@@ -13,7 +13,9 @@ vf_prompt принимает СПИСОК писем, а я гонял по од
 Порядок: сначала --проба (одна пачка с заведомо плохим письмом, чтобы
 убедиться, что разбор ловит отказ), потом сухой прогон, потом --снять.
 """
+import io
 import json
+import os
 import re
 import sqlite3
 import sys
@@ -32,6 +34,13 @@ from sender.ai_letter import vf_prompt                        # noqa: E402
 ПОТОКОВ = 6
 ПРОБА = "--проба" in sys.argv
 СНЯТЬ = "--снять" in sys.argv
+# ТОЛЬКО НАПРАВЛЕНИЕ: снимаем лишь письма не тому адресату, а придирки к
+# стилю («человечность», «страшилка», «два вопросительных знака») оставляем —
+# владелец 25.08: конвейерные письма имеет смысл оставить.
+ТОЛЬКО_НАПР = "--только-направление" in sys.argv
+# ВЕРДИКТЫ НА ДИСК. Первый прогон их не сохранял, и чтобы снять 23 письма
+# пришлось платить за всю линзу заново. Durable, с fsync.
+ВЕРДИКТЫ = r"C:\sender\_ops\linza-verdikty.jsonl"
 
 c = sqlite3.connect(r"C:\sender\sender.db", check_same_thread=False)
 c.row_factory = sqlite3.Row
@@ -101,6 +110,16 @@ def пачка(аргумент):
     в = _вердикты(т, len(строки), кц=(напр == "kc"))
     with замок:
         расход[0] += ц
+        with io.open(ВЕРДИКТЫ, "a", encoding="utf-8") as ф:
+            for i, р in enumerate(строки):
+                ок, почему = в[i]
+                ф.write(json.dumps(
+                    {"review_id": р["id"], "напр": напр, "ок": ок,
+                     "почему": почему,
+                     "имя": str(р["company_name"] or "")[:40]},
+                    ensure_ascii=False) + "\n")
+            ф.flush()
+            os.fsync(ф.fileno())
         for i, р in enumerate(строки):
             ок, почему = в[i]
             if ок:
@@ -172,8 +191,13 @@ from sender.config import Config                              # noqa: E402
 from sender.store import Store                                # noqa: E402
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
+к_снятию = [x for x in плохие
+            if not ТОЛЬКО_НАПР or re.search(r"(?i)направлени", x[3])]
+print("\nк снятию: %d из %d забракованных%s"
+      % (len(к_снятию), len(плохие),
+         " (только направление)" if ТОЛЬКО_НАПР else ""))
 снято = 0
-for rid, имя, напр, почему in плохие:
+for rid, имя, напр, почему in к_снятию:
     try:
         if store.confirm_decide(rid, status="skipped",
                                 decided_by="линза направления (пачкой)",
