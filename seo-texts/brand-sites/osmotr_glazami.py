@@ -38,6 +38,11 @@ VOPROS = """Ты смотришь на страницу перед публик�
 
 Оцени ТОЛЬКО вид, не содержание текста и не цифры.
 
+На странице ДВА разных выделенных блока, не путай их:
+- ОГЛАВЛЕНИЕ - вверху, между двумя тонкими линейками, список ссылок
+  с тире. Кнопки у него быть НЕ ДОЛЖНО, это навигация.
+- ПРИЗЫВ - серая плашка с толстой полосой слева, под ней всегда кнопка.
+
 1. Плашка призыва (серая, с полосой слева) - заметна, не сломана?
 2. Кнопка под ней - похожа на кнопку, надпись читается, размер разумный?
 3. Таблицы - есть линии и отбивка, колонки не слиплись, шапка над своими данными?
@@ -111,6 +116,24 @@ def main():
         ochered = ochered[:a.tolko]
     print(f'к осмотру {len(ochered)} страниц, уже осмотрено {len(gotovo)}', flush=True)
 
+    # ЗАМОК: ВТОРОЙ ЭКЗЕМПЛЯР НЕ ПОДНИМАЕТСЯ.
+    #
+    # Проверка «что уже осмотрено» читает журнал ОДИН РАЗ на старте.
+    # Я запускал прогон несколько раз подряд, все экземпляры выжили и
+    # видели журнал пустым - шесть процессов молотили одни и те же
+    # страницы. Из 148 вызовов 89 ушли впустую, это деньги владельца.
+    zamok = os.path.join(DIR, '.osmotr.zamok')
+    if os.path.exists(zamok):
+        try:
+            chuzhoy = int(open(zamok).read().strip())
+            os.kill(chuzhoy, 0)
+            print(f'осмотр уже идёт (процесс {chuzhoy}), второй не запускаю')
+            return 1
+        except (ValueError, ProcessLookupError, PermissionError):
+            pass                      # замок от покойника - забираем
+    with open(zamok, 'w') as f:
+        f.write(str(os.getpid()))
+
     klient = G.make_client()
     kand = sorted(glob.glob('/opt/pw-browsers/chromium*/chrome-linux/chrome'))
     with sync_playwright() as pw:
@@ -142,6 +165,10 @@ def main():
             print(f'{n}/{len(ochered)} {slug[:46]:46} '
                   f'{"оценка " + ocenka if ocenka else zapis.get("oshibka", "")[:60]}', flush=True)
         br.close()
+    try:
+        os.remove(zamok)
+    except OSError:
+        pass
     return 0
 
 
