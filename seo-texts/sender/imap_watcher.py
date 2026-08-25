@@ -12,6 +12,9 @@ from typing import Protocol, Optional
 from email.message import EmailMessage
 from sender.errors import SenderError, StoreError  # noqa: E402
 
+from sender.ruchnye_otvety import chey_otvet
+from sender.ruchnye_otvety import sobrat as sobrat_ruchnye
+
 logger = logging.getLogger(__name__)
 
 # Суб-классификация ответов (hot/интерес/автоответ/отказ) — опциональный модуль:
@@ -149,6 +152,11 @@ class ImapWatcher:
         self._reply_pipeline = reply_pipeline
         self._mailbox_map = {mb.mailbox_id: mb for mb in config.mailboxes()}
         self._uidvalidity_cache: dict[str, int] = {}
+        # Наибольший UID «Отправленных», который уже разобрали (ручные
+        # ответы). В памяти, не в базе: после рестарта первый заход берёт
+        # последние сутки — этого хватает, чтобы не потерять вчерашний
+        # ответ и не перечитывать три тысячи писем рассылки.
+        self._uid_otpravlennyh: dict[str, int] = {}
         self._auto_suppress_bounce = config.get("imap.auto_suppress_on_bounce", True)
         self._auto_suppress_complaint = config.get("imap.auto_suppress_on_complaint", True)
         # Greylist/soft-bounce 4.x.x: НЕ suppress (RU-провайдеры часто гриллистят) —
@@ -251,7 +259,68 @@ class ImapWatcher:
         except Exception as e:
             logger.exception(f"IMAP poll error for {mailbox_id}: {e}")
 
+        # РУЧНЫЕ ОТВЕТЫ ИЗ ВЕБ-ПОЧТЫ. Оператор отвечает клиенту прямо у
+        # почтовика, минуя панель, и для системы такого ответа не
+        # существует: карточка лида пуста, стол ответов готов предложить
+        # черновик тому, кому уже ответили. Подбираем их из
+        # «Отправленных» — только читаем, ошибки глушим: не подобрали —
+        # потеряли удобство, а не письмо.
+        if self._config.get("imap.ruchnye_otvety", True):
+            try:
+                self.podobrat_ruchnye(mailbox_id)
+            except Exception:  # noqa: BLE001
+                logger.exception("ручные ответы: сбор упал (%s)", mailbox_id)
+
         return events
+
+    def podobrat_ruchnye(self, mailbox_id: str) -> int:
+        """Завести в диалог ответы, написанные руками из веб-почты.
+
+        Возвращает, сколько писем завели. Своё от ручного отличаем по
+        Message-ID: панельные письма лежат в messages.rfc_message_id.
+        """
+        mb = self._mailbox_map.get(mailbox_id)
+        if mb is None:
+            return 0
+
+        def наше_ли(mid: str) -> bool:
+            try:
+                return self._store.find_message_by_rfc_id(mid) is not None
+            except Exception:  # noqa: BLE001 - не знаем → считаем чужим
+                return False
+
+        письма, верх = sobrat_ruchnye(
+            mb, nash_li=наше_ли,
+            s_uid=self._uid_otpravlennyh.get(mailbox_id, 0))
+        self._uid_otpravlennyh[mailbox_id] = верх
+        заведено = 0
+        for п in письма:
+            rid = chey_otvet(self._store, п)
+            if not rid:
+                logger.info("ручной ответ без хозяина: %s -> %s",
+                            mailbox_id, п.get("komu"))
+                continue
+            когда = п.get("kogda") or datetime.now(timezone.utc)
+            mid = None
+            try:
+                mid = self._store.otvet_kak_pismo(
+                    recipient_id=rid, mailbox_id=mailbox_id,
+                    subject=п.get("tema") or "", body=п.get("telo") or "",
+                    rfc_message_id=п["rfc_message_id"], sent_at=когда,
+                    in_reply_to=п.get("in_reply_to"), thread_id=None)
+            except Exception:  # noqa: BLE001
+                logger.exception("ручной ответ не записался письмом")
+            with suppress(Exception):
+                self._store.append_event(EventIn(
+                    dedup_key="ruchnoy:%s" % п["rfc_message_id"],
+                    event_type="reply_sent", event_ts=когда,
+                    message_id=mid, recipient_id=rid, mailbox_id=mailbox_id,
+                    detail={"ruchnoy": True, "komu": п.get("komu"),
+                            "tema": (п.get("tema") or "")[:200]}))
+            заведено += 1
+        if заведено:
+            logger.info("подобрано ручных ответов: %d (%s)", заведено, mailbox_id)
+        return заведено
 
     def run(self, *, interval_sec: int, stop) -> None:
         import time
