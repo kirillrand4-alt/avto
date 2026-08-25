@@ -41,8 +41,15 @@ c.row_factory = sqlite3.Row
 плохие = []
 
 
-def _вердикты(текст, сколько):
-    """Ответ линзы -> {idx: (годно, почему)}. Не разобрали — все НЕ годны."""
+def _вердикты(текст, сколько, кц=False):
+    """Ответ линзы -> {idx: (годно, почему)}. Не разобрали — все НЕ годны.
+
+    Для КЦ выбрасываем претензию по правилу 2 к строке отказа: линза несёт
+    редакцию 14.08 (запрет всем), а владелец 17.08 уточнил, что решение
+    касалось только Meyer — zashit_kontsovku для КЦ строку ТРЕБУЕТ, и по
+    замеру она стоит в 88% писем, на которые пришёл живой ответ. Без этой
+    поправки линза бракует 708 писем из 1269 за то, что канон предписывает.
+    """
     м = re.search(r"\{.*\}", текст or "", re.S)
     if not м:
         return {i: (False, "линза ответила не JSON") for i in range(сколько)}
@@ -58,9 +65,13 @@ def _вердикты(текст, сколько):
         except Exception:  # noqa: BLE001
             continue
         беды = з.get("problems") or з.get("why") or з.get("reason") or ""
-        if isinstance(беды, list):
-            беды = "; ".join(str(x) for x in беды)
-        если[i] = (bool(з.get("ok")), str(беды)[:170])
+        беды = беды if isinstance(беды, list) else ([беды] if беды else [])
+        if кц:
+            беды = [b for b in беды
+                    if not (re.search(r"(?i)правил\w*\s*2", str(b))
+                            and re.search(r"(?i)отказ", str(b)))]
+        остались = "; ".join(str(x) for x in беды)
+        если[i] = (bool(з.get("ok")) or not остались, остались[:170])
     # чего линза не назвала — не годно: молчание не одобрение
     return {i: если.get(i, (False, "линза не дала вердикт по этому письму"))
             for i in range(сколько)}
@@ -87,7 +98,7 @@ def пачка(аргумент):
         with замок:
             итог["пачка упала"] += len(строки)
         return
-    в = _вердикты(т, len(строки))
+    в = _вердикты(т, len(строки), кц=(напр == "kc"))
     with замок:
         расход[0] += ц
         for i, р in enumerate(строки):
@@ -123,8 +134,10 @@ if ПРОБА:
     "SELECT cr.id, cr.subject, cr.body, r.company_name, m.campaign_id "
     "  FROM confirm_reviews cr JOIN recipients r ON r.id=cr.recipient_id "
     "  LEFT JOIN messages m ON m.id=cr.message_id "
-    " WHERE cr.status IN ('pending','approved') "
-    "   AND substr(cr.created_at,1,10)=date('now') "
+    # ТОЛЬКО ТО, ЧТО ЕЩЁ МОЖЕТ УЙТИ. Карточек с текстом 3877, но у
+    # большинства письмо давно отправлено или снято — проверять их значит
+    # платить за историю.
+    " WHERE m.status IN ('pending_review','scheduled') "
     "   AND COALESCE(cr.body,'')<>'' ORDER BY cr.id").fetchall()
 print("писем к проверке: %d" % len(строки))
 по_напр = {"kc": [], "meyer": []}
