@@ -257,6 +257,29 @@ _МОЛЧИТ_ЗАМОК = threading.Lock()
 ОСТЫВАНИЕ = int(os.environ.get('PROVIDER_COOLDOWN', '900'))
 
 
+# СЛЕД ПОДМЕНЫ. Замер 25.08 по журналу разбора паспортов: 5 049 молчащих
+# стримов, из них 4 436 у луны, и каждый уводил процесс на запасную на четверть
+# часа. В журнале хайку упоминалась 1 292 раза против 5 115 у луны — то есть
+# примерно каждый пятый вызов шёл НЕ той моделью, которой числился, а вход у
+# хайку впятеро дороже. Цена при этом считалась по заказанной модели, и
+# расхождение не было видно ни в отчётах, ни в ответах владельцу. Пишем факт
+# подмены в серверный файл: строка на каждый переход, с причиной.
+ПОДМЕНЫ = os.environ.get('PROVIDER_PODMENA_LOG', r'C:\sender\provider-podmena.jsonl')
+
+
+def _zapisat_podmenu(bylo, stalo, prichina):
+    """Строка в журнал подмен. Ошибка записи не должна ронять сам вызов."""
+    try:
+        with io.open(ПОДМЕНЫ, 'a', encoding='utf-8') as f:
+            f.write(json.dumps({'ts': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                                'bylo': bylo, 'stalo': stalo,
+                                'prichina': prichina}, ensure_ascii=False) + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+    except Exception:  # noqa: BLE001 - журнал важен, но вызов важнее
+        pass
+
+
 def _otmetit_molchanie(model):
     with _МОЛЧИТ_ЗАМОК:
         _МОЛЧИТ[model] = time.time() + ОСТЫВАНИЕ
@@ -274,6 +297,10 @@ def _zhivaya(model):
     with _МОЛЧИТ_ЗАМОК:
         if _МОЛЧИТ.get(запас, 0) > time.time():
             return model            # обе молчат — пробуем исходную, вдруг ожила
+    # Тихий случай: вызов НАЧИНАЕТСЯ на запасной, потому что заказанная ещё
+    # остывает. Обрыва тут нет, печатать в stderr нечего, и до 25.08 такие
+    # вызовы вообще не оставляли следа — именно они и делали цену недостоверной.
+    _zapisat_podmenu(model, запас, 'остывание')
     return запас
 
 
@@ -429,6 +456,7 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
             _otmetit_molchanie(текущая)
             if текущая != запас:
                 print(f'{текущая} молчит — остаток попыток на {запас}', file=sys.stderr)
+                _zapisat_podmenu(текущая, запас, 'молчащий стрим')
                 текущая = запас
             continue
         except httpx.HTTPStatusError as ex:
