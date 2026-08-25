@@ -579,9 +579,15 @@ def _пакетом(c, СТРОКА, пакет, инны, ст, теперь):
             if пакет:
                 c.executemany(СТРОКА, пакет)
             if инны:
+                # DETAIL ОБНОВЛЯТЬ ОБЯЗАТЕЛЬНО. Прежде здесь стояло только
+                # ts=excluded.ts, и у компаний, уже имевших отметку прошлой
+                # версии, detail навсегда оставался старым: после слияния v3
+                # помеченными оказались 33 471 компания из 54 320, а остальные
+                # при любом следующем запуске разбирались бы заново.
                 c.executemany(
                     'INSERT INTO stage_log(inn, stage, detail, ts) VALUES(?,?,?,?) '
-                    'ON CONFLICT(inn, stage) DO UPDATE SET ts=excluded.ts',
+                    'ON CONFLICT(inn, stage) DO UPDATE SET ts=excluded.ts, '
+                    'detail=excluded.detail',
                     [(и, СТАДИЯ, ДЕТАЛЬ, метка) for и in инны])
             c.commit()
             ст['пакетов'] += 1
