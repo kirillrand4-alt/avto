@@ -45,10 +45,39 @@
     line-height: 1.9;
 }
 
-/* Отступа справа у ссылки быть не должно: разделитель списка - запятая,
- * и margin отбивал её от текста пробелом («...цикла , Чистота азота»). */
+/* ОГЛАВЛЕНИЕ - СПИСОК, А НЕ СТРОКА ЧЕРЕЗ ЗАПЯТУЮ.
+ *
+ * Девятнадцать заголовков, слитых в абзац, глазом не сканируются, а на
+ * телефоне занимают два экрана сплошного подчёркнутого текста. Тегом ul
+ * нельзя: вёрстка сайтов рисует у него свои тире-маркеры. Поэтому список
+ * делает CSS - каждая ссылка строка, на широком экране две колонки.
+ *
+ * break-inside не даёт колонке разорвать пункт пополам. */
 .na-stranice a {
-    margin-right: 0;
+    display: block;
+    margin: 0;
+    padding: 5px 0 5px 15px;
+    position: relative;
+    line-height: 1.45;
+    break-inside: avoid;
+}
+
+.na-stranice a::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .82em;
+    width: 7px;
+    height: 1px;
+    background: currentColor;
+    opacity: .5;
+}
+
+@media (min-width: 768px) {
+    .na-stranice {
+        columns: 2;
+        column-gap: 38px;
+    }
 }
 
 /* Таблицы у нас широкие - на телефоне обязана прокручиваться сама
@@ -102,13 +131,6 @@
 .tablica-prokrutka th {
     border-bottom-width: 2px;
     font-weight: 600;
-}
-
-/* Оглавление списком: перенос длинного пункта не должен читаться
- * как новый пункт. */
-.na-stranice a {
-    display: inline-block;
-    max-width: 100%;
 }
 
 /* Кнопка призыва не растягивается во всю ширину.
