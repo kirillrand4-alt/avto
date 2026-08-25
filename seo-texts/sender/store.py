@@ -3355,9 +3355,45 @@ class Store:
                     "INSERT INTO lead_events (lead_id, action, to_status, created_at)"
                     " VALUES (?, 'created', 'new', ?)", (lead_id, now_iso))
                 return lead_id, True
+            # ВТОРОЙ ОТВЕТ ДОПИСЫВАЕТ КАРТОЧКУ, А НЕ ПРОПАДАЕТ.
+            #
+            # 25.08.2026. «Росткран» ответил дважды: сперва «интерес в 2
+            # компрессорах», через пять часов — «Механик Александр
+            # +7 909 7865 379». Второй ответ упёрся в ON CONFLICT DO NOTHING
+            # и не доехал: в карточке остался только первый, поле телефона
+            # пустое. Продавец видел «интересно» и не видел, кому звонить.
+            #
+            # Дописываем сверху (свежее первым), телефон ставим, если его не
+            # было, метку поднимаем только вверх по важности. Статус не
+            # трогаем: карточку мог взять оператор, и сбросить её в «новую»
+            # значит отнять у него работу.
             row = conn.execute(
-                "SELECT id FROM leads WHERE dedup_key=?", (dedup_key,)).fetchone()
-            return int(row["id"]), False
+                "SELECT id, need, phone, reply_kind FROM leads "
+                " WHERE dedup_key=?", (dedup_key,)).fetchone()
+            lead_id = int(row["id"])
+            новый_текст = str(need or "").strip()
+            прежний = str(row["need"] or "")
+            дописать = (новый_текст and новый_текст not in прежний)
+            if дописать:
+                свод = (новый_текст + "\n\n--- предыдущий ответ ---\n" + прежний)[:6000]
+            else:
+                свод = прежний
+            вес = {"hot": 5, "interested": 4, "redirect": 3, "deferred": 3,
+                   "neutral": 2, "wrong_contact": 2, "auto_reply": 1,
+                   "not_interested": 1}
+            метка = row["reply_kind"]
+            if reply_kind and вес.get(str(reply_kind), 0) > вес.get(str(метка), 0):
+                метка = reply_kind
+            телефон = row["phone"] or phone
+            if дописать or телефон != row["phone"] or метка != row["reply_kind"]:
+                conn.execute(
+                    "UPDATE leads SET need=?, phone=?, reply_kind=?, "
+                    "       version=version+1, updated_at=? WHERE id=?",
+                    (свод, телефон, метка, now_iso, lead_id))
+                conn.execute(
+                    "INSERT INTO lead_events (lead_id, action, created_at) "
+                    "VALUES (?, 'дописан ответ', ?)", (lead_id, now_iso))
+            return lead_id, False
 
     def get_lead(self, lead_id: int) -> Optional["Lead"]:
         with self._lock:
