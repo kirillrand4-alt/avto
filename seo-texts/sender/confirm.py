@@ -427,7 +427,19 @@ class ConfirmSend:
             campaign_id=campaign_id, recipient_id=recipient_id,
             message_id=message_id, panel=panel,
         )
-        return SubmitResult(rid, created, "pending")
+        # СТАТУС БЕРЁМ ИЗ БАЗЫ, А НЕ ОБЪЯВЛЯЕМ. Здесь стояло жёсткое
+        # "pending", и вызывающий получал «всё хорошо» даже когда карточка в
+        # базе лежала снятой: 25.08 генератор так отчитался «ОК» о 632
+        # письмах, которых в очереди не было. Один лишний чтение-запрос на
+        # письмо дешевле, чем оплаченное письмо в никуда.
+        факт = "pending"
+        try:
+            строка = self._store.confirm_get(rid)
+            if строка and строка.get("status"):
+                факт = str(строка["status"])
+        except Exception:  # noqa: BLE001 - чтение статуса не смеет ронять постановку
+            pass
+        return SubmitResult(rid, created, факт)
 
     # -- чтение ------------------------------------------------------------- #
 

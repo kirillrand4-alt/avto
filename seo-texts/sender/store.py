@@ -2575,8 +2575,40 @@ class Store:
             if cur.rowcount == 1:
                 return int(cur.lastrowid), True
             row = conn.execute(
-                "SELECT id FROM confirm_reviews WHERE dedup_key=?", (dedup,)
-            ).fetchone()
+                "SELECT id, status FROM confirm_reviews WHERE dedup_key=?",
+                (dedup,)).fetchone()
+            # СНЯТУЮ КАРТОЧКУ ОЖИВЛЯЕМ НОВЫМ ПИСЬМОМ.
+            #
+            # 25.08.2026. «ON CONFLICT DO NOTHING» молча выбрасывал текст:
+            # компания вернулась в пул генерации, ей написали новое письмо, а
+            # очередь отдала ту же снятую карточку и НИЧЕГО в неё не записала.
+            # 632 оплаченных письма легли в никуда — оператор их не видел, а
+            # генератор считал постановку удачной.
+            #
+            # Оживляем только снятую и только свежим холодным письмом: у
+            # pending/approved/sent карточки своя жизнь (оператор её правил,
+            # подтверждал, отправлял), и перетирать её нельзя.
+            if (row is not None and str(row["status"]) == "skipped"
+                    and status == "pending" and kind == "outbound"
+                    and (subject or body)):
+                conn.execute(
+                    """UPDATE confirm_reviews
+                          SET subject=?, body=?, panel_json=?, message_id=?,
+                              status='pending', reason=?, decided_at=NULL,
+                              decided_by=NULL, updated_at=?
+                        WHERE id=?""",
+                    (subject, body, _json_dump(panel or {}), message_id,
+                     "письмо переписано, карточка оживлена", now_iso,
+                     int(row["id"])))
+                # ВМЕСТЕ С КАРТОЧКОЙ ПОДНИМАЕМ И ПИСЬМО. Оживить одну
+                # карточку мало: строка письма осталась бы snyatoy, и
+                # оператор подтверждал бы то, чего автоотправка не видит.
+                if message_id:
+                    conn.execute(
+                        "UPDATE messages SET status='pending_review', "
+                        "       last_error=NULL, updated_at=? "
+                        " WHERE id=? AND status='skipped'",
+                        (now_iso, int(message_id)))
             return int(row["id"]), False
 
     def confirm_get(self, review_id: int) -> Optional[dict]:

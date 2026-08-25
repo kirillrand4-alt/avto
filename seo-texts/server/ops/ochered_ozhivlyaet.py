@@ -1,0 +1,156 @@
+# -*- coding: utf-8 -*-
+"""Очередь подтверждения оживляет снятую карточку новым письмом.
+
+25.08: «ON CONFLICT DO NOTHING» молча выбрасывал текст. Компания вернулась
+в пул генерации, ей написали новое письмо, очередь отдала ту же СНЯТУЮ
+карточку и ничего в неё не записала — 632 оплаченных письма легли в никуда.
+Второй слой беды: ConfirmSend.submit возвращал жёсткое "pending" вместо
+статуса из базы, поэтому генератор считал постановку удачной и печатал «ОК».
+
+Две правки: снятую карточку оживляем свежим холодным письмом (живую и
+отправленную НЕ трогаем — у них своя жизнь), и статус отдаём фактический.
+
+    pl_run.py ochered_ozhivlyaet.py            # вхолостую
+    pl_run.py ochered_ozhivlyaet.py primenit   # применить
+"""
+import base64
+import io
+import json
+import os
+import py_compile
+import shutil
+import sys
+import time
+
+КОРЕНЬ = r"C:\sender\sender"
+ПРИМЕНИТЬ = "primenit" in sys.argv[1:]
+ГРУЗ_B64 = (
+    "eyJwYXRjaGVzIjogW3siZmlsZSI6ICJzdG9yZS5weSIsICJhIjogIklDQWdJQ0FnSUNBZ0lDQWdh"
+    "V1lnWTNWeUxuSnZkMk52ZFc1MElEMDlJREU2Q2lBZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0J5WlhSMWNt"
+    "NGdhVzUwS0dOMWNpNXNZWE4wY205M2FXUXBMQ0JVY25WbENpQWdJQ0FnSUNBZ0lDQWdJSEp2ZHlB"
+    "OUlHTnZibTR1WlhobFkzVjBaU2dLSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0pUUlV4RlExUWdhV1Fn"
+    "UmxKUFRTQmpiMjVtYVhKdFgzSmxkbWxsZDNNZ1YwaEZVa1VnWkdWa2RYQmZhMlY1UFQ4aUxDQW9a"
+    "R1ZrZFhBc0tRb2dJQ0FnSUNBZ0lDQWdJQ0FwTG1abGRHTm9iMjVsS0NrS0lDQWdJQ0FnSUNBZ0lD"
+    "QWdjbVYwZFhKdUlHbHVkQ2h5YjNkYkltbGtJbDBwTENCR1lXeHpaUT09IiwgInIiOiAiSUNBZ0lD"
+    "QWdJQ0FnSUNBZ2FXWWdZM1Z5TG5KdmQyTnZkVzUwSUQwOUlERTZDaUFnSUNBZ0lDQWdJQ0FnSUNB"
+    "Z0lDQnlaWFIxY200Z2FXNTBLR04xY2k1c1lYTjBjbTkzYVdRcExDQlVjblZsQ2lBZ0lDQWdJQ0Fn"
+    "SUNBZ0lISnZkeUE5SUdOdmJtNHVaWGhsWTNWMFpTZ0tJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDSlRS"
+    "VXhGUTFRZ2FXUXNJSE4wWVhSMWN5QkdVazlOSUdOdmJtWnBjbTFmY21WMmFXVjNjeUJYU0VWU1JT"
+    "QmtaV1IxY0Y5clpYazlQeUlzQ2lBZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0FvWkdWa2RYQXNLU2t1Wm1W"
+    "MFkyaHZibVVvS1FvZ0lDQWdJQ0FnSUNBZ0lDQWpJTkNoMEozUXI5Q2kwS1BRcmlEUW10Q1EwS0RR"
+    "b3RDZTBLZlFtdENqSU5DZTBKYlFtTkNTMEp2UXI5Q1YwSndnMEozUW50Q1MwS3ZRbkNEUW45Q1kw"
+    "S0hRck5DYzBKN1FuQzRLSUNBZ0lDQWdJQ0FnSUNBZ0l3b2dJQ0FnSUNBZ0lDQWdJQ0FqSURJMUxq"
+    "QTRMakl3TWpZdUlNS3JUMDRnUTA5T1JreEpRMVFnUkU4Z1RrOVVTRWxPUjhLN0lOQzgwTDdRdTlH"
+    "SDBMQWcwTExSaTlDeDBZRFFzTkdCMFl2UXN0Q3cwTHNnMFlMUXRkQzYwWUhSZ2pvS0lDQWdJQ0Fn"
+    "SUNBZ0lDQWdJeURRdXRDKzBMelF2OUN3MEwzUXVOR1BJTkN5MExYUmdOQzkwWVBRdTlDdzBZSFJq"
+    "Q0RRc2lEUXY5R0QwTHNnMExQUXRkQzkwTFhSZ05DdzBZYlF1TkM0TENEUXRkQzVJTkM5MExEUXY5"
+    "QzQwWUhRc05DNzBMZ2cwTDNRdnRDeTBMN1F0U0RRdjlDNDBZSFJqTkM4MEw0c0lOQ3dDaUFnSUNB"
+    "Z0lDQWdJQ0FnSUNNZzBMN1JoOUMxMFlEUXRkQzAwWXdnMEw3Umd0QzAwTERRdTlDd0lOR0MwWU1n"
+    "MExiUXRTRFJnZEM5MFkvUmd0R0QwWTRnMExyUXNOR0EwWUxRdnRHSDBMclJneURRdUNEUW5kQ1kw"
+    "S2ZRbGRDVDBKNGcwTElnMEwzUXRkR1JJTkM5MExVZzBMZlFzTkMvMExqUmdkQ3cwTHZRc0M0S0lD"
+    "QWdJQ0FnSUNBZ0lDQWdJeUEyTXpJZzBMN1F2OUM3MExEUmg5QzEwTDNRdmRHTDBZVWcwTC9RdU5H"
+    "QjBZelF2TkN3SU5DNzBMWFFzOUM3MExnZzBMSWcwTDNRdU5DNjBZUFF0TkN3SU9LQWxDRFF2dEMv"
+    "MExYUmdOQ3cwWUxRdnRHQUlOQzQwWVVnMEwzUXRTRFFzdEM0MExUUXRkQzdMQ0RRc0FvZ0lDQWdJ"
+    "Q0FnSUNBZ0lDQWpJTkN6MExYUXZkQzEwWURRc05HQzBMN1JnQ0RSZ2RHSDBMalJndEN3MExzZzBM"
+    "L1F2dEdCMFlMUXNOQzkwTDdRc3RDNjBZTWcwWVBRdE5DdzBZZlF2ZEMrMExrdUNpQWdJQ0FnSUNB"
+    "Z0lDQWdJQ01LSUNBZ0lDQWdJQ0FnSUNBZ0l5RFFudEMyMExqUXN0QzcwWS9RdGRDOElOR0MwTDdR"
+    "dTlHTTBMclF2aURSZ2RDOTBZL1JndEdEMFk0ZzBMZ2cwWUxRdnRDNzBZelF1dEMrSU5HQjBMTFF0"
+    "ZEMyMExqUXZDRFJoZEMrMEx2UXZ0QzAwTDNSaTlDOElOQy8wTGpSZ2RHTTBMelF2dEM4T2lEUmd3"
+    "b2dJQ0FnSUNBZ0lDQWdJQ0FqSUhCbGJtUnBibWN2WVhCd2NtOTJaV1F2YzJWdWRDRFF1dEN3MFlE"
+    "Umd0QyswWWZRdXRDNElOR0IwTExRdnRHUElOQzIwTGpRdDlDOTBZd2dLTkMrMEwvUXRkR0EwTERS"
+    "Z3RDKzBZQWcwTFhSa1NEUXY5R0EwTERRc3RDNDBMc3NDaUFnSUNBZ0lDQWdJQ0FnSUNNZzBML1F2"
+    "dEMwMFlMUXN0QzEwWURRdHRDMDBMRFF1eXdnMEw3Umd0Qy8wWURRc05DeTBMdlJqOUM3S1N3ZzBM"
+    "Z2cwTC9RdGRHQTBMWFJndEM0MFlEUXNOR0MwWXdnMExYUmtTRFF2ZEMxMEx2UmpOQzMwWTh1Q2lB"
+    "Z0lDQWdJQ0FnSUNBZ0lHbG1JQ2h5YjNjZ2FYTWdibTkwSUU1dmJtVWdZVzVrSUhOMGNpaHliM2Ri"
+    "SW5OMFlYUjFjeUpkS1NBOVBTQWljMnRwY0hCbFpDSUtJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdJ"
+    "Q0JoYm1RZ2MzUmhkSFZ6SUQwOUlDSndaVzVrYVc1bklpQmhibVFnYTJsdVpDQTlQU0FpYjNWMFlt"
+    "OTFibVFpQ2lBZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ1lXNWtJQ2h6ZFdKcVpXTjBJRzl5SUdK"
+    "dlpIa3BLVG9LSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdJR052Ym00dVpYaGxZM1YwWlNnS0lDQWdJQ0Fn"
+    "SUNBZ0lDQWdJQ0FnSUNBZ0lDQWlJaUpWVUVSQlZFVWdZMjl1Wm1seWJWOXlaWFpwWlhkekNpQWdJ"
+    "Q0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ1UwVlVJSE4xWW1wbFkzUTlQeXdnWW05a2VU"
+    "MC9MQ0J3WVc1bGJGOXFjMjl1UFQ4c0lHMWxjM05oWjJWZmFXUTlQeXdLSUNBZ0lDQWdJQ0FnSUNB"
+    "Z0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ2MzUmhkSFZ6UFNkd1pXNWthVzVuSnl3Z2NtVmhjMjl1"
+    "UFQ4c0lHUmxZMmxrWldSZllYUTlUbFZNVEN3S0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdJ"
+    "Q0FnSUNBZ0lDQWdaR1ZqYVdSbFpGOWllVDFPVlV4TUxDQjFjR1JoZEdWa1gyRjBQVDhLSUNBZ0lD"
+    "QWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdWMGhGVWtVZ2FXUTlQeUlpSWl3S0lDQWdJQ0FnSUNB"
+    "Z0lDQWdJQ0FnSUNBZ0lDQW9jM1ZpYW1WamRDd2dZbTlrZVN3Z1gycHpiMjVmWkhWdGNDaHdZVzVs"
+    "YkNCdmNpQjdmU2tzSUcxbGMzTmhaMlZmYVdRc0NpQWdJQ0FnSUNBZ0lDQWdJQ0FnSUNBZ0lDQWdJ"
+    "Q0xRdjlDNDBZSFJqTkM4MEw0ZzBML1F0ZEdBMExYUXY5QzQwWUhRc05DOTBMNHNJTkM2MExEUmdO"
+    "R0MwTDdSaDlDNjBMQWcwTDdRdHRDNDBMTFF1OUMxMEwzUXNDSXNJRzV2ZDE5cGMyOHNDaUFnSUNB"
+    "Z0lDQWdJQ0FnSUNBZ0lDQWdJQ0FnSUdsdWRDaHliM2RiSW1sa0lsMHBLU2tLSUNBZ0lDQWdJQ0Fn"
+    "SUNBZ2NtVjBkWEp1SUdsdWRDaHliM2RiSW1sa0lsMHBMQ0JHWVd4elpRPT0ifSwgeyJmaWxlIjog"
+    "ImNvbmZpcm0ucHkiLCAiYSI6ICJJQ0FnSUNBZ0lDQnlhV1FzSUdOeVpXRjBaV1FnUFNCelpXeG1M"
+    "bDl6ZEc5eVpTNWpiMjVtYVhKdFgzTjFZbTFwZENnS0lDQWdJQ0FnSUNBZ0lDQWdaVzFoYVd3OVpX"
+    "MWhhV3dzSUhOMVltcGxZM1E5YzNWaWFtVmpkQ3dnWW05a2VUMWliMlI1TENCcGJtNDlhVzV1TEFv"
+    "Z0lDQWdJQ0FnSUNBZ0lDQmpZVzF3WVdsbmJsOXBaRDFqWVcxd1lXbG5ibDlwWkN3Z2NtVmphWEJw"
+    "Wlc1MFgybGtQWEpsWTJsd2FXVnVkRjlwWkN3S0lDQWdJQ0FnSUNBZ0lDQWdiV1Z6YzJGblpWOXBa"
+    "RDF0WlhOellXZGxYMmxrTENCd1lXNWxiRDF3WVc1bGJDd0tJQ0FnSUNBZ0lDQXBDaUFnSUNBZ0lD"
+    "QWdjbVYwZFhKdUlGTjFZbTFwZEZKbGMzVnNkQ2h5YVdRc0lHTnlaV0YwWldRc0lDSndaVzVrYVc1"
+    "bklpaz0iLCAiciI6ICJJQ0FnSUNBZ0lDQnlhV1FzSUdOeVpXRjBaV1FnUFNCelpXeG1MbDl6ZEc5"
+    "eVpTNWpiMjVtYVhKdFgzTjFZbTFwZENnS0lDQWdJQ0FnSUNBZ0lDQWdaVzFoYVd3OVpXMWhhV3dz"
+    "SUhOMVltcGxZM1E5YzNWaWFtVmpkQ3dnWW05a2VUMWliMlI1TENCcGJtNDlhVzV1TEFvZ0lDQWdJ"
+    "Q0FnSUNBZ0lDQmpZVzF3WVdsbmJsOXBaRDFqWVcxd1lXbG5ibDlwWkN3Z2NtVmphWEJwWlc1MFgy"
+    "bGtQWEpsWTJsd2FXVnVkRjlwWkN3S0lDQWdJQ0FnSUNBZ0lDQWdiV1Z6YzJGblpWOXBaRDF0WlhO"
+    "ellXZGxYMmxrTENCd1lXNWxiRDF3WVc1bGJDd0tJQ0FnSUNBZ0lDQXBDaUFnSUNBZ0lDQWdJeURR"
+    "b2RDaTBKRFFvdENqMEtFZzBKSFFsZENnMElIUW5DRFFtTkNYSU5DUjBKRFFsOUNyTENEUWtDRFFu"
+    "ZENWSU5DZTBKSFFxdEN2MEpMUW05Q3YwSlhRbkM0ZzBKZlF0TkMxMFlIUmpDRFJnZEdDMEw3Umo5"
+    "QzcwTDRnMExiUmtkR0IwWUxRdXRDKzBMVUtJQ0FnSUNBZ0lDQWpJQ0p3Wlc1a2FXNW5JaXdnMExn"
+    "ZzBMTFJpOUMzMFl2UXN0Q3cwWTdSaWRDNDBMa2cwTC9RdnRDNzBZUFJoOUN3MExzZ3dxdlFzdEdC"
+    "MFpFZzBZWFF2dEdBMEw3UmlOQyt3cnNnMExUUXNOQzIwTFVnMExyUXZ0Q3owTFRRc0NEUXV0Q3cw"
+    "WURSZ3RDKzBZZlF1dEN3SU5DeUNpQWdJQ0FnSUNBZ0l5RFFzZEN3MExmUXRTRFF1OUMxMExiUXNO"
+    "QzcwTEFnMFlIUXZkR1AwWUxRdnRDNU9pQXlOUzR3T0NEUXM5QzEwTDNRdGRHQTBMRFJndEMrMFlB"
+    "ZzBZTFFzTkM2SU5DKzBZTFJoOUM0MFlMUXNOQzcwWUhSanlEQ3E5Q2UwSnJDdXlEUXZpQTJNeklL"
+    "SUNBZ0lDQWdJQ0FqSU5DLzBMalJnZEdNMEx6UXNOR0ZMQ0RRdXRDKzBZTFF2dEdBMFl2UmhTRFFz"
+    "aURRdnRHSDBMWFJnTkMxMExUUXVDRFF2ZEMxSU5DeDBZdlF1OUMrTGlEUW50QzAwTGpRdlNEUXU5"
+    "QzQwWWpRdmRDNDBMa2cwWWZSZ3RDMTBMM1F1TkMxTGRDMzBMRFF2OUdBMEw3UmdTRFF2ZEN3Q2lB"
+    "Z0lDQWdJQ0FnSXlEUXY5QzQwWUhSak5DODBMNGcwTFRRdGRHSTBMWFFzdEM3MExVc0lOR0gwTFhR"
+    "dkNEUXZ0Qy8wTHZRc05HSDBMWFF2ZEM5MEw3UXRTRFF2OUM0MFlIUmpOQzgwTDRnMExJZzBMM1F1"
+    "TkM2MFlQUXROQ3dMZ29nSUNBZ0lDQWdJTkdFMExEUXV0R0NJRDBnSW5CbGJtUnBibWNpQ2lBZ0lD"
+    "QWdJQ0FnZEhKNU9nb2dJQ0FnSUNBZ0lDQWdJQ0RSZ2RHQzBZRFF2dEM2MExBZ1BTQnpaV3htTGw5"
+    "emRHOXlaUzVqYjI1bWFYSnRYMmRsZENoeWFXUXBDaUFnSUNBZ0lDQWdJQ0FnSUdsbUlOR0IwWUxS"
+    "Z05DKzBMclFzQ0JoYm1RZzBZSFJndEdBMEw3UXV0Q3dMbWRsZENnaWMzUmhkSFZ6SWlrNkNpQWdJ"
+    "Q0FnSUNBZ0lDQWdJQ0FnSUNEUmhOQ3cwTHJSZ2lBOUlITjBjaWpSZ2RHQzBZRFF2dEM2MExCYklu"
+    "TjBZWFIxY3lKZEtRb2dJQ0FnSUNBZ0lHVjRZMlZ3ZENCRmVHTmxjSFJwYjI0NklDQWpJRzV2Y1dF"
+    "NklFSk1SVEF3TVNBdElOR0gwWUxRdGRDOTBMalF0U0RSZ2RHQzBMRFJndEdEMFlIUXNDRFF2ZEMx"
+    "SU5HQjBMelF0ZEMxMFlJZzBZRFF2dEM5MFkvUmd0R01JTkMvMEw3UmdkR0MwTERRdmRDKzBMTFF1"
+    "dEdEQ2lBZ0lDQWdJQ0FnSUNBZ0lIQmhjM01LSUNBZ0lDQWdJQ0J5WlhSMWNtNGdVM1ZpYldsMFVt"
+    "VnpkV3gwS0hKcFpDd2dZM0psWVhSbFpDd2cwWVRRc05DNjBZSXAifV19")
+
+груз = json.loads(base64.b64decode(ГРУЗ_B64).decode("utf-8"))
+тексты = {}
+for п in груз["patches"]:
+    путь = os.path.join(КОРЕНЬ, п["file"])
+    т = io.open(путь, encoding="utf-8").read()
+    якорь = base64.b64decode(п["a"]).decode("utf-8")
+    замена = base64.b64decode(п["r"]).decode("utf-8")
+    if "СНЯТУЮ КАРТОЧКУ ОЖИВЛЯЕМ" in т or "СТАТУС БЕРЁМ ИЗ БАЗЫ" in т:
+        print("%s: правка уже стоит" % п["file"])
+        continue
+    н = т.count(якорь)
+    print("%s: якорь найден %d раз" % (п["file"], н))
+    if н != 1:
+        raise SystemExit("ОТМЕНА: якорь должен встречаться ровно один раз")
+    тексты[путь] = т.replace(якорь, замена)
+
+if not тексты:
+    print("править нечего")
+    raise SystemExit(0)
+if not ПРИМЕНИТЬ:
+    print("\nвхолостую. Применить — primenit")
+    raise SystemExit(0)
+
+метка = time.strftime("%Y%m%d-%H%M%S")
+записаны = []
+try:
+    for путь, текст in тексты.items():
+        shutil.copy2(путь, путь + ".bak-" + метка)
+        io.open(путь, "w", encoding="utf-8", newline="").write(текст)
+        py_compile.compile(путь, doraise=True)
+        записаны.append(путь)
+        print("правлен %s (копия .bak-%s)" % (os.path.basename(путь), метка))
+except Exception as e:  # noqa: BLE001
+    print("СБОЙ: %s — откатываю" % e)
+    for путь in записаны:
+        shutil.copy2(путь + ".bak-" + метка, путь)
+    raise
+print("\nготово. Панель подхватит после Restart-Service SenderPanel -Force")
