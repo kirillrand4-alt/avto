@@ -32,6 +32,7 @@ from sender.napravlenie_pisma import napravlenie_pisma  # noqa: E402
 from sender.otkaz_spam import (СОБЫТИЕ as СОБЫТИЕ_ОТКАЗА,  # noqa: E402
                                eto_otkaz_spam, min_yashchikov,
                                nachalo_sutok, porogi, prichina_pauzy)
+from sender.v_otpravlennye import polozhit as polozhit_v_otpravlennye  # noqa: E402
 from sender.vne_bazy import razreshena as razreshena_vne_bazy  # noqa: E402
 
 logger = logging.getLogger("sender.sender")
@@ -1165,6 +1166,14 @@ class Sender:
         self._deliver(mb, mb.mailbox_id, to_email, mime_bytes)
 
         sent_at = datetime.now(timezone.utc)
+        # КОПИЯ В «ОТПРАВЛЕННЫЕ» САМОГО ЯЩИКА. SMTP копии у отправителя не
+        # оставляет — её кладёт веб-интерфейс почтовика, когда пишешь оттуда.
+        # Владелец 25.08: «когда я пишу ответ, этого ответа нету в ящике», и
+        # в итоге отвечал руками из веб-почты. Копия ничего не решает по
+        # доставке и потому НИКОГДА не роняет отправку: polozhit глушит свои
+        # ошибки сам и возвращает False.
+        if self.config.get("imap.kopiya_otvetov_v_otpravlennye", True):
+            polozhit_v_otpravlennye(mb, mime_bytes, kogda=sent_at)
         if hasattr(self.store, "send_log_add"):
             try:
                 self.store.send_log_add(
