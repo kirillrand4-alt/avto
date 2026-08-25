@@ -81,6 +81,36 @@ def ochered(predel=500):
     """
     _papki()
     bylo = _otdannye()
+    # ОТДАЛИ — НЕ ЗНАЧИТ СДЕЛАЛИ. Компания, попавшая в otdano.txt, не выдавалась
+    # больше никогда, и замер 25.08 нашёл 2 340 таких, у которых ничего не вышло:
+    # ни страниц в кэше, ни паспорта, ни строки в очереди. У 1 698 из них нет даже
+    # записи «не открылся» — они просто пропали между выдачей и результатом
+    # (рестарт Зенки, снятая задача, оборванный поток). Снимаем с учёта тех, по
+    # кому результата нет: пусть выдаются заново, а не висят вечно.
+    try:
+        _est_kesh = {n.split('.')[0] for n in os.listdir(KESH)}
+        _c2 = sqlite3.connect(BD)
+        _s_pasportom = {str(r[0]) for r in _c2.execute(
+            'select distinct inn from site_facts')}
+        _c2.close()
+        # ...и не тех, кто ПРЯМО СЕЙЧАС стоит в очереди: они ещё не обойдены,
+        # но и не потеряны. Без этой проверки мост дописывал бы их повторно
+        # каждый круг — очередь росла бы дублями, а не работой.
+        _v_ocheredi = set()
+        try:
+            with open(OCHERED, encoding='utf-8', errors='replace') as _f:
+                _v_ocheredi = {s.split(';')[0].strip() for s in _f if ';' in s}
+        except Exception:  # noqa: BLE001
+            pass
+        _bez_rezultata = {i for i in bylo
+                          if i not in _est_kesh and i not in _s_pasportom
+                          and i not in _v_ocheredi}
+        if _bez_rezultata:
+            bylo = bylo - _bez_rezultata
+            print('снято с учёта «отдано» без результата: %d'
+                  % len(_bez_rezultata), flush=True)
+    except Exception as e:  # noqa: BLE001 - не смогли проверить: льём как раньше
+        print('проверка «отдано без результата» пропущена: %s' % e, flush=True)
     c = sqlite3.connect(BD)
     c.row_factory = sqlite3.Row
     # БЕЗ LIMIT, с курсором. Было `limit predel*4` — и наполнитель встал намертво,
