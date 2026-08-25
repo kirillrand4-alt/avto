@@ -65,3 +65,33 @@ def test_vse_popytki_bez_json_dayut_oshibku_s_tegom():
         g._ask("ПРОМПТ", "genmeyer0")
     assert "genmeyer0" in str(ex.value)
     assert len(спрошено) == 3, "попыток по-прежнему три"
+
+
+# --- длинное тире чиним, а не бракуем -------------------------------------- #
+
+from sender.ai_letter import bez_dlinnogo_tire  # noqa: E402
+
+
+def test_tire_menyaetsya_na_defis():
+    assert bez_dlinnogo_tire("завод — крупный") == "завод - крупный"
+    assert bez_dlinnogo_tire("завод—крупный") == "завод - крупный"
+    assert bez_dlinnogo_tire("короткое – тоже") == "короткое - тоже"
+
+
+def test_tire_ne_skleivaet_abzacy():
+    """\\s съел бы перевод строки и слепил абзацы — берём только пробелы
+    и табы своей строки."""
+    было = "Первый абзац.\n\nВторой — с тире."
+    стало = bez_dlinnogo_tire(было)
+    assert стало == "Первый абзац.\n\nВторой - с тире."
+    assert стало.count("\n") == было.count("\n")
+
+
+def test_tire_bez_tire_nichego_ne_portit():
+    т = "Обычный текст, дефис-другой, и всё."
+    assert bez_dlinnogo_tire(т) == т
+
+
+def test_tire_pustaya_stroka():
+    assert bez_dlinnogo_tire(None) == ""
+    assert bez_dlinnogo_tire("") == ""
