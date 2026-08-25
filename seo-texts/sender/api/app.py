@@ -31,6 +31,8 @@ from sender.leaddesk import LeadConflict
 # P2 №6: композиционный корень переехал в sender.wiring — здесь реэкспорт,
 # чтобы исторические импорты `from sender.api.app import Deps, build_deps` жили.
 from sender.wiring import Deps, build_deps  # noqa: F401
+from sender.sobytiya_slovami import pochemu as pochemu_sobytiya
+from sender.sobytiya_slovami import yarlyk as yarlyk_sobytiya
 
 # Вердикты, после которых адрес исчезает из выбора «кому»: писать туда некуда.
 # Строками, а не импортом из addr_probe: модуль пробы может быть недоступен
@@ -613,7 +615,7 @@ def make_app(deps: Deps) -> FastAPI:
         # offset: пейджер фронта (владелец вливает всю базу — списки постраничные)
         rows = deps.store.list_events(event_type=event_type, campaign_id=campaign_id,
                                       provider=provider, limit=limit, offset=offset)
-        return {"events": [_event_json(e) for e in rows]}
+        return {"events": [_event_json(e, deps.store) for e in rows]}
 
     @app.get("/messages/sent")
     def messages_sent(q: Optional[str] = None, campaign_id: Optional[int] = None,
@@ -2527,10 +2529,29 @@ def _campaign_json(c):
             "min_priority_max": cfg.get("min_priority_max")}
 
 
-def _event_json(e):
+def _event_json(e, store=None):
+    """Событие для ленты: код, а рядом то же самое словами.
+
+    Владелец 25.08: «сделай, чтобы человекопонятно было — отбивка, за что
+    отбивка, письмо отправлено». Код оставляем: по нему работают фильтр и
+    старые ссылки, а «что» и «почему» читает человек. Получателя достаём
+    из стора, если он передан: в самом событии лежит только его номер.
+    """
+    кому = компания = None
+    if store is not None and getattr(e, "recipient_id", None):
+        try:
+            рек = store.get_recipient(int(e.recipient_id))
+        except Exception:  # noqa: BLE001 - лента не смеет падать из-за строки
+            рек = None
+        if рек is not None:
+            кому = getattr(рек, "email", None)
+            компания = getattr(рек, "company_name", None)
     return {"id": e.id, "event_type": e.event_type, "campaign_id": e.campaign_id,
             "provider": e.provider, "mailbox_id": e.mailbox_id,
-            "event_ts": _iso(e.event_ts)}
+            "event_ts": _iso(e.event_ts),
+            "chto": yarlyk_sobytiya(e.event_type),
+            "pochemu": pochemu_sobytiya(e.event_type, getattr(e, "detail", None)),
+            "komu": кому, "kompaniya": компания}
 
 
 def _supp_json(s):

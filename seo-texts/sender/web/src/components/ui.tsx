@@ -163,8 +163,40 @@ const LEAD_STATUS: Record<string, string> = {
   not_qualified: "не квал", in_bitrix: "в Bitrix",
 };
 
-export function StatusBadge({ status, kind = "lead" }: { status: string; kind?: "lead" | "campaign" }) {
-  const label = kind === "lead" ? (LEAD_STATUS[status] || status) : status;
+// Событие рассылки словами. Было: в ленте стояли коды (sent, bounce,
+// suppress, reply_auto), и оператор видел «bounce», не зная ни за что
+// отбивка, ни какому адресу. Владелец 25.08: «сделай, чтобы
+// человекопонятно было». Незнакомый код не прячем — показываем как есть:
+// выдуманный перевод хуже английского.
+const EVENT_LABELS: Record<string, string> = {
+  sent: "письмо отправлено",
+  delivered: "письмо доставлено",
+  open: "письмо открыли",
+  bounce: "отбивка — письмо не дошло",
+  reject_spam: "почтовик не принял письмо",
+  complaint: "жалоба на спам",
+  reply: "ответ клиента",
+  reply_auto: "автоответ клиента",
+  reply_sent: "мы ответили",
+  suppress: "адрес в стоп-листе",
+  unsubscribe: "отписка",
+  skip: "письмо пропущено",
+  retry_scheduled: "назначен повтор",
+  division_gate_block: "заслон направления",
+  other: "входящее вне переписки",
+};
+
+export function eventLabel(code: string): string {
+  return EVENT_LABELS[code] || code;
+}
+
+export function StatusBadge(
+  { status, kind = "lead" }: { status: string; kind?: "lead" | "campaign" | "event" },
+) {
+  const label =
+    kind === "lead" ? (LEAD_STATUS[status] || status)
+    : kind === "event" ? eventLabel(status)
+    : status;
   return <span className={`badge badge-${status}`}>{label}</span>;
 }
 

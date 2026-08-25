@@ -89,6 +89,12 @@ export interface EventRow {
   provider: string | null;
   mailbox_id: string | null;
   event_ts: string | null;
+  // то же событие словами (владелец 25.08: «сделай, чтобы человекопонятно
+  // было»). Код оставлен: по нему работает фильтр и старые ссылки.
+  chto?: string | null;
+  pochemu?: string | null;
+  komu?: string | null;
+  kompaniya?: string | null;
 }
 
 // _supp_json

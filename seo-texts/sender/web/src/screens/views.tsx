@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../api/client";
 import { useAuth } from "../context/auth";
 import { useToast } from "../components/Toast";
-import { Pager, Spinner, ErrorBox, Empty, Card, StatusBadge, ReadyBadge } from "../components/ui";
+import { Pager, Spinner, ErrorBox, Empty, Card, StatusBadge, ReadyBadge, eventLabel } from "../components/ui";
 import { fmtDate, pct, maskEmail } from "../lib/format";
 import type { Campaign, QuotaDay, SentMessage } from "../api/types";
 
@@ -176,8 +176,9 @@ export function Logs() {
       <div className="filterbar">
         <label>Тип
           <select value={type} onChange={(e) => { setType(e.target.value); setOffset(0); }}>
-            {["", "sent", "delivered", "bounce", "complaint", "reply", "unsubscribe", "suppress"].map((t) =>
-              <option key={t} value={t}>{t || "все"}</option>)}
+            {["", "sent", "bounce", "reject_spam", "reply", "reply_auto", "reply_sent",
+              "suppress", "skip", "complaint", "unsubscribe"].map((t) =>
+              <option key={t} value={t}>{t ? eventLabel(t) : "все события"}</option>)}
           </select>
         </label>
       </div>
@@ -185,10 +186,21 @@ export function Logs() {
         rows.length === 0 ? <Empty /> : (
           <div className="table-wrap">
             <table className="data-table">
-              <thead><tr><th>#</th><th>Тип</th><th>Кампания</th><th>Провайдер</th><th>Ящик</th><th>Время</th></tr></thead>
+              <thead><tr><th>#</th><th>Что случилось</th><th>Почему</th><th>Кому</th>
+                <th>Ящик</th><th>Время</th></tr></thead>
               <tbody>{rows.map((e) => (
-                <tr key={e.id}><td>{e.id}</td><td><StatusBadge status={e.event_type} kind="campaign" /></td>
-                  <td>{e.campaign_id ?? "—"}</td><td>{e.provider ?? "—"}</td><td>{e.mailbox_id ?? "—"}</td>
+                <tr key={e.id}><td>{e.id}</td>
+                  <td><StatusBadge status={e.event_type} kind="event" /></td>
+                  <td>{e.pochemu || <span className="muted">—</span>}</td>
+                  <td>
+                    {e.kompaniya || e.komu
+                      ? <>
+                          {e.kompaniya ? <div>{e.kompaniya}</div> : null}
+                          {e.komu ? <div className="muted">{e.komu}</div> : null}
+                        </>
+                      : <span className="muted">—</span>}
+                  </td>
+                  <td>{e.mailbox_id ?? "—"}</td>
                   <td>{fmtDate(e.event_ts)}</td></tr>
               ))}</tbody>
             </table>
