@@ -109,7 +109,24 @@ def main():
     import gen_provider as G
     from playwright.sync_api import sync_playwright
 
-    fajly = sorted(glob.glob(os.path.join(a.vhod, '*', '*.html')))
+    # ОЧЕРЕДЬ ПО КРУГУ, А НЕ ПО АЛФАВИТУ.
+    #
+    # Сортировка по имени ставит подряд все страницы одного домена, и
+    # прогон, прерванный или недоделанный, покрывает один сайт из
+    # двенадцати. Владелец поймал это на девятой странице: «ты все 9
+    # на одном домене смотрел что ли?» - и был прав, любая промежуточная
+    # средняя по такой выборке ничего не значит.
+    #
+    # Раскладываем по кругу: сначала по одной странице с каждого сайта,
+    # потом по второй. На любой точке остановки в выборке есть все.
+    po_saytam = {}
+    for f in sorted(glob.glob(os.path.join(a.vhod, '*', '*.html'))):
+        po_saytam.setdefault(os.path.basename(os.path.dirname(f)), []).append(f)
+    fajly = []
+    for i in range(max(len(v) for v in po_saytam.values()) if po_saytam else 0):
+        for dom in sorted(po_saytam):
+            if i < len(po_saytam[dom]):
+                fajly.append(po_saytam[dom][i])
     gotovo = uzhe_osmotreno()
     ochered = [p for p in fajly if os.path.basename(p)[:-5] not in gotovo]
     if a.tolko:
