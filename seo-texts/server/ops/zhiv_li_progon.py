@@ -1,31 +1,51 @@
 # -*- coding: utf-8 -*-
-"""Идёт ли сейчас прогон генерации: процессы и свежесть журнала.
-
-Запускающая команда оборвалась по таймауту с моей стороны - но прогон
-отцеплённый, он мог стартовать и жить. Прежде чем запускать второй раз (а
-это деньги), надо посмотреть, не идёт ли уже первый.
-"""
-import glob
+"""Жив ли отцеплённый прогон: процессы, свежесть логов, счёт написанного."""
+import io
+import json
 import os
 import subprocess
 import time
 
-из = subprocess.run(
-    ["powershell", "-NoProfile", "-Command",
-     "Get-CimInstance Win32_Process -Filter \"Name like 'python%'\" | "
-     "Select-Object ProcessId,CreationDate,CommandLine | "
-     "ConvertTo-Csv -NoTypeInformation"],
-    capture_output=True, text=True, timeout=90)
-print("=== процессы python ===")
-for строка in (из.stdout or "").splitlines():
-    if "partiya_gen" in строка or "_ops" in строка:
-        print("  " + строка.strip()[:190])
+КАТАЛОГ = r"C:\sender\_ops"
+сейчас = time.time()
 
-print("\n=== свежие файлы журнала и вывода ===")
-for шаблон in (r"C:\sender\_ops\*.jsonl", r"C:\sender\_ops\*.out",
-               r"C:\sender\_ops\*.log"):
-    for п in glob.glob(шаблон):
-        возраст = time.time() - os.path.getmtime(п)
-        if возраст < 7200:
-            print(f"  {os.path.basename(п):<44} {os.path.getsize(п):>9} байт, "
-                  f"обновлён {int(возраст//60)} мин назад")
+print("=== ПРОЦЕССЫ PYTHON ===")
+try:
+    в = subprocess.run(
+        ["powershell", "-NoProfile", "-Command",
+         "Get-CimInstance Win32_Process -Filter \"name like '%python%'\" | "
+         "Select-Object ProcessId,CreationDate,"
+         "@{n='cmd';e={$_.CommandLine.Substring(0,[Math]::Min(150,"
+         "$_.CommandLine.Length))}} | Format-List"],
+        capture_output=True, timeout=60)
+    т = (в.stdout or b"").decode("cp866", "replace")
+    for с in т.splitlines():
+        if с.strip():
+            print("   %s" % с.strip()[:150])
+except Exception as e:  # noqa: BLE001
+    print("   не вышло: %s" % str(e)[:80])
+
+print("\n=== СВЕЖЕСТЬ ФАЙЛОВ ПРОГОНА ===")
+for имя in ("ochered-25-08.jsonl", "ochered2508-blok1-meyer.log",
+            "gen-partiya-935.jsonl", "gen-partiya-935-vyzovy.jsonl"):
+    п = os.path.join(КАТАЛОГ, имя)
+    if not os.path.exists(п):
+        print("   %-34s нет файла" % имя)
+        continue
+    прошло = (сейчас - os.path.getmtime(п)) / 60.0
+    print("   %-34s %9d б, обновлён %.1f мин назад"
+          % (имя, os.path.getsize(п), прошло))
+
+лог = os.path.join(КАТАЛОГ, "ochered2508-blok1-meyer.log")
+if os.path.exists(лог):
+    строки = io.open(лог, encoding="utf-8", errors="replace").read().splitlines()
+    print("\n=== ХВОСТ ЛОГА БЛОКА (%d строк) ===" % len(строки))
+    for с in строки[-16:]:
+        print("   %s" % с[:150])
+
+# Сколько писем этот прогон уже положил в очередь подтверждения.
+import sqlite3
+c = sqlite3.connect(r"C:\sender\sender.db", timeout=30)
+n = c.execute("SELECT COUNT(*) FROM confirm_reviews "
+              " WHERE created_at >= '2026-08-25 10:35'").fetchone()[0]
+print("\nкарточек создано после старта прогона: %d" % n)
