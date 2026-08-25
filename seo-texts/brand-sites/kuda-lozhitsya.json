@@ -1,0 +1,889 @@
+[
+ {
+  "slug": "abac-kompressor--azotnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "abac-kompressor--azotnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "abac-kompressor--filtry-magistralnye",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://abac-kompressor.ru/catalog/filtry-magistralnye-abac/",
+  "kandidaty": [
+   "/catalog/filtry-magistralnye-abac/ (Фильтры магистральные)",
+   "/catalog/filtry/ (Фильтры)"
+  ]
+ },
+ {
+  "slug": "abac-kompressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "abac-kompressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "abac-kompressor--kompressornaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "abac-kompressor--mks",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "abac-kompressor--osushiteli",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://abac-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/",
+  "kandidaty": [
+   "/catalog/ochistka-szhatogo-vozdukha/ (Очистка сжатого воздуха)",
+   "/catalog/refrizheratornye-osushiteli-abac/ (Рефрижераторные осушители)"
+  ]
+ },
+ {
+  "slug": "abac-kompressor--tsiklonnye-separatory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://abac-kompressor.ru/catalog/maslovlagootdeliteli-abac/",
+  "kandidaty": [
+   "/catalog/maslovlagootdeliteli-abac/ (Масловлагоотделители)",
+   "/catalog/separatory-tsentrobezhnye-abac/ (Сепараторы центробежные)"
+  ]
+ },
+ {
+  "slug": "abac-kompressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://abac-kompressor.ru/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--azotnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--azotnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--dizelnye-kompressory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-14-bar/",
+  "kandidaty": [
+   "/catalog/dizelnye-kompressory-do-14-bar/",
+   "/catalog/dizelnye-kompressory-do-8-bar/",
+   "/catalog/dizelnye-kompressory-svyshe-14-bar/"
+  ]
+ },
+ {
+  "slug": "ac-kompressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--kompressornaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--mks",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--osushiteli",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ac-kompressor.ru/catalog/adsorbtsionnye-osushiteli-vozdukha/",
+  "kandidaty": [
+   "/catalog/adsorbtsionnye-osushiteli-vozdukha/",
+   "/catalog/membrannye-osushiteli-vozdukha/",
+   "/catalog/osushiteli-vozdukha/",
+   "/catalog/refrizheratornye-osushiteli-vozdukha/"
+  ]
+ },
+ {
+  "slug": "ac-kompressor--porshnevye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://ac-kompressor.ru/catalog/porshnevye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--spiralnye-kompressory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ac-kompressor.ru/catalog/spiralnye-bezmaslyanye-kompressory/",
+  "kandidaty": [
+   "/catalog/spiralnye-bezmaslyanye-kompressory/"
+  ]
+ },
+ {
+  "slug": "ac-kompressor--tsiklonnye-separatory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ac-kompressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://ac-kompressor.ru/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "berg-kompressor--azotnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "berg-kompressor--azotnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "berg-kompressor--dizelnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "berg-kompressor--filtry-magistralnye",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://berg-kompressor.ru/catalog/vozdukhopodgotovka/magistralnye-filtry/",
+  "kandidaty": [
+   "/catalog/vozdukhopodgotovka/magistralnye-filtry/ (Магистральные фильтры)"
+  ]
+ },
+ {
+  "slug": "berg-kompressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "berg-kompressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "berg-kompressor--kompressornaya-stanciya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://berg-kompressor.ru/catalog/modulnye-kompressornye-stantsii/",
+  "kandidaty": [
+   "/catalog/modulnye-kompressornye-stantsii/ (Модульные компрессорные станции)"
+  ]
+ },
+ {
+  "slug": "berg-kompressor--mks",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://berg-kompressor.ru/catalog/modulnye-kompressornye-stantsii/",
+  "kandidaty": [
+   "/catalog/modulnye-kompressornye-stantsii/ (Модульные компрессорные станции)"
+  ]
+ },
+ {
+  "slug": "berg-kompressor--osushiteli",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://berg-kompressor.ru/catalog/osushiteli/",
+  "kandidaty": []
+ },
+ {
+  "slug": "berg-kompressor--tsiklonnye-separatory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://berg-kompressor.ru/catalog/vozdukhopodgotovka/tsiklonnye-separatory/",
+  "kandidaty": [
+   "/catalog/vozdukhopodgotovka/tsiklonnye-separatory/ (Циклонные сепараторы)"
+  ]
+ },
+ {
+  "slug": "berg-kompressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://berg-kompressor.ru/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "crossair-compressor--azotnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "crossair-compressor--azotnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "crossair-compressor--dizelnye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://crossair-compressor.ru/catalog/dizelnye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "crossair-compressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "crossair-compressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "crossair-compressor--kompressornaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "crossair-compressor--mks",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "crossair-compressor--osushiteli",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://crossair-compressor.ru/catalog/vintovye-kompressory/na-resivere-s-osushitelem/",
+  "kandidaty": [
+   "/catalog/vintovye-kompressory/na-resivere-s-osushitelem/ (Компрессоры на ресивере с осушителем)"
+  ]
+ },
+ {
+  "slug": "crossair-compressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://crossair-compressor.ru/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--azotnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--azotnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--dizelnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--filtry-magistralnye",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--kompressornaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--mks",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--osushiteli",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://dali-kompressor.ru/catalog/osushiteli/",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--tsentrobezhnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--tsiklonnye-separatory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "dali-kompressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://dali-kompressor.ru/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "ekomak-kompressor--azotnaya-stanciya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ekomak-kompressor.com/catalog/generatory-azota-ppng/",
+  "kandidaty": [
+   "/catalog/generatory-azota-ppng/"
+  ]
+ },
+ {
+  "slug": "ekomak-kompressor--azotnaya-stanciya-modulnaya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ekomak-kompressor.com/catalog/generatory-azota-ppng/",
+  "kandidaty": [
+   "/catalog/generatory-azota-ppng/"
+  ]
+ },
+ {
+  "slug": "ekomak-kompressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ekomak-kompressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ekomak-kompressor--kompressornaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ekomak-kompressor--mks",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ekomak-kompressor--osushiteli",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://ekomak-kompressor.com/catalog/osushiteli/",
+  "kandidaty": []
+ },
+ {
+  "slug": "ekomak-kompressor--porshnevye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ekomak-kompressor--resivery",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ekomak-kompressor--spiralnye-kompressory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ekomak-kompressor.com/catalog/bezmaslyanye/spiralnye/",
+  "kandidaty": [
+   "/catalog/bezmaslyanye/spiralnye/ (Спиральные компрессоры)"
+  ]
+ },
+ {
+  "slug": "ekomak-kompressor--vintovye-kompressory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ekomak-kompressor.com/catalog/bezmaslyanye/vintovye/",
+  "kandidaty": [
+   "/catalog/bezmaslyanye/vintovye/ (Винтовые компрессоры)",
+   "/catalog/vintovye-elekticheskie/",
+   "/catalog/vintovye-elekticheskie/dmd/ (DMD (компрессоры с ременным приводом))",
+   "/catalog/vintovye-elekticheskie/eko/ (EKO (компрессоры с прямым приводом))"
+  ]
+ },
+ {
+  "slug": "enger-air--azotnaya-stanciya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/azotnye-ustanovki/",
+  "kandidaty": [
+   "/catalog/azotnye-ustanovki/ (Азотные установки)"
+  ]
+ },
+ {
+  "slug": "enger-air--azotnaya-stanciya-modulnaya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/azotnye-ustanovki/",
+  "kandidaty": [
+   "/catalog/azotnye-ustanovki/ (Азотные установки)"
+  ]
+ },
+ {
+  "slug": "enger-air--dizelnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "enger-air--dozhimnye-kompressory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/kompressory-40-bar/",
+  "kandidaty": [
+   "/catalog/kompressory-40-bar/ (Компрессоры высокого давления и бустеры)"
+  ]
+ },
+ {
+  "slug": "enger-air--filtry-magistralnye",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "enger-air--generatory-azota",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/azotnye-ustanovki/",
+  "kandidaty": [
+   "/catalog/azotnye-ustanovki/ (Азотные установки)"
+  ]
+ },
+ {
+  "slug": "enger-air--generatory-kisloroda",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/kislorodnye-ustanovki/",
+  "kandidaty": [
+   "/catalog/kislorodnye-ustanovki/ (Кислородные установки)"
+  ]
+ },
+ {
+  "slug": "enger-air--kislorodnaya-stanciya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/kislorodnye-ustanovki/",
+  "kandidaty": [
+   "/catalog/kislorodnye-ustanovki/ (Кислородные установки)"
+  ]
+ },
+ {
+  "slug": "enger-air--kislorodnaya-stanciya-modulnaya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/kislorodnye-ustanovki/",
+  "kandidaty": [
+   "/catalog/kislorodnye-ustanovki/ (Кислородные установки)"
+  ]
+ },
+ {
+  "slug": "enger-air--kompressornaya-stanciya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/mks/",
+  "kandidaty": [
+   "/catalog/mks/ (Модульные компрессорные станции)"
+  ]
+ },
+ {
+  "slug": "enger-air--mks",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://enger-air.ru/catalog/mks/",
+  "kandidaty": []
+ },
+ {
+  "slug": "enger-air--osushiteli",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/osushiteli_vozdukha/",
+  "kandidaty": [
+   "/catalog/osushiteli_vozdukha/ (Осушители воздуха)",
+   "/catalog/vozdukhopodgotovka/ (Воздухоподготовка)"
+  ]
+ },
+ {
+  "slug": "enger-air--porshnevye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "enger-air--spiralnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "enger-air--tsentrobezhnye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://enger-air.ru/catalog/tsentrobezhnye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "enger-air--tsiklonnye-separatory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "enger-air--vintovye-kompressory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://enger-air.ru/catalog/2_kh_stupenchatye_vintovye_kompressory/",
+  "kandidaty": [
+   "/catalog/2_kh_stupenchatye_vintovye_kompressory/ (Двухступенчатые винтовые компрессоры)",
+   "/catalog/vintovye_kompressory/ (Винтовые компрессоры)"
+  ]
+ },
+ {
+  "slug": "fini-compressor--azotnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "fini-compressor--azotnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "fini-compressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "fini-compressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "fini-compressor--kompressornaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "fini-compressor--mks",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "fini-compressor--spiralnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "fini-compressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://fini-compressor.com/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "ironmac-compressor--azotnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ironmac-compressor--azotnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ironmac-compressor--filtry-magistralnye",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://ironmac-compressor.com/catalog/filtry-magistralnye/",
+  "kandidaty": []
+ },
+ {
+  "slug": "ironmac-compressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ironmac-compressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ironmac-compressor--kompressornaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "ironmac-compressor--mks",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ironmac-compressor.com/catalog/blochnye-stantsii/",
+  "kandidaty": [
+   "/catalog/blochnye-stantsii/"
+  ]
+ },
+ {
+  "slug": "ironmac-compressor--osushiteli",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://ironmac-compressor.com/catalog/refrizheratornye-osushiteli-vozdukha/",
+  "kandidaty": [
+   "/catalog/refrizheratornye-osushiteli-vozdukha/ (Рефрижераторные осушители воздуха)"
+  ]
+ },
+ {
+  "slug": "ironmac-compressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://ironmac-compressor.com/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--azotnaya-stanciya",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/azotnaya-stanciya/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--azotnaya-stanciya-modulnaya",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/azotnaya-stanciya-modulnaya/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--dozhimnye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/dozhimnye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--filtry-magistralnye",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/filtry-magistralnye/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--kislorodnaya-stanciya",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/kislorodnaya-stanciya/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/kislorodnaya-stanciya-modulnaya/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--kompressornaya-stanciya",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/kompressornaya-stanciya/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--mks",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/mks/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--osushiteli",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/osushiteli/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--tsiklonnye-separatory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/tsiklonnye-separatory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "kraftmann-kompressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://kraftmann-kompressor.com/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ },
+ {
+  "slug": "remeza-kompressor--azotnaya-stanciya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/generatori-azota/",
+  "kandidaty": [
+   "/catalog/generatori-azota/ (Генераторы азота)"
+  ]
+ },
+ {
+  "slug": "remeza-kompressor--azotnaya-stanciya-modulnaya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/generatori-azota/",
+  "kandidaty": [
+   "/catalog/generatori-azota/ (Генераторы азота)"
+  ]
+ },
+ {
+  "slug": "remeza-kompressor--dozhimnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "remeza-kompressor--filtry-magistralnye",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/filtry-magistralnye/",
+  "kandidaty": [
+   "/catalog/ochistka-szhatogo-vozdukha/filtry-magistralnye/ (Фильтры магистральные)"
+  ]
+ },
+ {
+  "slug": "remeza-kompressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "remeza-kompressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "remeza-kompressor--kompressornaya-stanciya",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/modulnye-kompressornye-stantsii/",
+  "kandidaty": [
+   "/catalog/modulnye-kompressornye-stantsii/ (Модульные компрессорные станции)"
+  ]
+ },
+ {
+  "slug": "remeza-kompressor--mks",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/modulnye-kompressornye-stantsii/",
+  "kandidaty": [
+   "/catalog/modulnye-kompressornye-stantsii/ (Модульные компрессорные станции)"
+  ]
+ },
+ {
+  "slug": "remeza-kompressor--osushiteli",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/",
+  "kandidaty": [
+   "/catalog/ochistka-szhatogo-vozdukha/ (Очистка сжатого воздуха)",
+   "/catalog/ochistka-szhatogo-vozdukha/filtry-magistralnye/ (Фильтры магистральные)",
+   "/catalog/ochistka-szhatogo-vozdukha/kondensatootvodchiki/ (Конденсатоотводчики)",
+   "/catalog/ochistka-szhatogo-vozdukha/maslovlagootdeliteli/ (Масловлагоотделители)"
+  ]
+ },
+ {
+  "slug": "remeza-kompressor--resivery",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/vozdushnye-resivery/",
+  "kandidaty": [
+   "/catalog/vozdushnye-resivery/ (Воздушные ресиверы)"
+  ]
+ },
+ {
+  "slug": "remeza-kompressor--spiralnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "remeza-kompressor--tsiklonnye-separatory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/maslovlagootdeliteli/",
+  "kandidaty": [
+   "/catalog/ochistka-szhatogo-vozdukha/maslovlagootdeliteli/ (Масловлагоотделители)",
+   "/catalog/ochistka-szhatogo-vozdukha/separatory/ (Сепараторы центробежные (циклонные))"
+  ]
+ },
+ {
+  "slug": "remeza-kompressor--vintovye-kompressory",
+  "ishod": "ДРУГОЙ",
+  "kuda": "https://remeza-kompressor.ru/catalog/kompressory/vintovye/",
+  "kandidaty": [
+   "/catalog/kompressory/vintovye/ (Винтовые компрессоры)"
+  ]
+ },
+ {
+  "slug": "zif-kompressor--azotnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--azotnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--kislorodnaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--kislorodnaya-stanciya-modulnaya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--kompressornaya-stanciya",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--mks",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--osushiteli",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://zif-kompressor.ru/catalog/osushiteli/",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--spiralnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--tsentrobezhnye-kompressory",
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": []
+ },
+ {
+  "slug": "zif-kompressor--vintovye-kompressory",
+  "ishod": "ЕСТЬ",
+  "kuda": "https://zif-kompressor.ru/catalog/vintovye-kompressory/",
+  "kandidaty": []
+ }
+]
