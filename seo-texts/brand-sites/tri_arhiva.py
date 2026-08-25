@@ -101,7 +101,16 @@ def main():
     # третий. Владелец просил разделение, а не три взгляда на одно и то же -
     # «надо разделение между категориями и статьями, поэтому и просил
     # 3 архива». Теперь сумма трёх равна 133 ровно.
-    vse = set(kuda)
+    # СТРАНИЦЫ ENGER, ГДЕ ТЕКСТ УЖЕ СТОИТ, ИЗ СРЕЗОВ УБИРАЕМ.
+    #
+    # Прямое указание владельца: «убери статьи которые уже есть на сайте
+    # энгер из архивов». Замер по живым страницам нашёл шесть таких -
+    # от 1970 до 4717 знаков связной прозы на винтовых, центробежных,
+    # азотных, кислородных, осушителях и дожимных. Класть туда наш текст
+    # значит переписывать чужую работу.
+    ubrat = {s for s, z in kuda.items()
+             if s.startswith('enger-air--') and z.get('zanyato')}
+    vse = set(kuda) - ubrat
     est_kat = {s for s in vse if kuda[s]['ishod'] in ('ЕСТЬ', 'ДРУГОЙ')}
     net_kat = {s for s in vse if kuda[s]['ishod'] == 'НЕТ'}
     dorogie = {s for s in net_kat if tema(s) in DOROGIE}
@@ -151,6 +160,9 @@ def main():
     for imya, slugi, opis in srezy:
         n, arh = sobrat(imya, slugi, opis, kuda)
         print(f'{imya:22} страниц {n:4}  {os.path.basename(arh)}')
+    print(f'\nубрано страниц enger с уже стоящим текстом: {len(ubrat)}')
+    for s_ in sorted(ubrat):
+        print(f'    {s_}')
     print(f'\nсумма трёх: {len(dorogie) + len(est_kat) + len(net_kat)} из {len(vse)}, '
           f'пересечений {len(dorogie & est_kat) + len(dorogie & net_kat) + len(est_kat & net_kat)}')
     return 0

@@ -195,15 +195,17 @@
   "kuda": "https://berg-kompressor.ru/catalog/modulnye-kompressornye-stantsii/",
   "kandidaty": [
    "/catalog/modulnye-kompressornye-stantsii/ (Модульные компрессорные станции)"
-  ]
+  ],
+  "zanyato": 1853
  },
  {
   "slug": "berg-kompressor--mks",
-  "ishod": "ДРУГОЙ",
-  "kuda": "https://berg-kompressor.ru/catalog/modulnye-kompressornye-stantsii/",
+  "ishod": "НЕТ",
+  "kuda": "",
   "kandidaty": [
    "/catalog/modulnye-kompressornye-stantsii/ (Модульные компрессорные станции)"
-  ]
+  ],
+  "pochemu": "адрес занят страницей berg-kompressor--kompressornaya-stanciya"
  },
  {
   "slug": "berg-kompressor--osushiteli",
@@ -273,13 +275,15 @@
   "kuda": "https://crossair-compressor.ru/catalog/vintovye-kompressory/na-resivere-s-osushitelem/",
   "kandidaty": [
    "/catalog/vintovye-kompressory/na-resivere-s-osushitelem/ (Компрессоры на ресивере с осушителем)"
-  ]
+  ],
+  "zanyato": 1597
  },
  {
   "slug": "crossair-compressor--vintovye-kompressory",
   "ishod": "ЕСТЬ",
   "kuda": "https://crossair-compressor.ru/catalog/vintovye-kompressory/",
-  "kandidaty": []
+  "kandidaty": [],
+  "zanyato": 1511
  },
  {
   "slug": "dali-kompressor--azotnaya-stanciya",
@@ -351,7 +355,8 @@
   "slug": "dali-kompressor--vintovye-kompressory",
   "ishod": "ЕСТЬ",
   "kuda": "https://dali-kompressor.ru/catalog/vintovye-kompressory/",
-  "kandidaty": []
+  "kandidaty": [],
+  "zanyato": 2380
  },
  {
   "slug": "ekomak-kompressor--azotnaya-stanciya",
@@ -363,11 +368,12 @@
  },
  {
   "slug": "ekomak-kompressor--azotnaya-stanciya-modulnaya",
-  "ishod": "ДРУГОЙ",
-  "kuda": "https://ekomak-kompressor.com/catalog/generatory-azota-ppng/",
+  "ishod": "НЕТ",
+  "kuda": "",
   "kandidaty": [
    "/catalog/generatory-azota-ppng/"
-  ]
+  ],
+  "pochemu": "адрес занят страницей ekomak-kompressor--azotnaya-stanciya"
  },
  {
   "slug": "ekomak-kompressor--kislorodnaya-stanciya",
@@ -436,15 +442,17 @@
   "kuda": "https://enger-air.ru/catalog/azotnye-ustanovki/",
   "kandidaty": [
    "/catalog/azotnye-ustanovki/ (Азотные установки)"
-  ]
+  ],
+  "zanyato": 2334
  },
  {
   "slug": "enger-air--azotnaya-stanciya-modulnaya",
-  "ishod": "ДРУГОЙ",
-  "kuda": "https://enger-air.ru/catalog/azotnye-ustanovki/",
+  "ishod": "НЕТ",
+  "kuda": "",
   "kandidaty": [
    "/catalog/azotnye-ustanovki/ (Азотные установки)"
-  ]
+  ],
+  "pochemu": "адрес занят страницей enger-air--azotnaya-stanciya"
  },
  {
   "slug": "enger-air--dizelnye-kompressory",
@@ -458,7 +466,8 @@
   "kuda": "https://enger-air.ru/catalog/kompressory-40-bar/",
   "kandidaty": [
    "/catalog/kompressory-40-bar/ (Компрессоры высокого давления и бустеры)"
-  ]
+  ],
+  "zanyato": 1970
  },
  {
   "slug": "enger-air--filtry-magistralnye",
@@ -468,19 +477,21 @@
  },
  {
   "slug": "enger-air--generatory-azota",
-  "ishod": "ДРУГОЙ",
-  "kuda": "https://enger-air.ru/catalog/azotnye-ustanovki/",
+  "ishod": "НЕТ",
+  "kuda": "",
   "kandidaty": [
    "/catalog/azotnye-ustanovki/ (Азотные установки)"
-  ]
+  ],
+  "pochemu": "адрес занят страницей enger-air--azotnaya-stanciya"
  },
  {
   "slug": "enger-air--generatory-kisloroda",
-  "ishod": "ДРУГОЙ",
-  "kuda": "https://enger-air.ru/catalog/kislorodnye-ustanovki/",
+  "ishod": "НЕТ",
+  "kuda": "",
   "kandidaty": [
    "/catalog/kislorodnye-ustanovki/ (Кислородные установки)"
-  ]
+  ],
+  "pochemu": "адрес занят страницей enger-air--kislorodnaya-stanciya"
  },
  {
   "slug": "enger-air--kislorodnaya-stanciya",
@@ -488,15 +499,17 @@
   "kuda": "https://enger-air.ru/catalog/kislorodnye-ustanovki/",
   "kandidaty": [
    "/catalog/kislorodnye-ustanovki/ (Кислородные установки)"
-  ]
+  ],
+  "zanyato": 2479
  },
  {
   "slug": "enger-air--kislorodnaya-stanciya-modulnaya",
-  "ishod": "ДРУГОЙ",
-  "kuda": "https://enger-air.ru/catalog/kislorodnye-ustanovki/",
+  "ishod": "НЕТ",
+  "kuda": "",
   "kandidaty": [
    "/catalog/kislorodnye-ustanovki/ (Кислородные установки)"
-  ]
+  ],
+  "pochemu": "адрес занят страницей enger-air--kislorodnaya-stanciya"
  },
  {
   "slug": "enger-air--kompressornaya-stanciya",
@@ -508,9 +521,10 @@
  },
  {
   "slug": "enger-air--mks",
-  "ishod": "ЕСТЬ",
-  "kuda": "https://enger-air.ru/catalog/mks/",
-  "kandidaty": []
+  "ishod": "НЕТ",
+  "kuda": "",
+  "kandidaty": [],
+  "pochemu": "адрес занят страницей enger-air--kompressornaya-stanciya"
  },
  {
   "slug": "enger-air--osushiteli",
@@ -519,7 +533,8 @@
   "kandidaty": [
    "/catalog/osushiteli_vozdukha/ (Осушители воздуха)",
    "/catalog/vozdukhopodgotovka/ (Воздухоподготовка)"
-  ]
+  ],
+  "zanyato": 2287
  },
  {
   "slug": "enger-air--porshnevye-kompressory",
@@ -537,7 +552,8 @@
   "slug": "enger-air--tsentrobezhnye-kompressory",
   "ishod": "ЕСТЬ",
   "kuda": "https://enger-air.ru/catalog/tsentrobezhnye-kompressory/",
-  "kandidaty": []
+  "kandidaty": [],
+  "zanyato": 3405
  },
  {
   "slug": "enger-air--tsiklonnye-separatory",
@@ -552,7 +568,8 @@
   "kandidaty": [
    "/catalog/2_kh_stupenchatye_vintovye_kompressory/ (Двухступенчатые винтовые компрессоры)",
    "/catalog/vintovye_kompressory/ (Винтовые компрессоры)"
-  ]
+  ],
+  "zanyato": 4717
  },
  {
   "slug": "fini-compressor--azotnaya-stanciya",
@@ -600,7 +617,8 @@
   "slug": "fini-compressor--vintovye-kompressory",
   "ishod": "ЕСТЬ",
   "kuda": "https://fini-compressor.com/catalog/vintovye-kompressory/",
-  "kandidaty": []
+  "kandidaty": [],
+  "zanyato": 4350
  },
  {
   "slug": "ironmac-compressor--azotnaya-stanciya",
@@ -644,7 +662,8 @@
   "kuda": "https://ironmac-compressor.com/catalog/blochnye-stantsii/",
   "kandidaty": [
    "/catalog/blochnye-stantsii/"
-  ]
+  ],
+  "zanyato": 2112
  },
  {
   "slug": "ironmac-compressor--osushiteli",
@@ -736,11 +755,12 @@
  },
  {
   "slug": "remeza-kompressor--azotnaya-stanciya-modulnaya",
-  "ishod": "ДРУГОЙ",
-  "kuda": "https://remeza-kompressor.ru/catalog/generatori-azota/",
+  "ishod": "НЕТ",
+  "kuda": "",
   "kandidaty": [
    "/catalog/generatori-azota/ (Генераторы азота)"
-  ]
+  ],
+  "pochemu": "адрес занят страницей remeza-kompressor--azotnaya-stanciya"
  },
  {
   "slug": "remeza-kompressor--dozhimnye-kompressory",
@@ -778,11 +798,12 @@
  },
  {
   "slug": "remeza-kompressor--mks",
-  "ishod": "ДРУГОЙ",
-  "kuda": "https://remeza-kompressor.ru/catalog/modulnye-kompressornye-stantsii/",
+  "ishod": "НЕТ",
+  "kuda": "",
   "kandidaty": [
    "/catalog/modulnye-kompressornye-stantsii/ (Модульные компрессорные станции)"
-  ]
+  ],
+  "pochemu": "адрес занят страницей remeza-kompressor--kompressornaya-stanciya"
  },
  {
   "slug": "remeza-kompressor--osushiteli",
