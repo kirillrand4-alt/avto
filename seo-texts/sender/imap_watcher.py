@@ -544,7 +544,11 @@ class ImapWatcher:
                     свои=свои)
             except Exception:  # noqa: BLE001 - приём входящих важнее добавки
                 logger.exception("автоответ: разбор не удался")
-            if self._reply_desk and ev.thread_id:
+            # Без ветки лид тоже нужен. Здесь стояло «and ev.thread_id», и
+            # автоответ письма, у которого почтовик срезал References, не
+            # показывался никому. Ключ склейки push_warm_lead возьмёт по
+            # адресу — сам умеет.
+            if self._reply_desk:
                 recipient = self._store.get_recipient(recipient_id)
                 if recipient:
                     метка = "[автоответ]"
@@ -614,7 +618,13 @@ class ImapWatcher:
 
         if self._reply_desk and recipient_id:
             recipient = self._store.get_recipient(recipient_id)
-            if recipient and ev.thread_id:
+            # ВЕТКА НЕ ОБЯЗАТЕЛЬНА. Здесь стояло «and ev.thread_id»: ответ без
+            # References (корпоративные почтовики их режут) не заводил
+            # карточку вовсе. Сверка 25.08: 129 ответов клиентов против 112
+            # карточек — пятнадцать потерянных, среди них живой интерес
+            # «Сафита» («с удовольствием рассмотрим»). Ключ склейки без ветки
+            # push_warm_lead берёт по адресу.
+            if recipient:
                 snippet = ev.snippet
                 if signal is not None:
                     tags = [signal.kind] + ([f"тел {signal.phone}"] if signal.phone else [])
