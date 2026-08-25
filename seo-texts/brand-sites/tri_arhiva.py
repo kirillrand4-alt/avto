@@ -38,7 +38,7 @@ def tema(slug):
     return slug.split('--', 1)[1] if '--' in slug else slug
 
 
-def sobrat(imya, slugi, opisanie, kuda_karta):
+def sobrat(imya, slugi, opisanie, kuda_karta, zanyatye_adresa=frozenset()):
     papka = os.path.join(DIR, 'srezy', imya)
     shutil.rmtree(papka, ignore_errors=True)
     n = 0
@@ -73,13 +73,34 @@ def sobrat(imya, slugi, opisanie, kuda_karta):
     # карта адресатов только по своим страницам
     with open(os.path.join(papka, 'KUDA-KLAST.csv'), 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.writer(f, delimiter=';')
-        w.writerow(['Файл', 'Исход', 'Адрес из ТЗ', 'Куда класть'])
+        w.writerow(['Файл', 'Исход', 'Адрес из ТЗ', 'Куда класть', 'Примечание'])
         for slug in sorted(slugi):
             z = kuda_karta.get(slug)
             if not z:
                 continue
+            # У ПЛАНОВЫХ СТРАНИЦ ТОЖЕ ДОЛЖЕН БЫТЬ АДРЕС.
+            #
+            # Владелец сказал, как будет работать: «мы будем просто
+            # смотреть на адрес страницы и заливать туда». В срезах
+            # 1 и 3 адреса не было вовсе - стояло «(создать страницу)»,
+            # и смотреть было не на что. Плановый адрес из ТЗ как раз
+            # и есть предлагаемый слуг для новой категории, его и даём.
+            # ПЛАНОВЫЙ АДРЕС МОЖЕТ БЫТЬ УЖЕ ЗАНЯТ. Страница, проигравшая
+            # разводку столкновений, теряет цель - но её плановый адрес
+            # остаётся тем же, который занял победитель. Предлагать
+            # «создать» по занятому адресу нельзя, это тупик для того,
+            # кто просто смотрит на адрес и заливает.
+            gotov = z['kuda']
+            plan = z.get('url_tz', '')
+            if gotov:
+                adres = gotov
+            elif plan and plan.rstrip('/') in zanyatye_adresa:
+                adres = f"СОЗДАТЬ новый раздел (адрес {plan} занят)"
+            else:
+                adres = f"СОЗДАТЬ: {plan}"
+            pochemu = z.get('pochemu', '')
             w.writerow([f"{DOMEN[slug.split('--')[0]]}/{slug}.html", z['ishod'],
-                        z.get('url_tz', ''), z['kuda'] or '(создать страницу)'])
+                        z.get('url_tz', ''), adres, pochemu])
     open(os.path.join(papka, 'ЧИТАТЬ.md'), 'w', encoding='utf-8').write(opisanie)
     arh = os.path.join(DIR, f'{imya}.zip')
     if os.path.exists(arh):
@@ -157,8 +178,11 @@ def main():
 Дорогие плановые лежат в первом архиве.
 {obshchee}"""),
     ]
+    # Адреса, которые уже кем-то заняты: либо существующая страница,
+    # либо цель другой нашей статьи.
+    zanyatye_adresa = {z['kuda'].rstrip('/') for z in kuda.values() if z.get('kuda')}
     for imya, slugi, opis in srezy:
-        n, arh = sobrat(imya, slugi, opis, kuda)
+        n, arh = sobrat(imya, slugi, opis, kuda, zanyatye_adresa)
         print(f'{imya:22} страниц {n:4}  {os.path.basename(arh)}')
     print(f'\nубрано страниц enger с уже стоящим текстом: {len(ubrat)}')
     for s_ in sorted(ubrat):
