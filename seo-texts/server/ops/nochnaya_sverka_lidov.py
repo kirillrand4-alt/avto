@@ -26,6 +26,7 @@
 import io
 import json
 import os
+import re
 import sqlite3
 import sys
 import time
@@ -55,6 +56,45 @@ def записать(строка):
         traceback.print_exc()
 
 
+# Машинная почта, которую в ленту тащить незачем: агрегированные отчёты
+# приходят от каждого крупного почтовика раз в сутки, отчёт о недоставке
+# разбирает свой обработчик, письмо маяка — наше собственное.
+_МАШИННОЕ = re.compile(
+    r"dmarc|aggregate report|delivery-status|mail delivery|postmaster|"
+    r"undelivered|отчёт о недоставке", re.I)
+_КИРИЛЛИЦА = re.compile(r"[а-яё]{4}", re.I)
+# Служебные отправители: уведомления почтовиков о входе в аккаунт, роботы
+# CRM, отчёты DMARC (приходят zip-вложением, в тексте одна двоичная каша).
+# Их в ленту тащить незачем: человек им не писал и отвечать некому.
+_СЛУЖЕБНЫЙ = re.compile(
+    r"^(no-?reply|noreply|postmaster|mailer-daemon|maildaemon|security|"
+    r"notify|notification|dmarc|robot|bot|info@id)", re.I)
+_СЛУЖЕБНЫЙ_ДОМЕН = re.compile(
+    r"(^|\.)(id\.yandex\.ru|id\.mail\.ru|bitrix24\.ru|google\.com)$", re.I)
+
+
+def человеческое(текст: str, адрес: str = "") -> bool:
+    """Похоже ли «прочее» входящее на письмо живого человека.
+
+    Ответ клиента не всегда приходит веткой: 25.08 «ТЭКО» ответил НОВЫМ
+    письмом с личного gmail и темой «Ооо ТЭКО» — сторож не нашёл ни
+    In-Reply-To, ни получателя, письмо легло в «other» и в ленту не попало.
+    А ответ деловой: «компрессоры мы продаём, если есть интерес по выкупу —
+    пишите».
+    """
+    лок, _, дом = str(адрес or "").partition("@")
+    if лок and _СЛУЖЕБНЫЙ.match(лок):
+        return False
+    if дом and _СЛУЖЕБНЫЙ_ДОМЕН.search(дом):
+        return False
+    т = str(текст or "")
+    if not т.strip() or т.lstrip().startswith("PK"):
+        return False          # zip-вложение отчёта, а не письмо
+    if _МАШИННОЕ.search(т):
+        return False
+    return bool(_КИРИЛЛИЦА.search(т))
+
+
 def найти(c):
     """Ответы за окно, у которых нет карточки ни по получателю, ни по адресу."""
     есть = set()
@@ -69,7 +109,7 @@ def найти(c):
     for р in c.execute(
             "SELECT ев.id, ев.event_ts, ев.event_type, ев.recipient_id, "
             "       ев.detail_json FROM events ев "
-            " WHERE ев.event_type IN ('reply','reply_auto') "
+            " WHERE ев.event_type IN ('reply','reply_auto','other') "
             "   AND ев.event_ts >= datetime('now', ?) ORDER BY ев.id",
             ("-%d days" % ДНЕЙ,)):
         try:
@@ -79,6 +119,12 @@ def найти(c):
         з = d.get("headers") if isinstance(d.get("headers"), dict) else {}
         откуда = str(з.get("From") or "")
         адрес = откуда.split("<")[-1].strip("<> ").lower() if "@" in откуда else ""
+        з = d.get("headers") if isinstance(d.get("headers"), dict) else {}
+        откуда = str(з.get("From") or "")
+        адрес = откуда.split("<")[-1].strip("<> ").lower() if "@" in откуда else ""
+        текст = " ".join(str(d.get("snippet") or "").split())
+        if р["event_type"] == "other" and not человеческое(текст, адрес):
+            continue          # отчёт почтовика, а не ответ
         rid = р["recipient_id"]
         if rid and ("rid", int(rid)) in есть:
             continue
@@ -88,7 +134,7 @@ def найти(c):
             "событие": р["id"], "когда": р["event_ts"], "тип": р["event_type"],
             "получатель": rid, "адрес": адрес,
             "метка": d.get("reply_kind") or "",
-            "текст": " ".join(str(d.get("snippet") or "").split())[:600]})
+            "текст": текст[:600]})
     return найдено
 
 
@@ -129,7 +175,8 @@ def main():
         if рек is None and not н["адрес"]:
             пропущено += 1
             continue
-        метка = н["метка"] or ("auto_reply" if н["тип"] == "reply_auto" else "reply")
+        метка = н["метка"] or {"reply_auto": "auto_reply",
+                               "other": "вне переписки"}.get(н["тип"], "reply")
         try:
             lid = десk.push_warm_lead(рек, "", "[%s] %s" % (метка, н["текст"]),
                                       otvetil=н["адрес"] or None)
