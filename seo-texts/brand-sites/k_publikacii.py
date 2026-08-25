@@ -287,6 +287,23 @@ def podgotovit(html, domen):
     zagolovok = re.sub(r'<[^>]+>', '', zagolovki[0]).strip() if zagolovki else ''
     html = re.sub(r'<h1[^>]*>.*?</h1>\s*', '', html, flags=re.S | re.I)
     html = _PUSTOY.sub('', html)
+
+    # ПУСТЫЕ ОБОЛОЧКИ И ВЫДУМАННЫЕ КАРТИНКИ.
+    #
+    # Замер по всем 133: шесть штук на пяти страницах. Пустой <h3></h3>,
+    # три <p><small></small></p>, пустая ячейка таблицы - и одна картинка
+    # <img src="/images/centrifugal-station-proof.jpg">, которой на сайте
+    # нет: адрес отдаёт 404, на живой странице был бы битый значок.
+    #
+    # Путь картинки копирайтер сочинил сам. Наши фото лежат по схеме
+    # /upload/dm/<папка>/<файл>.webp и приходят из payload, а не из головы.
+    html = re.sub(r'<h[23][^>]*>\s*</h[23]>\s*', '', html)
+    html = re.sub(r'<p[^>]*>\s*<(small|em|strong|b|i)>\s*</\1>\s*</p>\s*', '', html)
+    html = re.sub(r'<p[^>]*>\s*<img[^>]*>\s*</p>\s*', '', html)
+    html = re.sub(r'<img[^>]*>', '', html)
+    # Пустая ячейка читается как обрыв таблицы - ставим прочерк.
+    html = re.sub(r'<td>\s*</td>', '<td>-</td>', html)
+
     html = _zagolovki_k_publikacii(html)
 
     # ДАТА ОБНОВЛЕНИЯ - В КОНЕЦ, А НЕ В СЕРЕДИНУ.
@@ -406,8 +423,20 @@ def podgotovit(html, domen):
         r'<p class="cta-knopka">' + NE_DO_KONCA + r'</p>',
         slit_paru, html, flags=re.S)
 
-    html = re.sub(r'\n{3,}', '\n\n', html).strip() + '\n'
-    return html, zagolovok, knopok[0], len(nayden)
+    html = re.sub(r'\n{3,}', '\n\n', html).strip()
+
+    # СВОЙ КОНТЕЙНЕР ВМЕСТО УГАДЫВАНИЯ ЧУЖОГО.
+    #
+    # Правила ритма и кеглей я вешал на классы контейнеров сайтов -
+    # .article, .text, .catalog-footer-seo и так далее. Список пришлось
+    # добывать разбором выгрузки, и он неизбежно неполон: у crossair это
+    # «row bx-blue», у ironmac «row mb-4», и до них правила не доехали -
+    # заголовок вопроса так и остался вровень с названием раздела.
+    #
+    # Гадать больше не нужно: оборачиваем тело в СВОЙ класс. Куда бы
+    # владелец ни вставил фрагмент, оформление приезжает вместе с ним.
+    return (f'<div class="statya-ruspro">\n{html}\n</div>\n',
+            zagolovok, knopok[0], len(nayden))
 
 
 def main():

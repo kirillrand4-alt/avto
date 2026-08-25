@@ -82,8 +82,7 @@
 
 /* Таблицы у нас широкие - на телефоне обязана прокручиваться сама
  * таблица, а не страница целиком. */
-.article table,
-.text table {
+.statya-ruspro table {
     max-width: 100%;
 }
 
@@ -168,28 +167,16 @@
  *
  * Задаём ритм только внутри наших контейнеров, чтобы не трогать вёрстку
  * каталога и карточек. */
-.article p,
-.text p,
-.catalog-footer-seo p,
-.bx-section-desc p,
-.item-desc p {
+.statya-ruspro p {
     margin-bottom: 1em;
 }
 
-.article h2,
-.text h2,
-.catalog-footer-seo h2,
-.bx-section-desc h2,
-.item-desc h2 {
+.statya-ruspro h2 {
     margin-top: 1.7em;
     margin-bottom: .6em;
 }
 
-.article h3,
-.text h3,
-.catalog-footer-seo h3,
-.bx-section-desc h3,
-.item-desc h3 {
+.statya-ruspro h3 {
     margin-top: 1.2em;
     margin-bottom: .4em;
     font-size: 1.08em;
@@ -197,10 +184,28 @@
 
 /* H2 «Частые вопросы» и H3-вопрос под ним шли почти одним кеглем
  * (32 против 28, на телефоне 24,7 против 23,1) - иерархия пропадала. */
-.article h2,
-.text h2,
-.catalog-footer-seo h2,
-.bx-section-desc h2,
-.item-desc h2 {
+.statya-ruspro h2 {
     font-size: 1.55em;
+}
+
+/* НАДПИСЬ НА КНОПКЕ - БЕЛАЯ, КАК ЗАДУМАНО БУТСТРАПОМ.
+ *
+ * У berg цвет ссылок сайта (#00A8FF) перебивал белый цвет .btn-primary,
+ * и надпись выходила синим по синему: контраст 1,75 при пороге 4,5.
+ * Замер по всем 133 страницам поймал это там, где глаз на снимке
+ * колебался. Правило действует только внутри .cta-knopka. */
+.cta-knopka a.btn-primary,
+.cta-knopka a.btn-primary:hover,
+.cta-knopka a.btn-primary:focus {
+    color: #fff;
+}
+
+/* РАЗНИЦА H2 И H3 ДОЛЖНА БЫТЬ ВИДНА.
+ *
+ * На 18 страницах кегли заголовков разошлись меньше чем на 3 пункта -
+ * вопрос FAQ читался тем же весом, что и название раздела над ним.
+ * Кегль H2 уже задан выше, здесь прижимаем H3. */
+.statya-ruspro h3 {
+    font-size: 1.02em;
+    font-weight: 600;
 }

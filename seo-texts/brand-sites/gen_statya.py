@@ -645,6 +645,22 @@ def proverit(html, sh, gazovaya):
     for z in re.findall(r'\[(?:ТРЕБУЕТСЯ|НУЖНО|УТОЧНИТЬ|TODO|ВСТАВИТЬ|ЗАПОЛНИТЬ|'
                         r'ДОБАВИТЬ|ЗАПРОСИТЬ)[^\]]*\]', html, re.I)[:3]:
         p.append('служебная заглушка в тексте: ' + ' '.join(z.split())[:90])
+    # ПУТЬ КАРТИНКИ НЕ СОЧИНЯЕТСЯ.
+    #
+    # Страница dali--tsentrobezhnye поставила <img src="/images/
+    # centrifugal-station-proof.jpg"> - адреса такого на сайте нет,
+    # проверено запросом: 404. На витрине это битый значок посреди
+    # блока доказательства.
+    #
+    # Наши фото приходят из payload по схеме /upload/dm/<папка>/<файл>,
+    # всё остальное - выдумка. Пустых оболочек это касается тоже: пустой
+    # заголовок и <p><small></small></p> занимают место и ничего не несут.
+    for z in re.findall(r'<img[^>]+src="([^"]*)"', html)[:3]:
+        if '/upload/' not in z:
+            p.append('картинка не из payload: ' + z[:70])
+    for teg in ('h2', 'h3'):
+        if re.search(rf'<{teg}[^>]*>\s*</{teg}>', html):
+            p.append(f'пустой заголовок <{teg}>')
     # СКЕЛЕТ. Строже прочего: набор H2 - это разводка по всей сетке.
     est = [re.sub(r'\s+', ' ', x).strip().lower()
            for x in re.findall(r'<h2[^>]*>(.*?)</h2>', html, re.S | re.I)]
