@@ -268,6 +268,38 @@ Func<string, string> pochemu_ne_godna = delegate(string h)
     catch { }
     bool korotkaya = h.Length < 8000;   // настоящая страница-заслон всегда куцая
 
+    // СТРАНИЦА-ОШИБКА САМОГО БРАУЗЕРА, А НЕ САЙТА. Chrome при отказе канала
+    // отдаёт свою служебную страницу («This page isn't working», ERR_...), и
+    // весит она под 250 КБ: внутри её собственные стили, скрипты и переводы.
+    // Проверка korotkaya такую не ловила, и кубик считал её нормальной главной,
+    // а потом восемь раз подряд получал её же на угадайках и записывал ДЕВЯТЬ
+    // «страниц». Замер 24.08: так вышло у 164 компаний из 430 (по всей выборке
+    // обхода — 173 из 1191), и лестница повторов не запускалась ни разу, потому
+    // что кубик был уверен, что всё открылось. Ищем без оглядки на размер.
+    if (n.Contains("id=\"main-frame-error\"") || n.Contains("neterror")
+        || System.Text.RegularExpressions.Regex.IsMatch(h, "\\bERR_[A-Z_]{3,}\\b"))
+        return "ошибка браузера";
+
+    // Разметки много, а текста нет — пустая оболочка (тот же случай, но без
+    // опознанных слов). Порог по ТЕКСТУ, а не по весу html: короткая страница
+    // контактов бывает честной, а 50 КБ разметки при полутора строках текста —
+    // нет. На коротких страницах правило не применяем, чтобы не выбросить
+    // настоящую страницу «Контакты» из трёх строк.
+    if (h.Length > 50000)
+    {
+        string bez_tegov = h;
+        try
+        {
+            bez_tegov = System.Text.RegularExpressions.Regex.Replace(
+                bez_tegov, "<(script|style)[^>]*>.*?</\\1>", " ",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase |
+                System.Text.RegularExpressions.RegexOptions.Singleline);
+            bez_tegov = System.Text.RegularExpressions.Regex.Replace(bez_tegov, "<[^>]+>", " ");
+        }
+        catch { }
+        if (bez_tegov.Trim().Length < 500) return "пустая оболочка";
+    }
+
     if (zagolovok.Contains("too many requests") || zagolovok.Contains("429")
         || (korotkaya && (n.Contains("too many requests")
                           || n.Contains("слишком много запросов")
@@ -782,8 +814,17 @@ var slova = new string[] { "contact", "kontakt", "svyaz", "about", "o-kompanii",
                            // именно там теряются адреса вроде uryupinsk@ и volzhskiy@
                            "filial", "predstavitel", "podrazdelen", "otdel", "office",
                            "ofis", "adresa", "regiony", "seti", "vacan", "career" };
-var ugadki = new string[] { "/contacts/", "/kontakty/", "/contact/", "/about/",
-                            "/o-kompanii/", "/company/staff/", "/company/", "/rukovodstvo/" };
+// Вариант БЕЗ завершающего слеша идёт следом за своим: замер 24.08 нашёл пять
+// сайтов, где /contacts отдаёт 200, а /contacts/ — нет (ic-tsgt.ru, texgaz.ru,
+// agava-kazan.ru, akademlaser.ru, retrusrb.ru; там же известный prompribor-nn.ru).
+// У 102 сайтов из 430 бесслешевый путь тоже отвечает, но редиректом на слеш —
+// лишним заходом это не станет, потому что угадки идут в самый хвост и только
+// когда контактной страницы не нашлось ни с главной, ни из карты сайта.
+var ugadki = new string[] { "/contacts/", "/contacts", "/kontakty/", "/kontakty",
+                            "/contact/", "/contact", "/about/", "/about",
+                            "/o-kompanii/", "/o-kompanii", "/company/staff/",
+                            "/company/staff", "/company/", "/company",
+                            "/rukovodstvo/", "/rukovodstvo" };
 var re = new System.Text.RegularExpressions.Regex(
     "href\\s*=\\s*[\"']([^\"'#]{1,180})[\"']",
     System.Text.RegularExpressions.RegexOptions.IgnoreCase);
