@@ -30,8 +30,8 @@ from sender.errors import ConfigError, GateTrippedError, PersonalizationGateErro
 from sender.gates import young_domain_reason  # noqa: E402
 from sender.napravlenie_pisma import napravlenie_pisma  # noqa: E402
 from sender.otkaz_spam import (СОБЫТИЕ as СОБЫТИЕ_ОТКАЗА,  # noqa: E402
-                               eto_otkaz_spam, nachalo_sutok,
-                               porogi, prichina_pauzy)
+                               eto_otkaz_spam, min_yashchikov,
+                               nachalo_sutok, porogi, prichina_pauzy)
 from sender.vne_bazy import razreshena as razreshena_vne_bazy  # noqa: E402
 
 logger = logging.getLogger("sender.sender")
@@ -682,8 +682,16 @@ class Sender:
             return
         соседи = [x.mailbox_id for x in self.config.mailboxes()
                   if getattr(x, "division", None) == напр]
-        всего = sum(_счёт(mailbox_id=m) for m in соседи)
-        if всего >= порог_напр:
+        счета = {m: _счёт(mailbox_id=m) for m in соседи}
+        всего = sum(счета.values())
+        # Рубеж направления — про ОБЩИЕ ДОМЕНЫ, а не про одну опальную учётку.
+        # 25.08.2026: пять отказов одного a.kozlov@zernosort.ru погасили шесть
+        # чужих мейеровских ящиков, у которых отказов не было ни одного, — и
+        # сам он к тому мигу уже стоял по своему порогу, то есть вина была
+        # зачтена дважды. Беда общая тогда, когда отказы идут не с одного
+        # адреса; порог gates.otkaz_min_yashchikov=1 возвращает прежнее.
+        с_отказами = sum(1 for н in счета.values() if н)
+        if всего >= порог_напр and с_отказами >= min_yashchikov(self.config):
             for m in соседи:
                 self._pauza(m, prichina_pauzy(всего, f"направление {напр}"))
 

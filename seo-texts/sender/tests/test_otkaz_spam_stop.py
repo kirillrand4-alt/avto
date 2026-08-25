@@ -191,3 +191,26 @@ def test_stroka_na_dashbord_kogda_yashchik_neizvesten():
     assert round(решение.value) == 23
     assert g.check_mailbox_otkaz("a@zernosort.ru").tripped is False
     assert any(t.scope == "почтовик" for t in g.active_trips())
+
+
+def test_odna_opalnaya_uchyotka_ne_gasit_sosedey():
+    """25.08.2026: пять отказов ОДНОГО ящика погасили шесть чужих здоровых.
+
+    Свой ящик обязан встать (порог 2), направление — нет: отказы с одного
+    адреса это беда учётки, а не общих доменов.
+    """
+    s = _отправитель()
+    for _ in range(5):
+        s._otkaz_spam(_Письмо(), "a@zernosort.ru", ОТКАЗ)
+    на_паузе = {п[0] for п in s.store.паузы if п[1]}
+    assert на_паузе == {"a@zernosort.ru"}, (
+        "соседи по направлению не виноваты в чужих отказах")
+
+
+def test_porog_odin_yashchik_vozvrashchaet_prezhnee_povedenie():
+    """gates.otkaz_min_yashchikov=1 — рубеж работает как до правки."""
+    s = _отправитель({"gates.otkaz_min_yashchikov": 1})
+    for _ in range(5):
+        s._otkaz_spam(_Письмо(), "a@zernosort.ru", ОТКАЗ)
+    на_паузе = {п[0] for п in s.store.паузы if п[1]}
+    assert {"a@zernosort.ru", "b@optic-sort.ru", "c@sort-systems.ru"} <= на_паузе

@@ -35,6 +35,9 @@ from typing import Optional
 
 ПОРОГ_ЯЩИКА = 2
 ПОРОГ_НАПРАВЛЕНИЯ = 5
+# Сколько РАЗНЫХ ящиков направления должны словить отказ, чтобы душить пул.
+# Одна опальная учётка — её собственная беда, а не беда общих доменов.
+МИН_ЯЩИКОВ = 2
 
 # Узкий разбор. «550 No such user» сюда не попадает намеренно: это мёртвый
 # адрес, чужая история. Ловим то, где почтовик прямо говорит про спам.
@@ -62,22 +65,40 @@ def eto_otkaz_spam(oshibka: object) -> bool:
     return bool(_СПАМ.search(т))
 
 
+def _iz_config(config, ключ: str, по_умолчанию: int) -> int:
+    """Целое из конфига, не роняясь ни на отсутствии ключа, ни на мусоре."""
+    try:
+        з = config.get(ключ, None)
+    except Exception:                                              # noqa: BLE001
+        return по_умолчанию
+    if з is None or str(з).strip() == "":
+        return по_умолчанию
+    try:
+        return max(0, int(з))
+    except (TypeError, ValueError):
+        return по_умолчанию
+
+
 def porogi(config) -> tuple[int, int]:
     """(порог по ящику, порог по направлению) из конфига; 0 — рубеж выключен."""
-    def _взять(ключ: str, по_умолчанию: int) -> int:
-        try:
-            з = config.get(ключ, None)
-        except Exception:                                          # noqa: BLE001
-            return по_умолчанию
-        if з is None or str(з).strip() == "":
-            return по_умолчанию
-        try:
-            return max(0, int(з))
-        except (TypeError, ValueError):
-            return по_умолчанию
+    return (_iz_config(config, "gates.otkaz_stop_yashchik", ПОРОГ_ЯЩИКА),
+            _iz_config(config, "gates.otkaz_stop_napravlenie", ПОРОГ_НАПРАВЛЕНИЯ))
 
-    return (_взять("gates.otkaz_stop_yashchik", ПОРОГ_ЯЩИКА),
-            _взять("gates.otkaz_stop_napravlenie", ПОРОГ_НАПРАВЛЕНИЯ))
+
+def min_yashchikov(config) -> int:
+    """Сколько разных ящиков направления должны словить отказ для общей паузы.
+
+    СЛУЧАЙ 25.08.2026. Пять отказов ОДНОГО a.kozlov@zernosort.ru погасили
+    шесть чужих мейеровских ящиков, у которых отказов не было ни одного:
+    счёт направления складывал всё подряд, и одной опальной учётки хватало,
+    чтобы остановить направление на сутки. Свой ящик к тому мигу уже стоял
+    по собственному порогу — то есть вина была зачтена дважды.
+
+    Рубеж направления заведён про ОБЩИЕ ДОМЕНЫ («придушивают их вместе»), а
+    общая беда видна тем, что отказы идут не с одного адреса. Порог 1 —
+    прежнее поведение.
+    """
+    return _iz_config(config, "gates.otkaz_min_yashchikov", МИН_ЯЩИКОВ)
 
 
 def prichina_pauzy(skolko: int, oblast: str) -> str:
