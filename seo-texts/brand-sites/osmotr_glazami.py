@@ -60,16 +60,40 @@ VOPROS = """Ты смотришь на страницу перед публик�
 
 
 def kadry(put, br, shirina=1280, vysota=900):
-    """Три экрана: верх, середина, низ."""
+    """Три экрана, наведённые НА БЛОКИ, а не на доли высоты.
+
+    СНАЧАЛА КАДРЫ БРАЛИСЬ НА 0, 45 И 92 ПРОЦЕНТАХ ВЫСОТЫ, И ЭТО БЫЛО
+    ОШИБКОЙ. Экран в 900 пикселей на странице в семь тысяч - это
+    двенадцать процентов, а плашки призыва стоят где придётся: на
+    ac--porshnevye они на 25, 57 и 83 процентах, и ни одна в кадр
+    не попала. Осмотр честно писал «плашка призыва отсутствует на всех
+    трёх снимках» и ставил четвёрку - шести страницам подряд.
+
+    То есть я наказывал страницы за то, что сам их не показал.
+
+    Теперь кадр наводится на то, о чём спрашивают: первый призыв,
+    первая таблица, последний призыв. Если чего-то нет - берём долю
+    высоты как раньше, но тогда «не вижу» будет правдой."""
     st = br.new_page(viewport={'width': shirina, 'height': vysota})
     out = []
     try:
         st.goto('file://' + os.path.abspath(put), wait_until='load', timeout=45000)
         st.wait_for_timeout(400)
+        celi = ['p.cta', '.tablica-prokrutka', 'p.cta:last-of-type']
+        zapas = [0, .45, .92]
         vsego = st.evaluate('() => document.body.scrollHeight')
-        for doly in (0, .45, .92):
-            st.evaluate(f'() => window.scrollTo(0, {int(vsego * doly)})')
-            st.wait_for_timeout(200)
+        for i, sel in enumerate(celi):
+            nashli = st.evaluate(f"""() => {{
+                const e = document.querySelectorAll({sel!r});
+                if (!e.length) return false;
+                const c = e[{'e.length - 1' if i == 2 else '0'}];
+                const y = c.getBoundingClientRect().top + window.scrollY;
+                window.scrollTo(0, Math.max(0, y - 170));
+                return true;
+            }}""")
+            if not nashli:
+                st.evaluate(f'() => window.scrollTo(0, {int(vsego * zapas[i])})')
+            st.wait_for_timeout(220)
             out.append(st.screenshot())
     finally:
         st.close()
