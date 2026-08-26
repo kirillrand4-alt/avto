@@ -946,13 +946,44 @@ class ImapWatcher:
         except Exception:  # noqa: BLE001 - нет модуля/конфига: ведём как прежде
             return False
 
+    # Ящики служб жалоб: письмо от них — жалоба независимо от текста.
+    _ЯЩИКИ_ЖАЛОБ = frozenset({"abuse", "fbl", "complaints", "feedback",
+                              "abuse-report", "spam-report"})
+
     def _is_complaint(self, msg: EmailMessage, subject: str, body: str) -> bool:
-        content_type = msg.get_content_type()
-        if content_type == "message/feedback-report":
+        """Жалоба на спам — это ОТЧЁТ (ARF), а не слово «спам» в тексте.
+
+        Раньше здесь стоял поиск подстрок abuse|spam|complaint|feedback-type
+        по теме и телу, и этого хватало, чтобы похоронить живую компанию:
+        26.08 ПАО «Лукойл» написало «данный вопрос не относится к
+        компетенции службы технической поддержки» и перечислило ТРИ других
+        своих адреса, а в тексте их корпоративного баннера нашлось слово
+        «спам». Письмо ушло в жалобы, adress автоматом лёг в стоп-лист
+        (imap.auto_suppress_on_complaint), карточка лида не завелась - и
+        компании с выручкой в триллионы мы больше не пишем никогда.
+
+        Признаём жалобой только машинные признаки: формат ARF, заголовок
+        отчёта или письмо со служебного ящика жалоб. Человек, написавший
+        слово «спам», жалобы не подавал.
+        """
+        if msg.get_content_type() == "message/feedback-report":
             return True
-        complaint_markers = ["abuse", "spam", "complaint", "feedback-type"]
-        text = (subject + " " + body).lower()
-        return any(marker in text for marker in complaint_markers)
+        try:
+            for часть in msg.walk():
+                if часть.get_content_type() == "message/feedback-report":
+                    return True
+        except Exception:  # noqa: BLE001 - кривой MIME не должен ронять приём
+            pass
+        if msg.get("Feedback-Type") or msg.get("X-Abuse-Report"):
+            return True
+        петля = str(msg.get("X-Loop", "") or "").strip().lower()
+        if петля.startswith("abuse"):
+            return True
+        отправитель = self._extract_email(msg.get("From", "") or "")
+        if отправитель.split("@", 1)[0] in self._ЯЩИКИ_ЖАЛОБ:
+            return True
+        # Машинная часть ARF, приехавшая текстом.
+        return "feedback-type:" in (body or "").lower()
 
     def _is_reply(self, msg: EmailMessage, in_reply_to: str, references: str) -> bool:
         return bool(in_reply_to or references)

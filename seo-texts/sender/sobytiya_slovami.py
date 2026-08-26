@@ -44,7 +44,16 @@ _ОТБИВКИ = (
     (r"no such user|invalid mailbox|user unknown|unknown user|"
      r"адресат не найден|5\.1\.1", "такого ящика нет"),
     (r"mailbox full|quota exceeded|over quota|переполн", "ящик переполнен"),
-    (r"spam|5\.7\.1|blacklist|blocked", "получатель принял за спам"),
+    # 5.7.1 и «blocked» — это ПОЛИТИКА сервера получателя, а не нажатая
+    # кнопка «Спам»: корпоративный периметр (relay00.akkermann.ru,
+    # hcoatings.ru) режет внешнюю почту на подходе. Прежняя формулировка
+    # «получатель принял за спам» читалась как поступок человека и пугала
+    # зря. Настоящий спам-вердикт почтовика оставляем отдельной строкой.
+    (r"blacklist|listed in|dnsbl|spamhaus|spam-?score|"
+     r"признан\w* спамом|classified as spam",
+     "почтовик счёл письмо спамом"),
+    (r"5\.7\.1|blocked|security reason|policy rejection",
+     "сервер получателя отклонил по своим правилам"),
     (r"domain not found|unrouteable|no mx|5\.4\.4|host not found",
      "домен не принимает почту"),
     (r"greylist|4\.7\.1|try again later|4\.2\.0", "сервер просит повторить позже"),
