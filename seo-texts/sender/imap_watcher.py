@@ -1108,18 +1108,23 @@ class ImapWatcher:
         не трогает, поэтому отчёты о недоставке (а они plain) проходят
         как раньше, и разбор DSN этой правки не замечает.
         """
-        from sender.pismo_v_tekst import v_tekst
+        from sender.pismo_v_tekst import luchshee_telo, v_tekst
         if msg.is_multipart():
+            # ЧАСТИ БЕРЁМ ОБЕ И ВЫБИРАЕМ. Текстовая обычно лучше, но когда в
+            # письме ТАБЛИЦА, Outlook кладёт в plain её обломки: ячейки по
+            # строкам, разделитель - табуляция. 26.08 техзадание «СМК
+            # Альтернатива» так и читалось столбиком из слов «No»,
+            # «Описание», «Давление,», «МПа». В HTML структура цела.
+            plain = html = ""
             for part in msg.walk():
-                if part.get_content_type() == "text/plain":
-                    txt = self._decode_part(part)
-                    if txt:
-                        return txt
-            for part in msg.walk():
-                if part.get_content_type() == "text/html":
-                    txt = v_tekst(self._decode_part(part))
-                    if txt:
-                        return txt
+                тип = part.get_content_type()
+                if тип == "text/plain" and not plain:
+                    plain = self._decode_part(part)
+                elif тип == "text/html" and not html:
+                    html = self._decode_part(part)
+            тело = luchshee_telo(plain, html)
+            if тело:
+                return тело
         else:
             return v_tekst(self._decode_part(msg))
         return ""

@@ -284,23 +284,25 @@ class MailBrowser:
         «&lt;адрес&gt;») оставались как есть, переносы строк пропадали, а
         содержимое <style> вываливалось в текст письма.
         """
-        from sender.pismo_v_tekst import v_tekst
+        from sender.pismo_v_tekst import luchshee_telo, v_tekst
         head = self._parse_headers(uid, m, seen=True)
         body = ""
         if m.is_multipart():
+            # Обе части, и выбор между ними: таблица в plain у Outlook
+            # рассыпается на отдельные слова, в HTML она цела.
+            plain = html = ""
             for part in m.walk():
-                if part.get_content_type() == "text/plain" and \
-                        "attachment" not in str(part.get("Content-Disposition", "")):
-                    body = part.get_payload(decode=True).decode(
+                тип = part.get_content_type()
+                вложение = "attachment" in str(part.get("Content-Disposition", ""))
+                if вложение:
+                    continue
+                if тип == "text/plain" and not plain:
+                    plain = part.get_payload(decode=True).decode(
                         part.get_content_charset() or "utf-8", "replace")
-                    break
-            if not body:
-                for part in m.walk():
-                    if part.get_content_type() == "text/html":
-                        html = part.get_payload(decode=True).decode(
-                            part.get_content_charset() or "utf-8", "replace")
-                        body = v_tekst(html)
-                        break
+                elif тип == "text/html" and not html:
+                    html = part.get_payload(decode=True).decode(
+                        part.get_content_charset() or "utf-8", "replace")
+            body = luchshee_telo(plain, html)
         else:
             # Письмо из одной части бывает и HTML-ом — тогда раньше сюда
             # приезжал сырой исходник: ветка снятия тегов до неё не доходила.

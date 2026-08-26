@@ -1,0 +1,42 @@
+# -*- coding: utf-8 -*-
+"""mailbrowser: разбор тела письма с выбором части. Правка по факту сервера.
+
+Серверная копия старее нашей ветки: там HTML чистится грубым
+re.sub("<[^>]+>"), а не общим разборщиком, и текстовая часть берётся всегда.
+Ставим обе правки разом: и разбор, и выбор части (таблица цела в HTML).
+
+Катить: --katit
+"""
+import base64
+import io
+import json
+import os
+import py_compile
+import sys
+import time
+
+Д = json.loads(base64.b64decode("eyJzdGFyb2UiOiAiICAgICAgICBoZWFkID0gc2VsZi5fcGFyc2VfaGVhZGVycyh1aWQsIG0sIHNlZW49VHJ1ZSlcbiAgICAgICAgYm9keSA9IFwiXCJcbiAgICAgICAgaWYgbS5pc19tdWx0aXBhcnQoKTpcbiAgICAgICAgICAgIGZvciBwYXJ0IGluIG0ud2FsaygpOlxuICAgICAgICAgICAgICAgIGlmIHBhcnQuZ2V0X2NvbnRlbnRfdHlwZSgpID09IFwidGV4dC9wbGFpblwiIGFuZCBcXFxuICAgICAgICAgICAgICAgICAgICAgICAgXCJhdHRhY2htZW50XCIgbm90IGluIHN0cihwYXJ0LmdldChcIkNvbnRlbnQtRGlzcG9zaXRpb25cIiwgXCJcIikpOlxuICAgICAgICAgICAgICAgICAgICBib2R5ID0gcGFydC5nZXRfcGF5bG9hZChkZWNvZGU9VHJ1ZSkuZGVjb2RlKFxuICAgICAgICAgICAgICAgICAgICAgICAgcGFydC5nZXRfY29udGVudF9jaGFyc2V0KCkgb3IgXCJ1dGYtOFwiLCBcInJlcGxhY2VcIilcbiAgICAgICAgICAgICAgICAgICAgYnJlYWtcbiAgICAgICAgICAgIGlmIG5vdCBib2R5OlxuICAgICAgICAgICAgICAgIGZvciBwYXJ0IGluIG0ud2FsaygpOlxuICAgICAgICAgICAgICAgICAgICBpZiBwYXJ0LmdldF9jb250ZW50X3R5cGUoKSA9PSBcInRleHQvaHRtbFwiOlxuICAgICAgICAgICAgICAgICAgICAgICAgaHRtbCA9IHBhcnQuZ2V0X3BheWxvYWQoZGVjb2RlPVRydWUpLmRlY29kZShcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBwYXJ0LmdldF9jb250ZW50X2NoYXJzZXQoKSBvciBcInV0Zi04XCIsIFwicmVwbGFjZVwiKVxuICAgICAgICAgICAgICAgICAgICAgICAgYm9keSA9IHJlLnN1YihyXCI8W14+XSs+XCIsIFwiIFwiLCBodG1sKVxuICAgICAgICAgICAgICAgICAgICAgICAgYnJlYWtcbiAgICAgICAgZWxzZTpcbiAgICAgICAgICAgIGJvZHkgPSAobS5nZXRfcGF5bG9hZChkZWNvZGU9VHJ1ZSkgb3IgYlwiXCIpLmRlY29kZShcbiAgICAgICAgICAgICAgICBtLmdldF9jb250ZW50X2NoYXJzZXQoKSBvciBcInV0Zi04XCIsIFwicmVwbGFjZVwiKVxuIiwgIm5vdm9lIjogIiAgICAgICAgZnJvbSBzZW5kZXIucGlzbW9fdl90ZWtzdCBpbXBvcnQgbHVjaHNoZWVfdGVsbywgdl90ZWtzdFxuICAgICAgICBoZWFkID0gc2VsZi5fcGFyc2VfaGVhZGVycyh1aWQsIG0sIHNlZW49VHJ1ZSlcbiAgICAgICAgYm9keSA9IFwiXCJcbiAgICAgICAgaWYgbS5pc19tdWx0aXBhcnQoKTpcbiAgICAgICAgICAgICMg0J7QsdC1INGH0LDRgdGC0LgsINC4INCy0YvQsdC+0YAg0LzQtdC20LTRgyDQvdC40LzQuDog0YLQsNCx0LvQuNGG0LAg0LIgcGxhaW4g0YMgT3V0bG9va1xuICAgICAgICAgICAgIyDRgNCw0YHRgdGL0L/QsNC10YLRgdGPINC90LAg0L7RgtC00LXQu9GM0L3Ri9C1INGB0LvQvtCy0LAsINCyIEhUTUwg0L7QvdCwINGG0LXQu9CwLlxuICAgICAgICAgICAgcGxhaW4gPSBodG1sID0gXCJcIlxuICAgICAgICAgICAgZm9yIHBhcnQgaW4gbS53YWxrKCk6XG4gICAgICAgICAgICAgICAg0YLQuNC/ID0gcGFydC5nZXRfY29udGVudF90eXBlKClcbiAgICAgICAgICAgICAgICDQstC70L7QttC10L3QuNC1ID0gXCJhdHRhY2htZW50XCIgaW4gc3RyKHBhcnQuZ2V0KFwiQ29udGVudC1EaXNwb3NpdGlvblwiLCBcIlwiKSlcbiAgICAgICAgICAgICAgICBpZiDQstC70L7QttC10L3QuNC1OlxuICAgICAgICAgICAgICAgICAgICBjb250aW51ZVxuICAgICAgICAgICAgICAgIGlmINGC0LjQvyA9PSBcInRleHQvcGxhaW5cIiBhbmQgbm90IHBsYWluOlxuICAgICAgICAgICAgICAgICAgICBwbGFpbiA9IHBhcnQuZ2V0X3BheWxvYWQoZGVjb2RlPVRydWUpLmRlY29kZShcbiAgICAgICAgICAgICAgICAgICAgICAgIHBhcnQuZ2V0X2NvbnRlbnRfY2hhcnNldCgpIG9yIFwidXRmLThcIiwgXCJyZXBsYWNlXCIpXG4gICAgICAgICAgICAgICAgZWxpZiDRgtC40L8gPT0gXCJ0ZXh0L2h0bWxcIiBhbmQgbm90IGh0bWw6XG4gICAgICAgICAgICAgICAgICAgIGh0bWwgPSBwYXJ0LmdldF9wYXlsb2FkKGRlY29kZT1UcnVlKS5kZWNvZGUoXG4gICAgICAgICAgICAgICAgICAgICAgICBwYXJ0LmdldF9jb250ZW50X2NoYXJzZXQoKSBvciBcInV0Zi04XCIsIFwicmVwbGFjZVwiKVxuICAgICAgICAgICAgYm9keSA9IGx1Y2hzaGVlX3RlbG8ocGxhaW4sIGh0bWwpXG4gICAgICAgIGVsc2U6XG4gICAgICAgICAgICAjINCf0LjRgdGM0LzQviDQuNC3INC+0LTQvdC+0Lkg0YfQsNGB0YLQuCDQsdGL0LLQsNC10YIg0LggSFRNTC3QvtC8LlxuICAgICAgICAgICAgYm9keSA9IHZfdGVrc3QoKG0uZ2V0X3BheWxvYWQoZGVjb2RlPVRydWUpIG9yIGJcIlwiKS5kZWNvZGUoXG4gICAgICAgICAgICAgICAgbS5nZXRfY29udGVudF9jaGFyc2V0KCkgb3IgXCJ1dGYtOFwiLCBcInJlcGxhY2VcIikpXG4ifQ==").decode("utf-8"))
+КАТИТЬ = "--katit" in sys.argv
+Ф = r"C:\sender\sender\mailbrowser.py"
+
+т = io.open(Ф, encoding="utf-8").read()
+if "luchshee_telo" in т:
+    print("правка уже стоит")
+    raise SystemExit(0)
+n = т.count(Д["staroe"])
+print("якорь найден раз: %d" % n)
+if n != 1:
+    raise SystemExit("якорь должен быть ровно один")
+новый = т.replace(Д["staroe"], Д["novoe"])
+print("было %d знаков, станет %d" % (len(т), len(новый)))
+if not КАТИТЬ:
+    print("\nсухой прогон. Катить: --katit")
+    raise SystemExit(0)
+копия = "%s.bak-%d" % (Ф, int(time.time()))
+io.open(копия, "w", encoding="utf-8", newline="").write(т)
+with io.open(Ф, "w", encoding="utf-8", newline="") as f:
+    f.write(новый)
+    f.flush()
+    os.fsync(f.fileno())
+py_compile.compile(Ф, doraise=True)
+print("поставлен (.bak %s)" % os.path.basename(копия))
