@@ -25,6 +25,7 @@ from __future__ import annotations
 import logging
 import os
 import sqlite3
+import time
 from datetime import datetime, timezone
 from typing import Iterable, Optional
 
@@ -90,6 +91,16 @@ def записать(enrich_db: Optional[str], вердикты: Iterable[dict])
         logger.exception("probe_enrich: не открылась база обогащения")
         return итог
     try:
+        # ЖДЁМ ЗАМОК, А НЕ ПАДАЕМ. В enrich.db одновременно пишет обогащение
+        # (свой воркер держит запись пачками), и приём вердиктов приходился
+        # ровно на его окно. 26.08 разбор показал цену: 5024 приговора
+        # «мёртв» так и не доехали до обогащения, потому что ПЕРВЫЙ же
+        # UPDATE получил «database is locked», внешний except проглотил
+        # ошибку — и вся пачка молча вернулась нулями.
+        con.execute("PRAGMA busy_timeout=60000")
+    except sqlite3.Error:                     # noqa: BLE001 - не критично
+        pass
+    try:
         _подготовить(con)
         for з in строки:
             адрес = str(з.get("email") or "").strip().lower()
@@ -97,14 +108,27 @@ def записать(enrich_db: Optional[str], вердикты: Iterable[dict])
             if not адрес or not вердикт:
                 итог["пропущено"] += 1
                 continue
-            cur = con.execute(
-                "UPDATE emails SET probe_verdict=?, probe_ts=?, probe_answer=? "
-                "WHERE lower(email)=?",
-                (вердикт, сейчас, str(з.get("answer") or "")[:200], адрес))
-            if cur.rowcount:
-                итог["обновлено"] += cur.rowcount
-                if вердикт in СМЕРТЕЛЬНЫЕ:
-                    итог["смертельных"] += cur.rowcount
+            # ОДНА СТРОКА НЕ ХОРОНИТ ПАЧКУ. Замок отпускают через секунды,
+            # поэтому повторяем, а на упорный сбой считаем строку и идём
+            # дальше: вердикты остальных важнее.
+            for попытка in range(3):
+                try:
+                    cur = con.execute(
+                        "UPDATE emails SET probe_verdict=?, probe_ts=?, "
+                        "probe_answer=? WHERE lower(email)=?",
+                        (вердикт, сейчас,
+                         str(з.get("answer") or "")[:200], адрес))
+                except sqlite3.Error:
+                    if попытка == 2:
+                        итог["не_легло"] = итог.get("не_легло", 0) + 1
+                        break
+                    time.sleep(1.5 * (попытка + 1))
+                    continue
+                if cur.rowcount:
+                    итог["обновлено"] += cur.rowcount
+                    if вердикт in СМЕРТЕЛЬНЫЕ:
+                        итог["смертельных"] += cur.rowcount
+                break
         con.commit()
     except sqlite3.Error:
         logger.exception("probe_enrich: вердикты не записались")

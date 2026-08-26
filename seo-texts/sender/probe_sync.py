@@ -258,10 +258,17 @@ class ProbeSync:
         перепроверка доменов обнулялась бы через десять минут — 155 адресов,
         потерявших подтверждение, тихо получали бы зелёную галку обратно.
         """
+        # ПОД ЗАМКОМ STORE. Соединение у панели одно на весь процесс, а
+        # потоков много: HTTP, авто-отправка, этот цикл. Чтение в обход
+        # store._lock оставляло на общем соединении незакрытый запрос, и
+        # соседний BEGIN IMMEDIATE падал с «another row available» — так
+        # 26.08 приговоры «нет ящика» не легли в стоп-лист.
         try:
-            con = self.store._conn  # noqa: SLF001 - та же живая база
-            return {str(д).strip().lower() for (д,) in con.execute(
-                "SELECT domain FROM catchall_domains WHERE itog='принимает всё'")}
+            with self.store._lock:  # noqa: SLF001 - тот же замок, что у записи
+                con = self.store._conn  # noqa: SLF001 - та же живая база
+                return {str(д).strip().lower() for (д,) in con.execute(
+                    "SELECT domain FROM catchall_domains "
+                    "WHERE itog='принимает всё'").fetchall()}
         except Exception:  # noqa: BLE001 - таблицы ещё нет, это не беда
             return set()
 
@@ -373,12 +380,22 @@ class ProbeSync:
                     снято += 1
             if вердикт == НЕЯСНО:
                 continue
-            try:
-                self.store.suppression_add(SuppressionIn(
-                    scope="email", value=адрес, reason="bounce_hard",
-                    source="probe-worker"))
-            except Exception:  # noqa: BLE001
-                logger.exception("probe_sync: адрес не лёг в стоп-лист")
+            # СТОП-ЛИСТ С ПОВТОРОМ. Мёртвый адрес обязан выпадать из
+            # работы один раз и навсегда, поэтому разовый сбой записи
+            # (замок соседнего потока) не повод его забыть. Три попытки, и
+            # только потом жалоба в лог.
+            for попытка in range(3):
+                try:
+                    self.store.suppression_add(SuppressionIn(
+                        scope="email", value=адрес, reason="bounce_hard",
+                        source="probe-worker"))
+                    break
+                except Exception:  # noqa: BLE001
+                    if попытка == 2:
+                        logger.exception(
+                            "probe_sync: адрес не лёг в стоп-лист: %s", адрес)
+                    else:
+                        time.sleep(0.5 * (попытка + 1))
         # Вердикт доносим до базы обогащения: там его читает отбор кандидатов,
         # и мёртвый адрес перестаёт всплывать в новых партиях (владелец 12.08 —
         # «а почты убираются в принципе из всех баз?»). Сбой записи не должен
