@@ -91,6 +91,9 @@ if not ДЕЛАТЬ or not новых:
     print("\nвхолостую или нечего заводить. Завести — primenit")
     raise SystemExit(0)
 
+from datetime import datetime, timezone                       # noqa: E402
+from types import SimpleNamespace                             # noqa: E402
+
 from sender.leaddesk import LeadDesk                          # noqa: E402
 from sender.store import Store                                # noqa: E402
 
@@ -107,6 +110,29 @@ for яид, папка, пис, r, _е in новых:
     рек = store.get_recipient(int(r["id"]))
     if рек is None:
         continue
+    # СОБЫТИЕ, А НЕ ТОЛЬКО ЛИД. История переписки на карточке письма
+    # строится из events (dialog_thread), и лид её не наполняет: 26.08
+    # ответ «ВЗНО» лёг лидом, а карточка письма показывала «ответов нет».
+    когда = пис.get("date_iso") or datetime.now(timezone.utc).isoformat()
+    try:
+        store.append_event(SimpleNamespace(
+            dedup_key="spam:%s" % (пис.get("message_id")
+                                   or "%s:%s" % (яид, пис.get("uid"))),
+            event_type="reply",
+            event_ts=(datetime.fromisoformat(когда)
+                      if isinstance(когда, str) else когда),
+            message_id=None,
+            recipient_id=int(r["id"]),
+            campaign_id=None,
+            mailbox_id=яид,
+            provider=None,
+            detail={"snippet": тело[:2000],
+                    "from": str(пис.get("from_addr") or ""),
+                    "subject": str(пис.get("subject") or ""),
+                    "papka": папка,
+                    "istochnik": "сверка спама"}))
+    except Exception as ex:                                   # noqa: BLE001
+        print("   событие не легло: %s" % str(ex)[:80])
     if десk.push_warm_lead(рек, пис.get("message_id") or "",
                            "[reply] " + тело[:3000],
                            otvetil=str(пис.get("from_addr") or "")):
