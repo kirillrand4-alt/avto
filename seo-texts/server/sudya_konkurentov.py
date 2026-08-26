@@ -196,9 +196,12 @@ def primenit():
     инны = [з['инн'] for з in вернуть]
     s = sqlite3.connect(SND, timeout=90)
     s.execute('PRAGMA busy_timeout=90000')
-    s.execute("DELETE FROM suppression WHERE scope='inn' "
-              "AND reason LIKE 'конкурент по паспорту%' AND value IN (%s)"
-              % ','.join('?' * len(инны)), tuple(инны))
+    # Знак процента в LIKE и %-подстановка списка ИНН в одной строке не уживаются:
+    # питон принимает «%' AND» за спецификатор формата и падает. Поэтому образец
+    # причины уходит параметром, а форматируется только плейсхолдерный хвост.
+    s.execute('DELETE FROM suppression WHERE scope=? AND reason LIKE ? '
+              'AND value IN (%s)' % ','.join('?' * len(инны)),
+              ('inn', 'конкурент по паспорту%') + tuple(инны))
     s.commit()
     d['снято_из_стоп-листа'] = s.total_changes
     s.close()
