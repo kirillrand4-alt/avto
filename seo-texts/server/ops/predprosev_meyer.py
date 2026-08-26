@@ -1,0 +1,280 @@
+# -*- coding: utf-8 -*-
+"""Предпросев мейеровского пула: снять непищевых ДО генерации письма.
+
+ЗАЧЕМ. Замер 25.08 на живом прогоне: после починки сбоя «нет JSON» самая
+большая доля брака — уже не поломка, а «не наш покупатель». 13 писем из 35
+браков сняты инженерной линзой: электротехника, электронное оборудование
+для АЗС, краски и грунты. Цепочка направлений приписывает их Meyer,
+платный гейт адресата пропускает, а линза, читающая живой текст сайта,
+справедливо снимает — но письмо уже написано и оплачено ($0.4-0.5 штука).
+
+Спрашиваем ТЕМИ ЖЕ глазами и по тем же правилам, что инженерная линза
+(ai_letter._TEH_LENS_SKEPTIK_MEYER), только про КОМПАНИЮ, а не про письмо,
+и ДО генерации. Один вопрос на шестерых стоит доли цента против доллара
+за выброшенное письмо.
+
+КУДА ПИШЕМ ВЕРДИКТ. Не в target_verdicts гейта: он направления не знает, и
+«не покупатель» там закрыл бы компанию и для компрессорного направления —
+а электротехническому заводу компрессор как раз нужен. Пишем в extra
+получателя:
+  * «кц»     → extra.ai_division='kc' — цепочка направлений читает это поле
+               первым (target_division, приоритет explicit), и мейеровский
+               прогон отсеет компанию сам, бесплатно;
+  * «никуда» → extra.ne_nash_ni_odnomu='причина' — их пропускает partiya_gen;
+  * «мейер» и «неясно» → не трогаем, пусть идут как шли.
+
+Журнал durable: каждая партия сразу строкой в jsonl с fsync, прогон
+резюмируемый.
+
+    python predprosev_meyer.py                  # вхолостую, покажет раскладку
+    python predprosev_meyer.py primenit         # проставить вердикты
+    python predprosev_meyer.py potolok=100      # ограничить пробным куском
+"""
+import io
+import json
+import os
+import re
+import sys
+import threading
+import time
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+
+sys.path.insert(0, r"C:\sender\sender")
+sys.path.insert(0, r"C:\sender")
+
+from sender.ai_letter import target_division            # noqa: E402
+from sender.ai_quota import build_ai_quota              # noqa: E402
+from sender.config import Config                        # noqa: E402
+from sender.review_lenses import default_caller         # noqa: E402
+from sender.store import Store                          # noqa: E402
+
+_ИМЕН = {}
+for _а in list(sys.argv[1:]):
+    if "=" in _а:
+        _к, _з = _а.split("=", 1)
+        _ИМЕН[_к.strip()] = _з.strip()
+        sys.argv.remove(_а)
+
+ДЕЛАТЬ = "primenit" in sys.argv[1:]
+ПОТОЛОК = int(_ИМЕН.get("potolok") or 0)
+МОДЕЛЬ = _ИМЕН.get("model") or "claude-sonnet-4-6"
+ПАЧКА = int(_ИМЕН.get("pachka") or 6)
+ПОТОКОВ = int(_ИМЕН.get("potokov") or 6)
+ЖУРНАЛ = r"C:\sender\_ops\predprosev-meyer.jsonl"
+
+ГОЛОВА = """Ты инженер-технолог переработки, отбираешь компании для поставщика
+ДВУХ станков:
+  * фотосепаратор - оптическая сортировка СЫПУЧЕГО потока до фасовки (видит
+    цвет, форму, поверхностный дефект);
+  * рентген-инспекция - поиск плотных посторонних включений (металл, стекло,
+    камень, кость) в самом продукте, чаще уже в упаковке.
+
+ПОКУПАТЕЛЬ - тот, кто САМ перерабатывает, сортирует или фасует продукт:
+зерно, крупы, мука, семена, орехи, сухофрукты, кофе, чай, специи, кондитерка,
+снеки, мясо, рыба, молоко, овощи, детское питание; а также сортировка
+вторсырья, пластика, стекла и минерального сырья.
+
+НЕ ПОКУПАТЕЛЬ: торговля, дистрибуция, импорт, оптовые базы, логистика,
+аренда, проектирование, экспертиза, оценка; производство ТАРЫ и УПАКОВКИ
+(они делают упаковку, а не фасуют продукт); производители оборудования;
+непищевая химия, краски, металлообработка, электроника, электротехника,
+стройматериалы, мебель.
+
+ВАЖНО ПРО ПРОФИЛЬ: ОКВЭД - классификатор для налоговой, а не список того,
+что предприятие делает. Если сайт говорит одно, а код другое - верь сайту.
+«Склад» по коду часто оказывается агрохолдингом с убойным цехом и
+сортировочным центром.
+
+ВТОРОЕ НАПРАВЛЕНИЕ. Если компания Meyer не подходит, но у неё есть СВОЁ
+производство (цех, станки, покраска, сварка, литьё, сборка, стройплощадка) -
+ей может пригодиться компрессорное оборудование: ответь «кц». «Никуда» -
+только когда производства нет вовсе: чистая торговля, услуги, аренда,
+экспертиза, госорган.
+
+Отвечай по каждой компании коротко и честно. Не знаешь - «неясно»."""
+
+ХВОСТ = ('\nОТВЕТ - СТРОГО JSON без текста вокруг:\n'
+         '{"verdicts":[{"idx":N,"verdict":"мейер|кц|никуда|неясно",'
+         '"pochemu":"одной фразой, чем компания занимается на самом деле"}]}')
+
+cfg = Config.load(r"C:\sender\sender.yaml")
+store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
+q = build_ai_quota(store, cfg)
+
+# --- кто уже осуждён (резюм) ---------------------------------------------- #
+осуждено = {}
+if os.path.exists(ЖУРНАЛ):
+    for с in io.open(ЖУРНАЛ, encoding="utf-8", errors="replace"):
+        try:
+            з = json.loads(с)
+        except Exception:                                     # noqa: BLE001
+            continue
+        if з.get("инн"):
+            осуждено[str(з["инн"])] = з
+print("в журнале уже осуждено: %d" % len(осуждено))
+
+# --- пул: все, кому цепочка сейчас назначает meyer ------------------------- #
+группы = store.recipient_groups().get("по_id") or {}
+счёт = Counter()
+кандидаты = []
+видели = set()
+for rid in sorted(группы):
+    rec = store.get_recipient(rid)
+    if not rec:
+        счёт["нет карточки"] += 1
+        continue
+    инн = "".join(c for c in str(getattr(rec, "inn", "") or "") if c.isdigit())
+    if not инн or инн in видели:
+        счёт["без ИНН или дубль"] += 1
+        continue
+    видели.add(инн)
+    try:
+        req = q._request(rec)
+    except Exception:                                         # noqa: BLE001
+        счёт["запрос не собрался"] += 1
+        continue
+    d = str(req.get("target_division") or "")
+    if d not in ("kc", "meyer"):
+        d, _ = target_division(req, default="kc")
+    if d != "meyer":
+        счёт["не meyer"] += 1
+        continue
+    if инн in осуждено:
+        счёт["уже осуждён"] += 1
+        continue
+    паспорт = ""
+    try:
+        паспорт = q._pasport_dlya_geyta(инн) or ""
+    except Exception:                                         # noqa: BLE001
+        паспорт = ""
+    текст = str((req.get("extra") or {}).get("site_text") or "")
+    кандидаты.append({
+        "rid": rid, "инн": инн,
+        "имя": str(getattr(rec, "company_name", "") or ""),
+        "оквэд": str(getattr(rec, "okved", "") or ""),
+        "занятие": str(req.get("activity") or ""),
+        "паспорт": паспорт[:700],
+        "сайт_текст": " ".join(текст.split())[:700]})
+print("кандидатов meyer к просеву: %d | отсев: %s"
+      % (len(кандидаты), dict(счёт)))
+if ПОТОЛОК:
+    кандидаты = кандидаты[:ПОТОЛОК]
+    print("ограничили потолком: %d" % len(кандидаты))
+if not кандидаты:
+    raise SystemExit(0)
+
+# --- просев ---------------------------------------------------------------- #
+ф = io.open(ЖУРНАЛ, "a", encoding="utf-8")
+замок = threading.Lock()
+итоги = {}
+свод = Counter()
+НАЧАЛО = time.time()
+
+
+def _блок(i, к):
+    ч = ["=== КОМПАНИЯ %d\nНазвание: %s" % (i, к["имя"])]
+    if к["занятие"]:
+        ч.append("Чем занимается (с сайта): %s" % к["занятие"])
+    if к["паспорт"]:
+        ч.append("ПАСПОРТ ИХ САЙТА (главнее ОКВЭДа): %s" % к["паспорт"])
+    if к["сайт_текст"]:
+        ч.append("Текст сайта: %s" % к["сайт_текст"])
+    ч.append("ОКВЭД: %s" % (к["оквэд"] or "нет"))
+    return "\n".join(ч)
+
+
+def партия(часть):
+    промпт = (ГОЛОВА + "\n\nКомпании:\n\n"
+              + "\n\n".join(_блок(i, к) for i, к in enumerate(часть)) + ХВОСТ)
+    try:
+        текст, _мета = default_caller(промпт, model=МОДЕЛЬ)
+    except Exception as ex:                                   # noqa: BLE001
+        with замок:
+            свод["сбой вызова"] += len(часть)
+            print("   сбой партии: %s" % repr(ex)[:110])
+        return
+    данные = None
+    for кусок in re.findall(r"\{.*\}", текст or "", re.S):
+        try:
+            данные = json.loads(кусок)
+            break
+        except Exception:                                     # noqa: BLE001
+            continue
+    if not isinstance(данные, dict):
+        with замок:
+            свод["ответ не разобрался"] += len(часть)
+        return
+    строки = []
+    for в in данные.get("verdicts", []):
+        try:
+            i = int(в.get("idx"))
+        except Exception:                                     # noqa: BLE001
+            continue
+        if not (0 <= i < len(часть)):
+            continue
+        к = часть[i]
+        вердикт = str(в.get("verdict") or "").strip().lower()
+        if вердикт not in ("мейер", "кц", "никуда", "неясно"):
+            вердикт = "неясно"
+        з = {"инн": к["инн"], "rid": к["rid"], "имя": к["имя"],
+             "вердикт": вердикт, "почему": str(в.get("pochemu") or "")[:200],
+             "когда": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        строки.append(з)
+    with замок:
+        for з in строки:
+            итоги[з["инн"]] = з
+            свод[з["вердикт"]] += 1
+            ф.write(json.dumps(з, ensure_ascii=False) + "\n")
+        ф.flush()
+        os.fsync(ф.fileno())
+        сделано = sum(свод[в] for в in ("мейер", "кц", "никуда", "неясно"))
+        if сделано % 60 < len(строки):
+            print("   %d/%d  %s  %.0f сек"
+                  % (сделано, len(кандидаты), dict(свод), time.time() - НАЧАЛО))
+
+
+части = [кандидаты[i:i + ПАЧКА] for i in range(0, len(кандидаты), ПАЧКА)]
+with ThreadPoolExecutor(max_workers=ПОТОКОВ) as пул:
+    list(пул.map(партия, части))
+ф.close()
+
+print("")
+print("=== раскладка просева ===")
+for в, n in свод.most_common():
+    print("   %-20s %d" % (в, n))
+print("")
+for в in ("кц", "никуда"):
+    примеры = [з for з in итоги.values() if з["вердикт"] == в][:6]
+    if примеры:
+        print("   ПРИМЕРЫ «%s»:" % в)
+        for з in примеры:
+            print("      %-38s %s" % (з["имя"][:38], з["почему"][:90]))
+
+if not ДЕЛАТЬ:
+    print("\nвхолостую. Проставить вердикты — primenit")
+    raise SystemExit(0)
+
+# --- применяем ------------------------------------------------------------- #
+переведено = снято = 0
+for з in итоги.values():
+    if з["вердикт"] not in ("кц", "никуда"):
+        continue
+    rec = store.get_recipient(int(з["rid"]))
+    if rec is None:
+        continue
+    extra = dict(getattr(rec, "extra", None) or {})
+    if з["вердикт"] == "кц":
+        extra["ai_division"] = "kc"
+        extra["ai_division_pochemu"] = "предпросев 25.08: " + з["почему"]
+        переведено += 1
+    else:
+        extra["ne_nash_ni_odnomu"] = "предпросев 25.08: " + з["почему"]
+        снято += 1
+    with store._lock:
+        store._conn.execute(
+            "UPDATE recipients SET extra_json=?, updated_at=? WHERE id=?",
+            (json.dumps(extra, ensure_ascii=False),
+             time.strftime("%Y-%m-%dT%H:%M:%S"), int(з["rid"])))
+        store._conn.commit()
+print("\nпереведено в кц: %d, снято совсем: %d" % (переведено, снято))
