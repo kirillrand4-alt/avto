@@ -54,6 +54,13 @@ FORMAT = 2
 # второй страхует от неудачного круга. Дальше платить за один и тот же сайт
 # бессмысленно — если два захода не нашли продукции, её там нет.
 PREDEL_PERERAZBOROV = int(os.environ.get('FAKTY_PERERAZBOROV', '2'))
+# Через сколько дней вернуться к компании, на которой мы сдались (popytok >= 3).
+# Три неудачи подряд НЕ означают «здесь ничего нет никогда»: сайт переезжает,
+# обход привозит разделы, которых в кэше не было, промпт меняется. Раньше
+# popytok>=3 стоял в списке ГОТОВЫХ наравне с собранным паспортом — то есть
+# провал записывался как выполненная работа и компания выбывала навсегда.
+# Теперь это не приговор, а остывание: через две недели даём ещё один заход.
+SDALIS_NA_DNEY = int(os.environ.get('FAKTY_SDALIS_DNEY', '14'))
 # Модель для НОВОСТЕЙ отдельная: замер 13.08 показал, что луна честна (все её
 # новости подтверждены дословно), но скупа — тратит 590 токенов на ответ против
 # 3131 у хайку и обрывает список. Хайку выдала 12 новостей, из них 11 полностью
@@ -952,11 +959,20 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
     # сами новые ключи, но модель вправе не вернуть пустой ключ — такая карточка
     # уходила бы в переразбор каждый круг, вечно и за деньги. Версию ставит наш
     # код в колонку format, она не зависит от того, что вернула модель.
+    # СДАЛИСЬ ≠ ГОТОВО. popytok>=3 стоял здесь наравне с собранным паспортом, и
+    # компания, у которой три захода подряд не дали карточки, выбывала из разбора
+    # НАВСЕГДА — провал записывался как выполненная работа. Это тот же класс
+    # ошибки, что «отдали = сделали» в мосту и «не записалось = добрано» в
+    # добore контактов. Теперь провал остывает: через SDALIS_NA_DNEY дней
+    # компания возвращается в очередь и получает ещё один заход.
+    ostylo = time.strftime('%Y-%m-%dT%H:%M:%S',
+                           time.localtime(time.time() - SDALIS_NA_DNEY * 86400))
     gotovye = {str(r[0]) for r in c.execute(
-        "select inn from site_facts where coalesce(popytok,0) >= 3 "
+        "select inn from site_facts where "
+        "(coalesce(popytok,0) >= 3 and coalesce(ts,'') > ?) "
         "or coalesce(otlozheno_do,0) > ? "
         "or (coalesce(facts_json,'')<>'' and coalesce(format,0) >= ?)",
-        (time.time(), FORMAT))}
+        (ostylo, time.time(), FORMAT))}
     svezhest = {str(r[0]): _vremya_pasporta(r[1]) for r in c.execute(
         "select inn, coalesce(ts,'') from site_facts where coalesce(facts_json,'')<>''")}
     istochnik = spisok if spisok is not None else (
@@ -1078,8 +1094,15 @@ def peresprosit(predel=100):
                                 "coalesce(cand_site,'') cand from companies "
                                 "where coalesce(verified,'') <> 'mismatch'")}
     spisok = []
+    # То же остывание, что и в sobrat(): сдавшиеся возвращаются через две недели,
+    # а не выбывают навсегда. Иначе добор пустых карточек не видел ровно тех, ради
+    # кого он и написан, — компании с тремя неудачными заходами.
+    ostylo = time.strftime('%Y-%m-%dT%H:%M:%S',
+                           time.localtime(time.time() - SDALIS_NA_DNEY * 86400))
     for r in c.execute("select inn, coalesce(site,'') site from site_facts "
-                       "where coalesce(facts_json,'')='' and coalesce(popytok,0) < 3"):
+                       "where coalesce(facts_json,'')='' "
+                       "and (coalesce(popytok,0) < 3 or coalesce(ts,'') <= ?)",
+                       (ostylo,)):
         inn = str(r['inn'])
         if not os.path.exists(os.path.join(KESH, inn + '.json.gz')):
             continue

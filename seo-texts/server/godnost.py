@@ -32,6 +32,7 @@ for _p in (DIR, os.path.dirname(DIR), r'C:\sender'):
         sys.path.insert(0, _p)
 import pasport_sverka as PS       # noqa: E402
 import sverka_privyazki as SP     # noqa: E402
+import enrich_db as _EDB          # noqa: E402
 
 BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 ДЛЯ_ЗАХОДА = ('продукция', 'энергохозяйство', 'газы', 'расширение', 'мощности')
@@ -65,6 +66,14 @@ def разобрать(r):
     """Вернуть (годен, причина_отсева, сколько_подтверждённых_фактов)."""
     if str(r['konkurent']) == '1':
         return False, 'конкурент — не пишем', 0
+    # Конкурент, видимый в собственном паспорте, но не помеченный флагом: ОКВЭД у
+    # него может быть какой угодно, а обогащение по нему могло не проходить вовсе.
+    # Так 26.08 письмо ушло производителю поршневых компрессоров (ИНН 6679054575),
+    # у которого в «продукции» паспорта они и перечислены. Подробности правила —
+    # в enrich_db.konkurent_po_pasportu.
+    он_конк, признаки = _EDB.konkurent_po_pasportu(r['facts'])
+    if он_конк:
+        return False, 'конкурент по паспорту (%s)' % ', '.join(признаки), 0
     if r['otkloneno']:
         return False, 'привязка отклонена, паспорт в карантине', 0
     if not r['facts']:

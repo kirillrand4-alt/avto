@@ -23,6 +23,12 @@ import sqlite3
 import sys
 import time
 
+_DIR = os.path.dirname(os.path.abspath(__file__))
+for _p in (_DIR, os.path.dirname(_DIR), r'C:\sender'):
+    if _p and _p not in sys.path:
+        sys.path.insert(0, _p)
+import enrich_db as _EDB  # noqa: E402
+
 ENRICH = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 SENDER = r'C:\sender\sender.db'
 CSV_PATH = r'C:\sender\_tmp\partiya-935-dogruz.csv'
@@ -198,6 +204,20 @@ def собрать(inny=None, gruppa=None, vse_pochty=False):
         к = (str(r['inn']), r['em'])
         if к not in имена or (r['post'] and not имена[к][1]):
             имена[к] = (r['person'], r['post'])
+    # Конкурент, видимый в собственном паспорте. Флаг is_competitor его не ловит:
+    # ОКВЭД может быть любой, а провайдер-судья по сайту проходит не по всем. 26.08
+    # так ушло письмо производителю поршневых компрессоров (ИНН 6679054575) — в его
+    # паспорте они перечислены в «продукции», а загрузка смотрела только на флаг.
+    # Читаем потоком и держим в памяти только попадания: facts_json тяжёлые.
+    конк_паспорт = {}
+    for r in c.execute("select inn, coalesce(facts_json,'') fj from site_facts "
+                       "where coalesce(facts_json,'')<>''"):
+        инн = str(r['inn'])
+        if инн not in компании:
+            continue
+        да, признаки = _EDB.konkurent_po_pasportu(r['fj'])
+        if да:
+            конк_паспорт[инн] = признаки
     чужие = set()
     try:
         чужие = {str(r[0]) for r in c.execute(
@@ -243,6 +263,9 @@ def собрать(inny=None, gruppa=None, vse_pochty=False):
             continue
         if str(к['konk']).strip().lower() in ('1', 'true', 'да'):
             отсеять('помечена конкурентом')
+            continue
+        if инн in конк_паспорт:
+            отсеять('конкурент по паспорту (%s)' % ', '.join(конк_паспорт[инн]))
             continue
         канд = [(а, р) for а, р in (адреса.get(инн) or [])
                 if а.split('@')[-1] not in НАШИ_ДОМЕНЫ]
