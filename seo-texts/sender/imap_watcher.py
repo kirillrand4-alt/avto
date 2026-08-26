@@ -423,6 +423,17 @@ class ImapWatcher:
             recipient_id = self._recipient_by_emails(failed_addrs)
         if recipient_id is None and orig_to:
             recipient_id = self._recipient_by_emails(orig_to)
+        # ОТВЕТ С ДРУГОГО АДРЕСА ТОЙ ЖЕ КОНТОРЫ. Письмо уходит на приёмную,
+        # внутри его передают, и отвечает человек со своего ящика — часто
+        # НОВЫМ письмом, без In-Reply-To. Тогда привязки не было вовсе:
+        # 19.08 «Шато де Талю» спросило «в какую стоимость данное
+        # оборудование, возможно ли получить КП» с andryushchenko@, а мы
+        # писали на sale@ — ответ лёг событием «other» без получателя и
+        # пролежал неделю.
+        if recipient_id is None and kind != "dsn" and from_addr:
+            recipient_id = self._recipient_by_emails([from_addr])
+        if recipient_id is None and kind != "dsn":
+            recipient_id = self._recipient_by_domain(from_addr)
 
         return InboundEvent(
             kind=kind,
@@ -453,6 +464,56 @@ class ImapWatcher:
                 if rid:
                     return int(rid)
         return None
+
+    # Публичные почтовики: у них домен ничего не говорит о компании, и
+    # привязка по нему склеила бы чужие письма. 25.08 такая ошибка уже была
+    # в замере ответов: любое письмо с bk.ru считалось ответом нашего
+    # получателя.
+    ОБЩИЕ_ДОМЕНЫ = frozenset({
+        "mail.ru", "bk.ru", "list.ru", "inbox.ru", "internet.ru",
+        "yandex.ru", "ya.ru", "yandex.com", "gmail.com", "googlemail.com",
+        "rambler.ru", "lenta.ru", "autorambler.ru", "outlook.com",
+        "hotmail.com", "live.com", "icloud.com", "me.com", "mail.com",
+        "protonmail.com", "proton.me", "bk.com", "narod.ru",
+    })
+
+    def _recipient_by_domain(self, from_addr: str) -> Optional[int]:
+        """Получатель по ДОМЕНУ отправителя — когда ветка не сошлась.
+
+        Только корпоративный домен и только если он у нас один на компанию:
+        иначе непонятно, кому засчитывать ответ. Публичные почтовики
+        исключены — там домен не значит ничего.
+        """
+        адрес = str(from_addr or "").strip().lower()
+        if "@" not in адрес:
+            return None
+        домен = адрес.rsplit("@", 1)[-1]
+        if not домен or домен in self.ОБЩИЕ_ДОМЕНЫ:
+            return None
+        finder = getattr(self._store, "recipients_by_domain", None)
+        if not callable(finder):
+            return None
+        try:
+            строки = finder(домен) or []
+        except Exception:  # noqa: BLE001 - сбой поиска не роняет приём
+            logger.exception("recipients_by_domain failed for %s", домен)
+            return None
+        if not строки:
+            return None
+
+        def поле(r, имя):
+            return r.get(имя) if isinstance(r, dict) else getattr(r, имя, None)
+
+        инны = {str(поле(r, "inn") or "").strip() for r in строки}
+        инны.discard("")
+        if len(инны) > 1:
+            # На одном домене две разные компании — бывает у холдингов и у
+            # арендованных доменов. Гадать нельзя.
+            logger.info("привязка по домену %s пропущена: компаний %d",
+                        домен, len(инны))
+            return None
+        rid = поле(строки[0], "id")
+        return int(rid) if rid else None
 
     def _process_event(self, ev: InboundEvent, mailbox_id: str) -> None:
         orig_msg = None

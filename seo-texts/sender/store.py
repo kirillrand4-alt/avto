@@ -1001,6 +1001,28 @@ class Store:
                 "SELECT * FROM recipients WHERE email=?", (norm,)).fetchone()
         return dict(row) if row else None
 
+    def recipients_by_domain(self, domain: str) -> list[dict]:
+        """Все получатели корпоративного домена — для привязки ответа.
+
+        Письмо уходит на приёмную, внутри его передают, и отвечает человек
+        со СВОЕГО ящика, часто новым письмом без In-Reply-To. Привязать
+        такой ответ можно только по домену: 19.08 «Шато де Талю» спросило
+        цену и КП с andryushchenko@, а писали мы на sale@ — ответ лёг
+        событием без получателя и пролежал неделю.
+
+        Отдаём ВСЕХ, кого нашли: решение «домен принадлежит одной компании»
+        принимает вызывающий, он же отсекает публичные почтовики.
+        """
+        дом = str(domain or "").strip().lower().lstrip("@")
+        if not дом:
+            return []
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM recipients WHERE lower(domain)=? "
+                " OR lower(email) LIKE ? ORDER BY id", (дом, "%@" + дом)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
     def iter_recipients(
         self, *, valid_status: Optional[str] = None, provider: Optional[str] = None,
         segment: Optional[str] = None, order: str = "id",
