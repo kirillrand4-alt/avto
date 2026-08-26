@@ -74,3 +74,59 @@ def test_store_bez_metoda_ne_ronyaet_priyom():
     w = ImapWatcher.__new__(ImapWatcher)
     w._store = object()
     assert w._recipient_by_domain("a@zavod.ru") is None
+
+
+# --- та же контора в другой зоне (26.08, «СМК Альтернатива») ---------------- #
+
+class ФейкStoreZony:
+    def __init__(self, строки):
+        self.строки = строки
+        self.спрошено = []
+
+    def recipients_by_domain(self, домен):
+        return [r for r in self.строки
+                if str(r["email"]).rsplit("@", 1)[-1] == домен]
+
+    def recipients_by_domain_name(self, имя):
+        self.спрошено.append(имя)
+        return [r for r in self.строки
+                if str(r["email"]).rsplit("@", 1)[-1].split(".")[0] == имя]
+
+
+def _сторож_зоны(строки):
+    w = ImapWatcher.__new__(ImapWatcher)
+    w._store = ФейкStoreZony(строки)
+    return w
+
+
+АЛЬТЕРНАТИВА = [{"id": 5051, "email": "post@smk-alternativa.ru",
+                 "inn": "2902040975"}]
+
+
+def test_otvet_iz_drugoy_zony_toy_zhe_kontory():
+    w = _сторож_зоны(АЛЬТЕРНАТИВА)
+    assert w._recipient_by_imya_domena("chernov@smk-alternativa.com") == 5051
+
+
+def test_korotkoe_imya_domena_ne_skleivaem():
+    """«tk-alt.ru» и «tk-alt.com» могут быть разными конторами."""
+    w = _сторож_зоны([{"id": 1, "email": "a@alt.ru", "inn": "1"}])
+    assert w._recipient_by_imya_domena("b@alt.com") is None
+
+
+def test_obshchee_imya_ne_skleivaem():
+    w = _сторож_зоны([{"id": 1, "email": "a@yandex.ru", "inn": "1"}])
+    assert w._recipient_by_imya_domena("b@yandex.com") is None
+    assert w._store.спрошено == []
+
+
+def test_dve_kompanii_s_odnim_imenem_ne_gadaem():
+    w = _сторож_зоны([{"id": 1, "email": "a@promstroy.ru", "inn": "111"},
+                      {"id": 2, "email": "b@promstroy.com", "inn": "222"}])
+    assert w._recipient_by_imya_domena("c@promstroy.net") is None
+
+
+def test_store_bez_metoda_imeni_ne_ronyaet():
+    w = ImapWatcher.__new__(ImapWatcher)
+    w._store = object()
+    assert w._recipient_by_imya_domena("a@smk-alternativa.com") is None

@@ -1023,6 +1023,24 @@ class Store:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def recipients_by_domain_name(self, name: str) -> list[dict]:
+        """Получатели, у чьего домена такое же ИМЯ, но зона любая.
+
+        Нужна для ответов с другой зоны той же конторы: 26.08 «СМК
+        Альтернатива» написала с smk-alternativa.com, а писали мы на
+        smk-alternativa.ru. Решение «это одна компания» принимает
+        вызывающий: он сверяет ИНН и отсекает короткие и общие имена.
+        """
+        имя = str(name or "").strip().lower()
+        if len(имя) < 5:
+            return []
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM recipients WHERE lower(domain) LIKE ? "
+                " OR lower(email) LIKE ? ORDER BY id",
+                (имя + ".%", "%@" + имя + ".%")).fetchall()
+        return [dict(r) for r in rows]
+
     def iter_recipients(
         self, *, valid_status: Optional[str] = None, provider: Optional[str] = None,
         segment: Optional[str] = None, order: str = "id",

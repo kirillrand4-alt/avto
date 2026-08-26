@@ -434,6 +434,8 @@ class ImapWatcher:
             recipient_id = self._recipient_by_emails([from_addr])
         if recipient_id is None and kind != "dsn":
             recipient_id = self._recipient_by_domain(from_addr)
+        if recipient_id is None and kind != "dsn":
+            recipient_id = self._recipient_by_imya_domena(from_addr)
 
         return InboundEvent(
             kind=kind,
@@ -511,6 +513,58 @@ class ImapWatcher:
             # арендованных доменов. Гадать нельзя.
             logger.info("привязка по домену %s пропущена: компаний %d",
                         домен, len(инны))
+            return None
+        rid = поле(строки[0], "id")
+        return int(rid) if rid else None
+
+    # Домены второго уровня, на которых сидят все подряд: совпадение имени
+    # там ничего не значит.
+    _ОБЩИЕ_ВТОРЫЕ = frozenset({"mail", "yandex", "google", "gmail", "list",
+                               "bk", "inbox", "rambler", "outlook", "live"})
+
+    def _recipient_by_imya_domena(self, from_addr: str) -> Optional[int]:
+        """Та же контора в другой зоне: smk-alternativa.com против .ru.
+
+        26.08 «СМК Альтернатива» прислала техзадание на пневмосистему -
+        давление, расход, классы чистоты, что стоит сейчас - с ящика
+        chernov@smk-alternativa.COM, а писали мы на post@smk-alternativa.RU.
+        Ни ветка, ни адрес, ни домен не сошлись, и горячее письмо легло
+        «входящим вне переписки» без компании.
+
+        Сверяем ИМЯ домена без зоны и требуем, чтобы совпала ровно одна
+        компания: «alternativa.ru» и «alternativa.com» разных фирм так не
+        склеятся, потому что имя у них тоже разное.
+        """
+        адрес = str(from_addr or "").strip().lower()
+        if "@" not in адрес:
+            return None
+        домен = адрес.rsplit("@", 1)[-1]
+        части = домен.split(".")
+        if len(части) < 2:
+            return None
+        имя = части[-2]
+        # Короткое или общее имя склеит чужих: «mail.ru» и «mail.com».
+        if len(имя) < 5 or имя in self._ОБЩИЕ_ВТОРЫЕ:
+            return None
+        finder = getattr(self._store, "recipients_by_domain_name", None)
+        if not callable(finder):
+            return None
+        try:
+            строки = finder(имя) or []
+        except Exception:  # noqa: BLE001 - сбой поиска не роняет приём
+            logger.exception("recipients_by_domain_name failed for %s", имя)
+            return None
+        if not строки:
+            return None
+
+        def поле(r, к):
+            return r.get(к) if isinstance(r, dict) else getattr(r, к, None)
+
+        инны = {str(поле(r, "inn") or "").strip() for r in строки}
+        инны.discard("")
+        if len(инны) > 1:
+            logger.info("привязка по имени домена %s пропущена: компаний %d",
+                        имя, len(инны))
             return None
         rid = поле(строки[0], "id")
         return int(rid) if rid else None
