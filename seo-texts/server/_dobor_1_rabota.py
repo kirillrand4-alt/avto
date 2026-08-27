@@ -158,8 +158,16 @@ def main():
     log('телефонов уникальных по 10 цифрам:', len(chey), '| уже с меткой:', len(uzhe))
 
     kesh = [n.split('.')[0] for n in os.listdir(KESH) if n.endswith('.json.gz')]
+    # УСЛОВИЕ БЫЛО СЛИШКОМ УЗКИМ. Цели брались как «ни почты, НИ телефона», и
+    # компания с телефоном, но без адреса, в добор не попадала никогда — хотя
+    # ищем мы прежде всего адрес. Замер 27.08: по старому условию целей 1936, а
+    # по «нет почты» — 14 083, то есть 12 147 компаний с готовым кэшем ни разу
+    # не просмотрены. Из них 2 677 мейеровских: ровно те, что выпали из догруза
+    # в «Партию 935» с причиной «нет адреса».
+    tolko_pochta = os.environ.get('DOBOR_TOLKO_POCHTA') == '1'
     celi = sorted(i for i in kesh
-                  if (i not in s_email and i not in s_phone and i in komp) or i in uzhe)
+                  if (i in komp and i not in s_email
+                      and (tolko_pochta or i not in s_phone)) or i in uzhe)
     sdelano = set(uzhe)
     if os.path.exists(ZHURNAL):
         with open(ZHURNAL, encoding='utf-8') as f:
