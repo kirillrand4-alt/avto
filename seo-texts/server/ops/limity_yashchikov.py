@@ -1,87 +1,52 @@
 # -*- coding: utf-8 -*-
-"""Лимиты и паузы ящиков: кто превысил и за что поставлен на паузу.
-
-Замер 24.08 показал строку, которой быть не должно:
-
-    a.kozlov@zernosort.ru | paused=1 | daily_limit=5 | sent_today=27
-
-Двадцать семь писем при суточном лимите пять — это либо лимит не
-применяется, либо значение в таблице протухло, и настоящий потолок
-считает рампа по дню разогрева. Разница важная: в первом случае мы жжём
-репутацию доменов, во втором врёт только табличка.
-
-Печатаем состояние всех ящиков целиком, причину паузы дословно и рядом —
-что говорит сама рампа для их дня. И смотрим, к каким ящикам привязаны
-просроченные письма: если они ждут паузы, то стоят не просто так.
-"""
+"""Дневные лимиты ящиков против того, что уже ушло и что ждёт."""
+import json
 import sqlite3
-import sys
+from datetime import datetime, timezone
 
-sys.path.insert(0, r"C:\sender\sender")
-sys.path.insert(0, r"C:\sender")
-
-c = sqlite3.connect(r"C:\sender\sender.db")
+c = sqlite3.connect(r"C:\sender\sender.db", timeout=90)
+c.execute("PRAGMA busy_timeout=60000")
 c.row_factory = sqlite3.Row
+лим = json.loads(c.execute("SELECT value FROM panel_settings "
+                           " WHERE key='send_limits'").fetchone()[0])
+общий = лим.get("all")
+по_ящикам = лим.get("per_mailbox") or {}
+print("общий лимит: %s" % (общий if общий is not None else "нет"))
 
-print("=== СОСТОЯНИЕ ЯЩИКОВ ===")
-print("%-40s %-9s %-6s %-6s %-5s %s"
-      % ("ящик", "провайдер", "лимит", "ушло", "день", "пауза"))
-строки = c.execute(
-    "SELECT mailbox_id, provider, daily_limit, sent_today, sent_total, "
-    "       ramp_day, paused, pause_reason, day_key, last_sent_at "
-    "  FROM mailbox_state ORDER BY sent_today DESC").fetchall()
-for р in строки:
-    пауза = "ДА" if р["paused"] else "—"
-    if р["pause_reason"]:
-        пауза += " (%s)" % str(р["pause_reason"])[:44]
-    print("%-40s %-9s %-6s %-6s %-5s %s"
-          % (str(р["mailbox_id"])[:40], str(р["provider"] or "?")[:9],
-             р["daily_limit"], р["sent_today"], р["ramp_day"], пауза))
+сегодня = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+ушло = {r["mailbox_id"]: r["n"] for r in c.execute(
+    "SELECT mailbox_id, COUNT(*) n FROM messages "
+    " WHERE substr(sent_at,1,10)=? GROUP BY mailbox_id", (сегодня,))}
+ждут = {r["mailbox_id"]: r["n"] for r in c.execute(
+    "SELECT mailbox_id, COUNT(*) n FROM messages "
+    " WHERE status IN ('scheduled','sending') GROUP BY mailbox_id")}
 
-превысили = [р for р in строки
-             if (р["daily_limit"] or 0) and (р["sent_today"] or 0) > р["daily_limit"]]
-print("\nящиков, где ушло больше записанного лимита: %d" % len(превысили))
-
-print("\n=== ЧТО ГОВОРИТ САМА РАМПА ===")
-try:
-    from sender.config import Config
-    from sender.ramp import daily_send_limit
-    cfg = Config.load(r"C:\sender\sender.yaml")
-    видели = set()
-    for р in строки:
-        ключ = (str(р["provider"] or ""), р["ramp_day"])
-        if ключ in видели:
-            continue
-        видели.add(ключ)
-        try:
-            л = daily_send_limit(р["provider"], р["ramp_day"], р["mailbox_id"])
-        except TypeError:
-            try:
-                л = daily_send_limit(р["provider"], р["ramp_day"])
-            except Exception as e:                             # noqa: BLE001
-                л = "не посчитан (%s)" % str(e)[:40]
-        except Exception as e:                                 # noqa: BLE001
-            л = "не посчитан (%s)" % str(e)[:40]
-        print("  провайдер %-10s день %-3s -> лимит %s"
-              % (str(р["provider"] or "?"), р["ramp_day"], л))
-except Exception as e:                                         # noqa: BLE001
-    print("  рампа не собралась: %s: %s" % (type(e).__name__, str(e)[:110]))
-
-print("\n=== ПРОСРОЧЕННЫЕ ПИСЬМА: ЧЬИ ОНИ ===")
-for р in c.execute(
-        "SELECT m.id, m.scheduled_at, m.mailbox_id, m.campaign_id, "
-        "       r.email, r.company_name "
-        "  FROM messages m LEFT JOIN recipients r ON r.id=m.recipient_id "
-        " WHERE m.status IN ('scheduled','sending') "
-        "   AND m.scheduled_at < datetime('now') ORDER BY m.scheduled_at"):
-    print("  #%-6s срок %s | ящик %s | кому %s | %s"
-          % (р["id"], str(р["scheduled_at"])[:16],
-             str(р["mailbox_id"] or "НЕ НАЗНАЧЕН")[:32],
-             str(р["email"] or "?")[:30], str(р["company_name"] or "")[:24]))
-
-print("\n=== СКОЛЬКО УШЛО С КАЖДОГО ЯЩИКА ЗА СЕГОДНЯ (по событиям) ===")
-for р in c.execute(
-        "SELECT mailbox_id, COUNT(*) n FROM events WHERE event_type='sent' "
-        "  AND substr(event_ts,1,10)=date('now') "
-        " GROUP BY mailbox_id ORDER BY n DESC LIMIT 25"):
-    print("  %-42s %d" % (str(р["mailbox_id"] or "?")[:42], р["n"]))
+print("")
+print("%-42s %6s %6s %7s %s" % ("ящик", "лимит", "ушло", "ждут", "хватит?"))
+итог = [0, 0, 0]
+беда = []
+# Часть писем ушла без ящика (mailbox_id NULL) — их сортировать нельзя.
+без_ящика = ушло.pop(None, 0) + ждут.pop(None, 0)
+if без_ящика:
+    print("писем без ящика: %d" % без_ящика)
+for я in sorted(set(list(ушло) + list(ждут) + list(по_ящикам))):
+    л = по_ящикам.get(я, общий)
+    у, ж = ушло.get(я, 0), ждут.get(я, 0)
+    итог[0] += (л or 0)
+    итог[1] += у
+    итог[2] += ж
+    если = ("лимит 0 — НЕ ПОЙДЁТ" if л == 0 else
+            "хватит" if л is None or у + ж <= л else
+            "не хватит на %d" % (у + ж - л))
+    if л == 0 or (л is not None and у + ж > л):
+        беда.append((я, л, у, ж))
+    print("%-42s %6s %6d %7d %s" % (str(я)[:42], л if л is not None else "нет",
+                                    у, ж, если))
+print("")
+print("итого: ушло %d, ждут %d" % (итог[1], итог[2]))
+if беда:
+    print("")
+    print("=== чьи письма сегодня не уйдут ===")
+    for я, л, у, ж in беда:
+        print("   %-42s лимит %s, ушло %d, ждут %d" % (str(я)[:42], л, у, ж))
+c.close()
