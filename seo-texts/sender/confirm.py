@@ -53,6 +53,18 @@ STOPLIST_REASONS = {
 
 RECENT_CONTACT_DAYS = 90
 
+# Сколько РАЗНЫХ адресов одной компании можно тронуть за то же окно.
+# Владелец 27.08: заслон считал повторным контактом любое письмо в ту же
+# компанию (last_contact сверяется по email ИЛИ ИНН), поэтому второе письмо
+# коллеге на том же домене — когда первое осталось без ответа — не попадало
+# в очередь вовсе: из 1125 отобранных упиралось 1123.
+# Снять ограничение по компании целиком нельзя: тогда у компании с десятью
+# адресами ничто не помешает отправить ей десять писем за квартал, а это
+# ровно тот шаблон, на котором 21.08 просели три домена Meyer (с одного
+# отказа на 114 писем до двадцати девяти на сорок восемь). Поэтому окно на
+# САМ АДРЕС осталось прежним, а на компанию встал потолок разных адресов.
+COMPANY_CONTACTS_PER_PERIOD = 2
+
 # Сколько ждать вердикт пробы по адресу, который ввёл человек.
 # Работник на VPS забирает задания каждые 20 секунд, круг обмена
 # с дропом занимает секунды — минуты хватает с запасом. Дольше
@@ -192,17 +204,23 @@ class ConfirmSend:
 
     def _guard(self, *, inn: Optional[str], email: str) -> Optional[str]:
         """Причина блокировки или None. Проверяет suppression (отписка
-        навсегда и пр.), повторный контакт <90 дней (Задача 3) и заведомо
-        недоставимый адрес."""
+        навсегда и пр.), заведомо недоставимый адрес, повторное письмо на ТОТ
+        ЖЕ адрес <90 дней (Задача 3) и потолок разных адресов одной компании
+        за то же окно."""
         entry = self._suppression_hit(inn=inn, email=email)
         if entry is not None:
             return f"suppressed:{entry.reason}"
         мёртв = self._nedostavimyy(email)
         if мёртв:
             return мёртв
-        last = self._recent_contact(inn=inn, email=email)
+        last = self._recent_contact(email=email)
         if last is not None:
-            return f"recent_contact<{RECENT_CONTACT_DAYS}d:{last.get('ts', '')[:10]}"
+            return (f"recent_contact<{self._okno_dney()}d:"
+                    f"{last.get('ts', '')[:10]}")
+        квота = self._kvota_kompanii(inn=inn, email=email)
+        if квота is not None:
+            return (f"company_quota>={self._potolok_kompanii()}"
+                    f"/{self._okno_dney()}d:{квота.get('ts', '')[:10]}")
         return None
 
     def _zhdyot_verdikta(self, row: dict) -> Optional[str]:
@@ -343,25 +361,83 @@ class ConfirmSend:
         except Exception:  # noqa: BLE001 - fail-safe: сомнение = блок
             return type("E", (), {"reason": "suppression_check_failed"})()
 
-    def _recent_contact(self, *, inn: Optional[str], email: str):
+    def _okno_dney(self) -> int:
+        """Окно повторного контакта в днях (confirm.recent_contact_days)."""
+        try:
+            return max(0, int(self._config.get("confirm.recent_contact_days",
+                                               RECENT_CONTACT_DAYS)))
+        except (TypeError, ValueError, AttributeError):
+            return RECENT_CONTACT_DAYS
+
+    def _potolok_kompanii(self) -> int:
+        """Сколько РАЗНЫХ адресов компании можно тронуть за окно.
+        confirm.company_contacts_per_period; 0 — потолка нет."""
+        try:
+            return max(0, int(self._config.get(
+                "confirm.company_contacts_per_period",
+                COMPANY_CONTACTS_PER_PERIOD)))
+        except (TypeError, ValueError, AttributeError):
+            return COMPANY_CONTACTS_PER_PERIOD
+
+    def _v_okne(self, ts: str) -> Optional[bool]:
+        """Метка времени попадает в окно? None — дату не разобрать."""
         from datetime import datetime, timedelta, timezone
+        try:
+            then = datetime.fromisoformat(str(ts or "").replace("Z", "+00:00"))
+            if then.tzinfo is None:
+                then = then.replace(tzinfo=timezone.utc)
+        except ValueError:
+            return None
+        return datetime.now(timezone.utc) - then < timedelta(days=self._okno_dney())
+
+    def _recent_contact(self, *, email: str, inn: Optional[str] = None):
+        """Последняя отправка на ЭТОТ ЖЕ адрес в окне — или None.
+
+        Раньше сюда передавался ещё и ИНН, а last_contact сверяет по email ИЛИ
+        ИНН, поэтому любое письмо в компанию закрывало ей все адреса на 90
+        дней. Компанию теперь стережёт _kvota_kompanii, а здесь — только сам
+        адрес. Параметр inn оставлен ради старых вызовов и игнорируется."""
         last = None
         try:
-            last = self._store.last_contact(email=email, inn=inn)
+            last = self._store.last_contact(email=email)
         except Exception:  # noqa: BLE001 - нет таблицы у мок-store
             return None
         if not last:
             return None
-        ts = str(last.get("ts") or "")
-        try:
-            then = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-            if then.tzinfo is None:
-                then = then.replace(tzinfo=timezone.utc)
-        except ValueError:
+        в_окне = self._v_okne(str(last.get("ts") or ""))
+        if в_окне is None:
             return last  # дата не парсится → консервативно считаем недавним
-        if datetime.now(timezone.utc) - then < timedelta(days=RECENT_CONTACT_DAYS):
-            return last
-        return None
+        return last if в_окне else None
+
+    def _kvota_kompanii(self, *, inn: Optional[str], email: str):
+        """Потолок разных адресов компании за окно: запись последней отправки,
+        если потолок уже выбран, иначе None.
+
+        Считаем РАЗНЫЕ адреса, а не письма: пять повторов на один info@ —
+        это один потревоженный человек, а пять разных ящиков — пять."""
+        потолок = self._potolok_kompanii()
+        цифры = "".join(c for c in str(inn or "") if c.isdigit())
+        if not потолок or not цифры:
+            return None
+        свой = str(email or "").strip().lower()
+        try:
+            строки = self._store.send_log_history(inn=цифры, limit=500)
+        except Exception:  # noqa: BLE001 - нет таблицы у мок-store
+            return None
+        адреса, последняя = {}, None
+        for r in строки or []:
+            if str(r.get("outcome") or "") != "sent":
+                continue
+            адрес = str(r.get("email") or "").strip().lower()
+            if not адрес or адрес == свой:
+                continue
+            if self._v_okne(str(r.get("ts") or "")) is False:
+                continue
+            адреса[адрес] = r
+            ts = str(r.get("ts") or "")
+            if последняя is None or ts > str(последняя.get("ts") or ""):
+                последняя = r
+        return последняя if len(адреса) >= потолок else None
 
     # -- постановка в очередь ----------------------------------------------- #
 
