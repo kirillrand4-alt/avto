@@ -1829,10 +1829,20 @@ class AiQuota:
                     with замок:
                         res.rejected += 1
                     rej = [str(x)[:120] for x in (out.rejected.get(j) or [])]
+                    # Компания не потеряна, если линза сказала, куда её
+                    # переставить: помечаем карточку и в лог кладём след —
+                    # следующая генерация возьмёт другое направление.
+                    друг = (getattr(out, "perestavit", None) or {}).get(j)
+                    переставлено = False
+                    if друг:
+                        with замок:
+                            переставлено = self._perestavit_napravlenie(r.id, друг)
                     items.append({"email": r.email, "recipient_id": r.id,
                                   "status": статус_брака(rej),
                                   "subject": "", "body": "",
-                                  "rounds": [{"rejected": rej}]})
+                                  "rounds": [{"rejected": rej,
+                                              "perestavleno": друг or "",
+                                              "zapisano": переставлено}]})
             with замок:
                 self._log(campaign_id, items, res)
                 if progress_cb is not None:
@@ -1955,6 +1965,48 @@ class AiQuota:
         except Exception:  # noqa: BLE001
             logger.exception("build_panel для ai-письма не собрался (%s)", r.email)
         return base
+
+    def _perestavit_napravlenie(self, recipient_id: int, division: str) -> bool:
+        """Записать направление в карточку получателя (extra.target_division).
+
+        Владелец 28.08: «если не покупатель этого направления, а другого, он
+        переставит в другое?». Линза покупателя отвечает, куда переставить, а
+        сохранить ответ надо здесь: target_division() читает extra первым
+        приоритетом ('explicit'), и следующая генерация напишет компании
+        письмо нужного направления вместо того, каким её забраковали.
+
+        Пишем ключ в ключ, а не через upsert_recipient: тот подменяет extra
+        целиком (COALESCE(NULLIF(excluded.extra_json,'{}'), ...)), а там лежит
+        паспорт сайта, ради которого половина проверок и работает.
+        """
+        if division not in ('kc', 'meyer'):
+            return False
+        try:
+            with self._store.transaction() as conn:
+                row = conn.execute(
+                    "SELECT extra_json FROM recipients WHERE id=?",
+                    (int(recipient_id),)).fetchone()
+                if row is None:
+                    return False
+                try:
+                    extra = json.loads(row[0] or "{}") or {}
+                except (TypeError, ValueError):
+                    extra = {}
+                if not isinstance(extra, dict):
+                    extra = {}
+                if str(extra.get("target_division") or "") == division:
+                    return False
+                extra["target_division"] = division
+                extra["target_division_istochnik"] = "линза покупателя"
+                conn.execute(
+                    "UPDATE recipients SET extra_json=?, updated_at=? WHERE id=?",
+                    (json.dumps(extra, ensure_ascii=False),
+                     datetime.now(timezone.utc).isoformat(), int(recipient_id)))
+            return True
+        except Exception:  # noqa: BLE001 - переставка не должна ронять прогон
+            logger.exception("не записал переставку направления (%s -> %s)",
+                             recipient_id, division)
+            return False
 
     def _ensure_message(self, campaign_id: int, recipient_id: int):
         """message_id для confirm_submit: без него письмо в очереди НЕОТПРАВЛЯЕМО
