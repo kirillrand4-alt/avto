@@ -61,6 +61,13 @@ PREDEL_PERERAZBOROV = int(os.environ.get('FAKTY_PERERAZBOROV', '2'))
 # провал записывался как выполненная работа и компания выбывала навсегда.
 # Теперь это не приговор, а остывание: через две недели даём ещё один заход.
 SDALIS_NA_DNEY = int(os.environ.get('FAKTY_SDALIS_DNEY', '14'))
+# КОПИЛКА НЕЗАПИСАННЫХ ПАСПОРТОВ. Владелец 28.08: «сделай, чтобы в базу
+# накопленный пул писался, и копился, пока ждёт». Пачка стоит до 96 оплаченных
+# вызовов провайдера, а enrich.db по расписанию занимают сверки приговоров и
+# лидов — каждый час, минут по пятнадцать. Разобранная карточка ложится сюда с
+# fsync и переливается в базу следующим кругом, когда та освободится.
+OZHIDAYUT = os.environ.get('FAKTY_OZHIDAYUT',
+                           r'C:\sender\fakty-zapisi-ozhidayut.jsonl')
 # Модель для НОВОСТЕЙ отдельная: замер 13.08 показал, что луна честна (все её
 # новости подтверждены дословно), но скупа — тратит 590 токенов на ответ против
 # 3131 у хайку и обрывает список. Хайку выдала 12 новостей, из них 11 полностью
@@ -942,6 +949,71 @@ def _sliyanie(staroe_json, novoe):
     return itog
 
 
+def _otlozhit(zapisi):
+    """Сложить незаписанные карточки в копилку на диск, с fsync."""
+    if not zapisi:
+        return 0
+    with open(OZHIDAYUT, 'a', encoding='utf-8') as f:
+        for z in zapisi:
+            f.write(json.dumps(z, ensure_ascii=False) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    return len(zapisi)
+
+
+def _kopilka():
+    iz = []
+    if not os.path.exists(OZHIDAYUT):
+        return iz
+    with open(OZHIDAYUT, encoding='utf-8', errors='replace') as f:
+        for s in f:
+            if not s.strip():
+                continue
+            try:
+                iz.append(json.loads(s))
+            except Exception:  # noqa: BLE001
+                pass
+    return iz
+
+
+def _perepisat_kopilku(ostatok):
+    """Атомарно: временный файл и подмена, чтобы обрыв не стёр копилку."""
+    vrem = OZHIDAYUT + '.tmp'
+    with open(vrem, 'w', encoding='utf-8') as f:
+        for z in ostatok:
+            f.write(json.dumps(z, ensure_ascii=False) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(vrem, OZHIDAYUT)
+
+
+def _slit_kopilku(c):
+    """Перелить накопленные карточки. Что не прошло — ждёт дальше."""
+    kop = _kopilka()
+    if not kop:
+        return {}
+    leglo, ostalos = 0, []
+    for z in kop:
+        try:
+            c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, "
+                      "sources_json, site, ts, note, popytok, format, pererazborov) "
+                      'VALUES(?,?,?,?,?,?,0,?,?)',
+                      (z['inn'], z['facts_json'], z['sources_json'], z['site'],
+                       z['ts'], '', z.get('format', FORMAT), z.get('krug', 0)))
+            c.commit()
+            leglo += 1
+        except sqlite3.OperationalError as e:
+            if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
+                raise
+            try:
+                c.rollback()
+            except Exception:  # noqa: BLE001
+                pass
+            ostalos.append(z)
+    _perepisat_kopilku(ostalos)
+    return {'из_копилки_легло': leglo, 'в_копилке_осталось': len(ostalos)}
+
+
 def _s_povtorom(c, delo, popytok=30):
     """Выполнить запись, пересиживая занятую базу.
 
@@ -1033,6 +1105,9 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
     klient = GP.make_client()
     itog = {'разобрано': 0, 'без_страниц': 0, 'сбоев': 0, 'с_продукцией': 0,
             'с_новостями': 0}
+    # СНАЧАЛА ПЕРЕЛИВАЕМ НАКОПЛЕННОЕ: если прошлый круг застал базу занятой,
+    # разобранные карточки лежат в копилке и ждут именно этого момента.
+    itog.update(_slit_kopilku(c))
 
     def zapisat(r):
         """Единственное место записи — вызывается из главного потока."""
@@ -1079,13 +1154,31 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
         if было and (было[0] or '').strip():
             krug = int(было[1] or 0) + 1
             fakty = _sliyanie(было[0], fakty)
-        c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, sources_json, "
-                  "site, ts, note, popytok, format, pererazborov) "
-                  'VALUES(?,?,?,?,?,?,0,?,?)',
-                  (r['inn'], json.dumps(fakty, ensure_ascii=False),
-                   json.dumps(r['istochniki'], ensure_ascii=False), r['site'],
-                   time.strftime('%Y-%m-%dT%H:%M:%S'), '', FORMAT, krug))
-        _s_povtorom(c, c.commit)
+        # ЗАНЯТА БАЗА — НЕ ТЕРЯЕМ ПАЧКУ, А КОПИМ. Разбор уже оплачен провайдеру,
+        # и ронять его из-за чужой сверки по расписанию нечестно. Карточка
+        # ложится в копилку и переливается следующим кругом.
+        строка = {'inn': r['inn'],
+                  'facts_json': json.dumps(fakty, ensure_ascii=False),
+                  'sources_json': json.dumps(r['istochniki'], ensure_ascii=False),
+                  'site': r['site'],
+                  'ts': time.strftime('%Y-%m-%dT%H:%M:%S'),
+                  'format': FORMAT, 'krug': krug}
+        try:
+            c.execute("INSERT OR REPLACE INTO site_facts(inn, facts_json, "
+                      "sources_json, site, ts, note, popytok, format, pererazborov) "
+                      'VALUES(?,?,?,?,?,?,0,?,?)',
+                      (строка['inn'], строка['facts_json'], строка['sources_json'],
+                       строка['site'], строка['ts'], '', FORMAT, krug))
+            c.commit()
+        except sqlite3.OperationalError as e:
+            if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
+                raise
+            try:
+                c.rollback()
+            except Exception:  # noqa: BLE001
+                pass
+            _otlozhit([строка])
+            itog['в_копилку'] = itog.get('в_копилку', 0) + 1
         if krug:
             itog['пересобрано'] = itog.get('пересобрано', 0) + 1
         itog['разобрано'] += 1

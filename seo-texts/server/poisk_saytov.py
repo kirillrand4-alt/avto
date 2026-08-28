@@ -33,6 +33,15 @@ import sverka_privyazki as SP     # noqa: E402
 BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 OBZVON = r'C:\sender\obzvon-index.db'
 LOG = r'C:\sender\poisk_saytov.jsonl'
+# КОПИЛКА НЕЗАПИСАННОГО. Владелец 28.08: «сделай, чтобы в базу накопленный пул
+# писался, и копился, пока ждёт». База занята предсказуемо и надолго: по
+# расписанию каждый час идут sender-sverka-prigovorov и sender-sverka-lidov,
+# каждая держит запись минут пятнадцать. Пересиживать это ожиданием — значит
+# стоять четверть часа на пачку; терять — значит терять оплаченный запрос
+# вместе с найденным сайтом. Поэтому находка сразу ложится сюда, на диск с
+# fsync, а в базу переливается на следующем круге, когда та свободна.
+ОЖИДАЮТ = os.environ.get('POISK_OZHIDAYUT',
+                         r'C:\sender\poisk-zapisi-ozhidayut.jsonl')
 
 
 def _podnjat_klyuchi():
@@ -123,16 +132,19 @@ def _ne_iskali(src):
     return any(м in s for м in _НЕ_ИСКАЛИ)
 
 
-def _с_повтором(c, дело, попыток=40):
-    """Выполнить запрос, пересиживая занятую базу.
+def _с_повтором(c, дело, попыток=4):
+    """Выполнить запрос, коротко пересиживая занятую базу.
 
-    enrich.db пишут одновременно мост, разбор паспортов и разбор контактов;
-    поиск сайтов ходит туда редко, но метко — и без повтора терял находку, за
-    которую уже заплачено.
+    Попыток было сорок с паузами до десяти секунд — до семи минут на один
+    запрос. Это имело смысл, пока замок считался случайным. Он не случайный:
+    сверки по расписанию держат базу по четверти часа, и столько ждать нечего.
+    Теперь четыре коротких попытки, а не вышло — находка уходит в копилку
+    (`_отложить`) и переливается следующим кругом. Возврат: ('ок', значение)
+    либо ('занято', None) — вызывающий обязан различать.
     """
     for i in range(попыток):
         try:
-            return дело()
+            return 'ок', дело()
         except sqlite3.OperationalError as e:
             if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
                 raise
@@ -140,8 +152,91 @@ def _с_повтором(c, дело, попыток=40):
                 c.rollback()
             except Exception:  # noqa: BLE001
                 pass
-            time.sleep(min(10, 2 + i))
-    return None
+            time.sleep(1 + i)
+    return 'занято', None
+
+
+def _отложить(записи):
+    """Сложить незаписанные находки в копилку на диск, с fsync."""
+    if not записи:
+        return 0
+    with open(ОЖИДАЮТ, 'a', encoding='utf-8') as f:
+        for з in записи:
+            f.write(json.dumps(з, ensure_ascii=False) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    return len(записи)
+
+
+def _прочесть_копилку():
+    из = []
+    if not os.path.exists(ОЖИДАЮТ):
+        return из
+    with open(ОЖИДАЮТ, encoding='utf-8', errors='replace') as f:
+        for s in f:
+            if not s.strip():
+                continue
+            try:
+                из.append(json.loads(s))
+            except Exception:  # noqa: BLE001
+                pass
+    return из
+
+
+def _переписать_копилку(остаток):
+    """Атомарно: пишем во временный и подменяем, чтобы обрыв не стёр копилку."""
+    врем = ОЖИДАЮТ + '.tmp'
+    with open(врем, 'w', encoding='utf-8') as f:
+        for з in остаток:
+            f.write(json.dumps(з, ensure_ascii=False) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(врем, ОЖИДАЮТ)
+
+
+def _слить_копилку(c):
+    """Перелить накопленное в базу. Что не прошло — остаётся ждать дальше."""
+    копилка = _прочесть_копилку()
+    if not копилка:
+        return {}
+    легло, осталось = 0, []
+    for з in копилка:
+        если = _записать_находку(c, з)
+        if если:
+            легло += 1
+        else:
+            осталось.append(з)
+    _переписать_копилку(осталось)
+    return {'из_копилки_легло': легло, 'в_копилке_осталось': len(осталось)}
+
+
+def _записать_находку(c, з):
+    """Одна находка в companies. True — легла, False — база занята."""
+    состояние, есть = _с_повтором(
+        c, lambda: c.execute('select 1 from companies where inn=?',
+                             (з['inn'],)).fetchone())
+    if состояние == 'занято':
+        return False
+    if not есть:
+        состояние, _ = _с_повтором(c, lambda: c.execute(
+            'INSERT INTO companies(inn, name, region, updated_at) VALUES(?,?,?,?)',
+            (з['inn'], (з.get('name') or '')[:200], (з.get('city') or '')[:80],
+             time.strftime('%Y-%m-%dT%H:%M:%S'))))
+        if состояние == 'занято':
+            return False
+    if з.get('verdikt'):
+        состояние, _ = _с_повтором(c, lambda: c.execute(
+            'update companies set site=?, site_source=?, updated_at=? where inn=?',
+            (з['site'], з['verdikt'], time.strftime('%Y-%m-%dT%H:%M:%S'), з['inn'])))
+    else:
+        состояние, _ = _с_повтором(c, lambda: c.execute(
+            "update companies set cand_site=?, updated_at=? where inn=? "
+            "and coalesce(site,'')=''",
+            (з['site'], time.strftime('%Y-%m-%dT%H:%M:%S'), з['inn'])))
+    if состояние == 'занято':
+        return False
+    состояние, _ = _с_повтором(c, c.commit)
+    return состояние == 'ок'
 
 
 def цели(skolko, dolya=None):
@@ -404,12 +499,17 @@ def прогон(skolko=1000, potokov=8):
     # минутами. Коммит после каждой компании (ниже) сокращает удержание до доли
     # секунды на строку.
     c = sqlite3.connect(BD, timeout=60)
-    c.execute('PRAGMA busy_timeout=120000')
+    c.execute('PRAGMA busy_timeout=15000')
     try:
         c.execute('ALTER TABLE companies ADD COLUMN site_source TEXT')
         c.commit()
     except Exception:  # noqa: BLE001
         pass
+    # СНАЧАЛА ПЕРЕЛИВАЕМ НАКОПЛЕННОЕ. Если прошлый круг застал базу занятой,
+    # находки лежат в копилке и ждут именно этого момента.
+    итог.update(_слить_копилку(c))
+
+    отложить = []
     for r, k in zip(rez, задачи):
         if not r.get('site'):
             итог['не_нашли'] += 1
@@ -424,36 +524,17 @@ def прогон(skolko=1000, potokov=8):
             итог['не_нашли'] += 1
             continue
         итог['нашли'] += 1
-        # ЗАМОК ПЕРЕСИЖИВАЕМ. 28.08 прогон умер на первой же находке с
-        # «database is locked»: рядом писали разбор ФИО и мост, а здесь стояла
-        # голая запись без повтора. Найденный сайт при этом терялся, и деньги
-        # за запрос уходили впустую.
-        есть = _с_повтором(
-            c, lambda: c.execute('select 1 from companies where inn=?',
-                                 (r['inn'],)).fetchone())
-        if not есть:
-            c.execute("INSERT INTO companies(inn, name, region, updated_at) VALUES(?,?,?,?)",
-                      (r['inn'], k['name'][:200], k['city'][:80],
-                       time.strftime('%Y-%m-%dT%H:%M:%S')))
-        if r.get('verdikt'):
-            _с_повтором(c, lambda: c.execute(
-                'update companies set site=?, site_source=?, updated_at=? '
-                'where inn=?',
-                (r['site'], r['verdikt'], time.strftime('%Y-%m-%dT%H:%M:%S'),
-                 r['inn'])))
-            итог['подтвердили'] += 1
+        з = {'inn': r['inn'], 'name': k['name'], 'city': k['city'],
+             'site': r['site'], 'verdikt': r.get('verdikt') or ''}
+        if _записать_находку(c, з):
+            итог['подтвердили' if r.get('verdikt') else 'в_кандидаты'] += 1
         else:
-            _с_повтором(c, lambda: c.execute(
-                "update companies set cand_site=?, updated_at=? where inn=? "
-                "and coalesce(site,'')=''",
-                (r['site'], time.strftime('%Y-%m-%dT%H:%M:%S'), r['inn'])))
-            итог['в_кандидаты'] += 1
-        # КОММИТ НА КАЖДУЮ КОМПАНИЮ, а не один на пачку: иначе транзакция живёт
-        # столько же, сколько цикл по сотне результатов вместе со всеми паузами
-        # пересиживания внутри, и соседи по базе стоят всё это время.
-        _с_повтором(c, c.commit)
-    _с_повтором(c, c.commit)
+            # База занята — НЕ ждём и НЕ теряем: складываем в копилку, следующий
+            # круг перельёт. Владелец 28.08: «пусть копится, пока ждёт».
+            отложить.append(з)
     c.close()
+    if отложить:
+        итог['в_копилку'] = _отложить(отложить)
 
     # ТЕПЕРЬ журнал: всё, что должно было лечь в базу, уже легло. Запись здесь
     # означает «компанию больше не берём», и раньше она стояла ДО базы — из-за
