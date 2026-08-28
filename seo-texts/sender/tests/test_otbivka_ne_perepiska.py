@@ -88,13 +88,37 @@ def test_v_lente_kompanii_otbivki_net(база):
     assert not any("invalid mailbox" in str(i.get("body") or "") for i in лента)
 
 
-def test_nashi_pisma_v_lente_ostayutsya(база):
-    """Убираем ТОЛЬКО уведомление сервера: сколько раз писали — правда, и она
-    остаётся видна оператору."""
+def test_pismo_kotoroe_ne_doshlo_tozhe_uhodit(база):
+    """Письмо на мёртвый адрес — не «мы написали». Показать его без отбивки
+    хуже, чем не показать вовсе: продажник читает это как «нам не ответили»."""
     store, _, _ = база
-    исходящие = [i for i in store.dialog_thread_company(ИНН)
-                 if i["direction"] == "out"]
-    assert sorted({i["email"] for i in исходящие}) == [МЁРТВЫЙ, ЖИВОЙ]
+    лента = store.dialog_thread_company(ИНН)
+    assert {i.get("email") for i in лента} == {ЖИВОЙ}
+    assert len(лента) == 2                       # наше письмо и ответ на него
+
+
+def test_snyatoe_pismo_ne_vozvrashchaetsya_iz_zhurnala(база):
+    """send_log и решения оператора — отдельные источники ленты; снятый адрес
+    возвращался оттуда строкой без тела."""
+    store, _, _ = база
+    assert not [i for i in store.dialog_thread_company(ИНН)
+                if i.get("body_missing")]
+
+
+def test_esli_otvetili_pisma_ostayutsya(база):
+    """Мягкая отбивка, а потом человек ответил — переписка была, и она нужна
+    целиком; уходит только само уведомление сервера."""
+    store, мёртвый, _ = база
+    store.append_event(EventIn(
+        dedup_key="imap:1:13:reply", event_type="reply",
+        event_ts=NOW + timedelta(minutes=5), recipient_id=мёртвый,
+        mailbox_id="box1@ru",
+        detail={"snippet": "Письмо дошло со второго раза, давайте обсудим",
+                "headers": {"Subject": "Re: Вопрос"}}))
+    адреса = {i.get("email") for i in store.dialog_thread_company(ИНН)}
+    assert адреса == {МЁРТВЫЙ, ЖИВОЙ}
+    assert not any(i.get("kind") == "bounce"
+                   for i in store.dialog_thread_company(ИНН))
 
 
 def test_polnaya_lenta_po_zaprosu(база):

@@ -1911,12 +1911,25 @@ class Store:
         items: list[dict] = []
         seen_rfc: set = set()
         seen_msg: set = set()
+        # Адреса, по которым переписки не было: письмо отбилось, ответа нет.
+        # Показывать продажнику «мы написали» туда, куда письмо не дошло, —
+        # то же враньё, что и показывать саму отбивку.
+        мёртвые: set = set()
         for rid, email in rids:
-            for it in self.dialog_thread(rid, limit=lim):
-                it["email"] = email
-                if (bez_otbivok
-                        and str(it.get("kind") or "") in self._OTBIVKI_NE_PEREPISKA):
+            свои = self.dialog_thread(rid, limit=lim)
+            if bez_otbivok:
+                отбилось = any(str(i.get("kind") or "")
+                               in self._OTBIVKI_NE_PEREPISKA for i in свои)
+                ответили = any(i.get("direction") == "in"
+                               and str(i.get("kind") or "")
+                               not in self._OTBIVKI_NE_PEREPISKA for i in свои)
+                if отбилось and not ответили:
+                    мёртвые.add(str(email or "").strip().lower())
                     continue
+                свои = [i for i in свои if str(i.get("kind") or "")
+                        not in self._OTBIVKI_NE_PEREPISKA]
+            for it in свои:
+                it["email"] = email
                 if it.get("message_id") is not None:
                     seen_msg.add(int(it["message_id"]))
                 if it.get("rfc_message_id"):
@@ -1949,6 +1962,8 @@ class Store:
             mid = r["message_id"]
             if mid is not None and int(mid) in seen_msg:
                 continue          # то же письмо уже пришло из messages, с телом
+            if str(r["email"] or "").strip().lower() in мёртвые:
+                continue          # адрес мёртвый: письма туда не было
             it = {
                 "direction": "out", "ts": r["ts"],
                 "kind": "reply_sent" if r["kind"] == "reply" else "sent",
@@ -1967,6 +1982,8 @@ class Store:
                 (digits, lim)).fetchall()
         used: set = set()
         for r in reversed(logs):          # по возрастанию времени: склейка 1:1
+            if str(r["email"] or "").strip().lower() in мёртвые:
+                continue          # иначе снятое письмо вернётся сюда без тела
             rfc = r["rfc_message_id"]
             mid = r["message_id"]
             if rfc and rfc in seen_rfc:
