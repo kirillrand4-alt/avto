@@ -1869,10 +1869,24 @@ class Store:
         items.sort(key=lambda x: str(x.get("ts") or ""))
         return items[-lim:] if len(items) > lim else items
 
-    def dialog_thread_company(self, inn: str, *, limit: int = 200) -> list[dict]:
+    # Уведомления почтовых серверов: это НЕ переписка с компанией. В карточке
+    # лида (её владелец пересылает в отдел продаж) отбивка по мёртвому адресу
+    # читается как ответ клиента и сбивает продажника с толку — 28.08 по
+    # «Импэкс-Дон» рядом с живым ответом висело «Ваше сообщение не доставлено…
+    # user not found» по СОСЕДНЕМУ адресу той же компании. Из ленты компании их
+    # убираем; в технической ленте контакта (dialog_thread) и в гейтах/счётчиках
+    # отбивок они остаются как были.
+    _OTBIVKI_NE_PEREPISKA = ("bounce", "dsn", "bounce_skryt")
+
+    def dialog_thread_company(self, inn: str, *, limit: int = 200,
+                              bez_otbivok: bool = True) -> list[dict]:
         """Вся переписка с КОМПАНИЕЙ (#64): по всем адресам всех получателей
         этого ИНН. Хронология единая; каждый элемент несёт email, чтобы оператор
         видел, с каким контактом шёл разговор.
+
+        bez_otbivok=True (по умолчанию) выбрасывает уведомления почтовых серверов
+        (bounce/DSN) — они не переписка, а служебный шум; передайте False, если
+        нужна полная техническая лента.
 
         Три источника, потому что одного не хватает:
           messages       — письма кампании (тело в body_rendered);
@@ -1900,6 +1914,9 @@ class Store:
         for rid, email in rids:
             for it in self.dialog_thread(rid, limit=lim):
                 it["email"] = email
+                if (bez_otbivok
+                        and str(it.get("kind") or "") in self._OTBIVKI_NE_PEREPISKA):
+                    continue
                 if it.get("message_id") is not None:
                     seen_msg.add(int(it["message_id"]))
                 if it.get("rfc_message_id"):
