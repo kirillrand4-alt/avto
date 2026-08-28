@@ -125,6 +125,20 @@ def цели(skolko, dolya=None):
     и если прогон остановить, остановится он на менее ценных.
     """
     dolya = float(os.environ.get('POISK_DOLYA', '1.0')) if dolya is None else dolya
+    # СПИСОК ЦЕЛЕЙ ФАЙЛОМ. Владелец 28.08: «запускай под хмл под мейер, выручка
+    # не известна либо от 30 млн». Поиск платный, и гнать его по всей базе,
+    # когда просили одно направление, — это чужие деньги на ветер. Файл с ИНН
+    # по строке в POISK_SPISOK сужает цели до него, порядок по выручке
+    # сохраняется. Нет переменной — поведение прежнее, вся база.
+    только = None
+    путь_списка = os.environ.get('POISK_SPISOK', '')
+    if путь_списка and os.path.exists(путь_списка):
+        только = set()
+        with open(путь_списка, encoding='utf-8', errors='replace') as f:
+            for стр in f:
+                и = ''.join(ch for ch in стр.strip() if ch.isdigit())
+                if и:
+                    только.add(и)
     o = sqlite3.connect(OBZVON)
     строки = []
     for inn, sites, rev, ns, nf, reg in o.execute(
@@ -166,6 +180,8 @@ def цели(skolko, dolya=None):
     уже -= несостоялось
     из = []
     for rev, i, sites, name, reg in верх:
+        if только is not None and i not in только:
+            continue
         if sites or i in est or i in уже:
             continue
         из.append({'inn': i, 'name': name, 'city': reg, 'revenue': rev})
