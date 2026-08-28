@@ -28,14 +28,18 @@ sys.path.insert(1, r"C:\sender\sender")
 
 КАТИТЬ = "--katit" in sys.argv
 СКОЛЬКО = int(next((a for a in sys.argv[1:] if a.isdigit()), "20"))
-СЛЕД = r"C:\sender\_ops\v-avtootpravku.jsonl"
+ПАРТИЯ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("partiya=")), "1")
+_Х = "" if ПАРТИЯ == "1" else "-%s" % ПАРТИЯ
+АДРЕСА = r"C:\sender\_ops\vtorye-adresa%s.jsonl" % _Х
+ВЕРДИКТЫ = r"C:\sender\_ops\sud-vtoryh%s.jsonl" % _Х
+СЛЕД = r"C:\sender\_ops\v-avtootpravku%s.jsonl" % _Х
 
 партия = {}
-for с in io.open(r"C:\sender\_ops\vtorye-adresa.jsonl", encoding="utf-8"):
+for с in io.open(АДРЕСА, encoding="utf-8"):
     d = json.loads(с)
     партия[int(d["review"])] = str(d["inn"])
 вердикт = {}
-for с in io.open(r"C:\sender\_ops\sud-vtoryh.jsonl", encoding="utf-8"):
+for с in io.open(ВЕРДИКТЫ, encoding="utf-8"):
     try:
         d = json.loads(с)
         вердикт[int(d["id"])] = str(d.get("verdikt") or "")
