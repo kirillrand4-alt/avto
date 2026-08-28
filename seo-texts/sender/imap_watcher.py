@@ -436,6 +436,14 @@ class ImapWatcher:
             recipient_id = self._recipient_by_domain(from_addr)
         if recipient_id is None and kind != "dsn":
             recipient_id = self._recipient_by_imya_domena(from_addr)
+        # ДОМЕН ДЕЛЯТ ДВЕ КОМПАНИИ — СМОТРИМ, КОМУ МЫ ПИСАЛИ ПОСЛЕДНИМИ.
+        # Владелец 28.08 показал автоответ «я закончила работу в компании,
+        # обращайтесь к Пушиной Александре» с virtex-food.ru: там у нас АО
+        # «Виртекс» и ООО «ВТ Логистик», и привязка по домену честно
+        # отказалась гадать. Гадать и не нужно: письмо ушло на
+        # sales-p@virtex-food.ru в 03:09, автоответ пришёл в 03:10.
+        if recipient_id is None and kind != "dsn":
+            recipient_id = self._recipient_by_svezhey_otpravkoy(from_addr)
 
         return InboundEvent(
             kind=kind,
@@ -478,6 +486,85 @@ class ImapWatcher:
         "hotmail.com", "live.com", "icloud.com", "me.com", "mail.com",
         "protonmail.com", "proton.me", "bk.com", "narod.ru",
     })
+
+    # Окно, в котором ответ ещё считается ответом на наше письмо. Автоответы
+    # приходят за минуты, живые ответы — за дни; две недели с запасом.
+    ОКНО_СВЕЖЕЙ_ОТПРАВКИ_ДНЕЙ = 14
+    # Насколько последняя отправка должна опережать предыдущую, чтобы выбор
+    # был однозначным. Час: две компании на одном домене, которым писали в
+    # одну минуту, — это не разрешимый случай, и гадать там нельзя.
+    ЗАЗОР_СЕК = 3600
+
+    def _recipient_by_svezhey_otpravkoy(self, from_addr: str) -> Optional[int]:
+        """Домен делят несколько компаний — берём ту, которой писали последней.
+
+        Работает там, где _recipient_by_domain честно отказался: несколько
+        ИНН на одном домене. Ответ приходит следом за нашим письмом, поэтому
+        «кому писали последними» — не догадка, а самый прямой признак.
+        Отказываемся, если последняя отправка старше окна или если две
+        компании получили письмо почти одновременно.
+        """
+        from datetime import datetime, timedelta, timezone
+        адрес = str(from_addr or "").strip().lower()
+        if "@" not in адрес:
+            return None
+        домен = адрес.rsplit("@", 1)[-1]
+        if not домен or домен in self.ОБЩИЕ_ДОМЕНЫ:
+            return None
+        finder = getattr(self._store, "recipients_by_domain", None)
+        история = getattr(self._store, "send_log_history", None)
+        if not callable(finder) or not callable(история):
+            return None
+        try:
+            строки = finder(домен) or []
+        except Exception:  # noqa: BLE001 - сбой поиска не роняет приём
+            logger.exception("recipients_by_domain failed for %s", домен)
+            return None
+        if len(строки) < 2:
+            return None
+
+        def поле(r, имя):
+            return r.get(имя) if isinstance(r, dict) else getattr(r, имя, None)
+
+        когда = []
+        for r in строки:
+            почта = str(поле(r, "email") or "").strip().lower()
+            rid = поле(r, "id")
+            if not почта or not rid:
+                continue
+            try:
+                ряд = история(email=почта, limit=5) or []
+            except Exception:  # noqa: BLE001
+                continue
+            метки = [str(x.get("ts") or "") for x in ряд
+                     if str(x.get("outcome") or "") == "sent"]
+            if метки:
+                когда.append((max(метки), int(rid), почта))
+        if not когда:
+            return None
+        когда.sort(reverse=True)
+        try:
+            последняя = datetime.fromisoformat(когда[0][0].replace("Z", "+00:00"))
+            if последняя.tzinfo is None:
+                последняя = последняя.replace(tzinfo=timezone.utc)
+        except ValueError:
+            return None
+        порог = datetime.now(timezone.utc) - timedelta(
+            days=self.ОКНО_СВЕЖЕЙ_ОТПРАВКИ_ДНЕЙ)
+        if последняя < порог:
+            return None
+        if len(когда) > 1:
+            try:
+                вторая = datetime.fromisoformat(когда[1][0].replace("Z", "+00:00"))
+                if вторая.tzinfo is None:
+                    вторая = вторая.replace(tzinfo=timezone.utc)
+            except ValueError:
+                вторая = None
+            if вторая is not None and (последняя - вторая).total_seconds() < self.ЗАЗОР_СЕК:
+                logger.info("привязка по свежей отправке %s пропущена: "
+                            "две компании писаны почти разом", домен)
+                return None
+        return когда[0][1]
 
     def _recipient_by_domain(self, from_addr: str) -> Optional[int]:
         """Получатель по ДОМЕНУ отправителя — когда ветка не сошлась.
