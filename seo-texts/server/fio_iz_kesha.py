@@ -51,6 +51,9 @@ BD = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 KESH = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
 ЖУРНАЛ = r'C:\sender\_tmp\fio-iz-kesha.jsonl'
 МОДЕЛЬ = os.environ.get('FIO_MODEL', 'gpt-5.6-luna')
+# Сколько адресов влезает в один запрос. Больше — промпт распухает и модель
+# начинает терять строки; у кого адресов больше, тот получает несколько вызовов.
+ПРЕДЕЛ_АДРЕСОВ = 20
 
 PROMPT = """Со страницы контактов предприятия «%(name)s» выпиши, кому принадлежат
 адреса электронной почты.
@@ -175,8 +178,26 @@ def main():
         потоков = max(1, min(12, int(sys.argv[sys.argv.index('--potokov') + 1])))
     d['потоков'] = потоков
     клиент = GP.make_client()
-    db = EDB.EnrichDB()
-    db.cx.execute('PRAGMA busy_timeout=120000')
+    # ОТКРЫТИЕ БАЗЫ ТОЖЕ ЖДЁТ. EnrichDB на конструкторе делает миграции, то есть
+    # просит запись, — а рядом работает демон моста и держит замок минутами.
+    # Дважды из-за этого разбор молча висел на старте: процесс жив, журнал не
+    # растёт, в логе пусто. Теперь ждём явно и говорим об этом в лог.
+    db = None
+    for попытка in range(60):
+        try:
+            db = EDB.EnrichDB()
+            db.cx.execute('PRAGMA busy_timeout=120000')
+            break
+        except Exception as e:  # noqa: BLE001
+            if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
+                raise
+            if попытка % 5 == 0:
+                print('база занята, жду открытия [%d/60]' % (попытка + 1),
+                      flush=True)
+            time.sleep(10)
+    if db is None:
+        print('база так и не открылась за десять минут', flush=True)
+        return 1
     итог = {'разобрано': 0, 'с_фио': 0, 'с_должностью': 0, 'записано_имён': 0,
             'сбоев': 0, 'пусто': 0}
     журнал = open(ЖУРНАЛ, 'a', encoding='utf-8')
@@ -188,34 +209,49 @@ def main():
     замок_журнала = threading.Lock()
 
     def спросить(инн, зап):
-        """Один вызов провайдера. Возвращает (инн, находки, сбой)."""
+        """Вызовы провайдера по одной компании. Возвращает (инн, находки, сбой).
+
+        ПОЧЕМУ НЕ ОДНИМ ВЫЗОВОМ. Сперва в запрос уходили первые двадцать адресов
+        и всё: у 124 компаний из очереди адресов больше, и 2 299 из них молча
+        не попадали в разбор — а на следующем заходе их отрезал бы тот же
+        потолок, то есть навсегда. Теперь длинный список делится на куски по
+        двадцать, текст страницы у них общий и перечитывать его не надо.
+        """
         текст = _tekst_stranicy(инн, зап['урлы'])
         if not текст.strip():
             return инн, [], 'нет текста'
-        сооб = [{'role': 'user', 'content': PROMPT % {
-            'name': зап['name'][:120],
-            'adresa': '\n'.join('- ' + a for a in зап['адреса'][:20]),
-            'tekst': текст}}]
-        try:
-            ответ = GP.call(клиент, сооб, model=МОДЕЛЬ, attempts=3, effort='low')
-            данные = GP.parse_json(ответ) or {}
-        except Exception as ex:  # noqa: BLE001
-            return инн, [], str(ex)[:120]
-        найдено = []
-        for к in (данные.get('kontakty') or []):
-            адрес = str(к.get('email') or '').strip().lower()
-            фио = str(к.get('fio') or '').strip()
-            должн = str(к.get('dolzhnost') or '').strip()
-            рядом = str(к.get('ryadom') or '').strip()
-            if not адрес or адрес not in зап['адреса']:
+        все_адреса = set(зап['адреса'])
+        найдено, сбои = [], []
+        for нач in range(0, len(зап['адреса']), ПРЕДЕЛ_АДРЕСОВ):
+            кусок = зап['адреса'][нач:нач + ПРЕДЕЛ_АДРЕСОВ]
+            сооб = [{'role': 'user', 'content': PROMPT % {
+                'name': зап['name'][:120],
+                'adresa': '\n'.join('- ' + a for a in кусок),
+                'tekst': текст}}]
+            try:
+                ответ = GP.call(клиент, сооб, model=МОДЕЛЬ, attempts=3,
+                                effort='low')
+                данные = GP.parse_json(ответ) or {}
+            except Exception as ex:  # noqa: BLE001
+                сбои.append(str(ex)[:80])
                 continue
-            # ЦИТАТА ОБЯЗАТЕЛЬНА. Имя без куска страницы, где оно стоит рядом с
-            # адресом, — догадка модели по имени ящика, а такое имя уедет в
-            # обращение письма. Нет цитаты — нет имени.
-            if фио and (not рядом or фио.split()[0].lower() not in рядом.lower()):
-                фио = ''
-            if фио or должн:
-                найдено.append((адрес, фио, должн))
+            for к in (данные.get('kontakty') or []):
+                адрес = str(к.get('email') or '').strip().lower()
+                фио = str(к.get('fio') or '').strip()
+                должн = str(к.get('dolzhnost') or '').strip()
+                рядом = str(к.get('ryadom') or '').strip()
+                if not адрес or адрес not in все_адреса:
+                    continue
+                # ЦИТАТА ОБЯЗАТЕЛЬНА. Имя без куска страницы, где оно стоит
+                # рядом с адресом, — догадка модели по имени ящика, а такое имя
+                # уедет в обращение письма. Нет цитаты — нет имени.
+                if фио and (not рядом
+                            or фио.split()[0].lower() not in рядом.lower()):
+                    фио = ''
+                if фио or должн:
+                    найдено.append((адрес, фио, должн))
+        if сбои and not найдено:
+            return инн, [], сбои[0]
         return инн, найдено, ''
 
     def работник():
