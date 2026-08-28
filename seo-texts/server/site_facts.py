@@ -997,14 +997,25 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
     # компания возвращается в очередь и получает ещё один заход.
     ostylo = time.strftime('%Y-%m-%dT%H:%M:%S',
                            time.localtime(time.time() - SDALIS_NA_DNEY * 86400))
-    gotovye = {str(r[0]) for r in c.execute(
+    # ДВЕ БОЛЬШИЕ ВЫБОРКИ — ОТДЕЛЬНЫМ СОЕДИНЕНИЕМ, И ЗАКРЫТЬ ЕГО ДО ЗАПИСИ.
+    # Раньше они шли тем же соединением, которым потом пишет zapisat, и оно
+    # оставалось в открытой ЧИТАЮЩЕЙ транзакции на всё время разбора пачки.
+    # Превратить её в пишущую sqlite не даёт, когда рядом кто-то писал: снимок
+    # устарел, и «database is locked» приходит НЕЗАВИСИМО от busy_timeout —
+    # ждать бесполезно. Отсюда картина 28.08: цикл и поиск сайтов встают
+    # одновременно, гашение одного не освобождает другого, а «держателя» замка
+    # нет вовсе. В поиске сайтов правка такая же.
+    _ro = sqlite3.connect('file:%s?mode=ro' % BD.replace('\\', '/'), uri=True,
+                          timeout=60)
+    gotovye = {str(r[0]) for r in _ro.execute(
         "select inn from site_facts where "
         "(coalesce(popytok,0) >= 3 and coalesce(ts,'') > ?) "
         "or coalesce(otlozheno_do,0) > ? "
         "or (coalesce(facts_json,'')<>'' and coalesce(format,0) >= ?)",
         (ostylo, time.time(), FORMAT))}
-    svezhest = {str(r[0]): _vremya_pasporta(r[1]) for r in c.execute(
+    svezhest = {str(r[0]): _vremya_pasporta(r[1]) for r in _ro.execute(
         "select inn, coalesce(ts,'') from site_facts where coalesce(facts_json,'')<>''")}
+    _ro.close()
     istochnik = spisok if spisok is not None else (
         _iz_kesha(predel, gotovye, svezhest) if iz_kesha else _kompanii_kampanii())
     # ФИЛЬТР НЕ ДОЛЖЕН ОТМЕНЯТЬ ВЕРДИКТ _iz_kesha. Здесь стоял просто отсев по
