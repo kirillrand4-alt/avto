@@ -444,6 +444,14 @@ class ImapWatcher:
         # sales-p@virtex-food.ru в 03:09, автоответ пришёл в 03:10.
         if recipient_id is None and kind != "dsn":
             recipient_id = self._recipient_by_svezhey_otpravkoy(from_addr)
+        # ПИСЬМО ПЕРЕСЛАЛИ КОЛЛЕГЕ, ОТВЕТИЛИ С ЛИЧНОГО ЯЩИКА. Ни отправитель,
+        # ни его домен нам ничего не говорят (mail.ru, gmail), зато в теле
+        # лежит цитата нашего письма с адресом получателя: «Кому:
+        # phlebolog-ufa@mail.ru». Владелец 28.08: из 182 входящих без
+        # привязки три оказались настоящими ответами клиентов, и все три
+        # опознаются по этому следу.
+        if recipient_id is None and kind != "dsn":
+            recipient_id = self._recipient_by_telom(snippet)
 
         return InboundEvent(
             kind=kind,
@@ -494,6 +502,50 @@ class ImapWatcher:
     # был однозначным. Час: две компании на одном домене, которым писали в
     # одну минуту, — это не разрешимый случай, и гадать там нельзя.
     ЗАЗОР_СЕК = 3600
+
+    _АДРЕС_В_ТЕЛЕ = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+
+    def _recipient_by_telom(self, snippet: str) -> Optional[int]:
+        """Получатель по адресу, найденному В ТЕКСТЕ письма (цитата нашего).
+
+        Берём только однозначный случай: в теле ровно ОДИН адрес, который
+        числится у нас получателем. Несколько разных — не гадаем: в цитате
+        может оказаться и наш адресат, и его подрядчик. Свои ящики
+        отбрасываем, иначе привяжемся к самим себе.
+        """
+        текст = str(snippet or "")
+        if not текст:
+            return None
+        finder = getattr(self._store, "find_recipient_by_email", None)
+        if not callable(finder):
+            return None
+        свои = set()
+        try:
+            свои = {str(getattr(m, "mailbox_id", "")).strip().lower()
+                    for m in (self._config.mailboxes() or [])}
+        except Exception:  # noqa: BLE001 - без конфига просто не фильтруем
+            свои = set()
+        найдено: dict = {}
+        for адрес in self._АДРЕС_В_ТЕЛЕ.findall(текст)[:60]:
+            адрес = адрес.strip().lower()
+            if not адрес or адрес in свои or адрес in найдено:
+                continue
+            try:
+                строка = finder(адрес)
+            except Exception:  # noqa: BLE001 - сбой поиска не роняет приём
+                continue
+            if строка:
+                rid = строка.get("id") if isinstance(строка, dict) else \
+                    getattr(строка, "id", None)
+                if rid:
+                    найдено[адрес] = int(rid)
+        уникальные = set(найдено.values())
+        if len(уникальные) != 1:
+            if уникальные:
+                logger.info("привязка по телу пропущена: получателей в цитате %d",
+                            len(уникальные))
+            return None
+        return уникальные.pop()
 
     def _recipient_by_svezhey_otpravkoy(self, from_addr: str) -> Optional[int]:
         """Домен делят несколько компаний — берём ту, которой писали последней.
