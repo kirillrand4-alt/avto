@@ -508,9 +508,16 @@ CREATE TABLE IF NOT EXISTS events (
     provider     TEXT,
     event_ts     TEXT NOT NULL,
     detail_json  TEXT,
-    created_at   TEXT NOT NULL
+    created_at   TEXT NOT NULL,
+    -- Message-ID входящего письма. Второй, НЕЗАВИСИМЫЙ признак того же
+    -- письма: dedup_key завязан на нумерацию писем в ящике, а она пережила
+    -- уже одну смену (порядковый номер → UID) и при пересоздании ящика
+    -- (UIDVALIDITY) сменится снова. Message-ID письмо несёт с собой и не
+    -- меняет никогда.
+    rfc_msgid    TEXT
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_events_dedup ON events(dedup_key);
+CREATE INDEX IF NOT EXISTS ix_events_msgid ON events(mailbox_id, rfc_msgid);
 CREATE INDEX IF NOT EXISTS ix_events_type_ts   ON events(event_type, event_ts);
 CREATE INDEX IF NOT EXISTS ix_events_recipient ON events(recipient_id, event_type);
 CREATE INDEX IF NOT EXISTS ix_events_campaign  ON events(campaign_id, event_type);
@@ -769,6 +776,8 @@ class Store:
                 # письмо не отправляем без явного второго подтверждения
                 # (владелец 12.08). Durable — переживает рестарт панели.
                 "ALTER TABLE confirm_reviews ADD COLUMN manual_email_ts TEXT",
+                # Message-ID входящего: см. комментарий в схеме events
+                "ALTER TABLE events ADD COLUMN rfc_msgid TEXT",
             ):
                 try:
                     self._conn.execute(ddl)
@@ -1475,22 +1484,51 @@ class Store:
 
     # -- events (append-only) ---------------------------------------------- #
 
+    @staticmethod
+    def _msgid_sobytiya(detail) -> str:
+        """Message-ID входящего письма из его же заголовков, нормализованный."""
+        if not isinstance(detail, dict):
+            return ""
+        шапка = detail.get("headers")
+        if not isinstance(шапка, dict):
+            return ""
+        for имя in ("Message-ID", "Message-Id", "message-id"):
+            з = шапка.get(имя)
+            if з:
+                return str(з).strip().strip("<>").lower()[:400]
+        return ""
+
     def append_event(self, e: EventIn) -> tuple[int, bool]:
-        """ON CONFLICT(dedup_key) DO NOTHING → (event_id, created?)."""
+        """ON CONFLICT(dedup_key) DO NOTHING → (event_id, created?).
+
+        Второй заслон — по Message-ID письма. dedup_key завязан на нумерацию
+        писем в ящике, и 28.08 эта нумерация сменилась (порядковый номер →
+        UID): весь архив выглядел новым и лёг в журнал повторно — 132 двойные
+        записи, сводка ответов выросла вдвое. Message-ID письмо несёт с собой,
+        и по нему повтор виден независимо от того, как мы нумеруем ящик.
+        """
         now_iso = _now_iso()
+        msgid = self._msgid_sobytiya(e.detail)
         with self.transaction() as conn:
+            if msgid:
+                была = conn.execute(
+                    "SELECT id FROM events WHERE mailbox_id IS ? AND rfc_msgid = ? "
+                    " ORDER BY id LIMIT 1", (e.mailbox_id, msgid)).fetchone()
+                if была:
+                    return int(была["id"]), False
             cur = conn.execute(
                 """
                 INSERT INTO events
                     (dedup_key, event_type, message_id, recipient_id, campaign_id,
-                     mailbox_id, provider, event_ts, detail_json, created_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?)
+                     mailbox_id, provider, event_ts, detail_json, created_at,
+                     rfc_msgid)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(dedup_key) DO NOTHING
                 """,
                 (
                     e.dedup_key, e.event_type, e.message_id, e.recipient_id,
                     e.campaign_id, e.mailbox_id, e.provider, _to_iso(e.event_ts),
-                    _json_dump(e.detail), now_iso,
+                    _json_dump(e.detail), now_iso, msgid or None,
                 ),
             )
             if cur.rowcount == 1:

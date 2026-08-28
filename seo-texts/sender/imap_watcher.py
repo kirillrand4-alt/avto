@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Protocol, Optional
 from email.message import EmailMessage
+from email.utils import parsedate_to_datetime
 from sender.errors import SenderError, StoreError  # noqa: E402
 
 from sender.ruchnye_otvety import chey_otvet
@@ -716,6 +717,33 @@ class ImapWatcher:
         rid = поле(строки[0], "id")
         return int(rid) if rid else None
 
+    # КОГДА ПИСЬМО ПРИШЛО, а не когда мы его заметили. Опрос добирается до
+    # письма когда угодно: 28.08 переход на UID открыл весь архив ящиков
+    # непрочитанным (флаг «прочитано» до этого ставился не тому письму), и
+    # суточная сводка приписала сегодняшнему дню 87 отбивок и 75 ответов
+    # чужих дней — BR% 8.76% вместо 3.8%. Берём Date самого письма; на кривой
+    # или бредовой дате (часы отправителя врут, заголовка нет) честно
+    # откатываемся на «сейчас», а не пишем 1970 год.
+    @staticmethod
+    def _kogda_prishlo(headers: dict) -> datetime:
+        сейчас = datetime.now(timezone.utc)
+        строка = str((headers or {}).get("Date") or "").strip()
+        if not строка:
+            return сейчас
+        try:
+            т = parsedate_to_datetime(строка)
+        except (TypeError, ValueError, IndexError):
+            return сейчас
+        if т is None:
+            return сейчас
+        if т.tzinfo is None:
+            т = т.replace(tzinfo=timezone.utc)
+        т = т.astimezone(timezone.utc)
+        рано = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        if т < рано or т > сейчас + timedelta(days=1):
+            return сейчас
+        return т
+
     def _process_event(self, ev: InboundEvent, mailbox_id: str) -> None:
         orig_msg = None
         if ev.rfc_message_id:
@@ -760,10 +788,17 @@ class ImapWatcher:
                 logger.exception("classify_reply failed; treating as plain reply")
                 signal = None
 
+        когда = self._kogda_prishlo(ev.raw_headers)
+        заметили = datetime.now(timezone.utc)
+        # Расхождение больше часа — это доскрёб архива, а не обычный опрос.
+        # Отметку «когда заметили» сохраняем: она объясняет, почему письмо
+        # позавчерашнее, а лид по нему заведён сегодня.
+        if abs((заметили - когда).total_seconds()) > 3600:
+            detail["zapisano_ts"] = заметили.strftime("%Y-%m-%dT%H:%M:%S")
         event_in = EventIn(
             dedup_key=ev.dedup_key,
             event_type=event_type,
-            event_ts=datetime.now(timezone.utc),
+            event_ts=когда,
             message_id=orig_msg.id if orig_msg else None,
             recipient_id=recipient_id,
             campaign_id=campaign_id,
