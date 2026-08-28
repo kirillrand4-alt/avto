@@ -306,31 +306,53 @@ def main():
             return getattr(self._cx, имя)
 
     db.cx = _БезКоммита(настоящее)
-    буфер = []
 
-    def слить():
-        """Записать накопленное. Не вышло — вернём в буфер и попробуем позже."""
-        if not буфер:
-            return
-        for попытка in range(20):
-            try:
-                for инн_, адрес_, фио_, должн_ in буфер:
-                    db.add_email(инн_, адрес_, role=должн_, person=фио_,
-                                 source='кэш-добор', pometka='кэш-добор фио')
-                настоящий_commit()
-                итог['записано_имён'] += len(буфер)
-                буфер.clear()
+    # ЗАПИСЬ — ОТДЕЛЬНАЯ НИТЬ. Пока слив шёл прямо в главном потоке, он вставал
+    # на замке базы вместе со всем конвейером: 44 компании в минуту, потом пять
+    # минут тишины, потом снова. Теперь главный поток только принимает ответы и
+    # ведёт журнал, а писарь копит и сливает в своём темпе.
+    на_запись = queue.Queue()
+    стоп_записи = threading.Event()
+
+    def писарь():
+        буфер = []
+
+        def слить():
+            if not буфер:
                 return
-            except Exception as e:  # noqa: BLE001
-                if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
-                    raise
+            for попытка in range(30):
                 try:
-                    настоящее.rollback()
-                except Exception:  # noqa: BLE001
-                    pass
-                time.sleep(min(10, 2 + попытка))
-        итог['сбоев_записи'] = итог.get('сбоев_записи', 0) + len(буфер)
-        буфер.clear()
+                    for инн_, адрес_, фио_, должн_ in буфер:
+                        db.add_email(инн_, адрес_, role=должн_, person=фио_,
+                                     source='кэш-добор', pometka='кэш-добор фио')
+                    настоящий_commit()
+                    итог['записано_имён'] += len(буфер)
+                    буфер.clear()
+                    return
+                except Exception as e:  # noqa: BLE001
+                    if ('locked' not in str(e).lower()
+                            and 'busy' not in str(e).lower()):
+                        raise
+                    try:
+                        настоящее.rollback()
+                    except Exception:  # noqa: BLE001
+                        pass
+                    time.sleep(min(10, 2 + попытка))
+            итог['сбоев_записи'] = итог.get('сбоев_записи', 0) + len(буфер)
+            буфер.clear()
+
+        while not (стоп_записи.is_set() and на_запись.empty()):
+            try:
+                буфер.append(на_запись.get(timeout=5))
+            except queue.Empty:
+                слить()
+                continue
+            if len(буфер) >= 100:
+                слить()
+        слить()
+
+    нить_записи = threading.Thread(target=писарь, daemon=True)
+    нить_записи.start()
 
     всего = len(цели)
     получено = 0
@@ -358,15 +380,14 @@ def main():
                 итог['с_фио'] += 1
             if должн:
                 итог['с_должностью'] += 1
-            буфер.append((инн, адрес, фио, должн))
+            на_запись.put((инн, адрес, фио, должн))
         итог['разобрано'] += 1
-        if len(буфер) >= 100:
-            слить()
         if итог['разобрано'] % 200 == 0:
             os.fsync(журнал.fileno())
             print(json.dumps({'секунд': round(time.time() - t0), **итог},
                              ensure_ascii=False), flush=True)
-    слить()
+    стоп_записи.set()
+    нить_записи.join(timeout=600)
     db.cx = настоящее
     журнал.close()
     db.cx.close()
