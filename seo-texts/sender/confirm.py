@@ -437,7 +437,30 @@ class ConfirmSend:
             ts = str(r.get("ts") or "")
             if последняя is None or ts > str(последняя.get("ts") or ""):
                 последняя = r
+        # ПИСЬМА, КОТОРЫЕ ЕЩЁ НЕ УШЛИ, ТОЖЕ ЗАНИМАЮТ ПОТОЛОК. send_log знает
+        # только отправленное, и две копии, поставленные разными партиями до
+        # того, как хоть одна ушла, обе проходили проверку законно: у ТЗК
+        # «Имсб» два письма разошлись с разницей в две минуты (владелец
+        # 28.08). Считаем и то, что уже стоит в расписании.
+        for адрес in self._adresa_v_rabote(цифры):
+            if адрес and адрес != свой:
+                адреса.setdefault(адрес, {"ts": ""})
         return последняя if len(адреса) >= потолок else None
+
+    def _adresa_v_rabote(self, inn_cifry: str) -> set:
+        """Адреса компании, письма которым уже стоят в очереди отправки."""
+        try:
+            store = self._store
+            with getattr(store, "_lock"):
+                строки = store._conn.execute(
+                    "SELECT LOWER(r.email) FROM messages m "
+                    "  JOIN recipients r ON r.id = m.recipient_id "
+                    " WHERE r.inn = ? AND m.status IN "
+                    "       ('scheduled','sending','pending_review')",
+                    (inn_cifry,)).fetchall()
+            return {str(x[0]) for x in строки if x and x[0]}
+        except Exception:  # noqa: BLE001 - сбой подсчёта не рвёт очередь
+            return set()
 
     # -- постановка в очередь ----------------------------------------------- #
 

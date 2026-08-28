@@ -101,3 +101,46 @@ def test_neotpravlennye_v_potolok_ne_idut(store, suppression):
     cs = make_confirm(store, suppression)
     r = cs.submit(email="director@zavod.ru", subject="Т", body="Б", inn=ИНН)
     assert r.status == "pending", r.reason
+
+
+# --------------------------------------------------------------------------- #
+# Потолок считает и НЕОТПРАВЛЕННЫЕ письма (владелец 28.08: два письма ТЗК
+# «Имсб» разошлись с разницей в две минуты — обе копии прошли проверку, пока
+# ни одна ещё не ушла)
+# --------------------------------------------------------------------------- #
+def test_potolok_uchityvaet_pisma_v_ocheredi(store, suppression):
+    from sender.dtos import CampaignIn, MessageIn, RecipientIn, SequenceStepIn
+    _отправлено(store, "info@zavod.ru", дней=5)
+    cid = store.create_campaign(CampaignIn(
+        name="К", legal_entity="ООО «Руспром»", legal_inn="2221239841"))
+    sid = store.add_step(SequenceStepIn(campaign_id=cid, step_index=0,
+                                        delay_hours=0, subject_tmpl="s",
+                                        body_tmpl="b"))
+    rid = store.upsert_recipient(RecipientIn(
+        email="zakupki@zavod.ru", domain="zavod.ru", inn=ИНН))
+    store.enqueue_message(MessageIn(
+        idempotency_key="k1", campaign_id=cid, recipient_id=rid,
+        sequence_step_id=sid, scheduled_at=datetime.now(UTC)))
+    cs = make_confirm(store, suppression)
+    # info@ отправлен + zakupki@ стоит в расписании = потолок выбран
+    r = cs.submit(email="director@zavod.ru", subject="Т", body="Б", inn=ИНН)
+    assert r.status == "skipped"
+    assert "company_quota" in r.reason
+
+
+def test_pismo_v_ocheredi_ne_meshaet_pervomu_adresu(store, suppression):
+    """Одно письмо в очереди — потолок ещё не выбран, второй адрес проходит."""
+    from sender.dtos import CampaignIn, MessageIn, RecipientIn, SequenceStepIn
+    cid = store.create_campaign(CampaignIn(
+        name="К", legal_entity="ООО «Руспром»", legal_inn="2221239841"))
+    sid = store.add_step(SequenceStepIn(campaign_id=cid, step_index=0,
+                                        delay_hours=0, subject_tmpl="s",
+                                        body_tmpl="b"))
+    rid = store.upsert_recipient(RecipientIn(
+        email="info@zavod.ru", domain="zavod.ru", inn=ИНН))
+    store.enqueue_message(MessageIn(
+        idempotency_key="k2", campaign_id=cid, recipient_id=rid,
+        sequence_step_id=sid, scheduled_at=datetime.now(UTC)))
+    cs = make_confirm(store, suppression)
+    r = cs.submit(email="zakupki@zavod.ru", subject="Т", body="Б", inn=ИНН)
+    assert r.status == "pending", r.reason
