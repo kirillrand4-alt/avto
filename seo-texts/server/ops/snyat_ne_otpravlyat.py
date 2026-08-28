@@ -22,8 +22,9 @@ sys.path.insert(0, r"C:\sender\sender")
 sys.path.insert(0, r"C:\sender")
 КАТИТЬ = "--katit" in sys.argv
 ПАРТИЯ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("partiya=")), "1")
-_Х = "" if ПАРТИЯ == "1" else "-%s" % ПАРТИЯ
-ВЕРДИКТЫ = r"C:\sender\_ops\sud-vtoryh%s.jsonl" % _Х
+_Х = "" if ПАРТИЯ in ("1", "ochered") else "-%s" % ПАРТИЯ
+ВЕРДИКТЫ = (r"C:\sender\_ops\sud-ocheredi.jsonl" if ПАРТИЯ == "ochered"
+            else r"C:\sender\_ops\sud-vtoryh%s.jsonl" % _Х)
 СЛЕД = r"C:\sender\_ops\vtorye-snyatye%s.jsonl" % _Х
 
 вердикты = {}

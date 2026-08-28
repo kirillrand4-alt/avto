@@ -30,7 +30,8 @@ sys.path.insert(1, r"C:\sender\sender")
 
 всё = {}
 for ф, п in ((r"C:\sender\_ops\sud-vtoryh.jsonl", 1),
-             (r"C:\sender\_ops\sud-vtoryh-2.jsonl", 2)):
+             (r"C:\sender\_ops\sud-vtoryh-2.jsonl", 2),
+             (r"C:\sender\_ops\sud-ocheredi.jsonl", 3)):
     try:
         for с in io.open(ф, encoding="utf-8"):
             d = json.loads(с)
