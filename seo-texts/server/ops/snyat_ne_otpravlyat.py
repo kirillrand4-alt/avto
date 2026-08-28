@@ -21,10 +21,13 @@ from collections import Counter
 sys.path.insert(0, r"C:\sender\sender")
 sys.path.insert(0, r"C:\sender")
 КАТИТЬ = "--katit" in sys.argv
-СЛЕД = r"C:\sender\_ops\vtorye-snyatye.jsonl"
+ПАРТИЯ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("partiya=")), "1")
+_Х = "" if ПАРТИЯ == "1" else "-%s" % ПАРТИЯ
+ВЕРДИКТЫ = r"C:\sender\_ops\sud-vtoryh%s.jsonl" % _Х
+СЛЕД = r"C:\sender\_ops\vtorye-snyatye%s.jsonl" % _Х
 
 вердикты = {}
-for с in io.open(r"C:\sender\_ops\sud-vtoryh.jsonl", encoding="utf-8"):
+for с in io.open(ВЕРДИКТЫ, encoding="utf-8"):
     try:
         d = json.loads(с)
         вердикты[int(d["id"])] = d
