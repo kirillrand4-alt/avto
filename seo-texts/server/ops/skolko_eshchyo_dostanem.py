@@ -27,7 +27,13 @@ sys.path.insert(0, r"C:\sender\sender")
 СЛУЖЕБНЫЕ = {"gosuslugi", "buh", "buhgalter", "kadry", "kadri", "kadr", "ok",
              "hr", "vacancy", "rabota", "job", "press", "pr", "smi", "edo",
              "diadoc", "sbis", "nalog", "fss", "pfr", "noreply", "no-reply",
-             "postmaster", "abuse", "spam", "rassylka", "news"}
+             "postmaster", "abuse", "spam", "rassylka", "news",
+             # 28.08: в первой партии проскочили resume@ и cv@ — ящики для
+             # резюме. Набор был собран по ролям обогащения, а эти приходят
+             # с сайта и роли не имеют вовсе.
+             "resume", "rezume", "cv", "personal", "otdelkadrov", "kadrovik",
+             "vakans", "vakansiya", "career", "careers", "recruit",
+             "recruiting", "hrm", "hrd", "praktika", "sekretariat"}
 ВЕС = {"снабжение/закупки": 0, "продажи": 1, "директор": 2,
        "нач.производства": 3, "нач.цеха": 3, "гл.инженер": 3,
        "гл.конструктор": 4, "инженер (не главный)": 4, "техконтакт": 5,

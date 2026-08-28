@@ -24,7 +24,12 @@ import gen_provider as GP                                        # noqa: E402
 МОДЕЛЬ = next((a.split("=", 1)[1] for a in sys.argv[1:]
                if a.startswith("модель=")), "claude-sonnet-4-6")
 ПАЧКА = 5
-СЛЕД = r"C:\sender\_ops\sud-vtoryh.jsonl"
+# Партия задаётся аргументом: partiya=2 читает второй список адресов и пишет
+# вердикты в свой файл, чтобы прогоны не смешивались.
+ПАРТИЯ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("partiya=")), "1")
+_ХВОСТ = "" if ПАРТИЯ == "1" else "-%s" % ПАРТИЯ
+АДРЕСА = r"C:\sender\_ops\vtorye-adresa%s.jsonl" % _ХВОСТ
+СЛЕД = r"C:\sender\_ops\sud-vtoryh%s.jsonl" % _ХВОСТ
 
 СИСТЕМА = """Ты придирчивый редактор холодных B2B-писем. Тебе дают карточку
 компании (название, ОКВЭД, паспорт сайта — то, что о ней реально известно) и
@@ -55,7 +60,7 @@ import gen_provider as GP                                        # noqa: E402
 отправке. Метка ИМЯ_ОТПРАВИТЕЛЯ — так и задумано, это не ошибка."""
 
 партия = {}
-for с in io.open(r"C:\sender\_ops\vtorye-adresa.jsonl", encoding="utf-8"):
+for с in io.open(АДРЕСА, encoding="utf-8"):
     d = json.loads(с)
     партия[int(d["review"])] = (str(d["inn"]), d["email"].lower())
 
