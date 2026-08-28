@@ -80,6 +80,23 @@ PROMPT = """Со страницы контактов предприятия «%(
 "dolzhnost": "как на странице или пусто", "ryadom": "дословный кусок страницы,
 где адрес стоит рядом с ФИО, или пусто"}]}"""
 
+class _БезКоммита:
+    """Соединение, глотающее commit: пачку фиксируем сами.
+
+    Подменить `commit` прямо на sqlite3.Connection нельзя — атрибут только для
+    чтения, поэтому обёртка.
+    """
+
+    def __init__(self, cx):
+        object.__setattr__(self, '_cx', cx)
+
+    def commit(self):
+        return None
+
+    def __getattr__(self, имя):
+        return getattr(self._cx, имя)
+
+
 _ТЕГИ = re.compile(r'<(script|style|noscript)[^>]*>.*?</\1>', re.S | re.I)
 _ПОЧТА = re.compile(r'[\w.+-]+@[\w.-]+\.\w{2,6}')
 
@@ -161,8 +178,65 @@ def _celi(predel=None, tolko_meyer=False):
     return цели[:predel] if predel else цели
 
 
+def zalit_iz_zhurnala():
+    """Записать в базу находки, уже лежащие в журнале.
+
+    Нужен потому, что журнал — точка резюма: разобранную компанию основной
+    прогон больше не переспрашивает. Когда писарь молчал из-за чужого
+    соединения, 3 800 компаний разобрались вхолостую — имена были в журнале, а
+    в базе их не было, и без этого прохода они пропали бы совсем.
+    """
+    import enrich_db as EDB
+    находки = []
+    with open(ЖУРНАЛ, encoding='utf-8', errors='replace') as f:
+        for стр in f:
+            if not стр.strip():
+                continue
+            try:
+                з = json.loads(стр)
+            except Exception:  # noqa: BLE001
+                continue
+            for пара in (з.get('найдено') or []):
+                if len(пара) == 3 and пара[0]:
+                    находки.append((str(з['инн']), пара[0], пара[1], пара[2]))
+    d = {'находок_в_журнале': len(находки)}
+    db = EDB.EnrichDB()
+    db.cx.execute('PRAGMA busy_timeout=120000')
+    настоящее = db.cx
+    коммит = настоящее.commit
+    db.cx = _БезКоммита(настоящее)
+    записано = 0
+    for н in range(0, len(находки), 200):
+        кусок = находки[н:н + 200]
+        for попытка in range(40):
+            try:
+                for инн, адрес, фио, должн in кусок:
+                    db.add_email(инн, адрес, role=должн, person=фио,
+                                 source='кэш-добор', pometka='кэш-добор фио')
+                коммит()
+                записано += len(кусок)
+                break
+            except Exception as e:  # noqa: BLE001
+                if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
+                    raise
+                try:
+                    настоящее.rollback()
+                except Exception:  # noqa: BLE001
+                    pass
+                time.sleep(min(10, 2 + попытка))
+    d['записано'] = записано
+    d['с_меткой_фио_в_базе'] = настоящее.execute(
+        "select count(*) from emails where coalesce(pometka,'') like '%фио%'"
+    ).fetchone()[0]
+    настоящее.close()
+    print(json.dumps(d, ensure_ascii=False, indent=1))
+    return 0
+
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
+    if '--iz-zhurnala' in sys.argv:
+        return zalit_iz_zhurnala()
     предел = None
     if '--predel' in sys.argv:
         предел = int(sys.argv[sys.argv.index('--predel') + 1])
@@ -178,7 +252,11 @@ def main():
 
     потоков = 1
     if '--potokov' in sys.argv:
-        потоков = max(1, min(12, int(sys.argv[sys.argv.index('--potokov') + 1])))
+        # Потолок 64, а не 12: владелец 28.08 «увеличь до 50 потоков,
+        # посмотрим что будет». Упрёмся не в нас, а в шлюз — по его панели
+        # видно RPM, и если он начнёт отвечать отказами, это станет заметно
+        # по счётчику сбоев в первую же минуту.
+        потоков = max(1, min(64, int(sys.argv[sys.argv.index('--potokov') + 1])))
     d['потоков'] = потоков
     клиент = GP.make_client()
     # ОТКРЫТИЕ БАЗЫ ТОЖЕ ЖДЁТ. EnrichDB на конструкторе делает миграции, то есть
@@ -293,18 +371,6 @@ def main():
     настоящее = db.cx
     настоящий_commit = настоящее.commit
 
-    class _БезКоммита:
-        """Соединение, глотающее commit: пачку фиксируем сами."""
-
-        def __init__(self, cx):
-            object.__setattr__(self, '_cx', cx)
-
-        def commit(self):
-            return None
-
-        def __getattr__(self, имя):
-            return getattr(self._cx, имя)
-
     db.cx = _БезКоммита(настоящее)
 
     # ЗАПИСЬ — ОТДЕЛЬНАЯ НИТЬ. Пока слив шёл прямо в главном потоке, он вставал
@@ -315,6 +381,26 @@ def main():
     стоп_записи = threading.Event()
 
     def писарь():
+        # СВОЁ СОЕДИНЕНИЕ. sqlite запрещает пользоваться соединением из чужого
+        # потока, и писарь на первом же сливе молча вставал: 3 200 компаний
+        # разобрано, «записано_имён» ноль. Журнал при этом всё сохранил, так
+        # что ничего не потерялось, но в базу не доехало ни одного имени.
+        свой = None
+        for попытка in range(60):
+            try:
+                свой = EDB.EnrichDB()
+                свой.cx.execute('PRAGMA busy_timeout=120000')
+                break
+            except Exception as e:  # noqa: BLE001
+                if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
+                    raise
+                time.sleep(10)
+        if свой is None:
+            print('писарь: база не открылась', flush=True)
+            return
+        настоящее_п = свой.cx
+        коммит_п = настоящее_п.commit
+        свой.cx = _БезКоммита(настоящее_п)
         буфер = []
 
         def слить():
@@ -323,9 +409,9 @@ def main():
             for попытка in range(30):
                 try:
                     for инн_, адрес_, фио_, должн_ in буфер:
-                        db.add_email(инн_, адрес_, role=должн_, person=фио_,
-                                     source='кэш-добор', pometka='кэш-добор фио')
-                    настоящий_commit()
+                        свой.add_email(инн_, адрес_, role=должн_, person=фио_,
+                                       source='кэш-добор', pometka='кэш-добор фио')
+                    коммит_п()
                     итог['записано_имён'] += len(буфер)
                     буфер.clear()
                     return
@@ -334,7 +420,7 @@ def main():
                             and 'busy' not in str(e).lower()):
                         raise
                     try:
-                        настоящее.rollback()
+                        настоящее_п.rollback()
                     except Exception:  # noqa: BLE001
                         pass
                     time.sleep(min(10, 2 + попытка))
