@@ -202,9 +202,17 @@ class ImapWatcher:
             crit = tuple(criteria) if criteria else ("UNSEEN",)
             do_mark = mark_seen if mark_seen is not None else (crit == ("UNSEEN",))
 
-            typ, data = imap.search(None, *crit)
+            # ИЩЕМ ПО UID, А НЕ ПО ПОРЯДКОВОМУ НОМЕРУ. imap.search отдаёт
+            # НОМЕРА В ПАПКЕ, а ключ дедупа события собирается как
+            # imap:{uidvalidity}:{номер}:{kind} — то есть номер выдавался за
+            # UID. Номера сдвигаются при удалении писем: 28.08 в шести ящиках
+            # из двадцати одного они разошлись с UID (у i.lyapin@kompressor-
+            # air-expert.ru — у 50 писем из 52). Новое письмо получало ключ,
+            # уже занятый старым, и молча отбрасывалось как «уже видели» —
+            # так терялись живые ответы клиентов.
+            typ, data = imap.uid("SEARCH", None, *crit)
             if typ != "OK":
-                logger.warning(f"IMAP search failed for {mailbox_id}: {typ}")
+                logger.warning(f"IMAP uid search failed for {mailbox_id}: {typ}")
                 imap.logout()
                 return []
 
@@ -223,7 +231,7 @@ class ImapWatcher:
                 # Ревью (подтверждено): BODY.PEEK — обычный RFC822-fetch на
                 # части серверов сам ставит \Seen, и упавшее ДО обработки
                 # письмо навсегда выпадало из UNSEEN-выборки.
-                typ, msg_data = imap.fetch(uid, "(BODY.PEEK[])")
+                typ, msg_data = imap.uid("FETCH", uid, "(BODY.PEEK[])")
                 if typ != "OK" or not msg_data or not msg_data[0]:
                     logger.warning("IMAP fetch пуст для uid=%s (%s) — письмо "
                                    "останется UNSEEN, возьмём в следующий тик",
@@ -249,7 +257,7 @@ class ImapWatcher:
                     # линией защиты.
                     if do_mark:
                         try:
-                            imap.store(uid, "+FLAGS", "\\Seen")
+                            imap.uid("STORE", uid, "+FLAGS", "\\Seen")
                         except Exception:  # noqa: BLE001 - флаг не критичен
                             logger.warning("IMAP store \\Seen failed uid=%s", uid_str)
                 except Exception as e:
