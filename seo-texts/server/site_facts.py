@@ -460,9 +460,15 @@ def _bd():
     # на PRAGMA и на записи внутри уже открытого соединения его не хватает, и
     # ночной прогон 20.08 ронял ЦЕЛУЮ пачку из 60 компаний одной строкой
     # «database is locked» — в базу в это же время пишут мост зенки и поиск
-    # сайтов. busy_timeout заставляет ждать до 30 секунд вместо отказа.
+    # сайтов. busy_timeout заставляет ждать вместо отказа.
+    #
+    # 180 секунд, а не 30. Замер 28.08: тридцати не хватает — поиск сайтов на
+    # двадцати четырёх потоках пишет часто и короткими порциями, и цикл в его
+    # паузы не попадает; за пять минут пачка не прошла ни разу, в логе одни
+    # «сбой: database is locked». Терпение здесь дешевле повтора: пачка стоит
+    # до 96 оплаченных вызовов провайдера.
     try:
-        c.execute('PRAGMA busy_timeout=30000')
+        c.execute('PRAGMA busy_timeout=180000')
     except Exception:  # noqa: BLE001
         pass
     c.execute(SHEMA)
@@ -936,6 +942,30 @@ def _sliyanie(staroe_json, novoe):
     return itog
 
 
+def _s_povtorom(c, delo, popytok=30):
+    """Выполнить запись, пересиживая занятую базу.
+
+    28.08: одной строки «database is locked» хватало, чтобы потерять ЦЕЛУЮ
+    пачку — а в пачке до 96 компаний, за разбор которых провайдеру уже
+    заплачено. busy_timeout спасает не всегда: рядом пишет поиск сайтов на
+    двадцати четырёх потоках, и в плотном потоке коротких транзакций ожидание
+    внутри sqlite успевает истечь. Тот же рубеж, что в поиске: оплаченную
+    работу замок сжигать не должен.
+    """
+    for i in range(popytok):
+        try:
+            return delo()
+        except sqlite3.OperationalError as e:
+            if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
+                raise
+            try:
+                c.rollback()
+            except Exception:  # noqa: BLE001
+                pass
+            time.sleep(min(10, 2 + i))
+    raise sqlite3.OperationalError('database is locked: не вышло за %d попыток' % popytok)
+
+
 def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
     """Разобрать страницы провайдером и записать в site_facts.
 
@@ -1007,15 +1037,16 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
             # оживает за минуты, страницы приезжают за часы.
             чужая = _ne_nasha_vina(r['note'])
             отложить = (time.time() + (1800 if чужая == 'провайдер' else 6 * 3600)) if чужая else 0
-            c.execute("INSERT INTO site_facts(inn, facts_json, sources_json, site, ts, "
-                      "note, popytok, otlozheno_do) VALUES(?,?,?,?,?,?,?,?) "
-                      "ON CONFLICT(inn) DO UPDATE SET ts=excluded.ts, note=excluded.note, "
-                      "otlozheno_do=excluded.otlozheno_do, "
-                      "popytok=coalesce(site_facts.popytok,0)+?",
-                      (r['inn'], '', '', r['site'],
-                       time.strftime('%Y-%m-%dT%H:%M:%S'), r['note'],
-                       0 if чужая else 1, отложить, 0 if чужая else 1))
-            c.commit()
+            _s_povtorom(c, lambda: c.execute(
+                "INSERT INTO site_facts(inn, facts_json, sources_json, site, ts, "
+                "note, popytok, otlozheno_do) VALUES(?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(inn) DO UPDATE SET ts=excluded.ts, note=excluded.note, "
+                "otlozheno_do=excluded.otlozheno_do, "
+                "popytok=coalesce(site_facts.popytok,0)+?",
+                (r['inn'], '', '', r['site'],
+                 time.strftime('%Y-%m-%dT%H:%M:%S'), r['note'],
+                 0 if чужая else 1, отложить, 0 if чужая else 1)))
+            _s_povtorom(c, c.commit)
             if r['note'] == 'страниц в кэше нет':
                 itog['без_страниц'] += 1
             else:
@@ -1043,7 +1074,7 @@ def sobrat(predel=50, iz_kesha=False, spisok=None, potokov=1):
                   (r['inn'], json.dumps(fakty, ensure_ascii=False),
                    json.dumps(r['istochniki'], ensure_ascii=False), r['site'],
                    time.strftime('%Y-%m-%dT%H:%M:%S'), '', FORMAT, krug))
-        c.commit()
+        _s_povtorom(c, c.commit)
         if krug:
             itog['пересобрано'] = itog.get('пересобрано', 0) + 1
         itog['разобрано'] += 1
