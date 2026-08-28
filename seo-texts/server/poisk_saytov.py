@@ -116,6 +116,27 @@ def _ne_iskali(src):
     return any(м in s for м in _НЕ_ИСКАЛИ)
 
 
+def _с_повтором(c, дело, попыток=40):
+    """Выполнить запрос, пересиживая занятую базу.
+
+    enrich.db пишут одновременно мост, разбор паспортов и разбор контактов;
+    поиск сайтов ходит туда редко, но метко — и без повтора терял находку, за
+    которую уже заплачено.
+    """
+    for i in range(попыток):
+        try:
+            return дело()
+        except sqlite3.OperationalError as e:
+            if 'locked' not in str(e).lower() and 'busy' not in str(e).lower():
+                raise
+            try:
+                c.rollback()
+            except Exception:  # noqa: BLE001
+                pass
+            time.sleep(min(10, 2 + i))
+    return None
+
+
 def цели(skolko, dolya=None):
     """База обзвона по убыванию выручки: у кого сайта нет нигде и кого ещё не искали.
 
@@ -345,21 +366,31 @@ def прогон(skolko=1000, potokov=8):
             итог['не_нашли'] += 1
             continue
         итог['нашли'] += 1
-        есть = c.execute('select 1 from companies where inn=?', (r['inn'],)).fetchone()
+        # ЗАМОК ПЕРЕСИЖИВАЕМ. 28.08 прогон умер на первой же находке с
+        # «database is locked»: рядом писали разбор ФИО и мост, а здесь стояла
+        # голая запись без повтора. Найденный сайт при этом терялся, и деньги
+        # за запрос уходили впустую.
+        есть = _с_повтором(
+            c, lambda: c.execute('select 1 from companies where inn=?',
+                                 (r['inn'],)).fetchone())
         if not есть:
             c.execute("INSERT INTO companies(inn, name, region, updated_at) VALUES(?,?,?,?)",
                       (r['inn'], k['name'][:200], k['city'][:80],
                        time.strftime('%Y-%m-%dT%H:%M:%S')))
         if r.get('verdikt'):
-            c.execute('update companies set site=?, site_source=?, updated_at=? where inn=?',
-                      (r['site'], r['verdikt'], time.strftime('%Y-%m-%dT%H:%M:%S'), r['inn']))
+            _с_повтором(c, lambda: c.execute(
+                'update companies set site=?, site_source=?, updated_at=? '
+                'where inn=?',
+                (r['site'], r['verdikt'], time.strftime('%Y-%m-%dT%H:%M:%S'),
+                 r['inn'])))
             итог['подтвердили'] += 1
         else:
-            c.execute("update companies set cand_site=?, updated_at=? where inn=? "
-                      "and coalesce(site,'')=''",
-                      (r['site'], time.strftime('%Y-%m-%dT%H:%M:%S'), r['inn']))
+            _с_повтором(c, lambda: c.execute(
+                "update companies set cand_site=?, updated_at=? where inn=? "
+                "and coalesce(site,'')=''",
+                (r['site'], time.strftime('%Y-%m-%dT%H:%M:%S'), r['inn'])))
             итог['в_кандидаты'] += 1
-    c.commit()
+    _с_повтором(c, c.commit)
     c.close()
     итог['секунд'] = round(time.time() - t0)
     итог['рублей_примерно'] = round(len(задачи) * 25 / 1000, 1)
