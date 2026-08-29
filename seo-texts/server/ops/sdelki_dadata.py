@@ -11,6 +11,7 @@
 
 Запуск: python sdelki_dadata.py [бюджет_сек]
 """
+import io
 import json
 import os
 import sqlite3
@@ -42,14 +43,33 @@ o = sqlite3.connect("file:%s?mode=ro" % ОБЗВОН, uri=True, timeout=60)
 обзвон = {цифры(r[0]) for r in o.execute("SELECT inn FROM obzvon")}
 o.close()
 
-db = sqlite3.connect(D.ENR, timeout=180)
-# Ждать блокировку, а не падать: 29.08 пробный прогон рядом убил отцеплённый
-# на «database is locked» после тысячи добранных карточек.
-db.execute("PRAGMA busy_timeout=180000")
-db.executescript(D.DDL)
-есть = {цифры(r[0]) for r in db.execute(
-    "SELECT inn FROM requisites WHERE COALESCE(ogrn,'') <> ''")}
-знаем = {цифры(r[0]) for r in db.execute("SELECT inn FROM companies")}
+# БАЗУ В ГОРЯЧЕМ ПУТИ НЕ ТРОГАЕМ ВОВСЕ. enrich.db надолго держат соседние
+# службы обзвона; прогон с записью в базу за 1720 секунд обработал ТРИ записи —
+# каждый commit висел на блокировке по 180 секунд и трижды повторялся. Durable
+# здесь журнал с fsync, а в базу карточки доливает zalit_iz_zhurnala.py, когда
+# она свободна. Читаем базу тоже только на чтение и с коротким ожиданием.
+db = sqlite3.connect("file:%s?mode=ro" % D.ENR, uri=True, timeout=20)
+db.execute("PRAGMA busy_timeout=15000")
+try:
+    есть = {цифры(r[0]) for r in db.execute(
+        "SELECT inn FROM requisites WHERE COALESCE(ogrn,'') <> ''")}
+    знаем = {цифры(r[0]) for r in db.execute("SELECT inn FROM companies")}
+except sqlite3.OperationalError as ex:
+    print("база занята (%s) — резюм только по журналу" % str(ex)[:40])
+    есть, знаем = set(), set()
+db.close()
+# Журнал — вторая половина резюма: он пишется даже когда база недоступна.
+if os.path.exists(ЖУРНАЛ):
+    for с in io.open(ЖУРНАЛ, encoding="utf-8", errors="ignore"):
+        с = с.strip()
+        if not с:
+            continue
+        try:
+            и = цифры(json.loads(с).get("inn"))
+        except Exception:                                          # noqa: BLE001
+            continue
+        if и:
+            есть.add(и)
 
 невидимые = sorted(сделки - обзвон - знаем - есть)
 остальные = sorted((сделки - есть) - set(невидимые))
@@ -62,7 +82,7 @@ print("   в очереди сейчас:  %d (невидимых %d, прочи
 os.makedirs(os.path.dirname(ЖУРНАЛ), exist_ok=True)
 jl = open(ЖУРНАЛ, "a", encoding="utf-8")
 t0 = time.time()
-ok = miss = err = отложено = занято = 0
+ok = miss = err = 0
 последняя = None
 for n, inn in enumerate(todo, 1):
     if time.time() - t0 > БЮДЖЕТ:
@@ -101,37 +121,13 @@ for n, inn in enumerate(todo, 1):
     if n % 25 == 0:
         jl.flush()
         os.fsync(jl.fileno())
-    записал = False
-    for попытка in range(3):
-        try:
-            db.execute("insert or replace into requisites ({}) values ({})".format(
-                ",".join(D.FIELDS), ",".join("?" for _ in D.FIELDS)),
-                [row.get(f) for f in D.FIELDS])
-            if n % 25 == 0:
-                db.commit()
-            записал = True
-            break
-        except sqlite3.OperationalError as ex:
-            if "locked" not in str(ex).lower():
-                raise
-            отложено += 1
-            time.sleep(2.0 * (попытка + 1))
-    if not записал:
-        занято += 1
     time.sleep(0.14)
-try:
-    db.commit()
-except sqlite3.OperationalError:
-    занято += 1
 jl.flush()
 os.fsync(jl.fileno())
-всего = db.execute(
-    "SELECT COUNT(*) FROM requisites WHERE COALESCE(ogrn,'') <> ''").fetchone()[0]
-db.close()
 jl.close()
+всего = sum(1 for _ in io.open(ЖУРНАЛ, encoding="utf-8", errors="ignore"))
 print(json.dumps({
     "в_очереди_было": len(todo), "получено": ok,
     "нет_в_ЕГРЮЛ": miss, "ошибок": err, "последняя_ошибка": последняя,
-    "всего_в_requisites_с_ОГРН": всего,
-    "ждали_блокировку": отложено, "не_легло_в_базу_ждёт_журнала": занято, "секунд": round(time.time() - t0, 1),
+    "строк_в_журнале": всего, "секунд": round(time.time() - t0, 1),
     "осталось_по_сделкам": len(todo) - ok - miss}, ensure_ascii=False))
