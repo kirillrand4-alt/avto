@@ -28,8 +28,16 @@ r"""Вытяжка почт, ролей и телефонов из сырых с
 РЕЗЮМИРУЕМОСТЬ по компаниям: таблица sdelano в той же базе на D:. Рестарт
 песочницы, перезагрузка сервера, падение процесса — продолжаем с места.
 
+ДВА ИСТОЧНИКА. Сырьё Зенки на D: — полные страницы, как их отдал сайт. Кэш
+конвейера (pagecache) — то же самое, но урезанное (страница до 300 тысяч знаков,
+компания до 2,5 МБ) и зато ПОЛНОЕ по охвату: туда попадает каждая скачанная
+страница, чем бы её ни брали — Зенкой в любом режиме или питоновским краулером.
+Владелец 29.08: «чтобы всегда и везде брались и почты и телефоны», поэтому
+разбираем оба, и кэш перечитываем, когда он пополнился (следим за mtime).
+
     python razbor_stranic.py                     посчитать объём работы
-    python razbor_stranic.py --delat             разбирать (8 процессов)
+    python razbor_stranic.py --delat             разбирать сырьё (8 процессов)
+    python razbor_stranic.py --delat --kesh      разбирать кэш конвейера
     python razbor_stranic.py --delat --procesov 12 --minut 240
 """
 import json
@@ -46,6 +54,7 @@ if DIR not in sys.path:
 
 ИСТОЧНИК = os.environ.get('RAZBOR_DIR', r'D:\zenno-razobrano')
 ИСХОДНЫЙ_C = os.environ.get('RAZBOR_DIR_C', r'C:\seostat\drop\zenno\razobrano')
+КЭШ = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
 БАЗА = os.environ.get('RAZBOR_DB', r'D:\razbor-nahodki.db')
 ЖУРНАЛ = os.environ.get('RAZBOR_LOG', r'D:\razbor-nahodki.jsonl')
 ENRICH = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
@@ -74,6 +83,12 @@ def _база(путь=None):
     create table if not exists sdelano(
       inn text primary key, ts text, stranic int, pocht int, telefonov int,
       novyh_pocht int, novyh_telefonov int);
+    -- кэш конвейера пополняется и после разбора: у файла меняется mtime, и
+    -- компанию надо перечитать. Поэтому отдельная таблица со свежестью, а не
+    -- отметка «сделано навсегда».
+    create table if not exists sdelano_kesh(
+      inn text primary key, ts text, mtime real, stranic int, pocht int,
+      telefonov int, novyh_pocht int, novyh_telefonov int);
     create table if not exists nahodki_pochta(
       inn text, email text, role text, role_src text, ctx text, src text,
       source_url text, skryt int, novyy int, ts text,
@@ -131,14 +146,54 @@ def _страницы(inn):
     return страницы, недоехало
 
 
-def разобрать(inn):
-    """Один ИНН: все его страницы -> адреса с ролью и контекстом + телефоны."""
+def целевые_кэш(c):
+    """ИНН из кэша конвейера, которые ещё не разбирали или которые пополнились.
+
+    Владелец 29.08: «чтобы всегда и везде брались и почты и телефоны». Кэш —
+    единственное место, куда попадает КАЖДАЯ скачанная страница, чем бы её ни
+    брали: и Зенкой в режиме фактов, и питоновским краулером. Поэтому контакты
+    снимаем отсюда, а не только с сырья Зенки.
+    """
+    было = {str(i): (m or 0) for i, m in c.execute(
+        'select inn, coalesce(mtime,0) from sdelano_kesh')}
+    цели = []
+    try:
+        with os.scandir(КЭШ) as это:
+            for з in это:
+                if not з.name.endswith('.json.gz'):
+                    continue
+                inn = з.name[:-8]
+                try:
+                    m = з.stat().st_mtime
+                except OSError:
+                    continue
+                if m > было.get(inn, -1) + 1:
+                    цели.append(inn)
+    except OSError:
+        pass
+    return цели
+
+
+def _страницы_кэша(inn):
+    """[(url, html)] из кэша конвейера."""
+    import gzip
+    п = os.path.join(КЭШ, '%s.json.gz' % inn)
+    try:
+        with gzip.open(п, 'rb') as f:
+            д = json.loads(f.read().decode('utf-8', 'replace'))
+    except Exception:  # noqa: BLE001
+        return []
+    страницы = []
+    for с in (д.get('pages') or []):
+        h = с.get('html') or ''
+        if h.strip():
+            страницы.append((с.get('url') or д.get('site') or '', h))
+    return страницы
+
+
+def _собрать(inn, страницы):
+    """Страницы одной компании -> адреса с ролью и контекстом + телефоны."""
     import contact_extract as CE
-    страницы, недоехало = _страницы(inn)
-    if недоехало:
-        return {'inn': inn, 'отложен': недоехало}
-    if not страницы:
-        return {'inn': inn, 'stranic': 0, 'pochta': [], 'telefony': []}
     почта, телефоны = {}, {}
     for url, html in страницы:
         try:
@@ -174,6 +229,30 @@ def разобрать(inn):
             'telefony': [{'phone': p, 'source_url': u} for p, u in телефоны.items()]}
 
 
+def разобрать(inn):
+    """Сырьё Зенки: один ИНН со своими файлами на D:."""
+    страницы, недоехало = _страницы(inn)
+    if недоехало:
+        return {'inn': inn, 'отложен': недоехало}
+    if not страницы:
+        return {'inn': inn, 'stranic': 0, 'pochta': [], 'telefony': []}
+    return _собрать(inn, страницы)
+
+
+def разобрать_кэш(inn):
+    """Кэш конвейера: один ИНН, вместе с отметкой свежести файла."""
+    п = os.path.join(КЭШ, '%s.json.gz' % inn)
+    try:
+        m = os.path.getmtime(п)
+    except OSError:
+        return {'inn': inn, 'stranic': 0, 'pochta': [], 'telefony': [], 'mtime': 0}
+    страницы = _страницы_кэша(inn)
+    р = _собрать(inn, страницы) if страницы else {
+        'inn': inn, 'stranic': 0, 'pochta': [], 'telefony': []}
+    р['mtime'] = m
+    return р
+
+
 def _известное():
     """Что уже есть в enrich.db — чтобы сразу помечать находки как новые."""
     почта, телефоны = set(), set()
@@ -195,17 +274,26 @@ def _известное():
     return почта, телефоны
 
 
-def прогон(процессов=8, минут=0, предел=0):
+def прогон(процессов=8, минут=0, предел=0, источник='razobrano'):
     t0 = time.time()
     c = _база()
-    уже = set(r[0] for r in c.execute('select inn from sdelano'))
-    цели = [i for i in целевые_инн() if i not in уже]
+    кэш = (источник == 'kesh')
+    if кэш:
+        цели = целевые_кэш(c)
+        уже = c.execute('select count(*) from sdelano_kesh').fetchone()[0]
+        дело = разобрать_кэш
+    else:
+        было = set(r[0] for r in c.execute('select inn from sdelano'))
+        цели = [i for i in целевые_инн() if i not in было]
+        уже = len(было)
+        дело = разобрать
     if предел:
         цели = цели[:предел]
     известн_п, известн_т = _известное()
-    итог = {'целей': len(цели), 'уже_было': len(уже), 'разобрано': 0,
-            'страниц': 0, 'почт': 0, 'новых_почт': 0, 'телефонов': 0,
-            'новых_телефонов': 0, 'отложено': 0, 'скрытых': 0, 'ошибок': 0}
+    итог = {'источник': источник, 'целей': len(цели), 'уже_было': уже,
+            'разобрано': 0, 'страниц': 0, 'почт': 0, 'новых_почт': 0,
+            'телефонов': 0, 'новых_телефонов': 0, 'отложено': 0, 'скрытых': 0,
+            'ошибок': 0}
     if not цели:
         итог['итог'] = 'разбирать нечего'
         c.close()
@@ -213,7 +301,7 @@ def прогон(процессов=8, минут=0, предел=0):
     сейчас = time.strftime('%Y-%m-%dT%H:%M:%S')
     с_прошлой_записи = 0
     with ProcessPoolExecutor(max_workers=процессов) as пул:
-        for р in пул.map(разобрать, цели, chunksize=8):
+        for р in пул.map(дело, цели, chunksize=8):
             if минут and time.time() - t0 > минут * 60:
                 итог['итог'] = 'остановлен по времени, остальное — в следующий раз'
                 break
@@ -240,10 +328,18 @@ def прогон(процессов=8, минут=0, предел=0):
                 c.execute('insert or ignore into nahodki_telefon(inn,phone,'
                           'source_url,novyy,ts) values(?,?,?,?,?)',
                           (inn, т['phone'], т['source_url'], новый, сейчас))
-            c.execute('insert or replace into sdelano(inn,ts,stranic,pocht,'
-                      'telefonov,novyh_pocht,novyh_telefonov) values(?,?,?,?,?,?,?)',
-                      (inn, сейчас, р['stranic'], len(р['pochta']),
-                       len(р['telefony']), нп, нт))
+            if кэш:
+                c.execute('insert or replace into sdelano_kesh(inn,ts,mtime,'
+                          'stranic,pocht,telefonov,novyh_pocht,novyh_telefonov) '
+                          'values(?,?,?,?,?,?,?,?)',
+                          (inn, сейчас, р.get('mtime') or 0, р['stranic'],
+                           len(р['pochta']), len(р['telefony']), нп, нт))
+            else:
+                c.execute('insert or replace into sdelano(inn,ts,stranic,pocht,'
+                          'telefonov,novyh_pocht,novyh_telefonov) '
+                          'values(?,?,?,?,?,?,?)',
+                          (inn, сейчас, р['stranic'], len(р['pochta']),
+                           len(р['telefony']), нп, нт))
             итог['разобрано'] += 1
             итог['страниц'] += р['stranic']
             итог['почт'] += len(р['pochta'])
@@ -282,9 +378,12 @@ def посмотреть():
          'новых_телефонов': c.execute(
              'select count(*) from nahodki_telefon where novyy=1').fetchone()[0],
          'роли': c.execute('select coalesce(role,"без роли"), count(*) '
-                           'from nahodki_pochta group by 1 order by 2 desc').fetchall()}
+                           'from nahodki_pochta group by 1 order by 2 desc').fetchall(),
+         'сделано_из_кэша': c.execute(
+             'select count(*) from sdelano_kesh').fetchone()[0]}
+    д['осталось_в_кэше'] = len(целевые_кэш(c))
     c.close()
-    д['целей_всего'] = len(целевые_инн())
+    д['целей_сырья'] = len(целевые_инн())
     return д
 
 
@@ -303,17 +402,22 @@ def main():
     if '--posmotret' in a:
         print(json.dumps(посмотреть(), ensure_ascii=False, indent=1))
         return 0
+    источник = 'kesh' if '--kesh' in a else 'razobrano'
     if '--delat' not in a:
         c = _база()
         уже = c.execute('select count(*) from sdelano').fetchone()[0]
+        осталось_кэш = len(целевые_кэш(c))
+        уже_кэш = c.execute('select count(*) from sdelano_kesh').fetchone()[0]
         c.close()
         цели = целевые_инн()
-        print(json.dumps({'компаний_на_D': len(цели), 'уже_разобрано': уже,
-                          'осталось': len(цели) - уже, 'база': БАЗА},
-                         ensure_ascii=False, indent=1))
+        print(json.dumps({'сырьё_на_D': len(цели), 'сырьё_разобрано': уже,
+                          'сырьё_осталось': len(цели) - уже,
+                          'кэш_разобран': уже_кэш, 'кэш_осталось': осталось_кэш,
+                          'база': БАЗА}, ensure_ascii=False, indent=1))
         return 0
     print(json.dumps(прогон(чис('--procesov', 8), чис('--minut', 0),
-                            чис('--predel', 0)), ensure_ascii=False, indent=1))
+                            чис('--predel', 0), источник),
+                     ensure_ascii=False, indent=1))
     return 0
 
 

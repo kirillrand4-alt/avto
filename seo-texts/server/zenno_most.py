@@ -76,8 +76,26 @@ def _otdannye():
 def ochered(predel=500):
     """Дописать в очередь компании, чей сайт питон взять не смог.
 
-    Берём тех, у кого сайт известен (или есть кандидат), но контактов нет — это и
-    есть случаи заслона, ради которых Зенка нужна. Уже отданные не повторяем.
+    Берём тех, у кого сайт известен (или есть кандидат), но контактов С САЙТА
+    нет — это и есть случаи заслона, ради которых Зенка нужна. Уже отданные не
+    повторяем.
+
+    ПОЧЕМУ «С САЙТА», А НЕ «ВООБЩЕ» (владелец 29.08: «исправь чтобы всегда и
+    везде брались и почты и телефоны»). Здесь стояло `not exists(select 1 from
+    emails ...)` — любой адрес отменял обход. А в базе 156 590 адресов из
+    обзвонной выгрузки на 104 136 компаний: реестровая почта, нашими гейтами не
+    проверенная. Компания с такой строкой считалась «контакты известны» и на
+    контактный обход не попадала НИКОГДА. При этом за паспортом её сайт всё
+    равно обходили — страницы ложились в razobrano, и контакты на них никто не
+    читал. Замер 29.08 на 5 100 разобранных компаниях: у 2 451 почта была
+    только из обзвона, и на их же страницах нашлось 4 996 адресов, которых в
+    базе нет.
+
+    Теперь отменяют обход только адреса, снятые НАШИМ сбором с сайта
+    (`own-site`, `zenno`, `кэш-добор`). Реестровые и справочниковые — не
+    отменяют. Условие расширяет круг с 14 021 компании до 62 866, поэтому тех,
+    чьи страницы уже лежат в кэше, в очередь не ставим вовсе: их разбирает
+    razbor_stranic.py по уже скачанному, без единого нового обхода.
     """
     _papki()
     bylo = _otdannye()
@@ -122,8 +140,8 @@ def ochered(predel=500):
     kursor = c.execute(
         "select inn, coalesce(site,'') site, coalesce(cand_site,'') cand "
         "from companies where (coalesce(site,'')<>'' or coalesce(cand_site,'')<>'') "
-        "and coalesce(best_email,'')='' "
-        "and not exists(select 1 from emails e where e.inn=companies.inn)")
+        "and not exists(select 1 from emails e where e.inn=companies.inn "
+        "               and e.source in ('own-site','zenno','кэш-добор'))")
 
     # справочники и агрегаторы в очередь не отдаём: первая партия 13.08 показала
     # в заданиях check.tochka.com и tatcenter.ru — Зенка честно обошла чужие сайты.
@@ -144,13 +162,24 @@ def ochered(predel=500):
     except Exception:  # noqa: BLE001
         ploshchadka = lambda u: ''
 
+    # Страницы уже скачаны — обходить второй раз незачем: контакты с них снимет
+    # razbor_stranic.py. Без этой проверки расширенное условие погнало бы Зенку
+    # по 45 тысячам компаний, чьи страницы лежат в кэше с прошлых обходов.
+    try:
+        s_keshem = {n.split('.')[0] for n in os.listdir(KESH)}
+    except OSError:
+        s_keshem = set()
+
     novye = []
-    prosmotreno = otdano_ranshe = chuzhih = 0
+    prosmotreno = otdano_ranshe = chuzhih = uzhe_kesh = 0
     for r in kursor:
         prosmotreno += 1
         inn = str(r['inn'])
         if inn in bylo:
             otdano_ranshe += 1
+            continue
+        if inn in s_keshem:
+            uzhe_kesh += 1
             continue
         u = (r['site'] or r['cand'] or '').strip()
         if not u:
@@ -184,7 +213,7 @@ def ochered(predel=500):
     # который мы только что чинили
     return {'дописано': len(novye), 'просмотрено': prosmotreno,
             'уже_отдавали': otdano_ranshe, 'чужих_сайтов': chuzhih,
-            'файл': OCHERED}
+            'страницы_уже_в_кэше': uzhe_kesh, 'файл': OCHERED}
 
 
 def povtor_nezashedshih(predel=700, starshe_chasov=6):

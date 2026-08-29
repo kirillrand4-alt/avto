@@ -16,6 +16,7 @@ r"""Сторож: держит конвейер живым, пока владе�
 """
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import time
@@ -229,6 +230,44 @@ def обход():
                     'паспорта': было['паспорта']['записей']}
     except Exception as e:  # noqa: BLE001
         сделано['слив_сбой'] = str(e)[:120]
+
+    # КОНТАКТЫ СО СТРАНИЦ — ВСЕГДА И ВЕЗДЕ (владелец 29.08). Страницы качались
+    # ради паспортов, а почты и телефоны на них никто не читал: у 2 451 компании
+    # из 5 100 разобранных почта в базе была только реестровая, и на их же
+    # страницах нашлось 4 996 адресов, которых в базе нет. Теперь разбор — такой
+    # же постоянный житель сервера, как мост и цикл фактов: сначала сырьё Зенки,
+    # потом кэш конвейера, куда попадает КАЖДАЯ скачанная страница.
+    try:
+        sys.path.insert(0, DIR)
+        import razbor_stranic as RS
+        if not _крутится(живые, 'razbor_stranic.py'):
+            с = RS._база()
+            было = set(r[0] for r in с.execute('select inn from sdelano'))
+            сырьё = sum(1 for i in RS.целевые_инн() if i not in было)
+            кэш = 0 if сырьё else len(RS.целевые_кэш(с))
+            с.close()
+            if сырьё or кэш:
+                сделано['разбор_страниц'] = {
+                    'что': 'сырьё' if сырьё else 'кэш',
+                    'осталось': сырьё or кэш,
+                    'pid': _поднять('razbor_stranic.py',
+                                    ['--delat', '--procesov', '6']
+                                    + ([] if сырьё else ['--kesh']),
+                                    r'D:\razbor-stranic.out', {'NO_BROWSER': '1'})}
+        # слив находок в enrich.db — отдельным процессом, он умеет ждать окна
+        if not _крутится(живые, 'slit_nahodki.py'):
+            н = sqlite3.connect('file:%s?mode=ro' % RS.БАЗА.replace('\\', '/'),
+                                uri=True, timeout=10)
+            ждут = н.execute('select count(*) from nahodki_pochta '
+                             'where coalesce(slito,0)=0').fetchone()[0]
+            н.close()
+            if ждут:
+                сделано['слив_находок'] = {
+                    'ждут': ждут,
+                    'pid': _поднять('slit_nahodki.py', ['--delat', '--skolko', '20'],
+                                    r'D:\sliv-nahodok.out', {'NO_BROWSER': '1'})}
+    except Exception as e:  # noqa: BLE001
+        сделано['разбор_сбой'] = str(e)[:150]
 
     длина = _длина_очереди()
     if длина < 150:
