@@ -96,7 +96,18 @@ def _база(путь=None):
     create table if not exists nahodki_telefon(
       inn text, phone text, source_url text, novyy int, ts text,
       primary key(inn, phone));
+    -- ИНН, найденный на самой странице, подтверждает принадлежность контакта
+    -- сильнее любого совпадения доменов (владелец 29.08: «особенно если знаем
+    -- инн на странице»). Считается отдельным дешёвым проходом: поиск подстроки,
+    -- а не разбор.
+    create table if not exists inn_na_stranicah(
+      inn text primary key, ts text, stranic int, s_innom int, adresa_url text);
     """)
+    for таблица in ('nahodki_pochta', 'nahodki_telefon'):
+        try:
+            c.execute('alter table %s add column inn_na_str int' % таблица)
+        except sqlite3.OperationalError:
+            pass
     return c
 
 
@@ -253,6 +264,90 @@ def разобрать_кэш(inn):
     return р
 
 
+def _любые_страницы(inn):
+    """Страницы компании откуда угодно: сырьё на D:, сырьё на C:, кэш конвейера."""
+    страницы, _ = _страницы(inn)
+    if страницы:
+        return страницы
+    прежний = globals()['ИСТОЧНИК']
+    try:                                   # свежие сутки остались на рабочем диске
+        globals()['ИСТОЧНИК'] = ИСХОДНЫЙ_C
+        страницы, _ = _страницы(inn)
+    finally:
+        globals()['ИСТОЧНИК'] = прежний
+    return страницы or _страницы_кэша(inn)
+
+
+def инн_на_страницах(inn):
+    """Есть ли ИНН компании на её же страницах и на каких именно.
+
+    Ищем и слитно, и с любыми разделителями внутри: «ИНН 7701 234567» и
+    «ИНН: 7701234567» — одно и то же число, а различие ломало бы весь смысл
+    проверки. Сравниваем по цифрам страницы, а не по её разметке.
+    """
+    страницы = _любые_страницы(inn)
+    if not страницы:
+        return {'inn': inn, 'stranic': 0, 's_innom': 0, 'urls': []}
+    цифры = re.sub(r'\D', '', str(inn))
+    urls = []
+    for url, html in страницы:
+        текст = re.sub(r'<[^>]+>', ' ', html)
+        if цифры in текст or цифры in re.sub(r'[\s\-.]', '', текст):
+            urls.append(url)
+    return {'inn': inn, 'stranic': len(страницы), 's_innom': len(urls),
+            'urls': urls[:20]}
+
+
+def прогон_инн(процессов=6, предел=0):
+    """Проставить признак «ИНН найден на странице» у накопленных находок."""
+    t0 = time.time()
+    c = _база()
+    было = set(str(r[0]) for r in c.execute('select inn from inn_na_stranicah'))
+    цели = [str(r[0]) for r in c.execute(
+        'select distinct inn from nahodki_pochta '
+        'union select distinct inn from nahodki_telefon') if str(r[0]) not in было]
+    if предел:
+        цели = цели[:предел]
+    итог = {'целей': len(цели), 'проверено': 0, 'с_инном': 0, 'без_страниц': 0}
+    if not цели:
+        итог['итог'] = 'проверять нечего'
+        c.close()
+        return итог
+    сейчас = time.strftime('%Y-%m-%dT%H:%M:%S')
+    сделано = 0
+    with ProcessPoolExecutor(max_workers=процессов) as пул:
+        for р in пул.map(инн_на_страницах, цели, chunksize=8):
+            inn = р['inn']
+            if not р['stranic']:
+                итог['без_страниц'] += 1
+            c.execute('insert or replace into inn_na_stranicah(inn,ts,stranic,'
+                      's_innom,adresa_url) values(?,?,?,?,?)',
+                      (inn, сейчас, р['stranic'], р['s_innom'],
+                       json.dumps(р['urls'], ensure_ascii=False)))
+            if р['s_innom']:
+                итог['с_инном'] += 1
+                места = set(р['urls'])
+                for таблица in ('nahodki_pochta', 'nahodki_telefon'):
+                    c.execute('update %s set inn_na_str=1 where inn=? '
+                              'and source_url in (%s)'
+                              % (таблица, ','.join('?' * len(места))),
+                              [inn] + sorted(места))
+            итог['проверено'] += 1
+            сделано += 1
+            if сделано % 500 == 0:
+                c.commit()
+                _журнал({'ts': time.strftime('%H:%M:%S'), 'инн_проверено': сделано,
+                         'с_инном': итог['с_инном'],
+                         'секунд': round(time.time() - t0)})
+    c.commit()
+    итог['секунд'] = round(time.time() - t0)
+    if итог['секунд']:
+        итог['компаний_в_час'] = round(итог['проверено'] / итог['секунд'] * 3600)
+    c.close()
+    _журнал({'ts': time.strftime('%H:%M:%S'), 'ИТОГ_ИНН': итог})
+    return итог
+
+
 def _известное():
     """Что уже есть в enrich.db — чтобы сразу помечать находки как новые."""
     почта, телефоны = set(), set()
@@ -403,6 +498,10 @@ def main():
         print(json.dumps(посмотреть(), ensure_ascii=False, indent=1))
         return 0
     источник = 'kesh' if '--kesh' in a else 'razobrano'
+    if '--inn' in a:
+        print(json.dumps(прогон_инн(чис('--procesov', 6), чис('--predel', 0)),
+                         ensure_ascii=False, indent=1))
+        return 0
     if '--delat' not in a:
         c = _база()
         уже = c.execute('select count(*) from sdelano').fetchone()[0]

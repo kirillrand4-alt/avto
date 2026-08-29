@@ -268,7 +268,7 @@ def обход():
             if ждут:
                 сделано['слив_находок'] = {
                     'ждут': ждут,
-                    'pid': _поднять('slit_nahodki.py', ['--delat', '--skolko', '20'],
+                    'pid': _поднять('slit_nahodki.py', ['--delat', '--skolko', '3'],
                                     r'D:\sliv-nahodok.out', {'NO_BROWSER': '1'})}
     except Exception as e:  # noqa: BLE001
         сделано['разбор_сбой'] = str(e)[:150]
