@@ -237,10 +237,14 @@ def обход():
     # страницах нашлось 4 996 адресов, которых в базе нет. Теперь разбор — такой
     # же постоянный житель сервера, как мост и цикл фактов: сначала сырьё Зенки,
     # потом кэш конвейера, куда попадает КАЖДАЯ скачанная страница.
+    # HOLD-RAZBOR.flag — на время замеров скорости Зенки: разбор жрёт диск и
+    # шесть ядер, и мерить обход при таком соседе нечестно. Снять = удалить файл.
     try:
         sys.path.insert(0, DIR)
         import razbor_stranic as RS
-        if not _крутится(живые, 'razbor_stranic.py'):
+        if os.path.exists(os.path.join(DIR, 'HOLD-RAZBOR.flag')):
+            pass
+        elif not _крутится(живые, 'razbor_stranic.py'):
             с = RS._база()
             было = set(r[0] for r in с.execute('select inn from sdelano'))
             сырьё = sum(1 for i in RS.целевые_инн() if i not in было)
