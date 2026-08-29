@@ -2412,6 +2412,14 @@ class Store:
             vals = event_type if isinstance(event_type, (list, tuple, set)) else [event_type]
             sql.append("AND event_type IN (%s)" % ",".join("?" for _ in vals))
             params.extend(vals)
+        else:
+            # МАШИННЫЕ ОТЧЁТЫ НЕ ПОКАЗЫВАЕМ. Агрегированные отчёты DMARC шлёт
+            # каждый крупный почтовик раз в сутки, а тело у них — zip: в ленте
+            # это выглядело строкой «PK□□□□□CJ ]юд⊥пЙ□□□u□□□8□□□google.com!...»
+            # и занимало полэкрана (28.08: 106 отчётов и 48 двоичных обрывков
+            # из 253 записей «входящее вне переписки»). В журнале они остаются
+            # — спросить их можно явным event_type='otchet'.
+            sql.append("AND event_type <> 'otchet'")
         for col, val in (("campaign_id", campaign_id), ("provider", provider),
                          ("mailbox_id", mailbox_id), ("recipient_id", recipient_id)):
             if val is not None:

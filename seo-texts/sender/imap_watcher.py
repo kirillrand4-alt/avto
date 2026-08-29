@@ -377,6 +377,8 @@ class ImapWatcher:
         # как служебное и дальше не ведём.
         if self._ot_mayaka(from_addr):
             kind = "other"
+        elif self._eto_otchyot(msg, subject, from_addr):
+            kind = "otchet"
         elif self._is_dsn(msg, subject, body):
             kind = "dsn"
         elif self._is_complaint(msg, subject, body):
@@ -461,6 +463,10 @@ class ImapWatcher:
         # опознаются по этому следу.
         if recipient_id is None and kind != "dsn":
             recipient_id = self._recipient_by_telom(snippet)
+        if kind == "otchet":
+            # Отчёт присылает ЧУЖОЙ почтовик про НАШ домен. Совпадение домена
+            # отправителя с карточкой получателя — совпадение, а не переписка.
+            recipient_id = None
 
         return InboundEvent(
             kind=kind,
@@ -1263,8 +1269,19 @@ class ImapWatcher:
         if not payload:
             return ""
         charset = (part.get_content_charset() or "").lower()
+        # ЗАЯВЛЕННАЯ КОДИРОВКА ВРЁТ ЧАЩЕ, ЧЕМ КАЖЕТСЯ, и однобайтовая ложь
+        # необратима на глаз: cp1251 «расшифрует» ЛЮБЫЕ байты без ошибки, и
+        # письмо в utf-8 с шапкой windows-1251 превращается в «РњС‹ СЂР°РґС‹
+        # РїСЂРёРІРµС‚СЃС‚РІРѕРІР°С‚СЊ» — так в ленте 29.08 выглядели письма
+        # texno-gm.com. Обратное невозможно: русский текст в cp1251 корректным
+        # utf-8 не бывает. Поэтому строгий utf-8 пробуем ПЕРВЫМ, и только если
+        # он не сошёлся — верим заголовку.
+        try:
+            return payload.decode("utf-8")
+        except UnicodeDecodeError:
+            pass
         tries = [charset] if charset else []
-        tries += ["utf-8", "cp1251", "koi8-r", "iso-8859-5"]
+        tries += ["cp1251", "koi8-r", "iso-8859-5"]
         for enc in tries:
             if not enc:
                 continue
@@ -1273,6 +1290,29 @@ class ImapWatcher:
             except (LookupError, UnicodeDecodeError):
                 continue
         return payload.decode("utf-8", errors="ignore")
+
+    # Агрегированный отчёт DMARC — не письмо и не событие про получателя.
+    # Его шлёт раз в сутки каждый крупный почтовик и КАЖДЫЙ домен, которому мы
+    # писали; тело — zip или xml. 28.08 в ленте таких оказалось 106 штук, ещё
+    # 48 записей были обломками их вложений, а один отчёт с noreply@el5-energo.ru
+    # привязался к карточке ПАО «ЭЛ5-Энерго» — по совпадению домена, будто
+    # компания нам написала.
+    _ОТЧЁТ_ТЕМА = re.compile(r"^\s*report[_ -]?domain\s*:", re.I)
+    _ОТЧЁТ_ОТПРАВИТЕЛЬ = ("dmarc", "noreply-dmarc", "postmaster@", "dmarcreport")
+    _ОТЧЁТ_ТИПЫ = ("application/zip", "application/gzip", "application/x-gzip",
+                   "application/xml", "text/xml")
+
+    @classmethod
+    def _eto_otchyot(cls, msg: EmailMessage, subject: str, from_addr: str) -> bool:
+        if cls._ОТЧЁТ_ТЕМА.match(str(subject or "")):
+            return True
+        от = str(from_addr or "").lower()
+        if any(п in от for п in cls._ОТЧЁТ_ОТПРАВИТЕЛЬ) and "report" in \
+                str(subject or "").lower():
+            return True
+        тип = str(msg.get_content_type() or "").lower()
+        имя = str(msg.get_filename() or "")
+        return тип in cls._ОТЧЁТ_ТИПЫ and "!" in имя
 
     def _extract_body(self, msg: EmailMessage) -> str:
         """Текст входящего. HTML разбираем, а не отдаём разметкой.
@@ -1308,6 +1348,13 @@ class ImapWatcher:
             if тело:
                 return тело
         else:
+            # ОДНОЧАСТНОЕ НЕ-ТЕКСТОВОЕ письмо (zip-отчёт DMARC, счёт в pdf) —
+            # это вложение, а не текст. Раньше его байты уезжали в snippet и
+            # рисовались в ленте как «PK□□□□□CJ ]юд⊥пЙ□□□».
+            тип = str(msg.get_content_type() or "").lower()
+            if not тип.startswith("text/"):
+                имя = str(msg.get_filename() or "").strip()
+                return "[вложение %s%s]" % (тип, (", " + имя) if имя else "")
             return v_tekst(self._decode_part(msg))
         return ""
 

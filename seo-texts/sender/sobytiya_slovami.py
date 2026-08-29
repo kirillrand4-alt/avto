@@ -30,6 +30,7 @@ from typing import Any, Optional
     "reply": "ответ клиента",
     "reply_auto": "автоответ клиента",
     "reply_sent": "мы ответили",
+    "otchet": "служебный отчёт почтовика",
     "suppress": "адрес в стоп-листе",
     "unsubscribe": "отписка",
     "skip": "письмо пропущено",
