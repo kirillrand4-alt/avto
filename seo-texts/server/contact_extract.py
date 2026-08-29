@@ -27,14 +27,40 @@ _DEOBF = [(re.compile(p, re.I), r) for p, r in (
     (r'\s*[\[({]\s*(?:dot|точка|тчк|точк)\s*[\])}]\s*|\s+(?:точка|\(точка\))\s+', '.'),
 )]
 
-# local-part -> роль (прямой сигнал)
+# local-part -> роль (прямой сигнал). Правила проверяются СВЕРХУ ВНИЗ, побеждает
+# первое — поэтому узкие стоят выше широких.
+#
+# ПРАВКИ 29.08 по замеру на мейеровской базе (отчёт 02-roli-i-imena.md):
+#  * `support` убран из гл.инженера: 228 адресов support@ по мейеру красились в
+#    главного инженера, хотя это техподдержка сайта или продукта. Ложная роль
+#    хуже отсутствующей — она уезжает в сегментацию и в подпись письма;
+#  * `opt` убран из снабжения: он стоял в ДВУХ правилах сразу, побеждало первое,
+#    и `opt@` уезжал в закупки, хотя на сайте поставщика это оптовый отдел,
+#    то есть продажи (61 адрес по мейеру);
+#  * добавлены латинские написания, которых словарь не знал: `secretar`,
+#    `secretary`, `contact` — при живых `sekret` и `kontakt`;
+#  * добавлены частые ящики из хвоста: склад и логистика, магазин и дилеры,
+#    ВЭД, вакансии, финансы, руководство. Замер: +598 ролей в неперелитых
+#    находках и +938 в уже залитой базе.
 LOCAL_ROLE = [
-    (r'^(zakup|snab|snabzh|postavk|opt|torg|zayavk|tender|purchase|procure)', 'снабжение/закупки'),
+    (r'^(zakup|snab|snabzh|postavk|torg|zayavk|tender|purchase|procure)', 'снабжение/закупки'),
+    (r'^(omts|mto|logist|sklad|warehouse|transport|perevoz)([._\-]|$|\d)', 'снабжение/закупки'),
     (r'^(sale|prodazh|prodaji|sbyt|commerc|kommerc|zakaz|order|market|opt)', 'продажи'),
+    (r'^(shop|store|magazin|trade|td|b2b|client|klient|dealer|diler|partner|'
+     r'export|eksport|ved|op)([._\-]|$|\d)', 'продажи'),
     (r'^(director|dir|ceo|gendir|glava|rukovod|boss|head|chief)', 'директор'),
+    (r'^(kd|gd|komdir|predsedatel|prezident|president|upravl|nachalnik)'
+     r'([._\-]|$|\d)', 'директор'),
     (r'^(buh|account|finans|oplata|bill|pay)', 'бухгалтерия'),
-    (r'^(inzh|engineer|tech|tehn|service|servis|proekt|konstr|support)', 'гл.инженер'),
+    (r'^(glavbuh|glbuh|fin|finance|econom|smeta|kassa|invoice)([._\-]|$|\d)',
+     'бухгалтерия'),
+    (r'^(inzh|engineer|tech|tehn|service|servis|proekt|konstr)', 'гл.инженер'),
     (r'^(hr|kadr|personal|resume|vacan|job)', 'кадры'),
+    (r'^(career|careers|rabota|vacancy|vakansi|trud)([._\-]|$|\d)', 'кадры'),
+    (r'^(secretar|secretary|kanc|kancel|referent|priemn|priyomn)([._\-]|$|\d)',
+     'общий/приёмная'),
+    (r'^(contact|feedback|help|hotline|callback|obratn|zvonok|support)'
+     r'([._\-]|$|\d)', 'общий/приёмная'),
     (r'^(info|office|ofis|mail|post|priem|reception|sekret|kontakt|general|company|zavod|firma|manager|adm|welcome|hello|zakaz)', 'общий/приёмная'),
 ]
 CTX_ROLE = [

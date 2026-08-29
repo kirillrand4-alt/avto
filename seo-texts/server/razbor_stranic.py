@@ -61,14 +61,36 @@ ENRICH = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 ПРЕДЕЛ_СТРАНИЦЫ = 5 * 2**20          # страницы крупнее — пропускаем
 ОТЧЁТ_КАЖДЫЕ = 500                   # компаний между записями в журнал
 
-# Домены и адреса, которые почтой компании не являются: чужие сервисы, примеры,
-# служебные адреса движков. Без этого в находки лезет мусор вроде no-reply@wix.
-МУСОР_ДОМЕН = re.compile(
-    r'@(?:example|test|domain|mail|email|site|company|your|sentry\.io|wixpress|'
-    r'w3\.org|schema\.org|sentry|jquery|googlemail|localhost|yourdomain|'
-    r'company\.com|mysite|bitrix|1gb\.ru|nic\.ru|reg\.ru)\b', re.I)
+# Домены, которые почтой компании не являются: примеры из шаблонов, служебные
+# адреса движков, чужие сервисы.
+#
+# ПОЧЕМУ СПИСОК, А НЕ РЕГУЛЯРКА (правка 29.08). Здесь стояло
+# `@(?:...|mail|email|site|company|...)\b`, и `@mail` совпадало с `@mail.ru`:
+# самый распространённый в стране почтовый домен целиком выбрасывался как мусор.
+# Замер на мейеровской выборке: у 5% компаний это был ЕДИНСТВЕННЫЙ найденный
+# адрес. Та же беда была у `@site`, `@company`, `@test`, `@your`, `@bitrix` —
+# регулярка по началу домена ловит живые домены, начинающиеся с этих букв.
+# Сравниваем домен целиком, а поддомены сервисов — отдельным списком окончаний.
+МУСОР_ДОМЕНЫ = {
+    'example.com', 'example.org', 'example.ru', 'test.com', 'test.ru',
+    'domain.com', 'domain.ru', 'email.com', 'site.com', 'site.ru',
+    'company.com', 'yourcompany.com', 'yourdomain.com', 'mysite.com',
+    'mysite.ru', 'localhost', 'localhost.localdomain', 'sentry.io',
+    'wixpress.com', 'w3.org', 'schema.org', 'jquery.com', 'googlemail.com',
+    '1gb.ru', 'nic.ru', 'reg.ru', 'beget.com', 'beget.ru', 'timeweb.ru',
+    'sentry.wixpress.com', 'noreply.com', 'no-reply.com', 'domain.tld',
+}
+МУСОР_ХВОСТ = ('.sentry.io', '.wixpress.com', '.example.com', '.invalid',
+               '.local', '.test')
 МУСОР_ЛОКАЛ = re.compile(r'^(?:no-?reply|noreply|donotreply|postmaster|abuse|'
                          r'webmaster|hostmaster|root|admin@localhost)', re.I)
+
+
+def мусорный(адрес):
+    """Адрес из шаблона движка или служебный, а не почта предприятия."""
+    дом = адрес.split('@')[-1]
+    return (дом in МУСОР_ДОМЕНЫ or дом.endswith(МУСОР_ХВОСТ)
+            or bool(МУСОР_ЛОКАЛ.match(адрес)))
 # Признаки того, что адрес спрятан от глаз — это спам-ловушка, письмо туда бьёт
 # по репутации домена. Смотрим 300 символов ДО адреса в сыром HTML.
 СКРЫТ = re.compile(r'display\s*:\s*none|visibility\s*:\s*hidden|font-size\s*:\s*0|'
@@ -119,42 +141,66 @@ def _журнал(запись):
 
 
 def целевые_инн():
-    """ИНН, у которых на D: лежит .urls.txt — по нему знаем порядок страниц."""
-    инн = []
-    with os.scandir(ИСТОЧНИК) as это:
-        for з in это:
-            if з.name.endswith('.urls.txt'):
-                инн.append(з.name[:-9])
-    return инн
+    """ИНН, у которых есть .urls.txt — по нему знаем порядок страниц.
+
+    Смотрим ОБА каталога: перенесённое на D: и свежее сырьё, ещё лежащее на
+    рабочем диске. Раньше брали только D:, и сутки последних обходов разбор не
+    видел вовсе.
+    """
+    инн = set()
+    for каталог in (ИСТОЧНИК, ИСХОДНЫЙ_C):
+        try:
+            with os.scandir(каталог) as это:
+                for з in это:
+                    if з.name.endswith('.urls.txt'):
+                        инн.add(з.name[:-9])
+        except OSError:
+            pass
+    return sorted(инн)
+
+
+def _где_файл(имя):
+    """Путь к файлу сырья: сперва рабочий диск, потом перенесённое на D:.
+
+    ОРИГИНАЛ ВСЕГДА ЦЕЛЫЙ (правка 29.08). Раньше файл, лежащий на C:, считался
+    «ещё копируется», и компания уходила в «отложено» — навсегда, потому что
+    перенос закончился и второго круга не случилось. Замер нашёл 1 417 таких
+    мейеровских компаний: страницы есть, а разбор их не видел. Копия на D:
+    появляется только после совпадения размеров, значит «есть на C:» означает
+    «ещё не переносили», а не «недокопировано».
+    """
+    c = os.path.join(ИСХОДНЫЙ_C, имя)
+    if os.path.exists(c):
+        return c
+    d = os.path.join(ИСТОЧНИК, имя)
+    return d if os.path.exists(d) else ''
 
 
 def _страницы(inn):
-    """[(url, html)] компании — только из файлов, чей близнец на C: уже удалён."""
-    пу = os.path.join(ИСТОЧНИК, '%s.urls.txt' % inn)
+    """[(url, html)] компании — из сырья Зенки, где бы оно ни лежало."""
+    пу = _где_файл('%s.urls.txt' % inn)
+    if not пу:
+        return [], 0
     try:
         with open(пу, encoding='utf-8-sig', errors='replace') as f:
             urls = [s.strip().lstrip('\ufeff') for s in f if s.strip()]
     except OSError:
         return [], 0
-    страницы, недоехало = [], 0
+    страницы = []
     for i, u in enumerate(urls):
-        имя = '%s_%d.html' % (inn, i)
-        пд = os.path.join(ИСТОЧНИК, имя)
-        if not os.path.exists(пд):
-            continue
-        if os.path.exists(os.path.join(ИСХОДНЫЙ_C, имя)):
-            недоехало += 1          # файл ещё копируется — не трогаем
+        п = _где_файл('%s_%d.html' % (inn, i))
+        if not п:
             continue
         try:
-            if os.path.getsize(пд) > ПРЕДЕЛ_СТРАНИЦЫ:
+            if os.path.getsize(п) > ПРЕДЕЛ_СТРАНИЦЫ:
                 continue
-            with open(пд, encoding='utf-8', errors='replace') as f:
+            with open(п, encoding='utf-8', errors='replace') as f:
                 h = f.read()
         except OSError:
             continue
         if h.strip():
             страницы.append((u, h))
-    return страницы, недоехало
+    return страницы, 0
 
 
 def целевые_кэш(c):
@@ -214,7 +260,7 @@ def _собрать(inn, страницы):
         низ = html.lower()
         for р in д['emails']:
             e = (р.get('email') or '').lower()
-            if not e or МУСОР_ДОМЕН.search(e) or МУСОР_ЛОКАЛ.match(e):
+            if not e or мусорный(e):
                 continue
             поз = низ.find(e)
             скрыт = 1 if (поз > 0 and СКРЫТ.search(html[max(0, поз - 300):поз])) else 0
