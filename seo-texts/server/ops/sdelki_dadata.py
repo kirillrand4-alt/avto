@@ -42,7 +42,10 @@ o = sqlite3.connect("file:%s?mode=ro" % ОБЗВОН, uri=True, timeout=60)
 обзвон = {цифры(r[0]) for r in o.execute("SELECT inn FROM obzvon")}
 o.close()
 
-db = sqlite3.connect(D.ENR, timeout=60)
+db = sqlite3.connect(D.ENR, timeout=180)
+# Ждать блокировку, а не падать: 29.08 пробный прогон рядом убил отцеплённый
+# на «database is locked» после тысячи добранных карточек.
+db.execute("PRAGMA busy_timeout=180000")
 db.executescript(D.DDL)
 есть = {цифры(r[0]) for r in db.execute(
     "SELECT inn FROM requisites WHERE COALESCE(ogrn,'') <> ''")}
