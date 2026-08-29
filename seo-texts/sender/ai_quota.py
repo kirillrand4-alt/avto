@@ -696,6 +696,18 @@ class AiQuota:
                         len(мёртвые))
             out = [r for r in out
                    if (r.email or "").strip().lower() not in мёртвые]
+        # СТОП-ЛИСТ ЖИВЬЁМ, А НЕ ПО ФЛАГУ В КАРТОЧКЕ. Отбор выше просит
+        # query_recipients({'suppressed': False}), но это ФЛАГ получателя, и он
+        # отстаёт: адрес попадает в таблицу suppression по отбивке, а флаг в
+        # карточке остаётся прежним. Замер 28.08: 277 писем сгенерировано на
+        # адреса из стоп-листа, у 256 запись там появилась РАНЬШЕ письма — мы
+        # платили за генерацию, уже зная, что ящика нет. Ловил их только заслон
+        # отправки (259 черновиков сняты, 61 отказ за один день) — то есть
+        # деньги и место в партии уходили впустую.
+        в_стопе = self._v_stop_liste(out)
+        if в_стопе:
+            logger.info("стоп-лист: пропущено %s получателей", len(в_стопе))
+            out = [r for r in out if r.id not in в_стопе]
         if len(out) > limit:
             жар = self._hotness_map([r.inn for r in out if r.inn])
             out.sort(key=lambda r: -(жар.get(str(r.inn), 0)))
@@ -1550,6 +1562,53 @@ class AiQuota:
                 elif ключ and not значение:
                     карта.pop(ключ, None)      # пустое значение = снять правило
         return карта
+
+    def _v_stop_liste(self, poluchateli: list) -> set:
+        """id получателей, чей адрес, домен или ИНН уже в стоп-листе.
+
+        Одним запросом на все три разреза, а не по вызову на кандидата:
+        кандидатов сканируется вдесятеро больше лимита. Истёкшие записи не
+        считаем — стоп-лист умеет быть временным.
+        """
+        if not poluchateli:
+            return set()
+        адреса, домены, инны = set(), set(), set()
+        карта = {}
+        for r in poluchateli:
+            почта = str(getattr(r, "email", "") or "").strip().lower()
+            инн = "".join(c for c in str(getattr(r, "inn", "") or "")
+                          if c.isdigit())
+            домен = почта.split("@")[-1] if "@" in почта else ""
+            if почта:
+                адреса.add(почта)
+            if домен:
+                домены.add(домен)
+            if инн:
+                инны.add(инн)
+            карта[r.id] = (почта, домен, инн)
+        значения = list(адреса | домены | инны)
+        найдено = set()
+        try:
+            con = sqlite3.connect(self._db_path, timeout=10)
+            try:
+                теперь = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+                for i in range(0, len(значения), 400):
+                    часть = значения[i:i + 400]
+                    q = ",".join("?" * len(часть))
+                    найдено |= {str(x[0]).strip().lower() for x in con.execute(
+                        "SELECT value FROM suppression "
+                        " WHERE LOWER(value) IN (%s) "
+                        "   AND (expires_at IS NULL OR expires_at > ?)" % q,
+                        часть + [теперь])}
+            finally:
+                con.close()
+        except Exception:  # noqa: BLE001 - нет таблицы/сбой → никого не режем
+            logger.exception("стоп-лист при отборе не прочитан")
+            return set()
+        if not найдено:
+            return set()
+        return {rid for rid, (почта, домен, инн) in карта.items()
+                if почта in найдено or домен in найдено or инн in найдено}
 
     def _dead_addresses(self, emails: list) -> set:
         """Адреса, которых точно нет: вердикт пробы «нет ящика».

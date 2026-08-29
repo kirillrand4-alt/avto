@@ -467,6 +467,22 @@ class ImapWatcher:
             # Отчёт присылает ЧУЖОЙ почтовик про НАШ домен. Совпадение домена
             # отправителя с карточкой получателя — совпадение, а не переписка.
             recipient_id = None
+        # ОТВЕТ БЕЗ ЗАГОЛОВКОВ ВЕТКИ. Ответом письмо считалось только по
+        # In-Reply-To/References, а половина деловой почты отвечает НОВЫМ
+        # письмом с новой темой: «компрессор КИП.», «Ооо ТЭКО». Такое письмо
+        # ложилось событием «входящее вне переписки» — ни ответа в сводке, ни
+        # карточки лида, ни отметки «этой компании уже ответили». Замер 29.08:
+        # среди 253 записей «вне переписки» 23 письма от живых людей, из них
+        # 11 привязаны к компании и просто не сочтены ответом.
+        #
+        # Признаём ответом, если сошлись ТРИ условия: письмо привязано к
+        # получателю, отправитель не машина и мы этому получателю ПИСАЛИ
+        # раньше. Без третьего условия ответом стала бы и рассылка компании,
+        # которой мы никогда не писали.
+        if (kind == "other" and recipient_id is not None
+                and not self._ot_mashiny(from_addr)
+                and self._pisali_ranshe(recipient_id)):
+            kind = "reply"
 
         return InboundEvent(
             kind=kind,
@@ -1313,6 +1329,34 @@ class ImapWatcher:
         тип = str(msg.get_content_type() or "").lower()
         имя = str(msg.get_filename() or "")
         return тип in cls._ОТЧЁТ_ТИПЫ and "!" in имя
+
+    # Машинные отправители: их «ответ» — уведомление робота, а не человек.
+    # «daemon» одним куском: под него подпадают и mailer-daemon@, и MDaemon@ —
+    # последний шлёт «Warning: … no such user here», то есть отбивку, а вовсе
+    # не ответ человека.
+    _МАШИНА = ("noreply", "no-reply", "no_reply", "donotreply", "do-not-reply",
+               "daemon", "postmaster@", "notification", "notifications@",
+               "notify@", "robot@", "bounce@", "abuse@")
+
+    @classmethod
+    def _ot_mashiny(cls, from_addr: str) -> bool:
+        а = str(from_addr or "").strip().lower()
+        return bool(а) and any(п in а for п in cls._МАШИНА)
+
+    def _pisali_ranshe(self, recipient_id: int) -> bool:
+        """Уходило ли этому получателю наше письмо. Ответ подразумевает письмо;
+        без этой проверки ответом станет любая рассылка компании из базы."""
+        try:
+            store = self._store
+            with getattr(store, "_lock"):
+                строка = store._conn.execute(          # noqa: SLF001
+                    "SELECT 1 FROM messages WHERE recipient_id = ? "
+                    "   AND sent_at IS NOT NULL LIMIT 1",
+                    (int(recipient_id),)).fetchone()
+            return строка is not None
+        except Exception:  # noqa: BLE001 - сбой проверки не роняет приём письма
+            logger.exception("проверка «писали ли раньше» не сработала")
+            return False
 
     def _extract_body(self, msg: EmailMessage) -> str:
         """Текст входящего. HTML разбираем, а не отдаём разметкой.
