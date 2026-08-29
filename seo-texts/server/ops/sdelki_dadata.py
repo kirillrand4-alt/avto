@@ -62,7 +62,7 @@ print("   в очереди сейчас:  %d (невидимых %d, прочи
 os.makedirs(os.path.dirname(ЖУРНАЛ), exist_ok=True)
 jl = open(ЖУРНАЛ, "a", encoding="utf-8")
 t0 = time.time()
-ok = miss = err = 0
+ok = miss = err = отложено = занято = 0
 последняя = None
 for n, inn in enumerate(todo, 1):
     if time.time() - t0 > БЮДЖЕТ:
@@ -91,17 +91,38 @@ for n, inn in enumerate(todo, 1):
         ok += 1
     row["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
     row["raw"] = json.dumps(d, ensure_ascii=False) if d else None
-    db.execute("insert or replace into requisites ({}) values ({})".format(
-        ",".join(D.FIELDS), ",".join("?" for _ in D.FIELDS)),
-        [row.get(f) for f in D.FIELDS])
+    # ЖУРНАЛ ПЕРВЫМ, база — по возможности. enrich.db надолго берут соседние
+    # службы (обзвон на 8012/8014), и busy_timeout не спасает: два прогона
+    # подряд умерли на «database is locked» через пять минут, потеряв темп.
+    # Журнал с fsync — вот durable-запись; из него карточки доливаются
+    # отдельным прогоном (zalit_iz_zhurnala.py), когда база свободна.
     jl.write(json.dumps({k: row.get(k) for k in D.FIELDS if k != "raw"},
                         ensure_ascii=False) + "\n")
     if n % 25 == 0:
-        db.commit()
         jl.flush()
         os.fsync(jl.fileno())
+    записал = False
+    for попытка in range(3):
+        try:
+            db.execute("insert or replace into requisites ({}) values ({})".format(
+                ",".join(D.FIELDS), ",".join("?" for _ in D.FIELDS)),
+                [row.get(f) for f in D.FIELDS])
+            if n % 25 == 0:
+                db.commit()
+            записал = True
+            break
+        except sqlite3.OperationalError as ex:
+            if "locked" not in str(ex).lower():
+                raise
+            отложено += 1
+            time.sleep(2.0 * (попытка + 1))
+    if not записал:
+        занято += 1
     time.sleep(0.14)
-db.commit()
+try:
+    db.commit()
+except sqlite3.OperationalError:
+    занято += 1
 jl.flush()
 os.fsync(jl.fileno())
 всего = db.execute(
@@ -111,5 +132,6 @@ jl.close()
 print(json.dumps({
     "в_очереди_было": len(todo), "получено": ok,
     "нет_в_ЕГРЮЛ": miss, "ошибок": err, "последняя_ошибка": последняя,
-    "всего_в_requisites_с_ОГРН": всего, "секунд": round(time.time() - t0, 1),
+    "всего_в_requisites_с_ОГРН": всего,
+    "ждали_блокировку": отложено, "не_легло_в_базу_ждёт_журнала": занято, "секунд": round(time.time() - t0, 1),
     "осталось_по_сделкам": len(todo) - ok - miss}, ensure_ascii=False))
