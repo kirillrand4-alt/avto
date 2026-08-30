@@ -202,42 +202,49 @@ def tolko_bogatye(campaign_id, limit):
 
 aq.candidates = tolko_bogatye
 
-if REZHIM == 'proba':
-    vzyali = tolko_bogatye(KAMPANIYA, SKOLKO)
-    print('=== ХОЛОСТОЙ ПРОГОН, генерации не было ===')
-    print(json.dumps(otbor_zhurnal, ensure_ascii=False, indent=1))
-    sys.exit(0)
+# Генерация агентами берёт ТУ ЖЕ десятку и импортирует этот модуль ради
+# tolko_bogatye, поэтому при импорте не должно выполняться ничего: и холостая
+# печать, и боевой прогон живут только под __main__.
+def main():
+    if REZHIM == 'proba':
+        tolko_bogatye(KAMPANIYA, SKOLKO)
+        print('=== ХОЛОСТОЙ ПРОГОН, генерации не было ===')
+        print(json.dumps(otbor_zhurnal, ensure_ascii=False, indent=1))
+        return
+    # боевой: квота = уже сгенерённое сегодня + SKOLKO, чтобы получить ровно SKOLKO новых
+    den = aq.today()
+    bylo_ok, bylo_brak = aq.counters(KAMPANIYA, [den]).get(den, (0, 0))
+    nachalo = time.time()
+    res = aq.run_today(KAMPANIYA, today=den, quota=bylo_ok + bylo_brak + SKOLKO)
 
-# боевой: квота = уже сгенерённое сегодня + SKOLKO, чтобы получить ровно SKOLKO новых
-den = aq.today()
-bylo_ok, bylo_brak = aq.counters(KAMPANIYA, [den]).get(den, (0, 0))
-nachalo = time.time()
-res = aq.run_today(KAMPANIYA, today=den, quota=bylo_ok + bylo_brak + SKOLKO)
+    svod = {'rezhim': 'boy', 'kampaniya': KAMPANIYA, 'den': den,
+            'bylo_do': bylo_ok + bylo_brak, 'kvota': res.quota,
+            'kandidatov': res.candidates, 'zaplanirovano': res.planned,
+            'ok': getattr(res, 'ok', None), 'brak': getattr(res, 'brak', None),
+            'prichina': getattr(res, 'reason', None),
+            'sekund': round(time.time() - nachalo, 1), 'otbor': otbor_zhurnal}
+    try:
+        with open(ZHURNAL, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(svod, ensure_ascii=False) + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+    except Exception as ex:  # noqa: BLE001
+        svod['zhurnal_err'] = str(ex)[:200]
 
-svod = {'rezhim': 'boy', 'kampaniya': KAMPANIYA, 'den': den,
-        'bylo_do': bylo_ok + bylo_brak, 'kvota': res.quota,
-        'kandidatov': res.candidates, 'zaplanirovano': res.planned,
-        'ok': getattr(res, 'ok', None), 'brak': getattr(res, 'brak', None),
-        'prichina': getattr(res, 'reason', None),
-        'sekund': round(time.time() - nachalo, 1), 'otbor': otbor_zhurnal}
-try:
-    with open(ZHURNAL, 'a', encoding='utf-8') as f:
-        f.write(json.dumps(svod, ensure_ascii=False) + '\n')
-        f.flush()
-        os.fsync(f.fileno())
-except Exception as ex:  # noqa: BLE001
-    svod['zhurnal_err'] = str(ex)[:200]
+    # что реально легло в очередь
+    s = sqlite3.connect(db_path)
+    svod['v_ocheredi_pending'] = s.execute(
+        'select count(*) from confirm_reviews where campaign_id=? and status="pending"',
+        (KAMPANIYA,)).fetchone()[0]
+    svod['svezhie'] = [
+        {'id': r[0], 'email': r[1], 'subject': (r[2] or '')[:70], 'status': r[3]}
+        for r in s.execute(
+            'select id, email, subject, status from confirm_reviews '
+            'where campaign_id=? order by id desc limit ?', (KAMPANIYA, SKOLKO))]
 
-# что реально легло в очередь
-s = sqlite3.connect(db_path)
-svod['v_ocheredi_pending'] = s.execute(
-    'select count(*) from confirm_reviews where campaign_id=? and status="pending"',
-    (KAMPANIYA,)).fetchone()[0]
-svod['svezhie'] = [
-    {'id': r[0], 'email': r[1], 'subject': (r[2] or '')[:70], 'status': r[3]}
-    for r in s.execute(
-        'select id, email, subject, status from confirm_reviews '
-        'where campaign_id=? order by id desc limit ?', (KAMPANIYA, SKOLKO))]
+    print('=== ИТОГ ===')
+    print(json.dumps(svod, ensure_ascii=False, indent=1))
 
-print('=== ИТОГ ===')
-print(json.dumps(svod, ensure_ascii=False, indent=1))
+
+if __name__ == '__main__':
+    main()
