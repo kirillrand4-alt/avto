@@ -59,7 +59,11 @@ if DIR not in sys.path:
 ЖУРНАЛ = os.environ.get('RAZBOR_LOG', r'D:\razbor-nahodki.jsonl')
 ENRICH = os.environ.get('ENRICH_DB', r'C:\sender\enrich.db')
 ПРЕДЕЛ_СТРАНИЦЫ = 5 * 2**20          # страницы крупнее — пропускаем
-ОТЧЁТ_КАЖДЫЕ = 500                   # компаний между записями в журнал
+# КОММИТИМ ЧАСТО. Стояло 500, и отметки «сделано» появлялись раз в пять-шесть
+# минут работы. Из-за этого прогресс был не виден: я трижды перезапускал прогон,
+# не дождавшись первой записи, и каждый раз терял всё, что он успел разобрать.
+# Сто компаний — это полминуты работы и настоящая резюмируемость.
+ОТЧЁТ_КАЖДЫЕ = 100                   # компаний между коммитом и записью в журнал
 
 # Домены, которые почтой компании не являются: примеры из шаблонов, служебные
 # адреса движков, чужие сервисы.
@@ -441,61 +445,76 @@ def прогон(процессов=8, минут=0, предел=0, источ�
         return итог
     сейчас = time.strftime('%Y-%m-%dT%H:%M:%S')
     с_прошлой_записи = 0
-    with ProcessPoolExecutor(max_workers=процессов) as пул:
-        for р in пул.map(дело, цели, chunksize=8):
-            if минут and time.time() - t0 > минут * 60:
-                итог['итог'] = 'остановлен по времени, остальное — в следующий раз'
-                break
-            if not р:
-                итог['ошибок'] += 1
-                continue
-            if р.get('отложен'):
-                итог['отложено'] += 1
-                continue
-            inn = р['inn']
-            нп = нт = 0
-            for п in р['pochta']:
-                новый = 1 if (inn, п['email']) not in известн_п else 0
-                нп += новый
-                итог['скрытых'] += п['skryt']
-                c.execute(
-                    'insert or ignore into nahodki_pochta(inn,email,role,role_src,'
-                    'ctx,src,source_url,skryt,novyy,ts) values(?,?,?,?,?,?,?,?,?,?)',
-                    (inn, п['email'], п['role'], п['role_src'], п['ctx'], п['src'],
-                     п['source_url'], п['skryt'], новый, сейчас))
-            for т in р['telefony']:
-                новый = 1 if (inn, т['phone']) not in известн_т else 0
-                нт += новый
-                c.execute('insert or ignore into nahodki_telefon(inn,phone,'
-                          'source_url,novyy,ts) values(?,?,?,?,?)',
-                          (inn, т['phone'], т['source_url'], новый, сейчас))
-            if кэш:
-                c.execute('insert or replace into sdelano_kesh(inn,ts,mtime,'
-                          'stranic,pocht,telefonov,novyh_pocht,novyh_telefonov) '
-                          'values(?,?,?,?,?,?,?,?)',
-                          (inn, сейчас, р.get('mtime') or 0, р['stranic'],
-                           len(р['pochta']), len(р['telefony']), нп, нт))
-            else:
-                c.execute('insert or replace into sdelano(inn,ts,stranic,pocht,'
-                          'telefonov,novyh_pocht,novyh_telefonov) '
-                          'values(?,?,?,?,?,?,?)',
-                          (inn, сейчас, р['stranic'], len(р['pochta']),
-                           len(р['telefony']), нп, нт))
-            итог['разобрано'] += 1
-            итог['страниц'] += р['stranic']
-            итог['почт'] += len(р['pochta'])
-            итог['новых_почт'] += нп
-            итог['телефонов'] += len(р['telefony'])
-            итог['новых_телефонов'] += нт
-            с_прошлой_записи += 1
-            if с_прошлой_записи >= ОТЧЁТ_КАЖДЫЕ:
-                c.commit()
-                с_прошлой_записи = 0
-                _журнал({'ts': time.strftime('%H:%M:%S'),
-                         'разобрано': итог['разобрано'], 'страниц': итог['страниц'],
-                         'новых_почт': итог['новых_почт'],
-                         'новых_телефонов': итог['новых_телефонов'],
-                         'секунд': round(time.time() - t0)})
+
+    # ОДИН ПРОЦЕСС — НЕ ПУЛ ИЗ ОДНОГО (правка 30.08). На загруженной машине пул
+    # перестаёт запускаться вовсе: Windows поднимает работника через spawn, тот
+    # заново импортирует модуль, а с ним contact_extract и enrich_contacts, и
+    # при двенадцати занятых ядрах двадцать компаний не разобрались за пять
+    # минут — при том что последовательный разбор берёт полсекунды на компанию.
+    # Поэтому при одном процессе идём простым циклом, без пула и без spawn.
+    def поток():
+        if процессов <= 1:
+            for и in цели:
+                yield дело(и)
+        else:
+            with ProcessPoolExecutor(max_workers=процессов) as пул:
+                for р in пул.map(дело, цели, chunksize=8):
+                    yield р
+
+    for р in поток():
+        if минут and time.time() - t0 > минут * 60:
+            итог['итог'] = 'остановлен по времени, остальное — в следующий раз'
+            break
+        if not р:
+            итог['ошибок'] += 1
+            continue
+        if р.get('отложен'):
+            итог['отложено'] += 1
+            continue
+        inn = р['inn']
+        нп = нт = 0
+        for п in р['pochta']:
+            новый = 1 if (inn, п['email']) not in известн_п else 0
+            нп += новый
+            итог['скрытых'] += п['skryt']
+            c.execute(
+                'insert or ignore into nahodki_pochta(inn,email,role,role_src,'
+                'ctx,src,source_url,skryt,novyy,ts) values(?,?,?,?,?,?,?,?,?,?)',
+                (inn, п['email'], п['role'], п['role_src'], п['ctx'], п['src'],
+                 п['source_url'], п['skryt'], новый, сейчас))
+        for т in р['telefony']:
+            новый = 1 if (inn, т['phone']) not in известн_т else 0
+            нт += новый
+            c.execute('insert or ignore into nahodki_telefon(inn,phone,'
+                      'source_url,novyy,ts) values(?,?,?,?,?)',
+                      (inn, т['phone'], т['source_url'], новый, сейчас))
+        if кэш:
+            c.execute('insert or replace into sdelano_kesh(inn,ts,mtime,'
+                      'stranic,pocht,telefonov,novyh_pocht,novyh_telefonov) '
+                      'values(?,?,?,?,?,?,?,?)',
+                      (inn, сейчас, р.get('mtime') or 0, р['stranic'],
+                       len(р['pochta']), len(р['telefony']), нп, нт))
+        else:
+            c.execute('insert or replace into sdelano(inn,ts,stranic,pocht,'
+                      'telefonov,novyh_pocht,novyh_telefonov) '
+                      'values(?,?,?,?,?,?,?)',
+                      (inn, сейчас, р['stranic'], len(р['pochta']),
+                       len(р['telefony']), нп, нт))
+        итог['разобрано'] += 1
+        итог['страниц'] += р['stranic']
+        итог['почт'] += len(р['pochta'])
+        итог['новых_почт'] += нп
+        итог['телефонов'] += len(р['telefony'])
+        итог['новых_телефонов'] += нт
+        с_прошлой_записи += 1
+        if с_прошлой_записи >= ОТЧЁТ_КАЖДЫЕ:
+            c.commit()
+            с_прошлой_записи = 0
+            _журнал({'ts': time.strftime('%H:%M:%S'),
+                     'разобрано': итог['разобрано'], 'страниц': итог['страниц'],
+                     'новых_почт': итог['новых_почт'],
+                     'новых_телефонов': итог['новых_телефонов'],
+                     'секунд': round(time.time() - t0)})
     c.commit()
     итог['секунд'] = round(time.time() - t0)
     if итог['секунд'] > 0:
