@@ -10,7 +10,23 @@ API:
   extract(html) -> {"emails":[{email,role,role_src,ctx,src}], "phones":[...], "kasha":[email...]}
   resolve_roles_llm(kasha, text, company, model='claude-haiku-4-5') -> {email: role}  (fable/haiku)
 """
-import os, re, json
+import os, re, json, sys
+
+# ТЕЛЕФОНЫ БЕРЁМ У enrich_contacts, А НЕ СВОИ (правка 29.08, по замечанию
+# владельца «у нас же был скрипт разбора телефонов, который это учитывал»).
+# Он прав: в enrich_contacts годами копился рубеж против реквизитов — подпись
+# «ИНН/ОГРН/КПП/БИК/ОКПО/р.с» перед номером, запрет цифры перед совпадением,
+# отсев координат inline-SVG, вырезание разметки до разбора, отдельное правило
+# для городского номера в скобках «(8482) 56-10-44». Здесь стояла своя простая
+# регулярка `(?:\+7|8)\d{3}...`, и она тащила со страниц реквизитов куски БИК и
+# КПП: 5 044 таких номера дошли до гейта. Дублировать проверенное — и был корень.
+_ЧУЖОЙ = os.path.dirname(os.path.abspath(__file__))
+if _ЧУЖОЙ not in sys.path:
+    sys.path.insert(0, _ЧУЖОЙ)
+try:
+    import enrich_contacts as _EC
+except Exception:  # noqa: BLE001 — модуль не поднялся, работаем своей регуляркой
+    _EC = None
 
 EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}')
 _IMG_EXT = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico')
@@ -123,14 +139,23 @@ def extract(html):
         if e.lower() not in raw_found:
             add(e, 'deobf')
 
-    # телефоны (все вариации)
+    # телефоны: проверенным разбором enrich_contacts, своей регуляркой — только
+    # если тот не поднялся
     phones = set()
+    if _EC is not None:
+        for s in _EC.phone_strings(_EC.без_графики(blob)):
+            d = re.sub(r'\D', '', s)
+            if 10 <= len(d) <= 11:
+                phones.add(d)
+    else:
+        for p in _PHONE_RE.findall(text):
+            phones.add(re.sub(r'\D', '', p))
+    # tel: и JSON-LD — это ЯВНАЯ разметка телефона, реквизитом там быть нечему,
+    # но длину всё равно проверяем
     for t in _TEL_RE.findall(blob):
         d = re.sub(r'\D', '', t)
         if 10 <= len(d) <= 12:
             phones.add(d)
-    for p in _PHONE_RE.findall(text):
-        phones.add(re.sub(r'\D', '', p))
     for js in _JSONLD_RE.findall(blob):
         for t in re.findall(r'"telephone"\s*:\s*"([^"]+)"', js):
             d = re.sub(r'\D', '', t)
