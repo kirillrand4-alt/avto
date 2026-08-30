@@ -57,10 +57,10 @@ def vyruchka(inns):
     try:
         for i in range(0, len(inns), 400):
             ch = inns[i:i + 400]
-            q = ('select inn, revenue_rub, revenue_year, name from companies '
+            q = ('select inn, revenue_rub, revenue_year, name, site from companies '
                  'where inn in (%s)' % ','.join('?' * len(ch)))
             for r in e.execute(q, ch):
-                out[str(r[0])] = (r[1], r[2], r[3])
+                out[str(r[0])] = (r[1], r[2], r[3], r[4])
     finally:
         e.close()
     return out
@@ -116,18 +116,54 @@ def tolko_bogatye(campaign_id, limit):
     bogatye.sort(key=lambda r: (-(zhar.get(str(r.inn), 0)),
                                 -(rev.get(inns[r.id])[0] or 0)))
 
-    # ОДИН ИНН — ОДИН СЛОТ. Замер 30.08: ИНН 7705825797 занял два места из
-    # десяти, причём адреса за ним стоят от разных организаций (данные в базе
-    # спорные). Потолок «2 адреса на компанию» стоит дальше, на очереди, и до
-    # него дело дошло бы уже после оплаченной генерации второго письма.
-    po_inn, unikalnye = set(), []
+    # ОДИН ИНН — ОДИН СЛОТ, И ЭТО ДОЛЖЕН БЫТЬ ВЕРНЫЙ АДРЕС.
+    #
+    # Замер 30.08: ИНН 7705825797 занял два места из десяти. В enrich это
+    # «Баимская», добыча медной руды на Чукотке, но одна из двух строк несёт
+    # адрес v.melnikov@kompressor-air-trade.ru — почту торговца компрессорами,
+    # то есть конкурента. Дедупликация «по первому в сортировке» оставляла
+    # именно её, а info.baimskaya@baimskaya.com выбрасывала как дубль: письмо
+    # ушло бы конкуренту в убеждении, что пишем на Баимскую.
+    #
+    # Поэтому при дубле предпочитаем адрес, чей домен совпадает с сайтом
+    # компании из enrich. Совпадения нет ни у одного — оставляем первый по
+    # сортировке, как раньше. Потолок «2 адреса на компанию» стоит дальше, на
+    # очереди подтверждения, и до него дело дошло бы уже после оплаченной
+    # генерации второго письма.
+    def _imya_domena(d):
+        """«http://baimskaya.ru/» -> «baimskaya». Зону отбрасываем: у Баимской
+        сайт в enrich записан на .ru, а почта на .com, и сравнение доменов
+        целиком не сматчило её саму с собой. То же у «ЛУЧ» (sialuch.ru против
+        sialuch.com). Сравниваем только имя второго уровня — выбор идёт между
+        строками ОДНОГО ИНН, так что ложное совпадение здесь маловероятно."""
+        d = str(d or '').lower().split('//')[-1].split('/')[0].removeprefix('www.')
+        chasti = [c for c in d.split('.') if c]
+        if len(chasti) < 2:
+            return ''
+        # co.uk, com.ru и подобные: имя — это третья с конца часть
+        if len(chasti) > 2 and chasti[-2] in ('co', 'com', 'org', 'net', 'gov'):
+            return chasti[-3]
+        return chasti[-2]
+
+    def svoy_domen(r):
+        v = rev.get(inns[r.id]) or ()
+        sayt = _imya_domena(v[3] if len(v) > 3 else '')
+        pochta = str(getattr(r, 'email', '') or '').lower()
+        domen = _imya_domena(pochta.split('@')[-1]) if '@' in pochta else ''
+        return bool(sayt) and sayt == domen
+
+    po_inn, unikalnye = {}, []
     for r in bogatye:
         klyuch_inn = inns[r.id] or f'rid-{r.id}'
-        if klyuch_inn in po_inn:
-            continue
-        po_inn.add(klyuch_inn)
-        unikalnye.append(r)
+        prezhniy = po_inn.get(klyuch_inn)
+        if prezhniy is None:
+            po_inn[klyuch_inn] = r
+            unikalnye.append(r)
+        elif svoy_domen(r) and not svoy_domen(prezhniy):
+            po_inn[klyuch_inn] = r        # меняем на адрес с домена компании
+            unikalnye[unikalnye.index(prezhniy)] = r
     dublej = len(bogatye) - len(unikalnye)
+    chuzhoy_domen = sum(1 for r in unikalnye if not svoy_domen(r))
     bogatye = unikalnye
 
     # Гейт «не покупатель» падает В ПРОПУСК: если провайдер не ответил (а он
@@ -151,13 +187,15 @@ def tolko_bogatye(campaign_id, limit):
         'srezal_stop_list': len(v_stope),
         'bez_dannyh_o_vyruchke': bez_dannyh, 'melche_50mln': melkie,
         'ot_50mln': len(bogatye), 'srezal_dubli_po_inn': dublej,
+        'adres_ne_s_domena_kompanii': chuzhoy_domen,
         'gejt_ne_pokupatel_sudil': sudili, 'gejt_snyal': snyato,
         'vzyato': len(vzyato),
         'vzyatye': [{'rid': r.id, 'inn': r.inn, 'email': r.email,
                      'company': (r.company_name or '')[:44],
                      'mln': round((rev.get(inns[r.id])[0] or 0) / 1e6),
                      'god': rev.get(inns[r.id])[1],
-                     'nakal': zhar.get(str(r.inn), 0)} for r in vzyato],
+                     'nakal': zhar.get(str(r.inn), 0),
+                     'domen_sovpal': svoy_domen(r)} for r in vzyato],
     })
     return vzyato
 
