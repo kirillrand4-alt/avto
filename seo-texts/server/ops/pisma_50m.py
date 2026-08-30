@@ -116,12 +116,32 @@ def tolko_bogatye(campaign_id, limit):
     bogatye.sort(key=lambda r: (-(zhar.get(str(r.inn), 0)),
                                 -(rev.get(inns[r.id])[0] or 0)))
 
-    gotovye, okno, sdvig, sudili = [], max(1, limit * 2), 0, 0
+    # ОДИН ИНН — ОДИН СЛОТ. Замер 30.08: ИНН 7705825797 занял два места из
+    # десяти, причём адреса за ним стоят от разных организаций (данные в базе
+    # спорные). Потолок «2 адреса на компанию» стоит дальше, на очереди, и до
+    # него дело дошло бы уже после оплаченной генерации второго письма.
+    po_inn, unikalnye = set(), []
+    for r in bogatye:
+        klyuch_inn = inns[r.id] or f'rid-{r.id}'
+        if klyuch_inn in po_inn:
+            continue
+        po_inn.add(klyuch_inn)
+        unikalnye.append(r)
+    dublej = len(bogatye) - len(unikalnye)
+    bogatye = unikalnye
+
+    # Гейт «не покупатель» падает В ПРОПУСК: если провайдер не ответил (а он
+    # отвечает 403, когда на кошельке пусто), _not_buyers вернёт пустое
+    # множество, и внешне это неотличимо от «все проверены и все годные».
+    # Поэтому считаем отдельно, скольких он судил и скольких реально снял:
+    # «судил 20, снял 0» — это сигнал, что вердиктов не было вовсе.
+    gotovye, okno, sdvig, sudili, snyato = [], max(1, limit * 2), 0, 0, 0
     while len(gotovye) < limit and sdvig < len(bogatye):
         chast = bogatye[sdvig:sdvig + okno]
         sdvig += len(chast)
         sudili += len(chast)
         ne_pokupateli = aq._not_buyers([r for r in chast if r.inn])
+        snyato += len(ne_pokupateli)
         gotovye.extend(r for r in chast if str(r.inn) not in ne_pokupateli)
     vzyato = gotovye[:limit]
 
@@ -130,7 +150,8 @@ def tolko_bogatye(campaign_id, limit):
         'srezal_okved': len(netselevye), 'srezal_mertvye_adresa': len(mertvye),
         'srezal_stop_list': len(v_stope),
         'bez_dannyh_o_vyruchke': bez_dannyh, 'melche_50mln': melkie,
-        'ot_50mln': len(bogatye), 'sudil_gejt_ne_pokupatel': sudili,
+        'ot_50mln': len(bogatye), 'srezal_dubli_po_inn': dublej,
+        'gejt_ne_pokupatel_sudil': sudili, 'gejt_snyal': snyato,
         'vzyato': len(vzyato),
         'vzyatye': [{'rid': r.id, 'inn': r.inn, 'email': r.email,
                      'company': (r.company_name or '')[:44],
