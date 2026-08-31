@@ -78,7 +78,10 @@ for р in s.execute("SELECT id, inn, email, domain, extra_json FROM recipients"
     if not (сайт and (dom == сайт or сайт in ист.get((i, em), set()))):
         continue
     v = выр.get(i)
-    if v is None or v < ПОРОГ:
+    # Критерий владельца: выручка от 30 млн ЛИБО неизвестна. Ровно 0 в
+    # companies означает «нет данных» (таких 56881 из 166620), поэтому ноль
+    # приравниваем к неизвестной, а не к нулевому обороту.
+    if not (v is None or v == 0 or v >= ПОРОГ):
         continue
     кандидаты.append((р["id"], р["extra_json"]))
     инн.add(i)

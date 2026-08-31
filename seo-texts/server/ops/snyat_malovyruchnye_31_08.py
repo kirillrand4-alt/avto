@@ -49,7 +49,10 @@ for rid in ids:
         continue
     inn = str(к.get("inn") or "")
     v = выр.get(inn)
-    if v is None:
+    if v is None or v == 0:
+        # РОВНО 0 - это «нет данных», а не нулевая выручка: таких значений в
+        # companies 56881 из 166620 (34%), а треть компаний с нулевым оборотом
+        # быть не может. Ни base_ref, ни requisites их не подтверждают.
         неизвестно.append((rid, inn))
     elif v < ПОРОГ:
         снять.append((rid, inn, v))
