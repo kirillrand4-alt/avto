@@ -48,3 +48,143 @@ mailboxes:
     from_name: "Вадим Иванов, Meyer"
     pool: pool_mailru
     division: meyer
+
+
+# --- 31.08.2026: +12 ящиков на шести новых доменах (по 2 на домен).
+# Заведены в Я360 владельцем, пароли приложений — в env BOX22..BOX33
+# (реестр службы AppEnvironmentExtra + panel.env, в git их нет).
+# Логин в Я360 уникален на всю организацию и домена не содержит, поэтому
+# повторяющаяся фамилия идёт с другим именем: два Ерохина, два Беляева,
+# две Кузнецовы, два Кузьмина. SMTP и IMAP проверены живым логином 12/12.
+  - mailbox_id: "a.erokhin@food-sort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "a.erokhin@food-sort.ru"
+    password_env: BOX22_PASSWORD
+    from_name: "Александр Ерохин, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "s.kozlov@food-sort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "s.kozlov@food-sort.ru"
+    password_env: BOX23_PASSWORD
+    from_name: "Сергей Козлов, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "m.belyaev@sorting-systems.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "m.belyaev@sorting-systems.ru"
+    password_env: BOX24_PASSWORD
+    from_name: "Максим Беляев, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "d.ivanov@sorting-systems.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "d.ivanov@sorting-systems.ru"
+    password_env: BOX25_PASSWORD
+    from_name: "Денис Иванов, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "e.kuznetsova@rentgen-control.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "e.kuznetsova@rentgen-control.ru"
+    password_env: BOX26_PASSWORD
+    from_name: "Елена Кузнецова, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "p.tyunin@rentgen-control.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "p.tyunin@rentgen-control.ru"
+    password_env: BOX27_PASSWORD
+    from_name: "Павел Тюнин, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "n.kuzmin@optical-sort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "n.kuzmin@optical-sort.ru"
+    password_env: BOX28_PASSWORD
+    from_name: "Никита Кузьмин, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "o.boyarkin@optical-sort.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "o.boyarkin@optical-sort.ru"
+    password_env: BOX29_PASSWORD
+    from_name: "Олег Бояркин, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "r.erokhin@rentgen-inspection.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "r.erokhin@rentgen-inspection.ru"
+    password_env: BOX30_PASSWORD
+    from_name: "Роман Ерохин, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "o.kuznetsova@rentgen-inspection.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "o.kuznetsova@rentgen-inspection.ru"
+    password_env: BOX31_PASSWORD
+    from_name: "Ольга Кузнецова, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "i.belyaev@inspection-systems.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "i.belyaev@inspection-systems.ru"
+    password_env: BOX32_PASSWORD
+    from_name: "Игорь Беляев, Meyer"
+    pool: pool_yandex
+    division: meyer
+  - mailbox_id: "v.kuzmin@inspection-systems.ru"
+    provider: yandex
+    smtp_host: smtp.yandex.ru
+    smtp_port: 465
+    imap_host: imap.yandex.ru
+    imap_port: 993
+    login: "v.kuzmin@inspection-systems.ru"
+    password_env: BOX33_PASSWORD
+    from_name: "Виктор Кузьмин, Meyer"
+    pool: pool_yandex
+    division: meyer
