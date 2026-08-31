@@ -50,7 +50,47 @@ Caddy будет циклично пытаться выпустить серти
 
 Домены зарегистрированы 31.08.2026, в `gates.young_domain.domains` они внесены
 с этой датой. Но `min_age_days: 0` — то есть гейт не сработает ни на одном.
-Решение владельца: поднимать порог или нет.
+
+Что именно делает гейт (по коду `sender/gates.py` на сервере, не по названию
+ключа): `young_domain_reason` возвращает блок ТОЛЬКО когда совпало двое —
+получатель сидит на собственном почтовом сервере (`mx_provider` = `other` или
+`unknown`, то есть корпорат) И домену ящика меньше `min_age_days`. Получателям
+на Яндексе, Mail.ru и прочих публичных провайдерах письма с молодого домена
+уходят как обычно.
+
+При планировании работает `young_domain_all_blocked`: письмо снимается, только
+если заблокированы ВСЕ доступные ящики. У направления meyer есть семь зрелых
+(домены от 21.07.2026), поэтому подъём порога не остановит переписку с
+корпоратами — она просто поедет со старых доменов, а новые шесть будут набирать
+возраст на публичных провайдерах. `allow_force` в конфиге не задан, значит
+обойти гейт вторым подтверждением нельзя.
+
+## Точный список записей DNS, которых не хватает
+
+Сверено с зоной рабочего двойника: MX, SPF, DKIM и `yandex-verification` у новых
+шести уже совпадают с образцом, различий там нет. Не хватает ровно трёх записей
+на каждый домен.
+
+| домен | запись | тип | значение |
+|---|---|---|---|
+| food-sort.ru | `@` | A | `91.206.14.169` |
+| food-sort.ru | `www` | A | `91.206.14.169` |
+| food-sort.ru | `_dmarc` | TXT | `v=DMARC1; p=quarantine; rua=mailto:dmarc@food-sort.ru; adkim=s; aspf=s` |
+| sorting-systems.ru | `@` | A | `91.206.14.169` |
+| sorting-systems.ru | `www` | A | `91.206.14.169` |
+| sorting-systems.ru | `_dmarc` | TXT | `v=DMARC1; p=quarantine; rua=mailto:dmarc@sorting-systems.ru; adkim=s; aspf=s` |
+| rentgen-control.ru | `@` | A | `91.206.14.169` |
+| rentgen-control.ru | `www` | A | `91.206.14.169` |
+| rentgen-control.ru | `_dmarc` | TXT | `v=DMARC1; p=quarantine; rua=mailto:dmarc@rentgen-control.ru; adkim=s; aspf=s` |
+| optical-sort.ru | `@` | A | `91.206.14.169` |
+| optical-sort.ru | `www` | A | `91.206.14.169` |
+| optical-sort.ru | `_dmarc` | TXT | `v=DMARC1; p=quarantine; rua=mailto:dmarc@optical-sort.ru; adkim=s; aspf=s` |
+| rentgen-inspection.ru | `@` | A | `91.206.14.169` |
+| rentgen-inspection.ru | `www` | A | `91.206.14.169` |
+| rentgen-inspection.ru | `_dmarc` | TXT | `v=DMARC1; p=quarantine; rua=mailto:dmarc@rentgen-inspection.ru; adkim=s; aspf=s` |
+| inspection-systems.ru | `@` | A | `91.206.14.169` |
+| inspection-systems.ru | `www` | A | `91.206.14.169` |
+| inspection-systems.ru | `_dmarc` | TXT | `v=DMARC1; p=quarantine; rua=mailto:dmarc@inspection-systems.ru; adkim=s; aspf=s` |
 
 ## Что уже уходило с этих доменов
 
