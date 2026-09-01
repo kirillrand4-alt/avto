@@ -27,8 +27,11 @@ time.sleep(4)
 метка = time.strftime("%m%d-%H%M%S")
 основа = os.path.join(КАТАЛОГ, "checko_finansy-%s" % метка)
 лог, ош = основа + ".log", основа + ".err"
+# МОБИЛЬНЫЙ РЕЖИМ ПО УМОЛЧАНИЮ: статичный пул из 78 прокси Чеко закрыл
+# наглухо (429 на всех сорока запросах подряд, начиная с первого), и без
+# --mobilnye перезапуск гонит прогон по выгоревшим адресам.
 арг = [os.path.join(КАТАЛОГ, "checko_finansy.py"), "--lim", ЛИМ,
-       "--potok", ПОТОК, "--bez-bazy"]
+       "--potok", ПОТОК, "--bez-bazy", "--mobilnye"]
 список = ", ".join("'" + a.replace("'", "''") + "'" for a in арг)
 пш("$env:PYTHONIOENCODING='utf-8'; Start-Process -FilePath '%s' "
    "-ArgumentList %s -WindowStyle Hidden -RedirectStandardOutput '%s' "
@@ -45,7 +48,7 @@ if os.path.exists(лог):
 print("=" * 70)
 print("=== СВОДКА: ХОДИЛКА БЕЗ ЗАПИСИ В БАЗУ ===")
 print("снято прежних: %s" % (", ".join(было) if было else "не было"))
-print("пущено: checko_finansy.py --lim %s --potok %s --bez-bazy" % (ЛИМ, ПОТОК))
+print("пущено: checko_finansy.py --lim %s --potok %s --bez-bazy --mobilnye" % (ЛИМ, ПОТОК))
 print("живых процессов: %s" % (", ".join(живые) if живые else "НЕТ"))
 print("лог: %s" % лог)
 print("")
