@@ -15,6 +15,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
 import re
 import sqlite3
 import threading
@@ -33,6 +35,8 @@ from sender.errors import (  # noqa: F401
 from sender.dtos import (  # noqa: F401
     RecipientIn, CampaignIn, SequenceStepIn, MessageIn, EventIn, SuppressionIn, Recipient, Campaign, SequenceStep, Message, SuppressionEntry, MailboxState, WarmupState,
 )
+
+logger = logging.getLogger("sender.store")
 
 # --------------------------------------------------------------------------- #
 # Исключения (общий хребет сервиса)
@@ -138,7 +142,23 @@ def _now_iso() -> str:
 def _from_iso(s: Optional[str]) -> Optional[datetime]:
     if s is None:
         return None
-    return datetime.strptime(s, _ISO_FMT).replace(tzinfo=timezone.utc)
+    try:
+        return datetime.strptime(s, _ISO_FMT).replace(tzinfo=timezone.utc)
+    except ValueError:
+        # Урок 05.08 (бой): ops-скрипт вписал получателей с датой от SQLite
+        # datetime('now') — «2026-08-02 17:05:28», без 'T' и микросекунд.
+        # Жёсткий strptime ронял iter_recipients целиком: одна кривая строка
+        # валила планирование и листинги. Дата — не то поле, из-за которого
+        # можно терять выборку: парсим либерально, наивное время считаем UTC
+        # (канон _to_iso), совсем нечитаемое — None, а не исключение.
+        try:
+            dt = datetime.fromisoformat(str(s).strip())
+        except ValueError:
+            logger.warning("_from_iso: нечитаемая дата %r — возвращаю None", s)
+            return None
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
 
 
 def _b(x: Any) -> Optional[bool]:
@@ -189,8 +209,14 @@ def _dialog_body(text: Optional[str]) -> dict[str, Any]:
     Возвращает body (полный текст, максимум DIALOG_BODY_MAX), body_len (сколько
     было ДО обрезки) и body_truncated. Фронт решает, сворачивать ли показ, —
     но данные он получает целиком.
+
+    HTML разбираем в текст (владелец 18.08: в ленте лидов вместо письма был
+    его исходник — «<div>Кому: …<br /></div>» и куски CSS). Лента печатает
+    тело как обычный текст, а письма — и входящие, и наши — собраны HTML-ом.
+    Оригинал в базе не трогаем, правим только показ.
     """
-    s = "" if text is None else str(text)
+    from sender.pismo_v_tekst import v_tekst
+    s = "" if text is None else v_tekst(str(text))
     if len(s) <= DIALOG_BODY_MAX:
         return {"body": s, "body_len": len(s), "body_truncated": False}
     return {"body": s[:DIALOG_BODY_MAX], "body_len": len(s),
@@ -316,6 +342,84 @@ def _subject_key(subject: Optional[str]) -> str:
                 changed = True
                 break
     return " ".join(s.lower().split())
+
+
+# Статус копии человеческими словами. «Отправлено» и «пропущено» — разные
+# вещи, и оператор должен видеть разницу без похода в очередь.
+_KOPIYA_PO_RUSSKI = {
+    "pending": "ждёт подтверждения",
+    "edited": "правится оператором",
+    "approved": "одобрена, уходит",
+    "sent": "отправлена",
+    "skipped": "пропущена — не писали",
+    "stoplist": "остановлена стоп-листом",
+}
+
+_FREEMAIL_DOMENY = {
+    "mail.ru", "inbox.ru", "bk.ru", "list.ru", "internet.ru", "yandex.ru", "ya.ru",
+    "gmail.com", "googlemail.com", "rambler.ru", "icloud.com", "me.com",
+    "outlook.com", "hotmail.com", "live.com", "yahoo.com", "mail.com",
+    "narod.ru", "pochta.ru", "qip.ru", "tut.by", "ukr.net", "mail.ua",
+}
+# Две ветки, потому что смешанный класс букв врал в обе стороны: [A-Za-zА-Яа-я]
+# жадно склеивал домен со следующим русским словом («mail.ruмые» вместо
+# «mail.ru»), а чистая латиница теряла кириллические домены на .рф. Запрет
+# продолжения — только латиницей: русский текст сразу за зоной это уже не адрес,
+# а слипшееся слово, и адрес перед ним настоящий.
+_ADRES_V_TEKSTE = re.compile(
+    r"[\w.+-]+@(?:[a-zA-Z0-9-]+\.)+(?:[A-Za-z]{2,}(?![A-Za-z0-9-])"
+    r"|рф(?![А-Яа-я]))"
+    r"|[\w.+-]+@(?:[а-яА-Я0-9-]+\.)+рф")
+# наши собственные домены отправки: адрес менеджера в подписи входящего письма
+# — это НЕ адрес, который дал клиент, и отметку он ставить не должен
+_NASHI_HVOSTY = ("kompressor-", "compressor-", "sort-systems", "meyer-",
+                 "ruspromtd", "usort", "vsefotoseparatory")
+
+
+def _adresa_iz_pisma(text: str, otpravitel: str = "") -> set:
+    """Адреса, НАЗВАННЫЕ в теле входящего письма (кроме нашего и его же).
+
+    Клиент сплошь и рядом отвечает «пришлите на zakupki@…» или «продублируйте
+    главному инженеру», и менеджер шлёт копию туда. В ленте это выглядело как
+    письмо непонятно кому — адрес не совпадает ни с получателем кампании, ни с
+    отправителем ответа.
+    """
+    свои = str(otpravitel or "").lower()
+    из = set()
+    for m in _ADRES_V_TEKSTE.finditer(str(text or "")):
+        a = m.group(0).lower().strip(".,;:")
+        if a in свои or any(h in a for h in _NASHI_HVOSTY):
+            continue
+        из.add(a)
+    return из
+
+
+def _pometit_adresa_iz_pisem(items: list[dict]) -> None:
+    """Отметить исходящие, ушедшие на адрес, который дали нам в письме.
+
+    Владелец 20.08: «сделай отметку, что если мы отправили копию письма по
+    емейлу который нам написали в письме». Считаем по самой ленте, а не по
+    отдельной таблице: тогда отметка появляется и на всей прошлой переписке,
+    а не только на будущей. Смотрим ТОЛЬКО входящие, пришедшие РАНЬШЕ этого
+    исходящего, — иначе совпадение ничего не значит.
+    """
+    названные: list[tuple] = []          # (ts, адрес, от кого)
+    for it in items:
+        ts = str(it.get("ts") or "")
+        if it.get("direction") == "in":
+            for a in _adresa_iz_pisma(it.get("body") or "", it.get("from_addr")
+                                      or it.get("email") or ""):
+                названные.append((ts, a, it.get("email") or it.get("from_addr") or ""))
+            continue
+        адрес = str(it.get("email") or "").lower()
+        if not адрес:
+            continue
+        for когда, a, от_кого in названные:
+            if a == адрес and когда <= ts:
+                it["adres_iz_pisma"] = True
+                it["adres_dal"] = от_кого
+                it["pometka"] = "адрес взят из их письма"
+                break
 
 
 def _dialog_match_out(items: list[dict], used: set, *, email: Optional[str],
@@ -483,9 +587,16 @@ CREATE TABLE IF NOT EXISTS events (
     provider     TEXT,
     event_ts     TEXT NOT NULL,
     detail_json  TEXT,
-    created_at   TEXT NOT NULL
+    created_at   TEXT NOT NULL,
+    -- Message-ID входящего письма. Второй, НЕЗАВИСИМЫЙ признак того же
+    -- письма: dedup_key завязан на нумерацию писем в ящике, а она пережила
+    -- уже одну смену (порядковый номер → UID) и при пересоздании ящика
+    -- (UIDVALIDITY) сменится снова. Message-ID письмо несёт с собой и не
+    -- меняет никогда.
+    rfc_msgid    TEXT
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_events_dedup ON events(dedup_key);
+CREATE INDEX IF NOT EXISTS ix_events_msgid ON events(mailbox_id, rfc_msgid);
 CREATE INDEX IF NOT EXISTS ix_events_type_ts   ON events(event_type, event_ts);
 CREATE INDEX IF NOT EXISTS ix_events_recipient ON events(recipient_id, event_type);
 CREATE INDEX IF NOT EXISTS ix_events_campaign  ON events(campaign_id, event_type);
@@ -699,6 +810,13 @@ CREATE INDEX IF NOT EXISTS ix_sendlog_inn   ON send_log(inn, ts);
 # --------------------------------------------------------------------------- #
 
 
+# Статусы, которых нет в общей ленте: у каждого своя очередь.
+# «deleted» — убранные оператором, они не в счёт вообще; остальные пять —
+# результат работы или пауза, и висеть среди неразобранных им незачем.
+СКРЫТЫЕ_ИЗ_ЛЕНТЫ = ('deleted', 'not_interested', 'in_bitrix', 'unqualified',
+                    'v_otpuske', 'avtootvet', 'closed')
+
+
 class Store:
     """DAL поверх sqlite3. Потокобезопасен через единый RLock на соединение."""
 
@@ -740,6 +858,12 @@ class Store:
                 "ALTER TABLE confirm_reviews ADD COLUMN kind TEXT NOT NULL DEFAULT 'outbound'",
                 "ALTER TABLE confirm_reviews ADD COLUMN in_reply_to TEXT",
                 "ALTER TABLE confirm_reviews ADD COLUMN thread_id TEXT",
+                # Когда адрес письма поставил ЧЕЛОВЕК: до вердикта пробы такое
+                # письмо не отправляем без явного второго подтверждения
+                # (владелец 12.08). Durable — переживает рестарт панели.
+                "ALTER TABLE confirm_reviews ADD COLUMN manual_email_ts TEXT",
+                # Message-ID входящего: см. комментарий в схеме events
+                "ALTER TABLE events ADD COLUMN rfc_msgid TEXT",
             ):
                 try:
                     self._conn.execute(ddl)
@@ -954,6 +1078,120 @@ class Store:
                 "SELECT * FROM recipients WHERE id=?", (recipient_id,)
             ).fetchone()
         return _row_to_recipient(row) if row else None
+
+    def find_recipient_by_email(self, email: str) -> Optional[dict]:
+        """Строка recipients по адресу (UNIQUE(email)) или None.
+
+        Адрес нормализуется ТЕМ ЖЕ каноном, что в upsert_recipient: иначе
+        поиск промахнётся на регистре/пробелах и «новый» контакт завели бы
+        поверх существующего — с чужим ИНН. Нужен ручному добавлению контакта
+        в панели (confirm.add_recipient_email), где проверка «адрес уже
+        закреплён за другой компанией» делается ДО записи.
+        """
+        norm, _domain, _inn = _normalize_recipient_identity(email or "", "", None)
+        if not norm:
+            return None
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM recipients WHERE email=?", (norm,)).fetchone()
+        return dict(row) if row else None
+
+    def poluchatel_dlya_vhodyashchego(self, from_addr: str,
+                                      subject: str = "") -> Optional[dict]:
+        """Кому из наших получателей принадлежит входящее письмо.
+
+        imap_watcher привязывал ответ ТОЛЬКО через In-Reply-To/References →
+        наше исходное письмо. Клиентская почта эти заголовки ставит не всегда,
+        и тогда событие ложилось с recipient_id=NULL, а лента диалога берёт
+        входящие строго `WHERE recipient_id=?` — то есть письмо было забрано,
+        лежало в базе и не показывалось НИГДЕ. Владелец 20.08: «здесь точно
+        знаю что был ещё один ответ». Замер: 3 таких из 88 входящих.
+
+        Порядок мерок — от точной к слабой:
+          1. адрес совпал с адресом получателя;
+          2. ответ пришёл с ДРУГОГО адреса того же домена, куда мы писали, —
+             типичное «переслал коллеге, отвечает он»;
+          3. тема совпала с темой отправленного письма на этот домен.
+        """
+        import re as _re
+        м = _re.search(r'[\w.+!#$%&\'*/=?^`{|}~-]+@[\w.-]+\.\w+', str(from_addr or ""))
+        адрес = (м.group(0).lower() if м else "")
+        if not адрес:
+            return None
+        прямо = self.find_recipient_by_email(адрес)
+        if прямо:
+            return dict(прямо, privyazka="адрес")
+        домен = адрес.split("@")[-1]
+        # бесплатную почту по домену не привязываем: ящиков на mail.ru в базе
+        # тысячи, и «единственный, кому писали» — случайность, а не связь
+        if not домен or домен in _FREEMAIL_DOMENY:
+            return None
+        with self._lock:
+            # только те, кому мы ДЕЙСТВИТЕЛЬНО писали: иначе домен вроде
+            # mail.ru притянул бы случайного однофамильца из базы
+            ряд = self._conn.execute(
+                """SELECT r.* FROM recipients r
+                    WHERE r.domain=?
+                      AND EXISTS (SELECT 1 FROM messages m
+                                   WHERE m.recipient_id=r.id AND m.sent_at IS NOT NULL)
+                    ORDER BY r.id LIMIT 2""", (домен,)).fetchall()
+        if len(ряд) == 1:
+            return dict(ряд[0], privyazka="домен")
+        if len(ряд) > 1 and subject:
+            тема = _normalize_subject(subject) if "_normalize_subject" in globals() \
+                else str(subject).strip().lower()
+            with self._lock:
+                по_теме = self._conn.execute(
+                    """SELECT r.* FROM recipients r
+                        JOIN messages m ON m.recipient_id=r.id
+                       WHERE r.domain=? AND m.sent_at IS NOT NULL
+                         AND lower(trim(replace(replace(COALESCE(m.subject,''),
+                             'Re:',''), 'RE:', ''))) = ?
+                       ORDER BY m.sent_at DESC LIMIT 1""",
+                    (домен, тема.replace("re:", "").strip())).fetchone()
+            if по_теме:
+                return dict(по_теме, privyazka="домен+тема")
+        return None
+
+    def recipients_by_domain(self, domain: str) -> list[dict]:
+        """Все получатели корпоративного домена — для привязки ответа.
+
+        Письмо уходит на приёмную, внутри его передают, и отвечает человек
+        со СВОЕГО ящика, часто новым письмом без In-Reply-To. Привязать
+        такой ответ можно только по домену: 19.08 «Шато де Талю» спросило
+        цену и КП с andryushchenko@, а писали мы на sale@ — ответ лёг
+        событием без получателя и пролежал неделю.
+
+        Отдаём ВСЕХ, кого нашли: решение «домен принадлежит одной компании»
+        принимает вызывающий, он же отсекает публичные почтовики.
+        """
+        дом = str(domain or "").strip().lower().lstrip("@")
+        if not дом:
+            return []
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM recipients WHERE lower(domain)=? "
+                " OR lower(email) LIKE ? ORDER BY id", (дом, "%@" + дом)
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def recipients_by_domain_name(self, name: str) -> list[dict]:
+        """Получатели, у чьего домена такое же ИМЯ, но зона любая.
+
+        Нужна для ответов с другой зоны той же конторы: 26.08 «СМК
+        Альтернатива» написала с smk-alternativa.com, а писали мы на
+        smk-alternativa.ru. Решение «это одна компания» принимает
+        вызывающий: он сверяет ИНН и отсекает короткие и общие имена.
+        """
+        имя = str(name or "").strip().lower()
+        if len(имя) < 5:
+            return []
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT * FROM recipients WHERE lower(domain) LIKE ? "
+                " OR lower(email) LIKE ? ORDER BY id",
+                (имя + ".%", "%@" + имя + ".%")).fetchall()
+        return [dict(r) for r in rows]
 
     def iter_recipients(
         self, *, valid_status: Optional[str] = None, provider: Optional[str] = None,
@@ -1170,6 +1408,56 @@ class Store:
             ).fetchall()
         return [_row_to_message(r) for r in rows]
 
+    def otvet_kak_pismo(self, *, recipient_id: int, mailbox_id: str,
+                        subject: str, body: str, rfc_message_id: str,
+                        sent_at: datetime, in_reply_to: Optional[str] = None,
+                        thread_id: Optional[str] = None) -> Optional[int]:
+        """Строка письма для ОТВЕТА оператора клиенту.
+
+        Владелец 19.08: «оператор ответила на письмо, но нигде нету информации
+        об этом». Ответ уходил по-настоящему (send_log + событие reply_sent),
+        но строки в messages не заводил - и потому не появлялся ни в
+        «Отправленных», ни в статистике ящика. Виден он был только в диалоге
+        компании, который читает confirm_reviews. Оператор отвечает и не
+        получает подтверждения там, где привык смотреть.
+
+        Кампанию и шаг берём у ПОСЛЕДНЕГО письма этому получателю: у ответа
+        своей кампании нет, а колонки NOT NULL. Нет прошлого письма (ответ на
+        входящее от компании, которой мы не писали) - строку не заводим и
+        возвращаем None: отправку это не рвёт, она уже состоялась.
+
+        Идемпотентность по rfc_message_id: повторный вызов на том же письме
+        вернёт существующую строку, а не заведёт вторую.
+        """
+        if not recipient_id or not rfc_message_id:
+            return None
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            есть = conn.execute(
+                "SELECT id FROM messages WHERE rfc_message_id=?",
+                (rfc_message_id,)).fetchone()
+            if есть:
+                return int(есть["id"])
+            прошлое = conn.execute(
+                "SELECT campaign_id, sequence_step_id FROM messages "
+                "WHERE recipient_id=? ORDER BY id DESC LIMIT 1",
+                (int(recipient_id),)).fetchone()
+            if not прошлое:
+                return None
+            cur = conn.execute(
+                """INSERT INTO messages
+                       (idempotency_key, campaign_id, recipient_id,
+                        sequence_step_id, mailbox_id, status, sent_at,
+                        rfc_message_id, in_reply_to, thread_id, subject,
+                        body_rendered, created_at, updated_at)
+                   VALUES (?,?,?,?,?, 'sent', ?,?,?,?,?,?,?,?)""",
+                (f"reply:{rfc_message_id}", int(прошлое["campaign_id"]),
+                 int(recipient_id), int(прошлое["sequence_step_id"]),
+                 mailbox_id or None, _to_iso(sent_at), rfc_message_id,
+                 in_reply_to or None, thread_id or None, subject or "",
+                 body or "", now_iso, now_iso))
+            return int(cur.lastrowid)
+
     def mark_sent(self, message_id: int, rfc_message_id: str, sent_at: datetime,
                   *, mailbox_id: Optional[str] = None) -> None:
         """Письмо ушло. mailbox_id пишем, если он известен: при РУЧНОЙ отправке
@@ -1213,10 +1501,22 @@ class Store:
             )
             return bool(cur.rowcount)
 
-    def mark_failed(self, message_id: int, error: str, *, retryable: bool) -> None:
-        """retryable → назад в 'scheduled' (снят lease); иначе финальный 'failed'."""
+    def mark_failed(self, message_id: int, error: str, *, retryable: bool,
+                    mailbox_id: Optional[str] = None) -> None:
+        """retryable → назад в 'scheduled' (снят lease); иначе финальный 'failed'.
+
+        mailbox_id — С КАКОГО ЯЩИКА не удалось отправить. Раньше не писался
+        вовсе, и разобрать отказы по ящикам было нечем: у 42 отказов из 43
+        (замер 21.08) колонка пустая. Пишем только когда ящик известен —
+        чужое значение не затираем.
+        """
         now_iso = _now_iso()
+        _ящик = str(mailbox_id).strip() if mailbox_id else ""
         with self.transaction() as conn:
+            if _ящик:
+                conn.execute(
+                    "UPDATE messages SET mailbox_id=? WHERE id=?",
+                    (_ящик, message_id))
             if retryable:
                 # Ревью №2: фильтра по статусу не было — письмо в 'pending_review'
                 # (ручная очередь) при временной ошибке SMTP уезжало в
@@ -1254,6 +1554,25 @@ class Store:
                 "UPDATE messages SET status='skipped', last_error=?, updated_at=? WHERE id=?",
                 (reason, now_iso, message_id),
             )
+
+    def mark_skipped_if_not_terminal(self, message_id: int, reason: str) -> bool:
+        """Снять письмо с отправки, не трогая терминальные статусы. → снято?
+
+        ``mark_skipped`` пишет 'skipped' безусловно, и вызвать его на письме,
+        которое секунду назад ушло, — значит потерять факт отправки: письмо
+        перестанет считаться отправленным, правило 90 дней его не увидит, и
+        компания получит второе письмо. Здесь проверка и запись — один UPDATE,
+        разъехаться им негде.
+        """
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """UPDATE messages
+                      SET status='skipped', last_error=?, updated_at=?
+                    WHERE id=? AND status NOT IN ('sent','skipped','failed')""",
+                (reason, now_iso, int(message_id)),
+            )
+            return cur.rowcount == 1
 
     def mark_pending_review(self, message_id: int) -> None:
         """Confirm-режим оркестратора: письмо ушло в очередь подтверждений —
@@ -1308,22 +1627,51 @@ class Store:
 
     # -- events (append-only) ---------------------------------------------- #
 
+    @staticmethod
+    def _msgid_sobytiya(detail) -> str:
+        """Message-ID входящего письма из его же заголовков, нормализованный."""
+        if not isinstance(detail, dict):
+            return ""
+        шапка = detail.get("headers")
+        if not isinstance(шапка, dict):
+            return ""
+        for имя in ("Message-ID", "Message-Id", "message-id"):
+            з = шапка.get(имя)
+            if з:
+                return str(з).strip().strip("<>").lower()[:400]
+        return ""
+
     def append_event(self, e: EventIn) -> tuple[int, bool]:
-        """ON CONFLICT(dedup_key) DO NOTHING → (event_id, created?)."""
+        """ON CONFLICT(dedup_key) DO NOTHING → (event_id, created?).
+
+        Второй заслон — по Message-ID письма. dedup_key завязан на нумерацию
+        писем в ящике, и 28.08 эта нумерация сменилась (порядковый номер →
+        UID): весь архив выглядел новым и лёг в журнал повторно — 132 двойные
+        записи, сводка ответов выросла вдвое. Message-ID письмо несёт с собой,
+        и по нему повтор виден независимо от того, как мы нумеруем ящик.
+        """
         now_iso = _now_iso()
+        msgid = self._msgid_sobytiya(e.detail)
         with self.transaction() as conn:
+            if msgid:
+                была = conn.execute(
+                    "SELECT id FROM events WHERE mailbox_id IS ? AND rfc_msgid = ? "
+                    " ORDER BY id LIMIT 1", (e.mailbox_id, msgid)).fetchone()
+                if была:
+                    return int(была["id"]), False
             cur = conn.execute(
                 """
                 INSERT INTO events
                     (dedup_key, event_type, message_id, recipient_id, campaign_id,
-                     mailbox_id, provider, event_ts, detail_json, created_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?)
+                     mailbox_id, provider, event_ts, detail_json, created_at,
+                     rfc_msgid)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(dedup_key) DO NOTHING
                 """,
                 (
                     e.dedup_key, e.event_type, e.message_id, e.recipient_id,
                     e.campaign_id, e.mailbox_id, e.provider, _to_iso(e.event_ts),
-                    _json_dump(e.detail), now_iso,
+                    _json_dump(e.detail), now_iso, msgid or None,
                 ),
             )
             if cur.rowcount == 1:
@@ -1332,6 +1680,17 @@ class Store:
                 "SELECT id FROM events WHERE dedup_key=?", (e.dedup_key,)
             ).fetchone()
             return int(row["id"]), False
+
+    # Отказ по политике («550 5.7.1 blocked due to security reason», антивирус,
+    # «message rejected») пишется тем же событием 'bounce', что и мёртвый ящик,
+    # — а это разные вещи. Ящика нет: адрес мусорный, за такое провайдеры режут
+    # домен. Отказ по политике: ящик ЖИВОЙ, письмо завернул фильтр получателя.
+    # Замер 18.08: два из четырёх ящиков, закрытых гейтом репутации, набрали
+    # свои проценты именно policy-отказами — без них 2.0% при пороге 2.5%.
+    # Цена ошибки: 70 писем в день простоя до конца месяца.
+    _БЕЗ_ПОЛИТИКИ = (
+        """ AND COALESCE(e.detail_json,'') NOT LIKE '%"verdict": "policy"%'"""
+        """ AND COALESCE(e.detail_json,'') NOT LIKE '%"verdict":"policy"%'""")
 
     def count_events(
         self,
@@ -1344,7 +1703,12 @@ class Store:
         recipient_provider: Optional[str] = None,
         recipient_id: Optional[int] = None,
         since: Optional[datetime] = None,
+        exclude_policy: bool = False,
+        exclude_campaign_ids: Optional[Sequence[int]] = None,
     ) -> int:
+        # exclude_policy — не считать отказы по политике (ящик живой, письмо
+        # завернул фильтр). Нужен гейтам репутации: их порог откалиброван под
+        # долю МЁРТВЫХ адресов.
         # mailbox_id/sequence_step_id — фильтры, которых ждёт analytics.StoreReader:
         # mailbox_id — колонка events (индекс ix_events_mailbox), sequence_step_id —
         # через join events.message_id -> messages.sequence_step_id.
@@ -1381,6 +1745,18 @@ class Store:
         if since is not None:
             sql.append("AND e.event_ts >= ?")
             params.append(_to_iso(since))
+        if exclude_policy:
+            sql.append(self._БЕЗ_ПОЛИТИКИ)
+        if exclude_campaign_ids:
+            # СЛУЖЕБНЫЕ КАМПАНИИ ВОН ИЗ СТАТИСТИКИ. Письма-маяки (проверка,
+            # в какую папку кладёт письмо почтовик) уходят по тому же пути,
+            # что и боевые - иначе замер ничего не стоит, - но считать их
+            # как отправку нельзя: это наша собственная проверка, а не работа
+            # с базой.
+            места = ",".join("?" for _ in exclude_campaign_ids)
+            sql.append(f"AND (e.campaign_id IS NULL OR "
+                       f"e.campaign_id NOT IN ({места}))")
+            params.extend(int(x) for x in exclude_campaign_ids)
         with self._lock:
             row = self._conn.execute(" ".join(sql), params).fetchone()
         return int(row["c"])
@@ -1388,6 +1764,7 @@ class Store:
     def count_events_grouped(
         self, *, by: str, event_types: Sequence[str],
         since: Optional[datetime] = None,
+        exclude_policy: bool = False,
     ) -> dict[str, dict[str, int]]:
         """Счётчики событий одним GROUP BY (ревью: gates делал N×3 запросов
         по доменам — 500 доменов = 1500 SQL на каждый evaluate_all).
@@ -1412,6 +1789,11 @@ class Store:
         if since is not None:
             sql.append("AND e.event_ts >= ?")
             params.append(_to_iso(since))
+        if exclude_policy:
+            # Отказы по политике исключаем ТОЛЬКО у отбивок: 'sent' и
+            # 'complaint' к ним отношения не имеют.
+            sql.append("AND (e.event_type <> 'bounce' OR (1=1"
+                       + self._БЕЗ_ПОЛИТИКИ + "))")
         sql.append("GROUP BY 1, 2")
         out: dict[str, dict[str, int]] = {}
         with self._lock:
@@ -1527,15 +1909,36 @@ class Store:
                           (SELECT COALESCE(cr.edited_subject, cr.subject)
                              FROM confirm_reviews cr
                             WHERE cr.message_id = m.id
-                            ORDER BY cr.id DESC LIMIT 1) AS review_subject
+                            ORDER BY cr.id DESC LIMIT 1) AS review_subject,
+                          -- Второй запасной путь: по АДРЕСУ и кампании. Связка
+                          -- confirm_reviews.message_id проставлена не у всех
+                          -- писем, и без этого одно письмо из четырнадцати
+                          -- показывалось пустым при живом тексте в базе
+                          -- (владелец 11.08: «а почему нету тела письма»).
+                          -- Сужаем кампанией: один адрес мог получать письма
+                          -- разных кампаний, и подставить чужой текст хуже,
+                          -- чем не подставить никакого.
+                          (SELECT COALESCE(cr.edited_body, cr.body)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id IS NULL
+                              AND lower(cr.email) = lower(r.email)
+                              AND cr.campaign_id IS m.campaign_id
+                              AND COALESCE(cr.edited_body, cr.body) <> ''
+                            ORDER BY cr.id DESC LIMIT 1) AS review_body_po_pochte
                      FROM messages m
                      LEFT JOIN recipients r ON r.id = m.recipient_id
                     WHERE m.id = ?""", (int(message_id),)).fetchone()
         if r is None:
             return None
         тело = r["body_rendered"] or ""
-        источник = "messages" if тело else ("confirm" if r["review_body"] else "")
-        тело = тело or (r["review_body"] or "")
+        if тело:
+            источник = "messages"
+        elif r["review_body"]:
+            источник, тело = "confirm", r["review_body"]
+        elif r["review_body_po_pochte"]:
+            источник, тело = "confirm (по адресу)", r["review_body_po_pochte"]
+        else:
+            источник = ""
         return {
             "message_id": r["id"],
             "subject": r["subject"] or r["review_subject"] or "",
@@ -1584,8 +1987,24 @@ class Store:
                           (SELECT COALESCE(cr.edited_subject, cr.subject)
                              FROM confirm_reviews cr
                             WHERE cr.message_id = m.id
-                            ORDER BY cr.id DESC LIMIT 1) AS review_subject
+                            ORDER BY cr.id DESC LIMIT 1) AS review_subject,
+                          -- Второй запасной путь: по АДРЕСУ и кампании. Связка
+                          -- confirm_reviews.message_id проставлена не у всех
+                          -- писем, и без этого одно письмо из четырнадцати
+                          -- показывалось пустым при живом тексте в базе
+                          -- (владелец 11.08: «а почему нету тела письма»).
+                          -- Сужаем кампанией: один адрес мог получать письма
+                          -- разных кампаний, и подставить чужой текст хуже,
+                          -- чем не подставить никакого.
+                          (SELECT COALESCE(cr.edited_body, cr.body)
+                             FROM confirm_reviews cr
+                            WHERE cr.message_id IS NULL
+                              AND lower(cr.email) = lower(r.email)
+                              AND cr.campaign_id IS m.campaign_id
+                              AND COALESCE(cr.edited_body, cr.body) <> ''
+                            ORDER BY cr.id DESC LIMIT 1) AS review_body_po_pochte
                      FROM messages m
+                     LEFT JOIN recipients r ON r.id = m.recipient_id
                     WHERE m.recipient_id=? AND m.sent_at IS NOT NULL
                     ORDER BY m.sent_at DESC LIMIT ?""",
                 (rid, lim)).fetchall()
@@ -1631,10 +2050,24 @@ class Store:
         items.sort(key=lambda x: str(x.get("ts") or ""))
         return items[-lim:] if len(items) > lim else items
 
-    def dialog_thread_company(self, inn: str, *, limit: int = 200) -> list[dict]:
+    # Уведомления почтовых серверов: это НЕ переписка с компанией. В карточке
+    # лида (её владелец пересылает в отдел продаж) отбивка по мёртвому адресу
+    # читается как ответ клиента и сбивает продажника с толку — 28.08 по
+    # «Импэкс-Дон» рядом с живым ответом висело «Ваше сообщение не доставлено…
+    # user not found» по СОСЕДНЕМУ адресу той же компании. Из ленты компании их
+    # убираем; в технической ленте контакта (dialog_thread) и в гейтах/счётчиках
+    # отбивок они остаются как были.
+    _OTBIVKI_NE_PEREPISKA = ("bounce", "dsn", "bounce_skryt")
+
+    def dialog_thread_company(self, inn: str, *, limit: int = 200,
+                              bez_otbivok: bool = True) -> list[dict]:
         """Вся переписка с КОМПАНИЕЙ (#64): по всем адресам всех получателей
         этого ИНН. Хронология единая; каждый элемент несёт email, чтобы оператор
         видел, с каким контактом шёл разговор.
+
+        bez_otbivok=True (по умолчанию) выбрасывает уведомления почтовых серверов
+        (bounce/DSN) — они не переписка, а служебный шум; передайте False, если
+        нужна полная техническая лента.
 
         Три источника, потому что одного не хватает:
           messages       — письма кампании (тело в body_rendered);
@@ -1659,8 +2092,24 @@ class Store:
         items: list[dict] = []
         seen_rfc: set = set()
         seen_msg: set = set()
+        # Адреса, по которым переписки не было: письмо отбилось, ответа нет.
+        # Показывать продажнику «мы написали» туда, куда письмо не дошло, —
+        # то же враньё, что и показывать саму отбивку.
+        мёртвые: set = set()
         for rid, email in rids:
-            for it in self.dialog_thread(rid, limit=lim):
+            свои = self.dialog_thread(rid, limit=lim)
+            if bez_otbivok:
+                отбилось = any(str(i.get("kind") or "")
+                               in self._OTBIVKI_NE_PEREPISKA for i in свои)
+                ответили = any(i.get("direction") == "in"
+                               and str(i.get("kind") or "")
+                               not in self._OTBIVKI_NE_PEREPISKA for i in свои)
+                if отбилось and not ответили:
+                    мёртвые.add(str(email or "").strip().lower())
+                    continue
+                свои = [i for i in свои if str(i.get("kind") or "")
+                        not in self._OTBIVKI_NE_PEREPISKA]
+            for it in свои:
                 it["email"] = email
                 if it.get("message_id") is not None:
                     seen_msg.add(int(it["message_id"]))
@@ -1694,6 +2143,8 @@ class Store:
             mid = r["message_id"]
             if mid is not None and int(mid) in seen_msg:
                 continue          # то же письмо уже пришло из messages, с телом
+            if str(r["email"] or "").strip().lower() in мёртвые:
+                continue          # адрес мёртвый: письма туда не было
             it = {
                 "direction": "out", "ts": r["ts"],
                 "kind": "reply_sent" if r["kind"] == "reply" else "sent",
@@ -1712,6 +2163,8 @@ class Store:
                 (digits, lim)).fetchall()
         used: set = set()
         for r in reversed(logs):          # по возрастанию времени: склейка 1:1
+            if str(r["email"] or "").strip().lower() in мёртвые:
+                continue          # иначе снятое письмо вернётся сюда без тела
             rfc = r["rfc_message_id"]
             mid = r["message_id"]
             if rfc and rfc in seen_rfc:
@@ -1735,7 +2188,48 @@ class Store:
                 "body_truncated": False, "body_missing": True,
                 "mailbox_id": "", "email": r["email"] or "",
                 "source": "send_log"})
+        # СТРАХОВКА НА ЧТЕНИЕ: входящие, которым не досталось recipient_id.
+        # Привязку чиним на приёме (poluchatel_dlya_vhodyashchego), но полагаться
+        # только на неё нельзя: любой новый способ не угадать получателя снова
+        # сделает письмо невидимым, а невидимый ответ клиента — это потерянная
+        # сделка. Здесь ловим по адресу и домену самой компании.
+        адреса = {str(e).lower() for _r, e in rids if e}
+        # По домену ловим только КОРПОРАТИВНЫЙ: у компании с ящиком на mail.ru
+        # домен «mail.ru» притянул бы в её ленту чужие письма со всей базы.
+        домены = {a.split("@")[-1] for a in адреса if "@" in a} - _FREEMAIL_DOMENY
+        if адреса or домены:
+            with self._lock:
+                сироты = self._conn.execute(
+                    """SELECT id, event_type, event_ts, mailbox_id, detail_json
+                         FROM events
+                        WHERE recipient_id IS NULL
+                          AND event_type IN ('reply','reply_auto','complaint','dsn')
+                        ORDER BY event_ts DESC LIMIT 400""").fetchall()
+            for r in сироты:
+                detail = _json_load(r["detail_json"])
+                отправитель = ((detail.get("headers") or {}).get("From", "")
+                               or detail.get("from") or "")
+                м = re.search(r"[\w.+-]+@[\w.-]+\.\w+", str(отправитель))
+                if not м:
+                    continue
+                адрес = м.group(0).lower()
+                if адрес not in адреса and адрес.split("@")[-1] not in домены:
+                    continue
+                rfc = ((detail.get("headers") or {}).get("Message-ID", "") or "").strip()
+                if rfc and rfc in seen_rfc:
+                    continue
+                items.append({
+                    "direction": "in", "ts": r["event_ts"], "kind": r["event_type"],
+                    "subject": (detail.get("headers") or {}).get("Subject", ""),
+                    "mailbox_id": r["mailbox_id"] or "", "email": адрес,
+                    "reply_kind": detail.get("reply_kind") or "",
+                    "event_id": r["id"], "source": "events-без-привязки",
+                    "bez_privyazki": True,
+                    "rfc_message_id": rfc,
+                    "from_addr": отправитель,
+                    **_dialog_body(detail.get("snippet"))})
         items.sort(key=lambda x: str(x.get("ts") or ""))
+        _pometit_adresa_iz_pisem(items)
         return items[-lim:] if len(items) > lim else items
 
     def last_event_ts(
@@ -1787,6 +2281,20 @@ class Store:
                 if row:
                     return _row_to_suppression(row)
         return None
+
+    def suppression_values(self, *, reason: str, scope: str = "email") -> set:
+        """Все значения стоп-листа с данной причиной, в нижнем регистре.
+
+        Нужна заслону ловушек: чтобы узнать «воскресшего», надо помнить, кто
+        когда-то отбился как несуществующий. Истёкшие записи тоже считаются —
+        история отбивки не перестаёт быть историей.
+        """
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT value FROM suppression WHERE scope=? AND reason=?",
+                (scope, reason),
+            ).fetchall()
+        return {str(r[0]).strip().lower() for r in rows if r[0]}
 
     def suppression_add(self, e: SuppressionIn) -> tuple[int, bool]:
         """Идемпотентное добавление → (id, created?).
@@ -1919,10 +2427,23 @@ class Store:
     ) -> None:
         now_iso = _now_iso()
         with self.transaction() as conn:
-            conn.execute(
-                "UPDATE mailbox_state SET paused=?, pause_reason=?, updated_at=? WHERE mailbox_id=?",
+            cur = conn.execute(
+                "UPDATE mailbox_state SET paused=?, pause_reason=?, updated_at=? "
+                "WHERE mailbox_id=?",
                 (1 if paused else 0, reason, now_iso, mailbox_id),
             )
+            if not cur.rowcount:
+                # Ящик ещё ни разу не отправлял — строки состояния нет, и голый
+                # UPDATE молча не делал ничего: «поставить на паузу» и «остановить
+                # всё» проходили мимо новых ящиков. day_key заведомо старый —
+                # чтобы отправка пересчитала рампу и лимит, а не взяла нули.
+                conn.execute(
+                    "INSERT OR IGNORE INTO mailbox_state(mailbox_id, provider, "
+                    "day_key, sent_today, sent_total, ramp_day, daily_limit, "
+                    "paused, pause_reason, updated_at) "
+                    "VALUES(?, '', '1970-01-01', 0, 0, 0, 0, ?, ?, ?)",
+                    (mailbox_id, 1 if paused else 0, reason, now_iso),
+                )
 
     def get_warmup_state(self, mailbox_id: str) -> Optional[WarmupState]:
         with self._lock:
@@ -2086,8 +2607,15 @@ class Store:
         params: list[Any] = []
         if event_type is not None:
             vals = event_type if isinstance(event_type, (list, tuple, set)) else [event_type]
-            sql.append("AND event_type IN (%s)" % ",".join("?" for _ in vals))
             params.extend(vals)
+        else:
+            # МАШИННЫЕ ОТЧЁТЫ НЕ ПОКАЗЫВАЕМ. Агрегированные отчёты DMARC шлёт
+            # каждый крупный почтовик раз в сутки, а тело у них — zip: в ленте
+            # это выглядело строкой «PK□□□□□CJ ]юд⊥пЙ□□□u□□□8□□□google.com!...»
+            # и занимало полэкрана (28.08: 106 отчётов и 48 двоичных обрывков
+            # из 253 записей «входящее вне переписки»). В журнале они остаются
+            # — спросить их можно явным event_type='otchet'.
+            sql.append("AND event_type <> 'otchet'")
         for col, val in (("campaign_id", campaign_id), ("provider", provider),
                          ("mailbox_id", mailbox_id), ("recipient_id", recipient_id)):
             if val is not None:
@@ -2140,6 +2668,133 @@ class Store:
         with self._lock:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         return [_row_to_message(row) for row in rows]
+
+    # Домены отправки направления «Мейер» (рентген-инспекция и фотосепараторы).
+    # Нужны как ЗАПАСНОЕ правило: у письма всегда есть ящик, а ИНН получателя
+    # может не найтись в базе обзвона — например у контакта, заведённого руками.
+    _MEYER_DOMENY = ("optic-sort.ru", "sort-systems.ru", "zernosort.ru",
+                     "usort.ru", "vsefotoseparatory.ru", "meyer-corp.ru",
+                     # шесть доменов, заведённых 31.08.2026: без них
+                     # мейеровские письма показывались меткой «КЦ»
+                     "food-sort.ru", "sorting-systems.ru",
+                     "rentgen-control.ru", "optical-sort.ru",
+                     "rentgen-inspection.ru", "inspection-systems.ru")
+
+    def _obzvon_prikreplyon(self) -> bool:
+        """Подцепить базу обзвона к соединению — там живёт division по ИНН.
+
+        В самой панели направления нет: recipients.segment хранит сегмент
+        КАМПАНИИ («новостные», «солянка», «металлообработка»), и у 6 211
+        получателей из 8 236 он пуст вовсе. Достоверный источник один —
+        obzvon.division: 129 378 «kc» и 32 421 «meyer» на всю базу.
+        """
+        готово = getattr(self, "_obz_ok", None)
+        if готово is not None:
+            return готово
+        путь = os.environ.get("OBZVON_DB", r"C:\sender\obzvon-index.db")
+        try:
+            # замок реентрантный (RLock), поэтому вызов изнутри уже занятой
+            # секции безопасен — а трогать общее соединение без него нельзя
+            with self._lock:
+                if Path(путь).exists():
+                    self._conn.execute("ATTACH DATABASE ? AS obz", (путь,))
+                    self._obz_ok = True
+                else:
+                    self._obz_ok = False
+        except Exception:  # noqa: BLE001 - без обзвона считаем по домену ящика
+            self._obz_ok = False
+        return self._obz_ok
+
+    def _sql_napravleniya(self, ящик: str = "m.mailbox_id") -> str:
+        """Выражение SQL «каким направлением писали»: домен ящика, иначе обзвон.
+
+        Порядок источников именно такой, а не наоборот. Домен ящика — ФАКТ:
+        письмо физически ушло с mailbox мейеровского или компрессорного домена.
+        obzvon.division — метка базы, и владелец 20.08 предупредил: «там ошибки
+        были сначала». Проверка это подтвердила: на 500 писем четыре
+        расхождения, и все четыре — ошибки метки, а не отправки. «Горводоканал»,
+        «Дорстройсервис-1», «Руsникель», фасадная компания помечены «meyer»,
+        хотя фотосепаратор и рентген-инспекция им не нужны, и письмо им ушло
+        с компрессорного ящика — правильно.
+
+        Обзвон остаётся запасным: у части писем ящик не записан (mailbox_id
+        пуст у восьми), и там метка — единственное, что есть.
+        """
+        домен = " OR ".join(
+            "lower(ifnull(%s,'')) LIKE '%%%%@%s'" % (ящик, d)
+            for d in self._MEYER_DOMENY)
+        по_домену = "CASE WHEN %s THEN 'meyer' ELSE 'kc' END" % домен
+        есть_ящик = "ifnull(%s,'') <> ''" % ящик
+        if not self._obzvon_prikreplyon():
+            return по_домену
+        return ("CASE WHEN %s THEN %s ELSE COALESCE((SELECT o.division "
+                "FROM obz.obzvon o WHERE o.inn = r.inn), 'kc') END"
+                % (есть_ящик, по_домену))
+
+    def otpravlennye(self, *, q: Optional[str] = None,
+                     campaign_id: Optional[int] = None,
+                     mailbox_id: Optional[str] = None,
+                     napravlenie: Optional[str] = None,
+                     tolko_s_otvetom: bool = False,
+                     limit: int = 100, offset: int = 0) -> dict:
+        """Всё, что мы отправили: письмо, кому, ответили ли, отбилось ли.
+
+        Владелец 11.08: «положи туда всё, что отправили мы». До этого дня
+        увидеть отправленное можно было только по одному письму или через
+        карточку лида — общего списка не было вовсе, и вопрос «а этому мы уже
+        писали?» упирался в память оператора.
+
+        Ответы и отбивки считаем ОДНИМ подзапросом на весь список, а не по
+        письму: писем будут тысячи.
+        """
+        усл = ["m.sent_at IS NOT NULL"]
+        зн: list[Any] = []
+        if campaign_id is not None:
+            усл.append("m.campaign_id = ?")
+            зн.append(int(campaign_id))
+        if mailbox_id:
+            усл.append("m.mailbox_id = ?")
+            зн.append(mailbox_id)
+        if q:
+            игла = f"%{str(q).strip().lower()}%"
+            усл.append("(lower(r.email) LIKE ? OR lower(ifnull(r.company_name,'')) "
+                       "LIKE ? OR ifnull(r.inn,'') LIKE ? "
+                       "OR lower(ifnull(m.subject,'')) LIKE ?)")
+            зн.extend([игла, игла, игла, игла])
+        напр_sql = self._sql_napravleniya()
+        if napravlenie:
+            усл.append("%s = ?" % напр_sql)
+            зн.append(str(napravlenie).strip().lower())
+        где = " AND ".join(усл)
+
+        # Ответ и отбивка — по событиям треда. reply_auto считаем ответом:
+        # владелец 11.08 просил видеть автоответы в ленте — «надо понимать,
+        # сколько было ответов».
+        основа = f"""
+            SELECT m.id, m.sent_at, m.subject, m.mailbox_id, m.campaign_id,
+                   m.status, m.thread_id, m.recipient_id,
+                   r.email, r.company_name, r.inn, r.segment,
+                   {напр_sql} AS napravlenie,
+                   (SELECT COUNT(*) FROM events e
+                     WHERE e.recipient_id = m.recipient_id
+                       AND e.event_type IN ('reply','reply_auto')) AS otvetov,
+                   (SELECT COUNT(*) FROM events e
+                     WHERE e.message_id = m.id
+                       AND e.event_type = 'bounce') AS otbivok
+            FROM messages m LEFT JOIN recipients r ON r.id = m.recipient_id
+            WHERE {где}"""
+        if tolko_s_otvetom:
+            основа += " AND otvetov > 0"
+        with self._lock:
+            всего = self._conn.execute(
+                f"SELECT COUNT(*) FROM messages m "
+                f"LEFT JOIN recipients r ON r.id = m.recipient_id WHERE {где}",
+                зн).fetchone()[0]
+            строки = self._conn.execute(
+                основа + " ORDER BY m.sent_at DESC, m.id DESC LIMIT ? OFFSET ?",
+                зн + [int(limit), int(offset)]).fetchall()
+        return {"vsego": int(всего),
+                "pisma": [dict(r) if hasattr(r, "keys") else r for r in строки]}
 
     def get_thread(self, recipient_id: int, campaign_id: int) -> list["Event"]:
         """История переписки пары (получатель, кампания) в хронологии."""
@@ -2239,7 +2894,7 @@ class Store:
         panel: Optional[dict] = None, status: str = "pending",
         reason: Optional[str] = None, kind: str = "outbound",
         in_reply_to: Optional[str] = None, thread_id: Optional[str] = None,
-        dedup_key: Optional[str] = None,
+        dedup_key: Optional[str] = None, allow_suppressed: bool = False,
     ) -> tuple[int, bool]:
         """Письмо в очередь подтверждений. Идемпотентно по dedup_key →
         (review_id, created?). status='skipped' — авто-скип на этапе очереди
@@ -2248,6 +2903,34 @@ class Store:
         kind='reply' — ручной ответ автоответчика: message_id обычно None,
         in_reply_to/thread_id несут привязку к треду; dedup_key задаётся явно
         (по треду), т.к. campaign у ответа нет."""
+        # ЗАСЛОН СТОП-ЛИСТА НА САМОМ ВХОДЕ В ОЧЕРЕДЬ (17.08). Раньше проверку
+        # делал только оркестратор, а confirm_submit верил вызывающему на
+        # слово. Владелец увидел в очереди «Богатых карточек» пять компаний
+        # из стоп-листа: партию ставил серверный скрипт, который звал этот
+        # метод напрямую и заслон обошёл. Один невнимательный вызов - и
+        # оператору предлагают подтвердить отправку тому, кому слать нельзя.
+        # Не отказ, а перевод в 'skipped' с причиной: это ровно тот статус,
+        # который метод и так документирует под авто-скип по suppression, и
+        # след в очереди остаётся. Только холодная исходящая: ответ живому
+        # человеку в треде (kind='reply') стоп-листом холодных не режется.
+        # allow_suppressed=True — осознанный обход: оператор сам решил писать
+        # адресату из стоп-листа и подтвердит это в очереди (тот же путь, что
+        # force-approve). Умолчание False: массовые прогоны обходить не могут.
+        if status == "pending" and kind == "outbound" and not allow_suppressed:
+            _s = None
+            try:
+                _mail = (email or "").strip().lower()
+                _dom = _mail.split("@")[-1] if "@" in _mail else ""
+                _inn = "".join(ch for ch in str(inn or "") if ch.isdigit())
+                _s = self.suppression_lookup(email=_mail, domain=_dom,
+                                             inn=_inn or None)
+            except Exception:  # noqa: BLE001 - сбой проверки не рвёт очередь
+                _s = None
+            if _s is not None:
+                status = "skipped"
+                reason = (f"стоп-лист: {getattr(_s, 'scope', '?')}="
+                          f"{getattr(_s, 'value', '?')} "
+                          f"({getattr(_s, 'reason', '?')})")
         dedup = dedup_key or self.confirm_dedup_key(inn, email, campaign_id)
         now_iso = _now_iso()
         with self.transaction() as conn:
@@ -2276,8 +2959,40 @@ class Store:
             if cur.rowcount == 1:
                 return int(cur.lastrowid), True
             row = conn.execute(
-                "SELECT id FROM confirm_reviews WHERE dedup_key=?", (dedup,)
-            ).fetchone()
+                "SELECT id, status FROM confirm_reviews WHERE dedup_key=?",
+                (dedup,)).fetchone()
+            # СНЯТУЮ КАРТОЧКУ ОЖИВЛЯЕМ НОВЫМ ПИСЬМОМ.
+            #
+            # 25.08.2026. «ON CONFLICT DO NOTHING» молча выбрасывал текст:
+            # компания вернулась в пул генерации, ей написали новое письмо, а
+            # очередь отдала ту же снятую карточку и НИЧЕГО в неё не записала.
+            # 632 оплаченных письма легли в никуда — оператор их не видел, а
+            # генератор считал постановку удачной.
+            #
+            # Оживляем только снятую и только свежим холодным письмом: у
+            # pending/approved/sent карточки своя жизнь (оператор её правил,
+            # подтверждал, отправлял), и перетирать её нельзя.
+            if (row is not None and str(row["status"]) == "skipped"
+                    and status == "pending" and kind == "outbound"
+                    and (subject or body)):
+                conn.execute(
+                    """UPDATE confirm_reviews
+                          SET subject=?, body=?, panel_json=?, message_id=?,
+                              status='pending', reason=?, decided_at=NULL,
+                              decided_by=NULL, updated_at=?
+                        WHERE id=?""",
+                    (subject, body, _json_dump(panel or {}), message_id,
+                     "письмо переписано, карточка оживлена", now_iso,
+                     int(row["id"])))
+                # ВМЕСТЕ С КАРТОЧКОЙ ПОДНИМАЕМ И ПИСЬМО. Оживить одну
+                # карточку мало: строка письма осталась бы snyatoy, и
+                # оператор подтверждал бы то, чего автоотправка не видит.
+                if message_id:
+                    conn.execute(
+                        "UPDATE messages SET status='pending_review', "
+                        "       last_error=NULL, updated_at=? "
+                        " WHERE id=? AND status='skipped'",
+                        (now_iso, int(message_id)))
             return int(row["id"]), False
 
     def confirm_get(self, review_id: int) -> Optional[dict]:
@@ -2285,6 +3000,42 @@ class Store:
             row = self._conn.execute(
                 "SELECT * FROM confirm_reviews WHERE id=?", (review_id,)
             ).fetchone()
+        return _row_to_confirm(row) if row else None
+
+    def panel_dlya_lida(self, *, inn: Optional[str] = None,
+                        email: Optional[str] = None) -> Optional[dict]:
+        """Карточка компании, какой она была при отправке письма этому лиду.
+
+        Владелец 11.08: «тех, кто ответил, можешь сюда выводить информацию о
+        компании, ту же, которая была при отправке?» — именно ту же, а не
+        пересобранную заново. Пересборка через полгода дала бы другие цифры
+        (выручка обновилась, повод протух, приговор линз пересужен), и разговор
+        оператора с человеком разошёлся бы с письмом, на которое тот отвечает.
+        Поэтому берём СОХРАНЁННЫЙ panel_json, а не строим панель заново.
+
+        Ищем по ИНН (у компании бывает несколько адресов, отвечают с любого),
+        а если ИНН не проставлен — по адресу. Берём последнюю отправленную:
+        именно на неё человек и отвечает.
+        """
+        цифры = "".join(c for c in str(inn or "") if c.isdigit())
+        почта = str(email or "").strip().lower()
+        условия, значения = [], []
+        if цифры:
+            условия.append("replace(replace(ifnull(inn,''),' ',''),'-','') = ?")
+            значения.append(цифры)
+        if почта:
+            условия.append("lower(email) = ?")
+            значения.append(почта)
+        if not условия:
+            return None
+        зпр = ("SELECT * FROM confirm_reviews WHERE panel_json IS NOT NULL "
+               f"AND ({' OR '.join(условия)}) "
+               # Отправленные вперёд: карточка, по которой письмо реально ушло,
+               # честнее черновика, оставшегося в очереди.
+               "ORDER BY CASE status WHEN 'approved' THEN 0 WHEN 'sent' THEN 0 "
+               "ELSE 1 END, id DESC LIMIT 1")
+        with self._lock:
+            row = self._conn.execute(зпр, значения).fetchone()
         return _row_to_confirm(row) if row else None
 
     def confirm_get_by_key(
@@ -2355,6 +3106,51 @@ class Store:
         with self._lock:
             row = self._conn.execute(sql, params).fetchone()
         return row["mailbox_id"] if row else None
+
+    def poslednie_otvety(self, *, inns: Optional[list] = None,
+                         emails: Optional[list] = None) -> dict:
+        """Наш ПОСЛЕДНИЙ ответ компании: {ключ → {ts, subject, review_id}}.
+
+        Владелец 19.08: «сегодня ответили одному — где вот он?». Ответ уходил,
+        а в ленте лид оставался нетронутым: колонки про исходящий ответ там нет,
+        переписка видна только внутри карточки. Считаем батчем, одним запросом
+        на страницу, как sent_flags: ключ — нормализованный ИНН и/или email.
+
+        Берём очередь подтверждений (kind='reply', статус sent/approved): именно
+        через неё уходит КАЖДЫЙ ответ оператора, а messages.in_reply_to у них
+        пустой — по нему ответы не находятся.
+        """
+        inn_keys = {"".join(c for c in str(x) if c.isdigit())
+                    for x in (inns or []) if x}
+        email_keys = {str(x).strip().lower() for x in (emails or []) if x}
+        if not inn_keys and not email_keys:
+            return {}
+        clauses, params = [], []
+        if inn_keys:
+            clauses.append(f"inn IN ({','.join('?' for _ in inn_keys)})")
+            params += list(inn_keys)
+        if email_keys:
+            clauses.append(
+                f"LOWER(COALESCE(email,'')) IN ({','.join('?' for _ in email_keys)})")
+            params += list(email_keys)
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, COALESCE(inn,''), LOWER(COALESCE(email,'')), "
+                "COALESCE(decided_at, updated_at, created_at) ts, "
+                "COALESCE(edited_subject, subject, '') subj, status "
+                "FROM confirm_reviews WHERE kind='reply' "
+                "AND status IN ('sent','approved') "
+                f"AND ({' OR '.join(clauses)}) ORDER BY ts ASC", params).fetchall()
+        out: dict = {}
+        for r in rows:
+            запись = {"ts": r[3], "subject": r[4], "review_id": r[0],
+                      "status": r[5]}
+            digits = "".join(c for c in str(r[1] or "") if c.isdigit())
+            if digits:
+                out[digits] = запись           # ORDER BY ts ASC → остаётся последний
+            if r[2]:
+                out[r[2]] = запись
+        return out
 
     def sent_flags(self, *, inns: Optional[list] = None,
                    emails: Optional[list] = None) -> dict:
@@ -2459,9 +3255,19 @@ class Store:
             if clash is not None:
                 raise ValidationError(
                     f"адрес {email} уже в очереди (карточка {clash['id']})")
-            conn.execute(
-                "UPDATE confirm_reviews SET email=?, dedup_key=?, updated_at=? "
-                "WHERE id=?", (email, new_dedup, _now_iso(), review_id))
+            # Метка «адрес поставил человек»: по ней approve ждёт вердикта
+            # пробы. Ставится здесь, а не в confirm.py, чтобы её нельзя было
+            # обойти другой веткой смены адреса.
+            try:
+                conn.execute(
+                    "UPDATE confirm_reviews SET email=?, dedup_key=?, "
+                    "manual_email_ts=?, updated_at=? WHERE id=?",
+                    (email, new_dedup, _now_iso(), _now_iso(), review_id))
+            except sqlite3.OperationalError:
+                conn.execute(                       # старая база без колонки
+                    "UPDATE confirm_reviews SET email=?, dedup_key=?, "
+                    "updated_at=? WHERE id=?",
+                    (email, new_dedup, _now_iso(), review_id))
         return self.confirm_get(review_id)
 
     def confirm_list(
@@ -2488,6 +3294,200 @@ class Store:
         with self._lock:
             rows = self._conn.execute(" ".join(sql), params).fetchall()
         return [_row_to_confirm(r) for r in rows]
+
+    def recipient_groups(self) -> dict:
+        """Группы получателей для фильтра очереди: {'по_id':…, 'по_почте':…,
+        'по_инн':…, 'все': [(группа, сколько)]}.
+
+        Группа — это `segment` ПЛЮС список `extra_json.gruppy`. Список нужен
+        потому, что `segment` одно-значный: компания из новостной кампании,
+        попавшая ещё и в отраслевую партию, иначе выпадала бы из новостной
+        (так и случилось при заливке металлообработки 05.08 — восемь адресов
+        переехали и вернулись только после разбора).
+        """
+        out_id: dict = {}
+        out_mail: dict = {}
+        out_inn: dict = {}
+        счёт: dict = {}
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, COALESCE(email,''), COALESCE(inn,''), "
+                "COALESCE(segment,''), COALESCE(extra_json,'') FROM recipients"
+            ).fetchall()
+        for r in rows:
+            гр = set()
+            seg = str(r[3] or "").strip()
+            if seg:
+                гр.add(seg)
+            ex = str(r[4] or "")
+            if "gruppy" in ex:
+                try:
+                    for x in (json.loads(ex).get("gruppy") or []):
+                        if str(x).strip():
+                            гр.add(str(x).strip())
+                except Exception:  # noqa: BLE001 - кривой extra не ломает очередь
+                    pass
+            if not гр:
+                continue
+            out_id[int(r[0])] = гр
+            em = str(r[1] or "").strip().lower()
+            if em:
+                out_mail[em] = гр | out_mail.get(em, set())
+            digits = "".join(c for c in str(r[2] or "") if c.isdigit())
+            if digits:
+                out_inn[digits] = гр | out_inn.get(digits, set())
+            for g in гр:
+                счёт[g] = счёт.get(g, 0) + 1
+        return {"по_id": out_id, "по_почте": out_mail, "по_инн": out_inn,
+                "все": sorted(счёт.items(), key=lambda kv: (-kv[1], kv[0]))}
+
+    def poslednee_otpravlennoe(self, recipient_id: int) -> Optional[dict]:
+        """Последнее письмо, реально ушедшее этому получателю.
+
+        Нужно разбору автоответов: когда человек в отпуске и просит писать
+        коллеге, слать надо ТО ЖЕ письмо, а не сочинять новое. Берём строку
+        очереди, а не messages: в ней лежит и правка оператора, и то, что
+        человек в итоге прочитал.
+        """
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE recipient_id=? "
+                "AND kind='outbound' AND status IN ('sent','approved') "
+                "ORDER BY id DESC LIMIT 1",
+                (int(recipient_id),),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def confirm_review_for_message(self, message_id: int) -> Optional[dict]:
+        """Последний review, привязанный к письму messages.id (или None).
+
+        Нужен обходу авто-отправки: письмо со статусом 'scheduled', у которого
+        review уже approved/edited, НЕ должно повторно рендериться шаблоном
+        '{subject}' и НЕ должно возвращаться в очередь подтверждений —
+        текст берётся из этого review."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM confirm_reviews WHERE message_id=? "
+                "ORDER BY id DESC LIMIT 1", (int(message_id),)).fetchone()
+        return _row_to_confirm(row) if row else None
+
+    def confirm_set_message(self, review_id: int, message_id: int) -> None:
+        """Привязать review к письму messages.id (для карточек, попавших в
+        очередь без message_id — например, из ai-квоты). Только pending и
+        только пустую привязку: чужую не перетираем."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                "UPDATE confirm_reviews SET message_id=?, updated_at=? "
+                "WHERE id=? AND status='pending' AND message_id IS NULL",
+                (int(message_id), now_iso, int(review_id)))
+            if cur.rowcount != 1:
+                raise StoreError(
+                    f"confirm_set_message: карточка {review_id} не pending "
+                    "или уже привязана к письму")
+
+    def reschedule_message(self, message_id: int, when: datetime) -> bool:
+        """Перенести scheduled_at письма (нетерминального). Кнопка «в
+        автоотправку» ставит слот окна В ЗОНЕ ПОЛУЧАТЕЛЯ: при
+        by_recipient_tz=True воротник час не проверяет — дисциплину часа
+        несёт именно scheduled_at."""
+        now_iso = _now_iso()
+        with self.transaction() as conn:
+            cur = conn.execute(
+                """UPDATE messages SET scheduled_at=?, updated_at=?
+                    WHERE id=? AND status NOT IN ('sent','skipped','failed')""",
+                (_to_iso(when), now_iso, int(message_id)))
+            return bool(cur.rowcount)
+
+    def approved_scheduled_after(self, porog: str) -> list:
+        """Одобренные письма в 'scheduled', чей срок ПОЗЖЕ порога.
+
+        Ровно та выборка, которую подтягивает под окно podtyanut_pod_okno:
+        письма, до которых цикл сегодня уже не дойдёт, потому что их срок
+        отложен вперёд. Возвращает (message_id, recipient_id, scheduled_at).
+        """
+        with self.transaction() as conn:
+            rows = conn.execute(
+                """SELECT m.id AS mid, m.recipient_id AS rid,
+                          m.scheduled_at AS sched
+                     FROM messages m
+                    WHERE m.status='scheduled' AND m.scheduled_at > ?
+                      AND (SELECT cr.status FROM confirm_reviews cr
+                            WHERE cr.message_id=m.id
+                            ORDER BY cr.id DESC LIMIT 1)
+                          IN ('approved','edited')
+                    ORDER BY m.scheduled_at, m.id""", (str(porog),)).fetchall()
+        return [(int(r["mid"]), int(r["rid"]), str(r["sched"] or ""))
+                for r in rows]
+
+    def claim_approved_due(self, *, now: datetime, limit: int,
+                           skip_ids=None) -> list[Message]:
+        """Атомарный claim писем автоотправки: 'scheduled', due, и последний
+        review по письму — approved/edited. Только их: обычные scheduled-письма
+        (ещё не одобренные) остаются оркестратору/очереди подтверждений.
+        Зеркало claim_due_messages, но по одобренным.
+
+        skip_ids — письма, уже разобранные в ЭТОМ проходе цикла. Без них
+        проход упирается в голову очереди: 18.08 первые десять писем по
+        возрасту оказались адресованы в пул mail.ru, где все ящики были либо
+        под гейтом репутации, либо выбрали дневной лимит. Цикл брал их
+        каждую минуту, возвращал в очередь и заканчивал проход — а 24
+        письма следом, полностью готовые к отправке, не отправлялись полтора
+        часа при свободных ящиках.
+        """
+        if limit <= 0:
+            return []
+        now_iso = _to_iso(now)
+        пропуск = [int(x) for x in (skip_ids or [])][:900]
+        условие = ""
+        параметры: list = [now_iso]
+        if пропуск:
+            условие = f" AND m.id NOT IN ({','.join('?' * len(пропуск))})"
+            параметры.extend(пропуск)
+        параметры.append(int(limit))
+        with self.transaction() as conn:
+            rows = conn.execute(
+                f"""SELECT m.id AS mid FROM messages m
+                    WHERE m.status='scheduled' AND m.scheduled_at <= ?
+                      AND (SELECT cr.status FROM confirm_reviews cr
+                            WHERE cr.message_id=m.id
+                            ORDER BY cr.id DESC LIMIT 1)
+                          IN ('approved','edited'){условие}
+                    ORDER BY m.scheduled_at, m.id LIMIT ?""",
+                tuple(параметры)).fetchall()
+            ids = [int(r["mid"]) for r in rows]
+            out: list[Message] = []
+            for mid in ids:
+                cur = conn.execute(
+                    "UPDATE messages SET status='sending', claimed_at=?, "
+                    "updated_at=? WHERE id=? AND status='scheduled'",
+                    (now_iso, now_iso, mid))
+                if cur.rowcount == 1:
+                    row = conn.execute(
+                        "SELECT * FROM messages WHERE id=?", (mid,)).fetchone()
+                    out.append(_row_to_message(row))
+        return out
+
+    def recipient_mx_map(self) -> dict:
+        """Почтовик получателей для фильтра очереди: {'по_id':…, 'по_почте':…}.
+
+        Нужен галке «скрыть ждущих созревания доменов»: гейт молодого домена
+        режет письма по mx_provider получателя (свой корпоративный сервер
+        отбивает почту с новых доменов — 06.08 так отбился НПО «Сатурн»:
+        «550 5.7.1 blocked due to security reason»). Карта строится ОДИН раз
+        на запрос очереди, как и карта групп."""
+        по_id: dict = {}
+        по_почте: dict = {}
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, COALESCE(email,''), COALESCE(mx_provider,'') "
+                "FROM recipients").fetchall()
+        for r in rows:
+            по_id[int(r[0])] = str(r[2] or "")
+            em = str(r[1] or "").strip().lower()
+            if em:
+                по_почте[em] = str(r[2] or "")
+        return {"по_id": по_id, "по_почте": по_почте}
 
     def confirm_golden(self, *, limit: int = 500) -> list[dict]:
         """Золотые пары (правки оператора) НЕЗАВИСИМО от статуса. Критерий —
@@ -2644,6 +3644,110 @@ class Store:
             rows = self._conn.execute(sql, params).fetchall()
         return [dict(r) for r in rows]
 
+    def delivery_emails_for_recipient(
+        self, recipient_id: int, *, limit: int = 20
+    ) -> list[str]:
+        """Адреса, на которые ПО ФАКТУ уходили письма этому получателю и
+        которые НЕ совпадают с recipients.email.
+
+        Оператор в панели может подменить адрес карточки (смена контакта или
+        ручное добавление) — тогда в send_log лежит доставочный адрес, а в
+        recipients остаётся прежний. Отписка, жалоба и жёсткая отбивка обязаны
+        суппрессить именно доставочный адрес: иначе человек нажал «отписаться»,
+        в стоп-лист ушёл базовый адрес, и ему можно писать снова (ФЗ-38).
+
+        Ограничение, названное честно: связь идёт через send_log.message_id →
+        messages.recipient_id. Ответы в тред (send_reply) пишут send_log без
+        message_id и сюда не попадают — у них адрес доставки и так свой,
+        отдельного получателя в базе за ними нет.
+        """
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT sl.email AS email, MAX(sl.ts) AS ts
+                     FROM send_log sl
+                     JOIN messages m ON m.id = sl.message_id
+                    WHERE m.recipient_id = ?
+                      AND sl.email <> COALESCE(
+                            (SELECT email FROM recipients WHERE id = ?), '')
+                    GROUP BY sl.email
+                    ORDER BY ts DESC
+                    LIMIT ?""",
+                (recipient_id, recipient_id, int(limit))).fetchall()
+        return [r["email"] for r in rows if r["email"]]
+
+    def recipients_with_unsent(self) -> list[dict]:
+        """(id, email, mx_provider) получателей с НЕОТПРАВЛЕННЫМ: строки
+        messages в scheduled/pending_review или pending-черновики подтверждений
+        (kind='outbound'). Кандидаты для queue-defer-young."""
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT DISTINCT r.id, r.email, r.mx_provider
+                     FROM recipients r
+                    WHERE r.id IN (SELECT recipient_id FROM messages
+                                    WHERE status IN ('scheduled','pending_review'))
+                       OR r.id IN (SELECT recipient_id FROM confirm_reviews
+                                    WHERE status='pending' AND kind='outbound'
+                                      AND recipient_id IS NOT NULL)""").fetchall()
+        return [dict(r) for r in rows]
+
+    def defer_unsent_for_recipients(self, recipient_ids, *,
+                                    reason: str) -> dict:
+        """Убрать НЕОТПРАВЛЕННОЕ по получателям, чтобы планировщик потом
+        пересоздал письма заново (решение владельца 05.08: очередь не должна
+        копить письма под гейтом молодых доменов и выстреливать их пачкой).
+
+        Физический DELETE, а не смена статуса — намеренно: и idempotency_key
+        писем (ON CONFLICT DO NOTHING), и dedup_key черновиков остаются заняты
+        строкой в ЛЮБОМ статусе — «скрытый» получатель иначе не вернулся бы в
+        план никогда. Удалённая строка = после созревания доменов планировщик
+        создаст письмо заново: свежий текст, штатные канарейка/лимиты дня —
+        залпа не будет.
+
+        Трогает только: pending-черновики kind='outbound' (ответы клиентам не
+        трогаем) и неотправленные messages (scheduled/pending_review) без
+        событий, без send_log и без оставшихся черновиков (решённые оператором
+        строки — история, она неприкосновенна).
+
+        Возвращает счётчики + удалённые черновики целиком ('reviews_backup') —
+        вызывающий обязан сложить их в файл до необратимого решения."""
+        ids = [int(i) for i in recipient_ids]
+        if not ids:
+            return {"reviews": 0, "messages": 0, "reviews_backup": []}
+        deleted_reviews: list[dict] = []
+        deleted_msgs = 0
+        with self.transaction() as conn:
+            for i in range(0, len(ids), 500):
+                chunk = ids[i:i + 500]
+                marks = ",".join("?" * len(chunk))
+                rows = conn.execute(
+                    f"""SELECT * FROM confirm_reviews
+                         WHERE status='pending' AND kind='outbound'
+                           AND recipient_id IN ({marks})""", chunk).fetchall()
+                deleted_reviews.extend(dict(r) for r in rows)
+                conn.execute(
+                    f"""DELETE FROM confirm_reviews
+                         WHERE status='pending' AND kind='outbound'
+                           AND recipient_id IN ({marks})""", chunk)
+                cur = conn.execute(
+                    f"""DELETE FROM messages
+                         WHERE status IN ('scheduled','pending_review')
+                           AND recipient_id IN ({marks})
+                           AND id NOT IN (SELECT message_id FROM events
+                                           WHERE message_id IS NOT NULL)
+                           AND id NOT IN (SELECT message_id FROM send_log
+                                           WHERE message_id IS NOT NULL)
+                           AND id NOT IN (SELECT message_id FROM confirm_reviews
+                                           WHERE message_id IS NOT NULL)""",
+                    chunk)
+                deleted_msgs += cur.rowcount
+        self.append_audit(
+            action="queue_defer", entity_type="recipients",
+            detail={"reason": reason, "получателей": len(ids),
+                    "черновиков": len(deleted_reviews),
+                    "писем": deleted_msgs})
+        return {"reviews": len(deleted_reviews), "messages": deleted_msgs,
+                "reviews_backup": deleted_reviews}
+
     def last_contact(
         self, *, email: Optional[str] = None, inn: Optional[str] = None
     ) -> Optional[dict]:
@@ -2659,8 +3763,15 @@ class Store:
     def create_lead(self, *, email: str, dedup_key: str, recipient_id=None,
                     campaign_id=None, thread_id=None, company_name=None, inn=None,
                     reply_kind=None, phone=None, need=None, readiness=None,
-                    source_event_id=None, sla_due_at=None) -> tuple[int, bool]:
-        """Создать лид идемпотентно (ON CONFLICT(dedup_key)). → (lead_id, created?)."""
+                    source_event_id=None, sla_due_at=None,
+                    status: str = "new") -> tuple[int, bool]:
+        """Создать лид идемпотентно (ON CONFLICT(dedup_key)). → (lead_id, created?).
+
+        ``status`` — обычно ``new``, но вежливый отказ клиента заводится сразу
+        в конечном ``not_interested``: в общей ленте он не нужен (её чистит
+        СКРЫТЫЕ_ИЗ_ЛЕНТЫ), а в своей очереди виден и сходится со счётчиком
+        ответов. Раньше отказ не заводил лида вовсе и пропадал из панели.
+        """
         now_iso = _now_iso()
         with self.transaction() as conn:
             cur = conn.execute(
@@ -2668,39 +3779,226 @@ class Store:
                     (recipient_id, campaign_id, thread_id, email, company_name, inn,
                      status, reply_kind, phone, need, readiness, source_event_id,
                      dedup_key, sla_due_at, version, created_at, updated_at)
-                   VALUES (?,?,?,?,?,?, 'new', ?,?,?,?,?, ?,?, 0, ?,?)
+                   VALUES (?,?,?,?,?,?, ?, ?,?,?,?,?, ?,?, 0, ?,?)
                    ON CONFLICT(dedup_key) DO NOTHING""",
                 (recipient_id, campaign_id, thread_id, email.strip().lower(),
-                 company_name, inn, reply_kind, phone, need, readiness,
+                 company_name, inn, status, reply_kind, phone, need, readiness,
                  source_event_id, dedup_key, _to_iso(sla_due_at), now_iso, now_iso),
             )
             if cur.rowcount == 1:
                 lead_id = int(cur.lastrowid)
                 conn.execute(
                     "INSERT INTO lead_events (lead_id, action, to_status, created_at)"
-                    " VALUES (?, 'created', 'new', ?)", (lead_id, now_iso))
+                    " VALUES (?, 'created', ?, ?)", (lead_id, status, now_iso))
                 return lead_id, True
+            # ВТОРОЙ ОТВЕТ ДОПИСЫВАЕТ КАРТОЧКУ, А НЕ ПРОПАДАЕТ.
+            #
+            # 25.08.2026. «Росткран» ответил дважды: сперва «интерес в 2
+            # компрессорах», через пять часов — «Механик Александр
+            # +7 909 7865 379». Второй ответ упёрся в ON CONFLICT DO NOTHING
+            # и не доехал: в карточке остался только первый, поле телефона
+            # пустое. Продавец видел «интересно» и не видел, кому звонить.
+            #
+            # Дописываем сверху (свежее первым), телефон ставим, если его не
+            # было, метку поднимаем только вверх по важности. Статус не
+            # трогаем: карточку мог взять оператор, и сбросить её в «новую»
+            # значит отнять у него работу.
             row = conn.execute(
-                "SELECT id FROM leads WHERE dedup_key=?", (dedup_key,)).fetchone()
-            return int(row["id"]), False
+                "SELECT id, need, phone, reply_kind FROM leads "
+                " WHERE dedup_key=?", (dedup_key,)).fetchone()
+            lead_id = int(row["id"])
+            новый_текст = str(need or "").strip()
+            прежний = str(row["need"] or "")
+            дописать = (новый_текст and новый_текст not in прежний)
+            if дописать:
+                свод = (новый_текст + "\n\n--- предыдущий ответ ---\n" + прежний)[:6000]
+            else:
+                свод = прежний
+            вес = {"hot": 5, "interested": 4, "redirect": 3, "deferred": 3,
+                   "neutral": 2, "wrong_contact": 2, "auto_reply": 1,
+                   "not_interested": 1}
+            метка = row["reply_kind"]
+            if reply_kind and вес.get(str(reply_kind), 0) > вес.get(str(метка), 0):
+                метка = reply_kind
+            телефон = row["phone"] or phone
+            if дописать or телефон != row["phone"] or метка != row["reply_kind"]:
+                conn.execute(
+                    "UPDATE leads SET need=?, phone=?, reply_kind=?, "
+                    "       version=version+1, updated_at=? WHERE id=?",
+                    (свод, телефон, метка, now_iso, lead_id))
+                conn.execute(
+                    "INSERT INTO lead_events (lead_id, action, created_at) "
+                    "VALUES (?, 'дописан ответ', ?)", (lead_id, now_iso))
+            return lead_id, False
 
     def get_lead(self, lead_id: int) -> Optional["Lead"]:
         with self._lock:
             row = self._conn.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         return _row_to_lead(row) if row else None
 
+    def kopii_avtootveta(self, recipient_ids: Iterable) -> dict:
+        """Копии писем, поставленные по автоответу: получатель -> [копии].
+
+        Владелец 20.08: «про копию письма убери куда нибудь в понятное поле, и
+        не понятно, на копию письма мы написали такое же письмо или нет».
+
+        Статус берём ЖИВОЙ из очереди, а не тот, что был в момент находки:
+        копия ставится со статусом pending и дальше живёт своей жизнью —
+        оператор её отправляет, пропускает или она уезжает в стоп-лист. Замер
+        20.08: копий двенадцать, отправлена одна, семь ждут, три пропущены,
+        одна в стоп-листе. Текстовая пометка в ленте этого не показывала
+        вообще — она замерзала на «поставлена в очередь».
+
+        Ключ копии — avtootvet:<ИСХОДНЫЙ получатель>:<адрес>, а recipient_id у
+        самой строки уже НОВЫЙ, поэтому связываем по ключу, а не по колонке.
+        """
+        ids = [int(i) for i in recipient_ids if str(i or "").strip().isdigit()]
+        if not ids:
+            return {}
+        из: dict = {}
+        with self._lock:
+            строки = self._conn.execute(
+                "SELECT dedup_key, email, status, "
+                "COALESCE(decided_at, updated_at, created_at) AS ts "
+                "  FROM confirm_reviews WHERE dedup_key LIKE 'avtootvet:%'"
+            ).fetchall()
+        нужны = set(ids)
+        for r in строки:
+            части = str(r["dedup_key"]).split(":")
+            if len(части) < 3 or not части[1].isdigit():
+                continue
+            исходный = int(части[1])
+            if исходный not in нужны:
+                continue
+            # СТАТУС ПИСЬМА СИЛЬНЕЕ СТАТУСА КАРТОЧКИ. Пока копии слали
+            # руками, хватало карточки: живая отправка ставит ей 'sent'.
+            # Автоотправка помечает ПИСЬМО, а карточка остаётся 'approved' -
+            # и лента про доставленную копию говорила «одобрена, уходит», а
+            # про отбитую (550 invalid mailbox) - ровно то же самое.
+            слово = _KOPIYA_PO_RUSSKI.get(str(r["status"]), str(r["status"]))
+            состояние = str(r["status"])
+            пм = self._conn.execute(
+                "SELECT m.status s, COALESCE(m.last_error,'') e "
+                "  FROM confirm_reviews cr JOIN messages m ON m.id=cr.message_id "
+                " WHERE cr.dedup_key=?", (str(r["dedup_key"]),)).fetchone()
+            if пм is not None:
+                if str(пм["s"]) == "sent":
+                    слово, состояние = "отправлена", "sent"
+                elif str(пм["s"]) == "failed":
+                    # В last_error лежит repr исключения smtplib:
+                    # (550, b'Message was not accepted -- invalid mailbox...').
+                    # Оператору нужен код и текст, а не кортеж с байтами.
+                    сыро = str(пм["e"] or "")
+                    м = re.search(r"\((\d{3}),\s*b?['\"](.+?)['\"]", сыро,
+                                  re.S)
+                    почему = (f"{м.group(1)} {м.group(2)}" if м else сыро)
+                    почему = " ".join(почему.split())[:90]
+                    слово = "не доставлена" + (f": {почему}" if почему else "")
+                    состояние = "failed"
+                elif str(пм["s"]) == "skipped" and состояние != "skipped":
+                    слово = "снята перед отправкой"
+                    состояние = "skipped"
+            из.setdefault(исходный, []).append({
+                "email": r["email"], "status": состояние,
+                "ts": r["ts"],
+                "chelovecheski": слово,
+            })
+        return из
+
+    def skolko_zhdyot_otpravki(self) -> dict:
+        """Сколько писем ждёт отправки — для экрана ёмкости пулов.
+
+        Владелец 20.08: «ещё вот сюда бы сколько ожидает отправки сегодня».
+        Ёмкость показывала только израсходованное, и было не видно, есть ли
+        чем её занимать.
+
+        По пулам не раскладываем: у ждущего письма ящика ещё нет — он
+        назначается в момент захвата. Все 64 ждущих сейчас с пустым mailbox_id,
+        так что любая разбивка по пулам была бы выдумкой.
+
+        Просроченные считаем отдельно: 30 писем стоят с 19.08 и два с 11.08 —
+        такое молча копится, и без отдельного числа этого не увидеть.
+        """
+        сегодня = _now_iso()[:10]
+        with self._lock:
+            строки = self._conn.execute(
+                "SELECT status, substr(COALESCE(scheduled_at,''),1,10) AS d, "
+                "COUNT(*) AS n FROM messages "
+                "WHERE sent_at IS NULL AND status IN ('scheduled','sending') "
+                "GROUP BY 1,2").fetchall()
+            на_подтверждении = self._conn.execute(
+                "SELECT COUNT(*) FROM confirm_reviews "
+                "WHERE status IN ('pending','edited')").fetchone()[0]
+        всего = на_сегодня = просрочено = вперёд = в_полёте = 0
+        for r in строки:
+            n = int(r["n"])
+            всего += n
+            if r["status"] == "sending":
+                в_полёте += n
+            д = r["d"] or ""
+            if not д or д == сегодня:
+                на_сегодня += n
+            elif д < сегодня:
+                просрочено += n
+            else:
+                вперёд += n
+        return {"vsego": всего, "na_segodnya": на_сегодня,
+                "prosrocheno": просрочено, "na_budushchee": вперёд,
+                "v_polyote": в_полёте, "na_podtverzhdenii": int(на_подтверждении)}
+
+    def _sql_napravleniya_lida(self) -> str:
+        """Направление лида: по ящику, который вёл с ним переписку.
+
+        У лида своего ящика нет, но он есть у писем: ответ клиента приходит на
+        НАШ ящик, и его домен — такой же факт, как домен отправки. Берём
+        сначала ящик последнего ответа, затем ящик последнего письма, и лишь
+        если ни того ни другого нет — метку обзвона по ИНН (в ней есть ошибки,
+        см. _sql_napravleniya).
+        """
+        ящик = ("COALESCE("
+                "(SELECT e.mailbox_id FROM events e "
+                "  WHERE e.recipient_id = leads.recipient_id "
+                "    AND e.event_type LIKE 'reply%' "
+                "    AND ifnull(e.mailbox_id,'') <> '' "
+                "  ORDER BY e.event_ts DESC LIMIT 1),"
+                "(SELECT m.mailbox_id FROM messages m "
+                "  WHERE m.recipient_id = leads.recipient_id "
+                "    AND ifnull(m.mailbox_id,'') <> '' "
+                "  ORDER BY m.sent_at DESC LIMIT 1))")
+        домен = " OR ".join("lower(ifnull(%s,'')) LIKE '%%@%s'" % (ящик, d)
+                            for d in self._MEYER_DOMENY)
+        по_домену = "CASE WHEN %s THEN 'meyer' ELSE 'kc' END" % домен
+        есть = "ifnull(%s,'') <> ''" % ящик
+        if not self._obzvon_prikreplyon():
+            return по_домену
+        return ("CASE WHEN %s THEN %s ELSE COALESCE((SELECT o.division "
+                "FROM obz.obzvon o WHERE o.inn = leads.inn), 'kc') END"
+                % (есть, по_домену))
+
     def list_leads(self, *, status=None, assigned_to=None, unassigned=False,
-                   reply_kind=None, limit: int = 100, offset: int = 0) -> list["Lead"]:
+                   reply_kind=None, napravlenie=None,
+                   limit: int = 100, offset: int = 0) -> list["Lead"]:
         sql = ["SELECT * FROM leads WHERE 1=1"]
         params: list[Any] = []
+        if napravlenie:
+            sql.append("AND %s = ?" % self._sql_napravleniya_lida())
+            params.append(str(napravlenie).strip().lower())
         if status is not None:
             vals = status if isinstance(status, (list, tuple, set)) else [status]
             sql.append("AND status IN (%s)" % ",".join("?" for _ in vals))
             params.extend(vals)
         else:
             # убранные из ленты (soft_delete_lead) не показываем; спросить их
-            # можно явно — status='deleted'
-            sql.append("AND status <> 'deleted'")
+            # можно явно — status='deleted'.
+            # Так же и «не интересно» (владелец 11.08: «чтобы не висели
+            # неактуальные лиды»): лид не удалён и достаётся фильтром по
+            # статусу, но в общей ленте не мозолит глаза.
+            # У КАЖДОГО СТАТУСА СВОЯ ОЧЕРЕДЬ (владелец 24.08: «для всех
+            # остальных тоже своя очередь, чтобы раскидать общую»). В ленте
+            # остаётся только то, что ждёт действия; результат и пауза уходят
+            # в свои очереди и достаются фильтром по статусу.
+            sql.append("AND status NOT IN (%s)"
+                       % ",".join("'%s'" % s for s in СКРЫТЫЕ_ИЗ_ЛЕНТЫ))
         if unassigned:
             sql.append("AND assigned_to IS NULL")
         elif assigned_to is not None:
