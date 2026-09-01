@@ -78,6 +78,11 @@ for k in GROUP_A + GROUP_B:
                      'значение': v, 'товаров': n,
                      'шорт-лист': 'да' if short else '', 'тир': tier(k, v, short)})
 
+# Excel в ru-локали читает «7.5» как дату 07.май — отдаём десятичную запятую
+for r in rows:
+    if re.fullmatch(r'\d+\.\d+', r['значение']):
+        r['значение'] = r['значение'].replace('.', ',')
+
 rows.sort(key=lambda r: ({'1':0,'2':1,'3':2,'-':3,'':4}[r['тир']], -r['товаров']))
 with open('group-gap-candidates.csv','w',newline='',encoding='utf-8-sig') as f:
     w = csv.DictWriter(f, fieldnames=['тир','блок','фасет','ключ','значение','товаров','шорт-лист'], delimiter=';')
