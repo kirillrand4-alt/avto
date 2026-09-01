@@ -42,6 +42,16 @@ import requests  # noqa: E402
 ЖУРНАЛ = r'C:\sender\server\checko_finansy.jsonl'
 ВСЕ = '--vse' in sys.argv
 БЕЗ_БАЗЫ = '--bez-bazy' in sys.argv or '--tolko-zhurnal' in sys.argv
+# МОБИЛЬНЫЕ С РОТАЦИЕЙ (владелец 01.09: «мобильные ротируются»). Пул из 78
+# статичных socks5 Чеко закрыл наглухо: замер дал 429 на всех сорока
+# запросах подряд, начиная с первого, и это держится часами. Мобильный
+# адрес живёт 30-45 запросов, но потом МЕНЯЕТСЯ, и лимит приходит чистым.
+# Замер ротации 01.09, десять минут наблюдения: 77.51.189.183 меняет адрес
+# раз в полторы-две минуты, 194.143.150.98 — раз в шесть, bproxy.site за
+# десять минут не сменил. При двух запросах на компанию это 700-1000
+# компаний в час, зато бесконечно.
+МОБИЛЬНЫЕ = '--mobilnye' in sys.argv
+ФАЙЛ_МОБИЛЬНЫХ = r'C:\sender\proxies-mobile.txt'
 _замок = threading.Lock()
 _стат = Counter()
 _остыв = {}
@@ -54,6 +64,67 @@ def арг(имя, поум):
         return int(sys.argv[sys.argv.index(имя) + 1])
     except (ValueError, IndexError):
         return поум
+
+
+_ip_прокси = {}
+_ждут = {}
+
+
+def мобильные_прокси():
+    """Мобильные из файла, без дублей. Их мало, но у них меняется адрес."""
+    из, видели = [], set()
+    if not os.path.exists(ФАЙЛ_МОБИЛЬНЫХ):
+        return из
+    with open(ФАЙЛ_МОБИЛЬНЫХ, encoding='utf-8', errors='replace') as ф:
+        строки = ф.read().splitlines()
+    for l in строки:
+        l = l.strip()
+        if l and not l.startswith('#') and l not in видели:
+            видели.add(l)
+            из.append(l if '://' in l else 'socks5://' + l)
+    return из
+
+
+def внешний_ip(px, таймаут=15):
+    try:
+        r = requests.get('https://api.ipify.org', proxies={'http': px,
+                                                           'https': px},
+                         timeout=таймаут)
+        return r.text.strip() if r.status_code == 200 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def ждать_смены_ip(px, предел=480):
+    """Ждать, пока у прокси сменится адрес. True — сменился.
+
+    Спать вслепую бесполезно: лимит Чеко привязан к АДРЕСУ, и он снимется
+    ровно тогда, когда мобильный оператор выдаст новый. Поэтому опрашиваем
+    внешний адрес, а не таймер. Один ждущий на прокси — остальные потоки
+    просто идут к другим выходам.
+    """
+    with _замок:
+        if _ждут.get(px):
+            return False
+        _ждут[px] = True
+    try:
+        было = _ip_прокси.get(px) or внешний_ip(px)
+        _ip_прокси[px] = было
+        до = time.time() + предел
+        while time.time() < до:
+            time.sleep(12)
+            стало = внешний_ip(px)
+            if стало and стало != было:
+                _ip_прокси[px] = стало
+                with _замок:
+                    _стат['ротаций дождались'] += 1
+                return True
+        with _замок:
+            _стат['ротации не дождались'] += 1
+        return False
+    finally:
+        with _замок:
+            _ждут[px] = False
 
 
 def прокси():
@@ -224,7 +295,7 @@ def сделанные():
 
 def main():
     ЛИМ, ПОТОК = арг('--lim', 1600), арг('--potok', 8)
-    PX = прокси()
+    PX = мобильные_прокси() if МОБИЛЬНЫЕ else прокси()
     if not PX:
         raise SystemExit('нет прокси в dolphin-proxies.txt')
     db = EDB.EnrichDB()
@@ -276,8 +347,14 @@ def main():
             if r.status_code == 429:
                 with _замок:
                     _стат['429'] += 1
-                    _остыв[px] = time.time() + 90   # адрес отдыхает полторы минуты
-                time.sleep(0.5)
+                if МОБИЛЬНЫЕ:
+                    # Ждём НОВЫЙ АДРЕС, а не отсидки: у мобильного лимит
+                    # снимается сменой IP, а не временем.
+                    ждать_смены_ip(px)
+                else:
+                    with _замок:
+                        _остыв[px] = time.time() + 90
+                    time.sleep(0.5)
                 continue
             if r.status_code != 200:
                 with _замок:
