@@ -41,6 +41,7 @@ import requests  # noqa: E402
 
 ЖУРНАЛ = r'C:\sender\server\checko_finansy.jsonl'
 ВСЕ = '--vse' in sys.argv
+БЕЗ_БАЗЫ = '--bez-bazy' in sys.argv or '--tolko-zhurnal' in sys.argv
 _замок = threading.Lock()
 _стат = Counter()
 _остыв = {}
@@ -293,7 +294,15 @@ def main():
                 for к in поля:
                     if з.get(к) not in (None, ''):
                         _стат['есть ' + к] += 1
-                if з:
+                # БЕЗ БАЗЫ — ТОЛЬКО ЖУРНАЛ (01.09). Запись сюда идёт под
+                # общим замком потоков, а соединение ждёт занятую базу до
+                # тридцати секунд — и все восемь потоков стоят за одной
+                # неудачной записью. При трёх писцах разом (часовая сверка
+                # приговоров, заливка и сама ходилка) прогон выродился в
+                # четыре компании за четыре минуты. Журнал ниже пишется
+                # независимо от базы, поэтому ничего не теряется:
+                # добытое переносит ops/dolit_iz_zhurnala_hodilki.py.
+                if з and not БЕЗ_БАЗЫ:
                     try:
                         db.cx.execute(
                             'UPDATE requisites SET ' +
@@ -318,7 +327,8 @@ def main():
         for n, _ in enumerate(п.map(один, list(enumerate(цели))), 1):
             if n % 100 == 0:
                 with _замок:
-                    db.cx.commit()
+                    if not БЕЗ_БАЗЫ:
+                        db.cx.commit()
                     ж.flush()
                     os.fsync(ж.fileno())
                 print(f'  {n}/{len(цели)}, {int(time.time()-t0)} с, '
