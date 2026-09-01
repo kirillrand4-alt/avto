@@ -4,3 +4,7 @@ screenshots/
 state.json
 config.json
 .env
+
+# производная выгрузка Битрикса (лежит на дропе: products.jsonl.gz)
+seo-texts/products.jsonl.gz
+__pycache__/
