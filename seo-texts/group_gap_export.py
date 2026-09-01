@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Выгрузка кандидатов в новые посадочные группы: полный список + шорт-лист."""
 import csv, re, json
+from collections import Counter
 from group_gap import load, index, FACETS, MIN, HAVE
 
 data = load(); idx = index(data)
@@ -33,6 +34,33 @@ def clean(k, v):
         return f in {24,36,50,90,100,120,140,150,160,180,230,240,270,300,350,540,750}
     return True
 
+
+# --- тир: что и когда делать -------------------------------------------------
+T1 = {   # тир 1 — дешёвые дырки с готовой семантикой
+ 'ctype':  {'поршневой','шестеренчатый','поршневой безмасляный'},
+ 'purpose':'ALL', 'volt':'ALL', 'recv':'ALL',
+ 'mobile': {'да'}, 'temp':'ALL', 'quiet':{'да'},
+ 'power':  {'1.5','2.2','3','4','5'},
+ 'press':  {'7.5','8.5'},
+ 'cooling':{'водяное'},
+ 'ipclass':{'IP65','IP66'},
+ 'tgroup': {'Генераторы азота','Компрессоры центробежные'},
+ 'engine': {'Cummins','Yuchai','Isuzu'},
+}
+SKIP = {   # в шорт-лист прошло, но делать не советую
+ 'warranty':'ALL', 'dewpt':'ALL', 'motor':'ALL',
+ 'cooling':{'воздушное'}, 'ipclass':{'IP56'}, 'tgroup':'REST',
+}
+def tier(k, v, short):
+    if not short: return ''
+    sk = SKIP.get(k)
+    if sk == 'ALL' or (sk == 'REST' and v not in T1['tgroup']) or (isinstance(sk, set) and v in sk):
+        return '-'
+    if k == 'series': return '2'
+    t1 = T1.get(k)
+    if t1 == 'ALL' or (isinstance(t1, set) and v in t1): return '1'
+    return '3'
+
 GROUP_A = ['tgroup','series','block','ipclass','temp','mobile','cooling','motor',
            'engine','warranty','quiet','dewpt','noise']
 GROUP_B = ['ctype','purpose','volt','recv','press','power','perf']
@@ -45,19 +73,23 @@ for k in GROUP_A + GROUP_B:
     for v, s in idx[k].items():
         n = len(s)
         if n < MIN or v in have: continue
+        short = clean(k, v)
         rows.append({'блок': kind, 'фасет': FACETS[k][0], 'ключ': k,
-                     'значение': v, 'товаров': n, 'шорт-лист': 'да' if clean(k, v) else ''})
+                     'значение': v, 'товаров': n,
+                     'шорт-лист': 'да' if short else '', 'тир': tier(k, v, short)})
 
-rows.sort(key=lambda r: (-r['товаров'],))
+rows.sort(key=lambda r: ({'1':0,'2':1,'3':2,'-':3,'':4}[r['тир']], -r['товаров']))
 with open('group-gap-candidates.csv','w',newline='',encoding='utf-8-sig') as f:
-    w = csv.DictWriter(f, fieldnames=['блок','фасет','ключ','значение','товаров','шорт-лист'], delimiter=';')
+    w = csv.DictWriter(f, fieldnames=['тир','блок','фасет','ключ','значение','товаров','шорт-лист'], delimiter=';')
     w.writeheader(); w.writerows(rows)
 
 short = [r for r in rows if r['шорт-лист']]
 print(f'всего кандидатов (>10 товаров): {len(rows)}')
 print(f'в шорт-листе: {len(short)}')
+tc = Counter(r['тир'] for r in short)
+print(f"  тир 1 (сразу): {tc['1']}   тир 2 (серии): {tc['2']}   "
+      f"тир 3 (потом): {tc['3']}   делать не советую: {tc['-']}")
 print()
-from collections import Counter
 c = Counter((r['блок'], r['фасет']) for r in rows)
 cs = Counter((r['блок'], r['фасет']) for r in short)
 print(f'{"фасет":<34} {"всего":>6} {"шорт":>6}')
