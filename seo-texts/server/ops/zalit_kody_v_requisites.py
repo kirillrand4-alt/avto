@@ -76,15 +76,42 @@ c = sqlite3.connect(БАЗА, timeout=180)
 уже = len(берём) - len(новых)
 
 вставлено = 0
+пачек, повторов, не_легло = 0, 0, 0
 if ПРИМЕНИТЬ and новых:
     метка = time.strftime("%Y-%m-%dT%H:%M:%S")
-    c.executemany(
-        "INSERT OR IGNORE INTO requisites "
-        "  (inn, ogrn, name_short, name_full, okved_main, address, status, "
-        "   src, updated_at) "
-        "VALUES (?,?,?,?,?,?,?,'checko-sbor-agro',?)",
-        [(и, о, нк, нп, к, а, с, метка) for и, о, нк, нп, к, а, с in новых])
-    c.commit()
+    # БАЗА ЗАНЯТА — ЭТО НОРМА, А НЕ АВАРИЯ. enrich.db читают генерация и
+    # обогатители, и одна транзакция на 35 тысяч строк не получит замок
+    # никогда: 01.09 первый заход упал с «database is locked». Пишем
+    # КОРОТКИМИ пачками, каждая своей транзакцией, с повторами. INSERT OR
+    # IGNORE делает прогон идемпотентным, поэтому повтор ничего не портит
+    # и упавшую заливку можно просто запустить заново.
+    c.execute("PRAGMA busy_timeout = 60000")
+    ПАЧКА = 500
+    for н in range(0, len(новых), ПАЧКА):
+        кусок = новых[н:н + ПАЧКА]
+        for попытка in range(8):
+            try:
+                c.executemany(
+                    "INSERT OR IGNORE INTO requisites "
+                    "  (inn, ogrn, name_short, name_full, okved_main, "
+                    "   address, status, src, updated_at) "
+                    "VALUES (?,?,?,?,?,?,?,'checko-sbor-agro',?)",
+                    [(и, о, нк, нп, к, а, с, метка)
+                     for и, о, нк, нп, к, а, с in кусок])
+                c.commit()
+                пачек += 1
+                break
+            except sqlite3.OperationalError as ex:
+                if "locked" not in str(ex) and "busy" not in str(ex):
+                    raise
+                повторов += 1
+                try:
+                    c.rollback()
+                except Exception:                              # noqa: BLE001
+                    pass
+                time.sleep(min(20.0, 1.5 * (попытка + 1)))
+        else:
+            не_легло += len(кусок)
     вставлено = c.execute(
         "SELECT COUNT(*) FROM requisites WHERE src='checko-sbor-agro'"
     ).fetchone()[0]
@@ -117,6 +144,8 @@ print("   уже есть в requisites:           %6d" % уже)
 print("   К ЗАЛИВКЕ НОВЫХ:                 %6d" % len(новых))
 if ПРИМЕНИТЬ:
     print("   строк с меткой checko-sbor-agro: %6d" % вставлено)
+    print("   пачек записано: %d, повторов из-за замка: %d, не легло: %d"
+          % (пачек, повторов, не_легло))
 print("")
 print("ПОДКОДЫ ТЕХ ЖЕ СЕМЕЙ, которые НЕ названы и НЕ залиты:")
 for к, н in семьи_лишние.most_common(12):
