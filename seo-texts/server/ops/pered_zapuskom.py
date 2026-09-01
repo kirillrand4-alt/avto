@@ -74,6 +74,7 @@ print("строк в группе «%s»: %d" % (ГРУППА, len(в_групп
 
 счёт = Counter()
 видели, свободные_meyer, ниже_порога = set(), set(), set()
+от_porogа, neizvestnye = set(), set()
 for rid in в_группе:
     rec = store.get_recipient(rid)
     if not rec:
@@ -99,7 +100,8 @@ for rid in в_группе:
         continue
     счёт["мейеровских фирм в группе"] += 1
     в = выручка.get(inn)
-    if в and int(в) < ПОРОГ:
+    известна = в is not None and int(в or 0) > 0
+    if известна and int(в) < ПОРОГ:
         ниже_порога.add(inn)
         счёт["выручка ниже порога"] += 1
         continue
@@ -110,6 +112,7 @@ for rid in в_группе:
         счёт["исчерпал 3 попытки"] += 1
         continue
     свободные_meyer.add(inn)
+    (от_porogа if известна else neizvestnye).add(inn)
 
 print("")
 print("=== ВОРОНКА ГРУППЫ ===")
@@ -118,4 +121,6 @@ for к, в in счёт.most_common():
 print("")
 print("=== СВОБОДНЫХ ПОД ФИЛЬТРОМ ВЫРУЧКИ ===")
 print("   годных к генерации:          %7d" % len(свободные_meyer))
+print("      из них выручка ОТ 30 МЛН: %7d   <- строгий режим" % len(от_porogа))
+print("      из них выручка НЕ известна:%7d" % len(neizvestnye))
 print("   отсеяно порогом (30 млн):    %7d" % len(ниже_порога))
