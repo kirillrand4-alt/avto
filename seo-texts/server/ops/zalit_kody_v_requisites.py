@@ -87,7 +87,18 @@ if ПРИМЕНИТЬ and новых:
     # КОРОТКИМИ пачками, каждая своей транзакцией, с повторами. INSERT OR
     # IGNORE делает прогон идемпотентным, поэтому повтор ничего не портит
     # и упавшую заливку можно просто запустить заново.
-    c.execute("PRAGMA busy_timeout = 60000")
+    # ПИШЕМ ОТДЕЛЬНЫМ СОЕДИНЕНИЕМ И ЧЕРЕЗ BEGIN IMMEDIATE. Здесь была
+    # настоящая причина, по которой заливка висела четверть часа и не
+    # записала ни строки. Соединение `c` уже прочитало requisites, то есть
+    # держало открытую читающую транзакцию; INSERT пытался повысить её до
+    # пишущей, а SQLite на таком повышении возвращает SQLITE_BUSY СРАЗУ,
+    # не вызывая обработчик ожидания, — иначе возможна взаимная
+    # блокировка. Из-за этого busy_timeout в минуту не применялся ни разу
+    # и все попытки отваливались мгновенно, а выглядело это как «чужой оп
+    # держит замок». На свежем соединении с явным BEGIN IMMEDIATE
+    # ожидание работает как задумано.
+    зп = sqlite3.connect(БАЗА, timeout=120, isolation_level=None)
+    зп.execute("PRAGMA busy_timeout = 120000")
     ПАЧКА = 500
     for н in range(0, len(новых), ПАЧКА):
         кусок = новых[н:н + ПАЧКА]
@@ -98,27 +109,33 @@ if ПРИМЕНИТЬ and новых:
         # пачку: прогон идёт отцеплённо, торопиться некуда.
         for попытка in range(360):
             try:
-                c.executemany(
+                зп.execute("BEGIN IMMEDIATE")
+                зп.executemany(
                     "INSERT OR IGNORE INTO requisites "
                     "  (inn, ogrn, name_short, name_full, okved_main, "
                     "   address, status, src, updated_at) "
                     "VALUES (?,?,?,?,?,?,?,'checko-sbor-agro',?)",
                     [(и, о, нк, нп, к, а, с, метка)
                      for и, о, нк, нп, к, а, с in кусок])
-                c.commit()
+                зп.execute("COMMIT")
                 пачек += 1
+                if пачек % 10 == 0:
+                    print("   пачек записано: %d из %d"
+                          % (пачек, (len(новых) + ПАЧКА - 1) // ПАЧКА),
+                          flush=True)
                 break
             except sqlite3.OperationalError as ex:
                 if "locked" not in str(ex) and "busy" not in str(ex):
                     raise
                 повторов += 1
                 try:
-                    c.rollback()
+                    зп.execute("ROLLBACK")
                 except Exception:                              # noqa: BLE001
                     pass
-                time.sleep(10.0)
+                time.sleep(5.0)
         else:
             не_легло += len(кусок)
+    зп.close()
     вставлено = c.execute(
         "SELECT COUNT(*) FROM requisites WHERE src='checko-sbor-agro'"
     ).fetchone()[0]
