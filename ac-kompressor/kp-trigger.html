@@ -1,0 +1,67 @@
+<!-- Кнопки "Получить КП" внутри статьи вызывают нижнюю кнопку страницы
+     (подвал: форма Битрикс24 click/7/40ef1t "Запросить коммерческое предложение").
+     Вставлять один раз в конец текста раздела. -->
+<script>
+(function () {
+	if (window.acKpTriggerReady) { return; }
+	window.acKpTriggerReady = true;
+
+	var TRIGGER  = "ac-kp-trigger";     /* класс кнопок в статье */
+	var B24_FORM = "click/7/40ef1t";    /* та же форма, что у кнопки в подвале */
+	var FALLBACK = "/company/zakaz/";   /* куда вести, если форма не поднялась */
+	var WAIT_MS  = 2500;
+	var STEP_MS  = 150;
+
+	/* Битрикс24 вешает обработчик на элемент, который идёт сразу за своим тегом script,
+	   и помечает этот script атрибутом data-b24-loaded. Берём последний такой на
+	   странице - это и есть рабочая кнопка внизу. */
+	function bottomButton() {
+		var scripts = document.querySelectorAll('script[data-b24-form="' + B24_FORM + '"][data-b24-loaded]');
+		for (var i = scripts.length - 1; i >= 0; i--) {
+			var el = scripts[i].nextElementSibling;
+			if (!el || el.tagName === "SCRIPT") { continue; }
+			return (el.querySelector && el.querySelector(".b24-form-click-btn")) || el;
+		}
+		return null;
+	}
+
+	function triggerFrom(node) {
+		while (node && node !== document) {
+			if (node.classList && node.classList.contains(TRIGGER)) { return node; }
+			node = node.parentNode;
+		}
+		return null;
+	}
+
+	function openForm(waited, link) {
+		var btn = bottomButton();
+		if (btn) { btn.click(); return; }
+		if (waited >= WAIT_MS) {
+			window.location.href = (link && link.getAttribute("href")) || FALLBACK;
+			return;
+		}
+		setTimeout(function () { openForm(waited + STEP_MS, link); }, STEP_MS);
+	}
+
+	document.addEventListener("click", function (e) {
+		var link = triggerFrom(e.target);
+		if (!link) { return; }
+		e.preventDefault();
+		openForm(0, link);
+	}, false);
+
+	/* пустой якорь в href прыгает наверх, если скрипт не отработал - подменяем на страницу заявки */
+	function fixHrefs() {
+		var list = document.getElementsByClassName(TRIGGER);
+		for (var i = 0; i < list.length; i++) {
+			var href = list[i].getAttribute("href");
+			if (!href || href === "#") { list[i].setAttribute("href", FALLBACK); }
+		}
+	}
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", fixHrefs, false);
+	} else {
+		fixHrefs();
+	}
+})();
+</script>
