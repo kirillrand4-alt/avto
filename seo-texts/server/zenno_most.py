@@ -137,11 +137,21 @@ def ochered(predel=500):
     # честно дописывал НОЛЬ. Со стороны это выглядело как «работа кончилась»
     # (владелец 13.08: «лог пустой»), хотя в базе оставалось 3728 компаний.
     # Теперь идём курсором и останавливаемся, набрав нужное.
+    # Направление (владелец 01.09: «интересны только мейровские», очередь при
+    # этом оказалась набита ленинградским КЦ). Наполнитель направления не
+    # различал и тянул из всей базы подряд, поэтому десять потоков Зенки
+    # уходили на КЦ, пока 11 528 мейеровских компаний с сайтом ждали обхода.
+    # ZENNO_NAPRAVLENIE=meyer — брать только это направление; пусто — как
+    # раньше, всю базу, но мейеровских ставим в начало.
+    napravlenie = os.environ.get('ZENNO_NAPRAVLENIE', '').strip().lower()
+    usl_napr = ("and coalesce(division,'') like '%%%s%%' " % napravlenie) if napravlenie else ''
     kursor = c.execute(
         "select inn, coalesce(site,'') site, coalesce(cand_site,'') cand "
         "from companies where (coalesce(site,'')<>'' or coalesce(cand_site,'')<>'') "
+        + usl_napr +
         "and not exists(select 1 from emails e where e.inn=companies.inn "
-        "               and e.source in ('own-site','zenno','кэш-добор'))")
+        "               and e.source in ('own-site','zenno','кэш-добор')) "
+        "order by case when coalesce(division,'') like '%meyer%' then 0 else 1 end")
 
     # справочники и агрегаторы в очередь не отдаём: первая партия 13.08 показала
     # в заданиях check.tochka.com и tatcenter.ru — Зенка честно обошла чужие сайты.
