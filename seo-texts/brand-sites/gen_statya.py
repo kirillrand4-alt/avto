@@ -792,6 +792,8 @@ def proverit(html, sh, gazovaya):
         p.append('машины нет в линейке: ' + z)
     for z in sanity.koefficient_podbora(html):
         p.append('коэффициент подбора испорчен: ' + z)
+    for z in sanity.formula_ne_shoditsya(html):
+        p.append('формула не сходится сама с собой: ' + z)
     for n in svyaznost.pereschety(t) + svyaznost.umnozheniya(t):
         p.append(f"числа не сходятся: {n['в тексте']} -> должно {n['должно быть']}")
     return p

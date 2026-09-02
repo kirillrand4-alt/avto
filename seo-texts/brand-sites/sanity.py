@@ -1442,6 +1442,160 @@ def _zpt_tochno(v):
     return ('%g' % v).replace('.', ',')
 
 
+# ВЫПИСАННАЯ ФОРМУЛА, КОТОРАЯ НЕ СХОДИТСЯ САМА С СОБОЙ.
+#
+# Внешняя рецензия статьи про азотные станции Atlas Copco: в тексте стояло
+# «0,06 × 10 × 1000 / 60 = 600 л/мин». Ответ 600 верный - он ровно
+# совпадает с нашим PODBOR_KOEFF для 99,5%, - а вот само выражение даёт 10.
+# Лишнее деление на 60 приехало из другой системы единиц: делить на 60
+# нужно, если коэффициент задан в м³/ЧАС воздуха, а наш задан в м³/МИН.
+#
+# Ни один прежний гейт этого не видел. pereschet_edinic проверяет вилку
+# в л/мин против её же пересчёта рядом и на арифметическое выражение не
+# смотрит вовсе; koefficient_podbora сверяет сам коэффициент и молчит,
+# потому что коэффициент как раз правильный. Ошибка живёт между ними:
+# числа верные, ответ верный, неверен путь от одних к другому.
+#
+# Класс опасный именно этим. Читатель-инженер повторит выкладку и получит
+# другое число, а редактор глазами не поймает: все цифры на месте.
+#
+# Проверка не требует внешних данных - выражение проверяет само себя.
+# Допуск 2%: округление промежуточных результатов в тексте законно
+# («0,6 м³/мин, или 600 л/мин»), а вдесятеро мимо - уже не округление.
+# РАЗБОР ИДЁТ ОТ ЗНАКА РАВЕНСТВА ВЛЕВО, А НЕ СЛЕВА НАПРАВО.
+#
+# Первая версия искала «число (× число)+ = число» вперёд и на странице
+# kraftmann--vintovye поймала хвост «0,7 × 1,15 = 3622» вместо всей
+# выкладки «4500 л/мин × 0,7 × 1,15 = 3622». Хвост, разумеется, не сходится,
+# а полное выражение сходится идеально. Поэтому левую часть надо забирать
+# целиком: до начала арифметики, через скобки и через единицы измерения,
+# которые в наших текстах стоят прямо внутри выкладки.
+_EDINICY_V_FORMULE = _re.compile(
+    r'\b(?:л/мин|м³/мин|м³/ч(?:ас)?|м³|нм³/ч|кВт|бар|шт|%|мин|ч(?:ас\w*)?)\b\.?', _re.I)
+_ZNAK = r'[-+×xх*/÷()]'
+_TOKEN = _re.compile(r'(' + _CH + r')|(' + _ZNAK + r')|(\s+)')
+DOPUSK_FORMULY = 0.02
+
+
+def _schitat(tokeny):
+    """Крошечный разбор без eval: скобки, + - × /, слева направо по рангу."""
+    poz = [0]
+
+    def mnozhitel():
+        if poz[0] >= len(tokeny):
+            raise ValueError
+        t = tokeny[poz[0]]
+        if isinstance(t, float):
+            poz[0] += 1
+            return t
+        if t == '(':
+            poz[0] += 1
+            v = summa()
+            if poz[0] >= len(tokeny) or tokeny[poz[0]] != ')':
+                raise ValueError
+            poz[0] += 1
+            return v
+        if t in ('-', '+'):
+            poz[0] += 1
+            v = mnozhitel()
+            return -v if t == '-' else v
+        raise ValueError
+
+    def proizvedenie():
+        v = mnozhitel()
+        while (poz[0] < len(tokeny) and isinstance(tokeny[poz[0]], str)
+               and tokeny[poz[0]] in ('×', 'x', 'х', '*', '/', '÷')):
+            z = tokeny[poz[0]]
+            poz[0] += 1
+            d = mnozhitel()
+            if z in ('×', 'x', 'х', '*'):
+                v *= d
+            else:
+                if d == 0:
+                    raise ValueError
+                v /= d
+        return v
+
+    def summa():
+        v = proizvedenie()
+        while (poz[0] < len(tokeny) and isinstance(tokeny[poz[0]], str)
+               and tokeny[poz[0]] in ('+', '-')):
+            z = tokeny[poz[0]]
+            poz[0] += 1
+            d = proizvedenie()
+            v = v + d if z == '+' else v - d
+        return v
+
+    v = summa()
+    if poz[0] != len(tokeny):
+        raise ValueError
+    return v
+
+
+def _razobrat_levuyu(kusok):
+    """Самый длинный арифметически осмысленный хвост слева от знака равно."""
+    tokeny = []
+    for m in _TOKEN.finditer(kusok):
+        if m.group(3):
+            continue
+        if m.group(1) is not None:
+            v = _ch60(m.group(1))
+            if v is None:
+                return None
+            tokeny.append(v)
+        else:
+            tokeny.append(m.group(2))
+    if not tokeny:
+        return None
+    for nachalo in range(len(tokeny)):
+        hvost = tokeny[nachalo:]
+        if not any(z in ('×', 'x', 'х', '*', '/', '÷') for z in hvost
+                   if isinstance(z, str)):
+            continue
+        if len([z for z in hvost if isinstance(z, float)]) < 2:
+            continue
+        try:
+            return _schitat(hvost), hvost
+        except (ValueError, ZeroDivisionError):
+            continue
+    return None
+
+
+def formula_ne_shoditsya(html):
+    """Выписанное выражение против собственного результата."""
+    out = []
+    t = _re.sub(r'\s+', ' ', _re.sub(r'<[^>]+>', ' ', html))
+    for m in _re.finditer(r'=\s*(' + _CH + r')(?![\d,.])', t):
+        itog = _ch60(m.group(1))
+        if itog is None or itog == 0:
+            continue
+        sleva = _EDINICY_V_FORMULE.sub(' ', t[max(0, m.start() - 140):m.start()])
+        # Граница высказывания: «...= 60 м³/ч. Требуемая мощность: 60 × 0,06»
+        # это ДВЕ выкладки, а не одна, и склеивать их нельзя.
+        sleva = _re.split(r'[=;:!?»]|(?<=\D)\.(?=\s)|\.\s', sleva)[-1]
+        sleva = _re.sub(r'^[^\d(]*', '', sleva.strip())
+        # После снятия единиц в выкладке остаются только цифры и знаки.
+        # Буква внутри - это слово («e^(-2)», «дней», «руб»), такое не считаем.
+        if not sleva or _re.search(r'[^\d\s.,+\-×xх*/÷()\u00a0]', sleva):
+            continue
+        razbor = _razobrat_levuyu(sleva)
+        if not razbor:
+            continue
+        znachenie, _ = razbor
+        if abs(znachenie - itog) / abs(itog) > DOPUSK_FORMULY:
+            vidno = _re.sub(r'\s+', ' ', t[max(0, m.start() - 90):m.end()]).strip()
+            out.append(f'«...{vidno}» - выражение даёт '
+                       f'{_zpt_tochno(round(znachenie, 4))}, '
+                       f'а написан результат {_zpt_tochno(itog)}')
+    bylo, itog2 = set(), []
+    for z in out:
+        if z in bylo:
+            continue
+        bylo.add(z)
+        itog2.append(z)
+    return itog2[:4]
+
+
 def koefficient_podbora(html):
     """Коэффициент подбора, названный явно, против наших 0,05/0,06/0,07."""
     out = []
