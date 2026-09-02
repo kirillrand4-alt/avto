@@ -1,0 +1,231 @@
+﻿строка;имя;фамилия;email;компания
+2;Ольга;Палиенко;vanta@list.ru;"ООО "" Ванта"""
+3;Наталья;Печурина;mts9402988@gmail.com;"ООО ""БЭК"""
+4;Екатерина;Супрунчик;kat_s80@mail.ru;АО ЛАЙСАН
+5;Марина;Гончарова;brushkomv@yandex.ru;Хлебпром
+6;Светлана;Куринова;kurinova_sa@mail.ru;"ООО ""Премиум Фудс"""
+7;Irina;Martynova;petrovairina23@gmail.com;ооо Мастерфуд
+8;Елена;Белослудцева;notk@kmkk.ru;ООО ФНМ
+9;Наталья;Янина;market@vyalkin.ru;ВЯЛКИН
+10;Любовь;Борисова;lyubov.borisova@x5.ru;Перекресток
+11;Кристина;Любимова;kristinalyubimova83@yandex.ru;ООО МПЗ Мясницкий ряд
+12;Максим;Конюхов;kmv@e-cont.ru;Континент
+13;Ася;Вакина;a.vakina@acdamate.com;"ООО ""Новые фермы"""
+14;Анатолий;Кубышко;kubyshko@gmail.com;"Журнал ""Мясная индустрия"""
+15;Инна;Карпенко;ikarpenko@hz5.volgahleb.ru;"АО ""Хлебозавод №5"""
+16;Ольга;Полянская;opolanskaa45@gmail.com;"АО""АГРОИМПОРТ'"
+17;Альфия;Таджимова;a_tadzhimova@lkray.ru;"АО ""КО ""Любимый Край"""
+19;Маргарита;Калмыкова;kalmikova@kmkk.ru;"ЗАО ""Кореновский молочно-консервный комбинат"""
+20;Анна;Осипова;nsk@kmkk.ru;ЗАО КМКК
+21;Анна;Рыбаченко;a.rybachenko@zarodiny.ru;"ООО ""Рыбзавод ""За Родину"""
+22;Юлия;Щербакова;yuliya.shcherbakova@msk.coolclever.ru;"ООО "" МясновЪ-77"""
+23;Мария;А.;maria.abramova@x5.ru;"ООО ""Агроторг"""
+24;Санда;Соколова;info@experthoreca.ru;физ лицо
+25;Валентина;Депутатовп;valentinadep@mail.ru;"ООО ""ГК Новиков"""
+26;Олег;Смирнов;supermetodichka@mail.ru;"АО «ККБ"""
+27;Надежда;Дида;stlaborant@saturn-milk.ru;"ОООФХ Фирма ""Сатурн"""
+28;Марина;Ходырева;m.abakumova@auchan.ru;Торговая сеть
+29;Ильяс;Дусаев;dusaev@mail.ru;Premium Uzbekistan
+30;Екатерина;Лощенкова;quality-high@arzamas-hleb.ru;"ЗАО ""АРЗАМАССКИЙ ХЛЕБ"""
+31;Полина;Баженова;p.bazhenova@auchan.ru;АШАН
+32;Светлана;Малевич;s.malievich3005505@mail.ru;маслосырзавод
+33;Аля;Мартынова;razumovskaya.ag@gmail.com;1
+34;Анна;Шиман;a.shiman@inkerman.ru;"ООО ""Инкерманский завод марочных вин"""
+35;Елена;Леснова;lesnovaev@topprodukt.ru;ООО Топ - Продукт
+36;Полина;Козырева;polina.kozyreva@svetopaper.com;СЦБК
+37;Елена Владимировна;Рыбакова;rudoy@seyma.ru;АО Агрофирма Сеймовская
+38;Ольга;Майгурова;o_maygurova@sarepta.ru;"ООО ""ВГМЗ ""Сарепта"""
+39;Елена;Шарапова;karlena86@mail.ru;ИП Сергиенко И.В
+40;Анна;Терехина;terehina.am@kolbasa.ru;ООО «МПЗ Мясницкий Ряд»
+41;Анна;Юрьева;urievaai@karavay.spb.ru;7830000360
+42;Анастасия;Маркова;frau.marckova1998@gmail.com;Слой
+43;Борис;Позняк;b.poznyak@mpkon.ru;"ООО ""МПК ""Потанино"""
+44;Наталья;Кондратьева;natalya.kondrateva@zeelandia.ru;ООО ЗИЛАНДИЯ
+45;Евгения;Слайковская;eg.slaykovskaya@rusagromaslo.com;Русагро
+46;Юлия;Щербакова;u.sherbakova@greenray-kuban.ru;"ООО ""Грин Рэй Кубань"""
+47;Татьяна;Логунова;t.logunova@samagotovila.ru;"ООО ""МЯСНОЙ МАРМЕЛАД"""
+48;Оксана;Андрияшкина;oksi-1981-oksi@mail.ru;"АО ""Барнаульский молочный комбинат"""
+49;Наталья;Попова;popova_n@khleb.ru;FMCG
+50;Елена;Левченок;elena.levchenok@servolux.com;"Филиал ЮНИМИТ ОАО ""Смолевичи Бройлер"""
+51;Антон;Купряков;anton.kupriakov@burgerkingrus.ru;ООО БУРГЕР РУС
+52;Надежда;Слизовская;nadezhda.slizovskaya@burgerkingrus.ru;"ООО ""Бургер Рус"""
+53;Юлия;Сенницкая;mex-mex.cmk@mail.ru;"ООО ""Тортилья Ацтека"""
+55;Екатерина;Зайцева;zaytsevaeal@x5.ru;АО АРВИАЙ
+56;Елена;Трушникова;trushnikovaea@doronichi.com;Дороничи
+57;Галина;Щигло;techno@grodfood.by;"ООО ""КВИНФУД"""
+58;Ольга;Светлова;o.o.svetlova@ireks-trier.ru;"ООО ""ИРЕКС ТРИЭР"""
+59;Natalia;Vasileva;matashkavas@mail.ru;ИП Васильева
+61;Светлана;Якунина;iakunina.si@pirpak.ru;"ООО ""ПиР-ПАК"""
+63;Петр;Падалко;ppv@coolclever.ru;"ООО ""Отдохни-77"""
+64;Елена;Скопина;smk@zdrava.com;"ОАО ""Производственный холдинг ""Здрава"""
+65;Карина;Кондратьева;k.kondrateva@novabev.com;"ООО ""Поместье Голубицкое"""
+66;Леонид;Федоров;fedorov.ln@kolbasa.ru;Мясницкий ряд
+67;Константин;Глазунов;kglazunov@yorkfresh.ru;"ООО ""Снэк-Концепт"""
+68;Татьяна;Алексеева;alekseeva.tn@trisfood.ru;МИДОРИ ЕВРАЗИЯ
+69;Светлана;Ветошкина;vetoshkinasp@kmpp.ru;"ООО ""Сарапульский мясокомбинат"""
+70;Екатерина;Ротарь;rotary.ea@kolbasa.ru;"ООО ""МПЗ Мясницкий ряд"""
+71;Марина;Каллы;lab12@kalinka74.ru;ИП Куприянова
+73;Наталья;Хабибулина;khabibulina_nv@forbico.com;ООО РИР
+74;Китлаева;Диана;sert@globalf.ru;"ООО ""Глобал Фуд"""
+75;Анна;Захарова;a.zaharova@naturovo.ru;ООО Агрофабрика Натурово
+76;Светлана;Алексеева;s.alekseeva@growfood.pro;GrowFood
+77;Ирина;Кадникова;lab11@kalinka74.ru;ИП Куприянова Елена Влапдимировна
+78;YULIYA;DANILIUK;techyuliya@gmail.com;ИООО Вастега
+79;Ирина;Пономаренко;ponomarenko@samarabeer.ru;"АО ""Жигулевское пиво"""
+80;Варвара;Виноградова;vavinogradovas@ozon.ru;Озон Вкус
+81;Сергей;Семкин;semkin.sergey@grainford-agro.ru;Грейнфорд-Агро
+82;Евгения;Скворцова;evgeniia.skvorcova@narodny-konditer.ru;"ООО ""Миллениум"""
+83;Алла;Маркина;markina@shelkovohleb.ru;ЗАО Щелковохлеб
+84;Оксана;Холодкова;ox@emoloko.ru;ООО Егорлык Молоко
+86;Мария;Мария;boldina.mv@kolbasa.ru;Мясницкий Ряд
+87;Надежда;Муравьева;muravevan@yarbroiler.ru;АО Ярославский бройлер
+88;Елизавета;Крюченко;ekryuchenko@leovit.ru;"ООО ""ЛЕОВИТ нутрио"""
+89;Алла;Никонова;a.nikonova@ecosgp.com;ООО ЭКОС
+90;Роман;Колпак;romankolpak84@gmail.com;Sofos
+91;Елена;Мельникова;melnikova@hz-5.ru;"ОАО ""Самарский хлебозавод №5"""
+92;Марина;Ефремцева;pro18@globalf.ru;ООО Глобал-Фуд
+93;Андрей;Мосов;andrei.mosov@uniconf.ru;Объединенные кондитеры
+94;Ольга;Борисюк;techn2@vastega.com;"ИООО ""Вастега"""
+95;Татьяна;Зудилина;t.zudilina@omkmilk.ru;"АО ""Озерецкий молочный комбинат"""
+96;Оксана;Седова;sedova.o@domshedevr.ru;ООО Домашние шедевры
+97;Халючкова;Наталья;haluchkova.natalia@bremor.com;"СП ""Санта Бремор"" ООО"
+98;Ирина;Касюк;kasyuk.irina@bremor.com;Бремор
+99;Александр;Начаров;nacharov@hlebprom.com;ОАО Хлебпром
+100;Андрей;Мамонтов;avmamontov@octopusgaz.ru;"АО ""Октопус"""
+101;Галина;Русинова;rusinovaga@craft-foods.ru;"ООО «Крафт Фудс Групп"""
+102;Екатерина;Миллер;control@litan.group;ООО ЛИТАН ГРУПП
+103;Инна;Шатунова;vastega.quality@gmail.com;"ИООО ""Вастега"""
+104;Алия;Валишина;valish1naaliya@yandex.ru;ООО «Агро-Альянс ОМФ»
+105;Александр;Насонов;ip_nasonov@new-era.shop;ИП
+106;Лилия;Симовонян;lilia.simovonyan.stm@gmail.com;"ООО ""Стандарт"""
+107;Айсылу;Зиганшина;a.ziganshina@chistai.ru;"АО ХК ""Чистополье"""
+108;Павел;Салявин;p1@ice3.ru;Айс в Кубе
+109;Анна;Баранова;abaranova2016@mail.ru;"ООО"" Аква Мир"""
+110;Арина;Сальникова;salnikova.ai@pirpak.ru;"ООО ""Пир ПАК"""
+111;Рита;Родион;rodion.rita@bremor.com;СП Санта Бремор ООО
+113;Николай;Вовк;vovk.n@aistco.com;AISTCO
+114;Анастасия;Ескевич;eskevich.anastasia@tdyarmarka.ru;ООО фирма «Торговый Дом Ярмарка»
+115;Александра;Феофанова;a.feofanova@cherkizovo.com;Черкизово
+116;елена;Шевченко;klinchenko@mail.ru;ооо юг-фуд
+117;Людмила;Валюга;mpk@svoyfermer.com;ООО Перспектива
+120;Алсу;Низамова;nizamova.a@itlekitchen.ru;ООО ИТЛЕ КИТЧЕН
+121;Елена;Гончарова;goncharova.elena@ast-broker.ru;ООО АСТ
+122;Евгения;Иванова;zhenyai@inbox.ru;ООО «ЗБВ КВАДРА»
+123;Анастасия;Гусева;a.guseva@omkmilk.ru;Озерецкий молочный комбинат
+124;Андрей;Пайгусов;gp.app@mail.ru;ООО Грин Салат
+125;Надежда;Ханова;h.nadya@rm-mamad.ru;ООО РМ АГРО
+126;Владимир;Неровный;nerovnyyvladimir@gmail.com;Сеть ресторанов в СПб
+127;Оксана;нефедкина;nefedkinaov@poly-kap.com;ооо
+129;Надежда;Румянцева;runy@unifrost.ru;"ООО ""Юнифрост"""
+137;Алина;Бирюкова;a.i.biryukova@cherkizovo.com;"ПАО ""черкизово"""
+138;ирина;Плюхина;i.pliulkina@cherkizovo.com;черкизово
+139;Игорь;Кутепов;kutigur@yandex.ru;АО ЧМПЗАО ЧМПЗ
+140;Владимир;Виноградов;nppizumrud@bk.ru;ООО НПП  ИЗУМРУД
+141;Нина;Дубровская;gd@slon24.com;"""Съем слона"""
+142;Андрей;Гудель;a.gudel@suhogruz.com;Сифуд Индастриз
+143;Светлана;Федченко;fedchenko@yarbroiler.ru;"АО ""Ярославский бройлер"""
+144;Валерия;Хромоныгина;khromonygina@yandex.ru;АО Теремок
+145;юлия;вайхель;89137459347@yandex.ru;МегаТорг
+146;Ирина;Владимировна;comdir.navhleb@mail.ru;"АО ""Навашинский хлеб"""
+147;Татьяна;Мальцева;lab@obninsk-xleb.ru;"ОАО ""Хлебокомбинат"""
+148;Юрий;Краснов;u.krasnov@acdamate.com;Дамате
+149;Мария;Соснина;maria.sosnina.ok@yandex.ru;
+150;Татьяна;Андреева;14077945@mail.ru;"ООО ""Кондитерская фабрика ""Чистопрудненская"""
+151;лариса;самсонова;samsonova@sagagroup.ru;"ООО ""Гагаринский консервный комбинат"""
+152;Екатерина;Кантор;kate.kantor@yandex.ru;"ООО ""ВОСТРЯКОВО-2"""
+153;Елена;Муртазаева;elena.murtazaeva@rambler.ru;СЭД
+154;Ольга;Карпина;karpina.olga@tdyarmarka.ru;"ООО фирма ""Торговый Дом Ярмарка"""
+155;Ирина;Александрова;aleksandrova.irina@tdyarmarka.ru;"ООО фирма ""Торговый Дом Ярмарка"""
+156;Елена;Климова;elena.trufanova@asg.ru;"ООО ""АСГ"""
+157;Валентина;Кутепова;valentina.kutepova@agrosila-holding.ru;"АО ""Агросила"""
+158;Татьяна;Лазарева;t.lazareva@rusagromaslo.com;РУСАГРО
+159;Наталья;Ятманова;ntasha1977@mail.ru;Астелла Трейд
+160;Виолетта;Ясиновская;violetta.yasinovskaya@gmail.com;РЕННА-Холдинг
+161;Мария;Ардашева;ardasheva@komos.ru;Комос Групп
+162;Сергей;Манылов;manylovsv@topprodukt.ru;"ООО ""Топ Продукт"""
+163;Марина;Страхова;mstrahova@kundrat.ru;"ООО ""ТОРГОВЫЙ ДОМ КУННДРАТ"""
+164;Ирина Сергеевна;Добровольская;spz.lab@mail.ru;"ОАО ""Ставропольский пивоваренный завод"""
+165;Елена Борисявичене;Елена Борисявичене;lena.b@smakhleb.ru;"АО ""СМАК"""
+166;Светлана;Асонова;s.asonova@soyuz22.ru;ООО СОЮЗ-22
+167;Елена;Порохина;porohina.eu@niagara74.ru;"ООО ""НВК ""Ниагара"""
+168;Нина;Руденко;nina7ru@gmail.com;Чизланд
+169;Ольга;Петрова;petrova@farmalakt.ru;ООО ФАРМАЛАКТ
+170;Екатерина;Юркина;ekaterinayurkina@mail.ru;"ООО ""ФАРМАЛАКТ"""
+171;Татьяна;Шлег;tatiana.shleg@lateo.ru;"ООО ""НЗДП"""
+172;Татьяна;Бриль;brilta1982@yandex.ru;ООО Персона
+173;Александр;Анохин;alexan.anokhin@x5.ru;"АО ""Перекресток вкусов"""
+174;Ольга Вячеславовна;Четоркина;ochetorkina@sostra.ru;"ООО ""Состра"""
+175;Наталья;Маляренко;malyarenko@cholod.ru;Холод
+176;Дарья;Кукина;kukina@piteko.ru;ООО ПК ПИТЭКО
+177;Надежда;Филипенко;namifi@mail.ru;ИТ
+178;Юлия Анатольевна;Серова;serova.ya@kolbasa.ru;ООО «МПЗ Мясницкий Ряд»
+179;Ольга;Бочарова;bocharova@grospiron.ru;Гроспирон
+180;Наталья;Горожанова;natalia.gorozhanova@dececcorussia.com;Экстра м
+181;Лилия;Миндарова;ptl@maheev.ru;"АО ""Эссен Продакшн АГ"""
+182;Светлана;Романенко;svetlana07romanenko@mail.ru;"ООО ""Луганский мясокомбинат"""
+183;Надежда;Кирилюк;nadezh.kirilyuk@x5.ru;Х5
+184;Сергей;Мухин;ms@foodsafetymarket.ru;Food Safety Market
+185;Антон;Ширшов;anton.shirshov27@gmail.com;кондитерская.ру
+186;Екатерина;Майкова;emaikova@buketbeer.ru;"ОАО ""Букет Чувашии"""
+187;Евгения;Цыпушникова;etsypushnikova@bdagro.ru;Белая Дача Новосибирск
+188;Светлана;Куринова;tech.premiumfoods@gmail.com;"ООО ""Премиум Фудс"""
+189;Анастасия;Жердева;aa.zherdeva@rusagromaslo.com;АО Жировой комбинат
+190;Наталья;Андреева;technolog@lencoprod.com;СВИТПРО
+191;Елена;Караматова;ekaramatova@region-nt.com;ООО РНТ
+192;Ольга;Ритвинская;olga.ritvinskaia@lateo.ru;НЗДП
+193;Ирина;Завьялова;zavyalova@bonumfood.ru;"ООО ""Бонум Фуд"""
+194;Олеся;Сергеева;sergeevaoa@afariant.ru;ООО Агрофирма Ариант
+195;Анна;Величко;otk@shokolat-e.ru;"ООО ""КФ ""Шоколатье"""
+196;Валентин;Бо;kuberatd@gmail.com;ООО ТД Кубера
+197;Елена;Бондаренко;elenabondarenko-65@mail.ru;"ООО ""Восток Продукт"""
+198;Светлана;Макеева;zemskovasveta@bk.ru;ооо восток продукт
+199;Анна;Козьмина;anessa04@mail.ru;независимый эксперт
+200;Фирсова;Александровна;m.firsova@rennagroup.ru;"АО ""Ренна-Холдинг"""
+201;Валерия;Ковтун;vk@foodfiction.ru;-
+202;Анна;Волкова;haccp1@tamaki.ru;+7
+203;Галина;Головня;g.golovnya@vian-d.ru;"ООО ""ВиАн-Дистрибьюшн"""
+204;Виолетта;Фельзинг;v.felzing@novokubanskoe.ru;ЗАО Новокубанское
+205;Нонна;Привалова;texmoloko@mail.ru;"ООО ""ЗАЛЕССКИЙ ФЕРМЕР"""
+206;Эльвина;Гребеникова;kr_otk2@provkusno.info;ПРО ВКУСНО
+207;Тамара;Карпук;karpuk.tamara@bremor.com;"СП ""Санта Бремор"" ООО"
+208;Ирина;Денисова;denisovaid@topprodukt.ru;"ООО ""Топ Продукт"""
+209;Ольга;Бабурченкова;baburchenkova@promkonserv.ru;ООО Промконсервы
+210;Кирилл;Степанов;stepanov.kd@kolbasa.ru;Руководитель ИТ-Проектов
+211;Наталья;Макаркина;pretenzee-grain@mail.ru;ИП Ананикян А.А
+212;Любовь;Иванцова;technologist@naturalsupp.ru;"ООО ""Натуральные добавки"""
+213;Инна;Евменова;evmenova_iu@fitnesshock.ru;Фитнес десерты
+214;Елена;Полякова;poliakovaev@pfvaraksino.ru;ПФ Вараксино
+215;Ольга;Полянская;pr23@agroimport-foods.ru;"АО""АГРОИМПОРТ"""
+216;Валерия;Черепанова;v.cherepanova@streetsfood.ru;Стритс
+217;Екатерина;Щербакова;ekaterina.shchr@yandex.ru;Альтернатива
+218;Марина;Уткина;vezlomtseva@inbox.ru;ЗП КЭНАПС
+219;Екатерина;Драпеко;lab7@kalinka74.ru;ИП Куприянова
+220;Наталия;Устьянцева;kamminvoda11@yandex.ru;"ООО ""Обуховские минеральные воды"""
+221;Руслан;Камбаров;dir.logist@zvezdakavkaza.ru;0900014750
+222;Елена;Мигалева;elena.migaleva@permalko.ru;АО Пермалко
+223;Юлия;Смолина;smolinaya@ftk.komos.ru;"ООО ФТК ""Комос Групп"""
+224;Алина;Савельева;sa.company@mail.ru;ООО Примвестторг
+225;Анастасия;Евлахова;aevlakhova@ozon.ru;Озон Вкус
+226;Александр;Межнин;technolog@transpit.ru;"ООО ""Транспит Северо-Запад"""
+227;Наталья;Варнавская;teh@tenera.asia;"ООО ""Тенера"""
+228;Gorbachev;Vladislav;gorbachev@obtpro.ru;ОБТ Про
+229;Natalya;Prokopchuk;natalya.prokopchuk@ecofactory.ru;Эко-фабрика
+230;Андрей;Степанов;a.stepanov@fish.spb.ru;"ООО ""СК СПБ"""
+231;Марина;Терешкина;m.tereshkina@omkmilk.ru;"АО ""Озерецкий молочный комбинат"""
+232;Marina;Brozhenko;marina.brozhenko@logmol.ru;Logika moloka
+233;Надежда;Федорук;fedoruk.nadezhda@bremor.com;Санта Бремор
+234;Раиса;Мороз;raisa.moroz@delectofood.com;"ООО ""Найс Айс"""
+235;Валентина;Дедушенко;valen.dedushenko@x5.ru;Х5 Диджитал
+236;Роман;Колпак;kolpak@sofosbio.com;Cофос протеин биотехнолоджи
+237;Александр;Саканцев;aleksa.sakantsev@x5.ru;х5
+238;Наталья;Чучкова;cno@coolclever.ru;"ООО ""Отдохни - 77"""
+239;Надежда;Кудрявцева;nkudryavtseva@x5.ru;X5 Digital
+240;Аксинья;Иванова;oks.nefyodkina@yandex.ru;ООО
+241;Надежда;Румянцева;nadezhda.rumyanceva.75@mail.ru;"ООО ""Юнифрост"""
+242;Елена;Бочарова;auditor_okk@polyana.pro;"ООО ""Поляна"""
+243;Екатерина;Колесникова;hinddelkahinddelkate@mail.ru;"АО «Озерецкий молочный комбинат"""
+244;Александра;Феофанова;a_feofanova@cherkizovo.com;Черкизово
+245;Анастасия;Егорова;egorova.anastyasia@tdyarmarka.ru;"ООО фирма «Торговый Дом Ярмарка"""
+246;Екатерина;Тарасова;kate.krugova@yandex.ru;"ООО ""Поляна"""
+247;Екатерина;Томаш;ktsabal@mail.ru;АО БМК
+248;Nikolay;Deryugin;derderyuginnikolay@gmail.com;АО Тандер
