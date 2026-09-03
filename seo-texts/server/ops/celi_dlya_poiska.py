@@ -112,8 +112,15 @@ for с in io.open(ЖУРНАЛ, encoding="utf-8", errors="replace"):
     видели.add(и)
     имя, адрес, квэд = свежие[и]
     место = город(адрес) or регион_по_инн(и)
-    цели.append({"inn": и, "name": имя, "city": место,
-                 "okved": квэд, "revenue_rub": выр,
+    # КЛЮЧИ РОВНО ТЕ, ЧТО ЖДЁТ sayty_dlya_celey.py:
+    #     имя = c.get('poln') or c.get('krat');  город = c.get('region')
+    # Первый заход я собрал с «name» и «city» — оба поля оказались пустыми,
+    # запрос свёлся к « официальный сайт», и всем компаниям подряд
+    # находились одни и те же случайные сайты (flex-system.kz, 40-e.ru,
+    # webtend.ru). Девятнадцать запросов ушли впустую.
+    цели.append({"inn": и, "poln": имя, "krat": имя, "region": место,
+                 "name": имя, "city": место,
+                 "okved": квэд, "revenue_rub": выр, "rev": выр,
                  "phones": z.get("phones_checko") or "",
                  "emails": z.get("emails_checko") or ""})
     счёт["в companies есть" if и in в_companies
