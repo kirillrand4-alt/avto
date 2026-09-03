@@ -151,6 +151,122 @@
 - `kompressornaya-stanciya.html` ✓ -> СОЗДАТЬ: https://zif-kompressor.ru/catalog/kompressornaya-stanciya/
 - `mks.html` ✓ -> СОЗДАТЬ: https://zif-kompressor.ru/catalog/mks/
 
+## Вторая партия: тексты для существующих разделов (49 статей)
+
+Архив «есть категория». Разделы на сайтах уже созданы, тексты в них не
+размещены - проверил все 49 адресов, ни на одном ни одного фрагмента этих
+статей нет. Свёрстаны тем же скриптом.
+
+Добавился двенадцатый сайт - `kraftmann-kompressor.com` (11 статей). Форм
+Битрикс24 на нём нет вообще, поэтому кнопка там обычная ссылка на
+`/contacts/`. Пять статей для `ac-kompressor.ru` лежат не здесь, а в
+`ac-kompressor/statyi/` - вместе с остальными его текстами и в его
+оформлении (белая кнопка, синяя полоса у плашек).
+
+**Разделы уже существующие, у части из них есть своё описание** - статья его
+заменит. Точно проверено, что описание непустое, у пяти адресов: три раздела
+crossair (340-530 знаков) и два ironmac (по 2,5 тысячи знаков). На остальных
+сайтах шаблон не помечает блок описания классом, снаружи не посмотреть -
+увидите в админке, поле будет непустым.
+
+### Куда какой файл (вторая партия)
+
+### abac-kompressor.ru
+
+- `sajty/abac-kompressor.ru/filtry-magistralnye.html` -> https://abac-kompressor.ru/catalog/filtry-magistralnye-abac/  (раздел нашёлся под другим именем)
+- `sajty/abac-kompressor.ru/osushiteli.html` -> https://abac-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/  (раздел нашёлся под другим именем)
+- `sajty/abac-kompressor.ru/tsiklonnye-separatory.html` -> https://abac-kompressor.ru/catalog/maslovlagootdeliteli-abac/  (раздел нашёлся под другим именем)
+- `sajty/abac-kompressor.ru/vintovye-kompressory.html` -> https://abac-kompressor.ru/catalog/vintovye-kompressory/
+
+### ac-kompressor.ru
+
+- `ac-kompressor/statyi/dizelnye-kompressory.html` -> https://ac-kompressor.ru/catalog/dizelnye-kompressory-do-14-bar/  (раздел нашёлся под другим именем)
+- `ac-kompressor/statyi/osushiteli.html` -> https://ac-kompressor.ru/catalog/adsorbtsionnye-osushiteli-vozdukha/  (раздел нашёлся под другим именем)
+- `ac-kompressor/statyi/porshnevye-kompressory.html` -> https://ac-kompressor.ru/catalog/porshnevye-kompressory/
+- `ac-kompressor/statyi/spiralnye-kompressory.html` -> https://ac-kompressor.ru/catalog/spiralnye-bezmaslyanye-kompressory/  (раздел нашёлся под другим именем)
+- `ac-kompressor/statyi/vintovye-kompressory.html` -> https://ac-kompressor.ru/catalog/vintovye-kompressory/
+
+### berg-kompressor.ru
+
+- `sajty/berg-kompressor.ru/filtry-magistralnye.html` -> https://berg-kompressor.ru/catalog/vozdukhopodgotovka/magistralnye-filtry/  (раздел нашёлся под другим именем)
+- `sajty/berg-kompressor.ru/kompressornaya-stanciya.html` -> https://berg-kompressor.ru/catalog/modulnye-kompressornye-stantsii/  (раздел нашёлся под другим именем)
+- `sajty/berg-kompressor.ru/osushiteli.html` -> https://berg-kompressor.ru/catalog/osushiteli/
+- `sajty/berg-kompressor.ru/tsiklonnye-separatory.html` -> https://berg-kompressor.ru/catalog/vozdukhopodgotovka/tsiklonnye-separatory/  (раздел нашёлся под другим именем)
+- `sajty/berg-kompressor.ru/vintovye-kompressory.html` -> https://berg-kompressor.ru/catalog/vintovye-kompressory/
+
+### crossair-compressor.ru
+
+- `sajty/crossair-compressor.ru/dizelnye-kompressory.html` -> https://crossair-compressor.ru/catalog/dizelnye-kompressory/
+- `sajty/crossair-compressor.ru/osushiteli.html` -> https://crossair-compressor.ru/catalog/vintovye-kompressory/na-resivere-s-osushitelem/  (раздел нашёлся под другим именем)
+- `sajty/crossair-compressor.ru/vintovye-kompressory.html` -> https://crossair-compressor.ru/catalog/vintovye-kompressory/
+
+### dali-kompressor.ru
+
+- `sajty/dali-kompressor.ru/osushiteli.html` -> https://dali-kompressor.ru/catalog/osushiteli/
+- `sajty/dali-kompressor.ru/vintovye-kompressory.html` -> https://dali-kompressor.ru/catalog/vintovye-kompressory/
+
+### ekomak-kompressor.com
+
+- `sajty/ekomak-kompressor.com/azotnaya-stanciya.html` -> https://ekomak-kompressor.com/catalog/generatory-azota-ppng/  (раздел нашёлся под другим именем)
+- `sajty/ekomak-kompressor.com/osushiteli.html` -> https://ekomak-kompressor.com/catalog/osushiteli/
+- `sajty/ekomak-kompressor.com/spiralnye-kompressory.html` -> https://ekomak-kompressor.com/catalog/bezmaslyanye/spiralnye/  (раздел нашёлся под другим именем)
+- `sajty/ekomak-kompressor.com/vintovye-kompressory.html` -> https://ekomak-kompressor.com/catalog/bezmaslyanye/vintovye/  (раздел нашёлся под другим именем)
+
+### enger-air.ru
+
+- `sajty/enger-air.ru/kompressornaya-stanciya.html` -> https://enger-air.ru/catalog/mks/  (раздел нашёлся под другим именем)
+
+### fini-compressor.com
+
+- `sajty/fini-compressor.com/vintovye-kompressory.html` -> https://fini-compressor.com/catalog/vintovye-kompressory/
+
+### ironmac-compressor.com
+
+- `sajty/ironmac-compressor.com/filtry-magistralnye.html` -> https://ironmac-compressor.com/catalog/filtry-magistralnye/
+- `sajty/ironmac-compressor.com/mks.html` -> https://ironmac-compressor.com/catalog/blochnye-stantsii/  (раздел нашёлся под другим именем)
+- `sajty/ironmac-compressor.com/osushiteli.html` -> https://ironmac-compressor.com/catalog/refrizheratornye-osushiteli-vozdukha/  (раздел нашёлся под другим именем)
+- `sajty/ironmac-compressor.com/vintovye-kompressory.html` -> https://ironmac-compressor.com/catalog/vintovye-kompressory/
+
+### kraftmann-kompressor.com
+
+- `sajty/kraftmann-kompressor.com/azotnaya-stanciya.html` -> https://kraftmann-kompressor.com/catalog/azotnaya-stanciya/
+- `sajty/kraftmann-kompressor.com/azotnaya-stanciya-modulnaya.html` -> https://kraftmann-kompressor.com/catalog/azotnaya-stanciya-modulnaya/
+- `sajty/kraftmann-kompressor.com/dozhimnye-kompressory.html` -> https://kraftmann-kompressor.com/catalog/dozhimnye-kompressory/
+- `sajty/kraftmann-kompressor.com/filtry-magistralnye.html` -> https://kraftmann-kompressor.com/catalog/filtry-magistralnye/
+- `sajty/kraftmann-kompressor.com/kislorodnaya-stanciya.html` -> https://kraftmann-kompressor.com/catalog/kislorodnaya-stanciya/
+- `sajty/kraftmann-kompressor.com/kislorodnaya-stanciya-modulnaya.html` -> https://kraftmann-kompressor.com/catalog/kislorodnaya-stanciya-modulnaya/
+- `sajty/kraftmann-kompressor.com/kompressornaya-stanciya.html` -> https://kraftmann-kompressor.com/catalog/kompressornaya-stanciya/
+- `sajty/kraftmann-kompressor.com/mks.html` -> https://kraftmann-kompressor.com/catalog/mks/
+- `sajty/kraftmann-kompressor.com/osushiteli.html` -> https://kraftmann-kompressor.com/catalog/osushiteli/
+- `sajty/kraftmann-kompressor.com/tsiklonnye-separatory.html` -> https://kraftmann-kompressor.com/catalog/tsiklonnye-separatory/
+- `sajty/kraftmann-kompressor.com/vintovye-kompressory.html` -> https://kraftmann-kompressor.com/catalog/vintovye-kompressory/
+
+### remeza-kompressor.ru
+
+- `sajty/remeza-kompressor.ru/azotnaya-stanciya.html` -> https://remeza-kompressor.ru/catalog/generatori-azota/  (раздел нашёлся под другим именем)
+- `sajty/remeza-kompressor.ru/filtry-magistralnye.html` -> https://remeza-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/filtry-magistralnye/  (раздел нашёлся под другим именем)
+- `sajty/remeza-kompressor.ru/kompressornaya-stanciya.html` -> https://remeza-kompressor.ru/catalog/modulnye-kompressornye-stantsii/  (раздел нашёлся под другим именем)
+- `sajty/remeza-kompressor.ru/osushiteli.html` -> https://remeza-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/  (раздел нашёлся под другим именем)
+- `sajty/remeza-kompressor.ru/resivery.html` -> https://remeza-kompressor.ru/catalog/vozdushnye-resivery/  (раздел нашёлся под другим именем)
+- `sajty/remeza-kompressor.ru/tsiklonnye-separatory.html` -> https://remeza-kompressor.ru/catalog/ochistka-szhatogo-vozdukha/maslovlagootdeliteli/  (раздел нашёлся под другим именем)
+- `sajty/remeza-kompressor.ru/vintovye-kompressory.html` -> https://remeza-kompressor.ru/catalog/kompressory/vintovye/  (раздел нашёлся под другим именем)
+
+### zif-kompressor.ru
+
+- `sajty/zif-kompressor.ru/osushiteli.html` -> https://zif-kompressor.ru/catalog/osushiteli/
+- `sajty/zif-kompressor.ru/vintovye-kompressory.html` -> https://zif-kompressor.ru/catalog/vintovye-kompressory/
+
+## Что поправлено в первой партии
+
+- `enger-air.ru/generatory-azota.html` и `generatory-kisloroda.html`: в стиль
+  заголовка «Частые вопросы» попадала незаполненная подстановка
+  `scroll-margin-top:{}px`, и закрывающий тег аккордеона стоял не на месте.
+  Оба файла пересобраны, если уже вставляли - вставьте заново.
+- `abac-kompressor.ru/mks.html`: подписи к таблицам (`caption`) получили
+  стиль, раньше шли по центру мелким.
+
+Остальные 51 файл первой партии не изменились.
+
 ## Запуск
 
 ```

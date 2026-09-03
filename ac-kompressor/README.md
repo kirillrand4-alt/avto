@@ -47,7 +47,7 @@ kp-trigger-inline.html  запасной вариант без тега script
 
 ## Статьи
 
-Семь текстов в `statyi/`. Вставлять целиком в поле "Описание" раздела,
+Двенадцать текстов в `statyi/`. Вставлять целиком в поле "Описание" раздела,
 в режиме исходного кода. Стилей от сайта не требуют - вся вёрстка инлайном,
 `stili-dlya-sayta.css` из архива класть не нужно.
 
@@ -60,6 +60,11 @@ kp-trigger-inline.html  запасной вариант без тега script
 | `kislorodnaya-stanciya-modulnaya.html` | СОЗДАТЬ `/catalog/kislorodnaya-stanciya-modulnaya/` |
 | `mks.html` | СОЗДАТЬ `/catalog/mks/` |
 | `kompressornaya-stanciya.html` | СОЗДАТЬ `/catalog/kompressornaya-stanciya/` - но это тот же текст, что уже стоит в разделе "Компрессорные станции" |
+| `vintovye-kompressory.html` | `/catalog/vintovye-kompressory/` - раздел уже есть |
+| `porshnevye-kompressory.html` | `/catalog/porshnevye-kompressory/` - раздел уже есть |
+| `spiralnye-kompressory.html` | `/catalog/spiralnye-kompressory/` - раздел уже есть |
+| `dizelnye-kompressory.html` | `/catalog/dizelnye-kompressory-do-14-bar/` - раздел под другим именем |
+| `osushiteli.html` | `/catalog/adsorbtsionnye-osushiteli-vozdukha/` - раздел под другим именем |
 
 Адреса взяты из `KUDA-KLAST.csv` архива, колонка "Куда класть".
 
@@ -122,7 +127,7 @@ HTML шаблон срезает теги и показывает первое �
 
 ## Если редактор съедает тег script
 
-В `statyi-bez-skripta/` лежат те же семь текстов без единого тега `script`:
+В `statyi-bez-skripta/` лежат те же тексты без единого тега `script`:
 обработчик стоит в самой кнопке, атрибутом `onclick`. Брать их, если после
 сохранения кнопки перестали открывать форму (у этого сайта редактор уже ломал
 скрипт - блок `inline/230/1f147p` сохранился как `<sc ript`).
