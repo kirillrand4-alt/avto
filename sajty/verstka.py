@@ -37,13 +37,14 @@ import sys
 SAJTY = {
     "abac-kompressor.ru": dict(
         klass="bxr-color-button", stil="color:#1a1a1a;",
-        zakaz="https://abac-kompressor.ru/company/contacts/", forma=None),
+        zakaz="https://abac-kompressor.ru/company/contacts/", forma="click/7/40ef1t"),
     "ac-kompressor.ru": dict(
         klass=None, stil="", akcent="#0096d6", trigger="ac-kp-trigger", shapka=110,
         zakaz="https://ac-kompressor.ru/company/zakaz/", forma="click/7/40ef1t"),
     "berg-kompressor.ru": dict(
         klass="btn btn-primary", stil="color:#fff;", shapka=130,
-        zakaz="https://berg-kompressor.ru/contacts/", forma=None),
+        zakaz="https://berg-kompressor.ru/contacts/", forma="click/164/7higok",
+        nadpis="Оставить заявку"),
     "crossair-compressor.ru": dict(
         klass="btn btn-primary", stil="",
         zakaz="https://crossair-compressor.ru/about/contacts/", forma="click/173/5pc41r"),
@@ -52,22 +53,25 @@ SAJTY = {
         zakaz="https://dali-kompressor.ru/company/contacts/", forma="click/7/40ef1t"),
     "ekomak-kompressor.com": dict(
         klass="btn btn-primary", stil="",
-        zakaz="https://ekomak-kompressor.com/contacts/", forma=None),
+        zakaz="https://ekomak-kompressor.com/contacts/", forma="click/8/cosa3e",
+        nadpis="Оставить заявку"),
     "enger-air.ru": dict(
         klass="enger-btn enger-btn--primary", stil="", shapka=60,
-        zakaz="https://enger-air.ru/company/contacts/", forma=None),
+        zakaz="https://enger-air.ru/company/contacts/", forma="click/160/lzzwog"),
     "fini-compressor.com": dict(
         klass="btn btn-primary", stil="",
-        zakaz="https://fini-compressor.com/about/contacts/", forma=None),
+        zakaz="https://fini-compressor.com/about/contacts/", forma="click/200/pkoq43",
+        nadpis="Оставить заявку"),
     "ironmac-compressor.com": dict(
         klass="btn btn-primary", stil="",
-        zakaz="https://ironmac-compressor.com/company/contacts/", forma=None),
+        zakaz="https://ironmac-compressor.com/company/contacts/", forma="click/193/h77r1g",
+        nadpis="Оставить заявку"),
     "kraftmann-kompressor.com": dict(
         klass="bxr-color-button", stil="",
-        zakaz="https://kraftmann-kompressor.com/contacts/", forma=None),
+        zakaz="https://kraftmann-kompressor.com/contacts/", forma="click/7/40ef1t"),
     "remeza-kompressor.ru": dict(
         klass="bxr-color-button", stil="color:#1a1a1a;",
-        zakaz="https://remeza-kompressor.ru/company/contacts/", forma=None),
+        zakaz="https://remeza-kompressor.ru/company/contacts/", forma="click/7/40ef1t"),
     "zif-kompressor.ru": dict(
         klass="btn btn-primary", stil="",
         zakaz="https://zif-kompressor.ru/company/where-buy/", forma="click/7/40ef1t"),
@@ -108,77 +112,116 @@ def cveta(sajt):
 
 def knopka(sajt):
     trigger = sajt.get("trigger", TRIGGER)
+    nadpis = sajt.get("nadpis", NADPIS)
     if sajt.get("akcent"):
         return (f'<a href="{sajt["zakaz"]}" class="{trigger}" '
-                f'style="{KNOPKA_SVOYA.format(sajt["akcent"])}">{NADPIS}</a>')
+                f'style="{KNOPKA_SVOYA.format(sajt["akcent"])}">{nadpis}</a>')
     return (f'<a href="{sajt["zakaz"]}" class="{sajt["klass"]} {trigger}" '
-            f'style="{KNOPKA_PRAVKI}{sajt["stil"]}">{NADPIS}</a>')
+            f'style="{KNOPKA_PRAVKI}{sajt["stil"]}">{nadpis}</a>')
 
 
 def snippet(sajt):
-    """Обработчик кнопки: нажимает ту кнопку сайта, к которой Битрикс24 привязал
-    форму, и открывается тот же попап. Дописывается, только если форма есть."""
+    """Загрузчик формы Битрикс24 плюс обработчик кнопок.
+
+    Форму вставляем в саму статью: на разделах без товаров у сайта своих форм
+    на странице нет, и кнопка иначе уводила бы на страницу заявки. Загрузчик
+    привязывает форму к скрытой ссылке, а кнопки в тексте нажимают её -
+    попап открывается на любой странице.
+
+    Запасные пути, если загрузчик не отработал: любая другая форма Битрикс24,
+    которая нашлась на странице, и только потом переход на страницу заявки.
+    """
     if not sajt["forma"]:
         return ""
     trigger = sajt.get("trigger", TRIGGER)
+    nadpis = sajt.get("nadpis", NADPIS)
     flag = "acKpTriggerReady" if trigger == "ac-kp-trigger" else "kpTriggerReady"
-    return f'''<!-- Кнопки "{NADPIS}" в статье открывают форму Битрикс24 {sajt["forma"]}:
-     нажимают ту кнопку сайта, к которой её привязал сам Битрикс24. -->
-<script>
-(function () {{
-\tif (window.{flag}) {{ return; }}
-\twindow.{flag} = true;
+    vid, nomer, kod = sajt["forma"].split("/")
+    yakor = trigger + "-yakor"
 
-\tvar TRIGGER  = "{trigger}";
-\tvar B24_FORM = "{sajt["forma"]}";
-\tvar FALLBACK = "{sajt["zakaz"]}";
-\tvar WAIT_MS  = 2500;
-\tvar STEP_MS  = 150;
+    zagruzchik = (
+        '<script data-b24-form="{forma}" data-skip-moving="true">\n'
+        "(function(w,d,u){{\n"
+        "var s=d.createElement('script');s.async=true;s.src=u+'?'+(Date.now()/180000|0);\n"
+        "var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);\n"
+        "}})(window,document,'https://bitrix-po22.ru/upload/crm/form/loader_{nomer}_{kod}.js');\n"
+        "</script>\n"
+        # именно span, а не ссылка: Битрикс24 привязывает форму к элементу
+        # сразу за своим script, а клик по ссылке с адресом уводил бы страницу
+        # раньше, чем откроется попап
+        '<span class="{yakor}" style="display:none" aria-hidden="true"></span>'
+    ).format(forma=sajt["forma"], nomer=nomer, kod=kod, yakor=yakor)
 
-\t/* Битрикс24 вешает обработчик на элемент сразу за своим тегом script и
-\t   помечает этот script атрибутом data-b24-loaded. */
-\tfunction knopkaSajta() {{
-\t\tvar scripts = document.querySelectorAll('script[data-b24-form="' + B24_FORM + '"][data-b24-loaded]');
-\t\tfor (var i = scripts.length - 1; i >= 0; i--) {{
-\t\t\tvar el = scripts[i].nextElementSibling;
-\t\t\tif (!el || el.tagName === "SCRIPT") {{ continue; }}
-\t\t\treturn (el.querySelector && el.querySelector(".b24-form-click-btn")) || el;
-\t\t}}
-\t\treturn null;
-\t}}
+    obrabotchik = """<script>
+(function () {
+	if (window.FLAG) { return; }
+	window.FLAG = true;
 
-\tfunction izTriggera(node) {{
-\t\twhile (node && node !== document) {{
-\t\t\tif (node.classList && node.classList.contains(TRIGGER)) {{ return node; }}
-\t\t\tnode = node.parentNode;
-\t\t}}
-\t\treturn null;
-\t}}
+	var TRIGGER  = "TRIGGER_KLASS";
+	var B24_FORM = "B24_FORMA";
+	var FALLBACK = "ADRES_ZAYAVKI";
+	var WAIT_MS  = 6000;
+	var STEP_MS  = 150;
 
-\tfunction otkryt(waited, link) {{
-\t\tvar btn = knopkaSajta();
-\t\tif (btn) {{
-\t\t\t/* кнопка сайта часто <a href="#"> - не даём странице прыгнуть наверх */
-\t\t\tvar y = window.pageYOffset;
-\t\t\tbtn.click();
-\t\t\tsetTimeout(function () {{ if (Math.abs(window.pageYOffset - y) > 4) {{ window.scrollTo(0, y); }} }}, 0);
-\t\t\treturn;
-\t\t}}
-\t\tif (waited >= WAIT_MS) {{
-\t\t\twindow.location.href = (link && link.getAttribute("href")) || FALLBACK;
-\t\t\treturn;
-\t\t}}
-\t\tsetTimeout(function () {{ otkryt(waited + STEP_MS, link); }}, STEP_MS);
-\t}}
+	/* Битрикс24 вешает обработчик на элемент сразу за тегом script своей формы
+	   и помечает этот script атрибутом data-b24-loaded. Сначала ищем нашу
+	   форму (её загрузчик стоит в конце статьи), потом любую другую на странице. */
+	function posle(selektor) {
+		var scripts = document.querySelectorAll(selektor);
+		for (var i = scripts.length - 1; i >= 0; i--) {
+			var el = scripts[i].nextElementSibling;
+			if (!el || el.tagName === "SCRIPT") { continue; }
+			return (el.querySelector && el.querySelector(".b24-form-click-btn")) || el;
+		}
+		return null;
+	}
 
-\tdocument.addEventListener("click", function (e) {{
-\t\tvar link = izTriggera(e.target);
-\t\tif (!link) {{ return; }}
-\t\te.preventDefault();
-\t\totkryt(0, link);
-\t}}, false);
-}})();
-</script>'''
+	function cel() {
+		return posle('script[data-b24-form="' + B24_FORM + '"][data-b24-loaded]')
+			|| posle('script[data-b24-form^="click/"][data-b24-loaded]');
+	}
+
+	function izTriggera(node) {
+		while (node && node !== document) {
+			if (node.classList && node.classList.contains(TRIGGER)) { return node; }
+			node = node.parentNode;
+		}
+		return null;
+	}
+
+	function otkryt(waited, link) {
+		var el = cel();
+		if (el) {
+			/* кнопки сайта часто <a href="#"> - не даём странице прыгнуть наверх */
+			var y = window.pageYOffset;
+			el.click();
+			setTimeout(function () { if (Math.abs(window.pageYOffset - y) > 4) { window.scrollTo(0, y); } }, 0);
+			return;
+		}
+		if (waited >= WAIT_MS) {          /* форма так и не поднялась */
+			window.location.href = (link && link.getAttribute("href")) || FALLBACK;
+			return;
+		}
+		setTimeout(function () { otkryt(waited + STEP_MS, link); }, STEP_MS);
+	}
+
+	document.addEventListener("click", function (e) {
+		var link = izTriggera(e.target);
+		if (!link) { return; }
+		e.preventDefault();
+		otkryt(0, link);
+	}, false);
+})();
+</script>"""
+    obrabotchik = (obrabotchik.replace("FLAG", flag)
+                   .replace("TRIGGER_KLASS", trigger)
+                   .replace("B24_FORMA", sajt["forma"])
+                   .replace("ADRES_ZAYAVKI", sajt["zakaz"]))
+
+    shapka = ('<!-- Кнопки "%s" открывают форму Битрикс24 %s прямо на странице.\n'
+              "     Загрузчик формы и обработчик кнопок - ниже, трогать не нужно. -->"
+              % (nadpis, sajt["forma"]))
+    return shapka + "\n" + zagruzchik + "\n" + obrabotchik
 
 
 def bez_tegov(s):

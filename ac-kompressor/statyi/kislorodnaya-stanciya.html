@@ -1,4 +1,4 @@
-<div class="statya-ruspro" style="line-height:1.65;overflow-wrap:break-word;">
+<div class="statya-ruspro" style="line-height:1.65;overflow-wrap:break-word;text-align:left;">
 <p>Кислородная станция на базе компрессора Atlas Copco - установка для получения кислорода из атмосферного воздуха непосредственно на площадке заказчика. В составе: компрессор Atlas Copco (686 позиций в линейке, мощность 2-500 кВт, давление до 25 бар), система подготовки воздуха до класса ISO 8573 1-4-1, генератор кислорода адсорбционного типа (производительность 20-1670 Нм³/ч), ресивер кислорода. Чистота на выходе 93-95%, режим работы непрерывный, при необходимости резервирование генерации и дожим до 150 бар для заправки баллонов.</p>
 <div style="margin:24px 0 30px;padding:18px 20px;border:1px solid #d9e0e5;background:#f6f8fa;"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin:0 0 12px;"><p style="margin:0;"><strong>Содержание страницы</strong></p><a href="https://ac-kompressor.ru/company/zakaz/" class="ac-kp-trigger" style="display:inline-block !important;box-sizing:border-box;min-width:168px;padding:15px 28px;background:#fff !important;border:1px solid #e5e5e5;color:#0096d6 !important;font-size:15px;line-height:20px;font-weight:700;text-align:center;text-decoration:none !important;cursor:pointer;vertical-align:middle;">Получить КП</a></div><ol style="margin:0;padding-left:22px;columns:280px 2;column-gap:36px;">
 <li style="margin:0 0 7px;break-inside:avoid;"><a href="#adsorbcionnaya-tehnologiya-psa-i-potolok">Адсорбционная технология PSA и потолок чистоты 93-95% для непрерывных процессов</a></li>
@@ -136,25 +136,31 @@
 </div>
 </div>
 
-<!-- Кнопки "Получить КП" внутри статьи вызывают нижнюю кнопку страницы
-     (подвал: форма Битрикс24 click/7/40ef1t "Запросить коммерческое предложение").
-     Вставлять один раз в конец текста раздела. -->
+<!-- Кнопки "Получить КП" открывают форму Битрикс24 click/7/40ef1t прямо на странице.
+     Загрузчик формы и обработчик кнопок - ниже, трогать не нужно. -->
+<script data-b24-form="click/7/40ef1t" data-skip-moving="true">
+(function(w,d,u){
+var s=d.createElement('script');s.async=true;s.src=u+'?'+(Date.now()/180000|0);
+var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);
+})(window,document,'https://bitrix-po22.ru/upload/crm/form/loader_7_40ef1t.js');
+</script>
+<span class="ac-kp-trigger-yakor" style="display:none" aria-hidden="true"></span>
 <script>
 (function () {
 	if (window.acKpTriggerReady) { return; }
 	window.acKpTriggerReady = true;
 
-	var TRIGGER  = "ac-kp-trigger";     /* класс кнопок в статье */
-	var B24_FORM = "click/7/40ef1t";    /* та же форма, что у кнопки в подвале */
-	var FALLBACK = "/company/zakaz/";   /* куда вести, если форма не поднялась */
-	var WAIT_MS  = 2500;
+	var TRIGGER  = "ac-kp-trigger";
+	var B24_FORM = "click/7/40ef1t";
+	var FALLBACK = "https://ac-kompressor.ru/company/zakaz/";
+	var WAIT_MS  = 6000;
 	var STEP_MS  = 150;
 
-	/* Битрикс24 вешает обработчик на элемент, который идёт сразу за своим тегом script,
-	   и помечает этот script атрибутом data-b24-loaded. Берём последний такой на
-	   странице - это и есть рабочая кнопка внизу. */
-	function bottomButton() {
-		var scripts = document.querySelectorAll('script[data-b24-form="' + B24_FORM + '"][data-b24-loaded]');
+	/* Битрикс24 вешает обработчик на элемент сразу за тегом script своей формы
+	   и помечает этот script атрибутом data-b24-loaded. Сначала ищем нашу
+	   форму (её загрузчик стоит в конце статьи), потом любую другую на странице. */
+	function posle(selektor) {
+		var scripts = document.querySelectorAll(selektor);
 		for (var i = scripts.length - 1; i >= 0; i--) {
 			var el = scripts[i].nextElementSibling;
 			if (!el || el.tagName === "SCRIPT") { continue; }
@@ -163,7 +169,12 @@
 		return null;
 	}
 
-	function triggerFrom(node) {
+	function cel() {
+		return posle('script[data-b24-form="' + B24_FORM + '"][data-b24-loaded]')
+			|| posle('script[data-b24-form^="click/"][data-b24-loaded]');
+	}
+
+	function izTriggera(node) {
 		while (node && node !== document) {
 			if (node.classList && node.classList.contains(TRIGGER)) { return node; }
 			node = node.parentNode;
@@ -171,35 +182,27 @@
 		return null;
 	}
 
-	function openForm(waited, link) {
-		var btn = bottomButton();
-		if (btn) { btn.click(); return; }
-		if (waited >= WAIT_MS) {
+	function otkryt(waited, link) {
+		var el = cel();
+		if (el) {
+			/* кнопки сайта часто <a href="#"> - не даём странице прыгнуть наверх */
+			var y = window.pageYOffset;
+			el.click();
+			setTimeout(function () { if (Math.abs(window.pageYOffset - y) > 4) { window.scrollTo(0, y); } }, 0);
+			return;
+		}
+		if (waited >= WAIT_MS) {          /* форма так и не поднялась */
 			window.location.href = (link && link.getAttribute("href")) || FALLBACK;
 			return;
 		}
-		setTimeout(function () { openForm(waited + STEP_MS, link); }, STEP_MS);
+		setTimeout(function () { otkryt(waited + STEP_MS, link); }, STEP_MS);
 	}
 
 	document.addEventListener("click", function (e) {
-		var link = triggerFrom(e.target);
+		var link = izTriggera(e.target);
 		if (!link) { return; }
 		e.preventDefault();
-		openForm(0, link);
+		otkryt(0, link);
 	}, false);
-
-	/* пустой якорь в href прыгает наверх, если скрипт не отработал - подменяем на страницу заявки */
-	function fixHrefs() {
-		var list = document.getElementsByClassName(TRIGGER);
-		for (var i = 0; i < list.length; i++) {
-			var href = list[i].getAttribute("href");
-			if (!href || href === "#") { list[i].setAttribute("href", FALLBACK); }
-		}
-	}
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", fixHrefs, false);
-	} else {
-		fixHrefs();
-	}
 })();
 </script>

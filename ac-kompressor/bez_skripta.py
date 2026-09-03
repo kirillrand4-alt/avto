@@ -21,7 +21,7 @@ cel = os.path.join(korn, "statyi-bez-skripta")
 os.makedirs(cel, exist_ok=True)
 for put in sorted(glob.glob(os.path.join(korn, "statyi", "*.html"))):
     s = io.open(put, encoding="utf-8", newline="").read()
-    s = re.sub(r'\s*<!--[^>]*?-->\s*<script>.*?</script>\s*$', '\r\n', s, flags=re.S)
+    s = re.sub(r'\s*<!-- Кнопки .*$', '\r\n', s, flags=re.S)   # снимаем загрузчик формы и обработчик
     n = s.count('class="ac-kp-trigger"')
     s = s.replace('class="ac-kp-trigger"', f'class="ac-kp-trigger" onclick="{ONCLICK}"')
     assert '<script' not in s and s.count('onclick=') == n, put

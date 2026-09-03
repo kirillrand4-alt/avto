@@ -103,8 +103,15 @@
 </div>
 </div>
 
-<!-- Кнопки "Получить КП" в статье открывают форму Битрикс24 click/7/40ef1t:
-     нажимают ту кнопку сайта, к которой её привязал сам Битрикс24. -->
+<!-- Кнопки "Получить КП" открывают форму Битрикс24 click/7/40ef1t прямо на странице.
+     Загрузчик формы и обработчик кнопок - ниже, трогать не нужно. -->
+<script data-b24-form="click/7/40ef1t" data-skip-moving="true">
+(function(w,d,u){
+var s=d.createElement('script');s.async=true;s.src=u+'?'+(Date.now()/180000|0);
+var h=d.getElementsByTagName('script')[0];h.parentNode.insertBefore(s,h);
+})(window,document,'https://bitrix-po22.ru/upload/crm/form/loader_7_40ef1t.js');
+</script>
+<span class="kp-trigger-yakor" style="display:none" aria-hidden="true"></span>
 <script>
 (function () {
 	if (window.kpTriggerReady) { return; }
@@ -113,19 +120,25 @@
 	var TRIGGER  = "kp-trigger";
 	var B24_FORM = "click/7/40ef1t";
 	var FALLBACK = "https://dali-kompressor.ru/company/contacts/";
-	var WAIT_MS  = 2500;
+	var WAIT_MS  = 6000;
 	var STEP_MS  = 150;
 
-	/* Битрикс24 вешает обработчик на элемент сразу за своим тегом script и
-	   помечает этот script атрибутом data-b24-loaded. */
-	function knopkaSajta() {
-		var scripts = document.querySelectorAll('script[data-b24-form="' + B24_FORM + '"][data-b24-loaded]');
+	/* Битрикс24 вешает обработчик на элемент сразу за тегом script своей формы
+	   и помечает этот script атрибутом data-b24-loaded. Сначала ищем нашу
+	   форму (её загрузчик стоит в конце статьи), потом любую другую на странице. */
+	function posle(selektor) {
+		var scripts = document.querySelectorAll(selektor);
 		for (var i = scripts.length - 1; i >= 0; i--) {
 			var el = scripts[i].nextElementSibling;
 			if (!el || el.tagName === "SCRIPT") { continue; }
 			return (el.querySelector && el.querySelector(".b24-form-click-btn")) || el;
 		}
 		return null;
+	}
+
+	function cel() {
+		return posle('script[data-b24-form="' + B24_FORM + '"][data-b24-loaded]')
+			|| posle('script[data-b24-form^="click/"][data-b24-loaded]');
 	}
 
 	function izTriggera(node) {
@@ -137,15 +150,15 @@
 	}
 
 	function otkryt(waited, link) {
-		var btn = knopkaSajta();
-		if (btn) {
-			/* кнопка сайта часто <a href="#"> - не даём странице прыгнуть наверх */
+		var el = cel();
+		if (el) {
+			/* кнопки сайта часто <a href="#"> - не даём странице прыгнуть наверх */
 			var y = window.pageYOffset;
-			btn.click();
+			el.click();
 			setTimeout(function () { if (Math.abs(window.pageYOffset - y) > 4) { window.scrollTo(0, y); } }, 0);
 			return;
 		}
-		if (waited >= WAIT_MS) {
+		if (waited >= WAIT_MS) {          /* форма так и не поднялась */
 			window.location.href = (link && link.getAttribute("href")) || FALLBACK;
 			return;
 		}
