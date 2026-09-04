@@ -7,3 +7,4 @@ config.json
 seo-texts/audit/_sq.csv
 seo-texts/audit/_crawl-seen.json
 seo-texts/audit/crawl.log
+seo-texts/audit/closure.log
