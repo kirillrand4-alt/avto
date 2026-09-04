@@ -100,11 +100,24 @@ def tag(s, t):
     return html.unescape(re.sub(r'<[^>]+>', ' ', m.group(1))).strip() if m else ''
 
 
-def extract_article(s):
-    """Блок статьи под каталогом: от первого <h2> до конца блока с байлайном.
+def prose_only(block):
+    """Оставить от блока только прозу: заголовки и абзацы, в исходном порядке.
 
-    На сайте три вида страниц: с нашей статьёй (байлайн «Руспром»),
-    с легаси-текстом (h2 есть, байлайна нет), без текста вовсе.
+    У наших статей блок чистый и режется по байлайну. У легаси-страниц статья
+    перемешана с меню, листингом товаров и боковыми блоками, и вырезать её
+    границами нельзя. Зато проза там лежит в <h2>/<h3>/<p>, а навигация - в
+    <a> внутри <li> и <div>. Поэтому берём только эти теги: так и текст для
+    ревью получается читаемым, и ссылки считаются из статьи, а не из меню.
+    """
+    parts = re.findall(r'<(h2|h3|p)\b[^>]*>(.*?)</\1>', block, re.S | re.I)
+    return '\n'.join('<%s>%s</%s>' % (t, c, t) for t, c in parts)
+
+
+def extract_article(s):
+    """Блок статьи под каталогом.
+
+    Три вида страниц: с нашей статьёй (байлайн «Руспром»), с легаси-текстом
+    (h2 есть, байлайна нет), без текста вовсе.
     """
     i = s.find('<h2')
     if i < 0:
@@ -112,12 +125,13 @@ def extract_article(s):
     j = s.find('Руспром')
     if j > i:
         end = s.find('</div>', j)
-        block = s[i:end if end > 0 else j + 500]
-        kind = 'ours'
-    else:
-        block = s[i:]
-        kind = 'legacy'
-    return {'kind': kind, 'html': block}
+        return {'kind': 'ours', 'html': s[i:end if end > 0 else j + 500]}
+    cut = len(s)
+    for mark in ('<footer', 'id="footer"', 'class="footer'):
+        k = s.find(mark, i)
+        if k > i:
+            cut = min(cut, k)
+    return {'kind': 'legacy', 'html': prose_only(s[i:cut])}
 
 
 def facets(s):

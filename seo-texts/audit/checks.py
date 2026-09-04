@@ -38,12 +38,16 @@ def main():
         d = json.load(open(f))
         pay['https://prokompressor.ru' + d['url']] = d
 
-    # дубли метатегов по сайту
-    tcnt = collections.Counter(r['title'].strip() for r in inv if r['title'].strip())
-    dcnt = collections.Counter(r['description'].strip() for r in inv if r['description'].strip())
+    # Дубли-редиректы (старые фильтровые пути) - не самостоятельные разделы:
+    # у них тот же title и та же статья, что у канонического адреса, поэтому
+    # в подсчёт дублей метатегов они не идут, иначе каждый канон ложно
+    # помечался бы дублем самого себя.
+    canon = [r for r in inv if not r.get('is_duplicate')]
+    tcnt = collections.Counter(r['title'].strip() for r in canon if r['title'].strip())
+    dcnt = collections.Counter(r['description'].strip() for r in canon if r['description'].strip())
     # повторы FAQ-вопросов
     faq = collections.Counter()
-    for r in inv:
+    for r in canon:
         for q in faq_questions(r):
             faq[q] += 1
 
@@ -52,9 +56,21 @@ def main():
         u, p = r['url'], r['path']
         k = keys.get(u, {})
         c = {'url': u, 'path': p, 'depth': r['depth'], 'h1': r['h1'],
+             'is_duplicate': bool(r.get('is_duplicate')),
+             'canonical_target': r.get('canonical_target', ''),
+             'page_kind': r.get('page_kind', ''),
              'article_kind': r['article_kind'], 'article_chars': r['article_chars'],
              'h2_count': len(r['h2']), 'faq_schema': r['has_faq_schema'],
              'byline': r['byline'], 'flags': [], 'notes': []}
+
+        if r.get('is_duplicate'):
+            c['flags'].append('ДУБЛЬ_РЕДИРЕКТ')
+            c['notes'].append('склеен с ' + r.get('canonical_target', ''))
+            c['shows'] = k.get('shows_total', 0)
+            c['clicks'] = k.get('clicks_total', 0)
+            c['priority'] = 3
+            out.write(json.dumps(c, ensure_ascii=False) + '\n')
+            continue
 
         # 1. наличие статьи
         if r['article_kind'] == 'none':
@@ -78,9 +94,6 @@ def main():
             c['flags'].append(f'TITLE_ДУБЛЬ_x{tcnt[t]}')
         if d and dcnt[d] > 1:
             c['flags'].append(f'DESC_ДУБЛЬ_x{dcnt[d]}')
-        if r['canonical'] and r['canonical'].rstrip('/') != u.rstrip('/'):
-            c['flags'].append('CANONICAL_ЧУЖОЙ')
-            c['notes'].append('canonical -> ' + r['canonical'])
 
         # 3. стайлгайд
         b = r.get('article_html', '')
