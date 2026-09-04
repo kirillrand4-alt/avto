@@ -22,10 +22,13 @@ import sender.probe_sync as PS                  # noqa: E402
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 
-петля = build_addr_probe(store, cfg)
-ps = PS.build_probe_sync(store, getattr(петля, "probe_", петля), cfg)
-взято = ps.забрать()
-print("забрано у работника: %s" % взято)
+# забрать() тянет и разбирает весь файл результатов работника и не
+# укладывается в 900 секунд раннера. Разделили: сбор идёт отдельным
+# запуском, здесь только решение по тем вердиктам, что уже в базе.
+if (sys.argv[2] if len(sys.argv) > 2 else "") == "забрать":
+    петля = build_addr_probe(store, cfg)
+    ps = PS.build_probe_sync(store, getattr(петля, "probe_", петля), cfg)
+    print("забрано у работника: %s" % ps.забрать())
 
 c = sqlite3.connect(r"C:\sender\sender.db")
 c.row_factory = sqlite3.Row
