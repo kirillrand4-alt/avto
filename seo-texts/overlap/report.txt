@@ -206,7 +206,7 @@ enger-air.ru               crossair-compressor.ru         222     6.4%    0.6%  
    2,704  винтовой компрессор берг
           berg-c.com 1912/542/поз7 | berg-k.ru 756/1/поз12 | PROKOMPRESSOR 36/0/поз17
    2,618  компрессор центр
-          PROKOMPRESSOR 2552/280/поз2 | barnaul.pk 59/2/поз1 | vladivostok.pk 3/1/поз1 | enger-air.ru 3/0/поз32 | ac-k.ru 1/0/поз50
+          PROKOMPRESSOR 2552/280/поз2 | barnaul.pk 59/2/поз1 | enger-air.ru 3/0/поз32 | vladivostok.pk 3/1/поз1 | ac-k.ru 1/0/поз50
    2,513  компрессоры berg
           berg-c.com 1750/629/поз12 | berg-k.ru 685/4/поз13 | PROKOMPRESSOR 78/0/поз23
    2,440  comaro

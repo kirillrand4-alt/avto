@@ -21,6 +21,12 @@ OUT = sys.argv[2] if len(sys.argv) > 2 else "."
 WS = re.compile(r"\s+")
 
 
+def num(x, nd=1):
+    """Число для CSV: десятичная запятая. С точкой русский Excel читает
+    17.6 как дату 17 июня и портит колонку позиций."""
+    return f"{x:.{nd}f}".replace(".", ",")
+
+
 def norm(q):
     return WS.sub(" ", q.strip().lower().replace("ё", "е"))
 

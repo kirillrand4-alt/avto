@@ -78,8 +78,8 @@ def main():
                     "доля показов B на общих %", "показов на общих запросах"])
         for p in sorted(pairs, key=lambda x: -x["shared"]):
             w.writerow([p["a"], p["b"], p["n_a"], p["n_b"], p["shared"],
-                        f"{p['overlap']*100:.2f}", f"{p['jaccard']*100:.2f}",
-                        f"{p['imp_share_a']*100:.2f}", f"{p['imp_share_b']*100:.2f}", p["imp_shared"]])
+                        bo.num(p["overlap"]*100, 2), bo.num(p["jaccard"]*100, 2),
+                        bo.num(p["imp_share_a"]*100, 2), bo.num(p["imp_share_b"]*100, 2), p["imp_shared"]])
 
     # квадратная матрица «доля показов A на запросах, что есть и у B»
     with open(os.path.join(OUT, "peresechenie-kvadrat.csv"), "w", newline="", encoding="utf-8-sig") as fh:
@@ -90,7 +90,7 @@ def main():
             pm[(p["a"], p["b"])] = p["imp_share_a"]
             pm[(p["b"], p["a"])] = p["imp_share_b"]
         for a in sites:
-            w.writerow([a] + [("" if a == b else f"{pm.get((a,b),0)*100:.1f}") for b in sites])
+            w.writerow([a] + [("" if a == b else bo.num(pm.get((a, b), 0)*100)) for b in sites])
 
     # ---------- самые дорогие спорные запросы ----------
     contested = []
@@ -115,7 +115,7 @@ def main():
         w.writerow(["запрос", "сайтов", "показов всего", "кликов всего", "сайты (показы/клики/позиция)"])
         for imp, q, ds in contested:
             clk = sum(agg[(d, q)][1] for d in ds)
-            det = " | ".join(f"{d} {agg[(d,q)][0]}/{agg[(d,q)][1]}/{agg[(d,q)][2]:.1f}" for d in ds)
+            det = " | ".join(f"{d} {agg[(d,q)][0]}/{agg[(d,q)][1]}/{bo.num(agg[(d,q)][2])}" for d in ds)
             w.writerow([q, len(ds), imp, clk, det])
     print(f"\nCSV: peresechenie-matrica.csv, peresechenie-kvadrat.csv, "
           f"spornye-zaprosy.csv ({len(contested):,} строк)")

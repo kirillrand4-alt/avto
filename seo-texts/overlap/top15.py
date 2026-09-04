@@ -40,8 +40,8 @@ for s in sites:
     py, pg = wpos(s, qs, agg_ya), wpos(s, qs, agg_go)
     nb = {o for o in sites if o != s and topset[s] & allset[o]}
     shared = sum(1 for q in qs if any((o, q) in agg_all for o in sites if o != s))
-    table.append([s, i, f"{i/tot*100:.1f}", c,
-                  f"{py:.1f}" if py else "", f"{pg:.1f}" if pg else "", shared, len(nb)])
+    table.append([s, i, bo.num(i/tot*100), c,
+                  bo.num(py) if py else "", bo.num(pg) if pg else "", shared, len(nb)])
     print(f"{s:<30}{i:>14,}{i/tot*100:>10.1f}%{c:>8,}"
           f"{(f'{py:.1f}' if py else '—'):>12}{(f'{pg:.1f}' if pg else '—'):>12}"
           f"{shared:>21}{len(nb):>16}")
@@ -90,6 +90,6 @@ with open(os.path.join(OUT, "top15-zaprosy.csv"), "w", newline="", encoding="utf
                       if o != s and (o, q) in agg_all]
             py = agg_ya.get((s, q)); pg = agg_go.get((s, q))
             w.writerow([s, k, q, idx[s][q][0], idx[s][q][1],
-                        f"{py[2]:.1f}" if py else "", f"{pg[2]:.1f}" if pg else "",
+                        bo.num(py[2]) if py else "", bo.num(pg[2]) if pg else "",
                         ", ".join(others)])
 print("\nCSV: top15-pozicii.csv, top15-matrica.csv, top15-zaprosy.csv")

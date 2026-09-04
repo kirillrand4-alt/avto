@@ -47,9 +47,9 @@ for s in sites:
             second_i += v[0]
             second_q += 1
     top = partner.most_common(1)
-    out.append([s, len(qs), imp, clk, f"{uniq_i/imp*100:.1f}", f"{uniq_c/max(clk,1)*100:.1f}",
-                f"{second_i/imp*100:.1f}", second_q,
-                top[0][0] if top else "", f"{top[0][1]/imp*100:.1f}" if top else ""])
+    out.append([s, len(qs), imp, clk, bo.num(uniq_i/imp*100), bo.num(uniq_c/max(clk,1)*100),
+                bo.num(second_i/imp*100), second_q,
+                top[0][0] if top else "", bo.num(top[0][1]/imp*100) if top else ""])
 
 hdr = ["сайт", "запросов", "показов", "кликов", "уникальные показы %", "уникальные клики %",
        "показы вторым номером %", "запросов вторым номером", "главный сосед", "показов пересечено с ним %"]
@@ -58,4 +58,4 @@ with open(os.path.join(OUT, "svodka-po-saytam.csv"), "w", newline="", encoding="
 
 print(f"\n{'сайт':<30}{'показов':>9}{'уник.показы':>13}{'уник.клики':>12}{'вторым №':>10}  главный сосед")
 for r in out:
-    print(f"{r[0]:<30}{r[2]:>9,}{r[4]+'%':>13}{r[5]+'%':>12}{r[6]+'%':>10}  {r[8]} ({r[9]}%)")
+    print(f"{r[0]:<30}{r[2]:>9,}{r[4]+chr(37):>13}{r[5]+chr(37):>12}{r[6]+chr(37):>10}  {r[8]} ({r[9]}%)")
