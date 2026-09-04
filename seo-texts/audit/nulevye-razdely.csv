@@ -1,0 +1,182 @@
+﻿url;h1;группа;статья;знаков;позиций_в_razdele;флаги
+/catalog/azotnye-stantsii/modulnye-azotnye-stantsii/;Модульные азотные станции;azotnye-stantsii;legacy;6798;2;СТАТЬЯ_НЕ_НАША
+/catalog/azotnye-stantsii/azotno-kislorodnye-stantsii/;Азотно-кислородные станции;azotnye-stantsii;legacy;6204;2;СТАТЬЯ_НЕ_НАША|БИТЫХ_ССЫЛОК_1
+/catalog/azotnye-stantsii/;Азотные станции и установки;azotnye-stantsii;legacy;10456;2;СТАТЬЯ_НЕ_НАША|БИТЫХ_ССЫЛОК_1
+/catalog/generatsiya-gazov/;Генерация газов;generatsiya-gazov;ours;4799;23;DESC_ДЛИНА_196
+/catalog/kislorodnye-stantsii/modulnye-kislorodnye-stantsii/;Модульные кислородные станции;kislorodnye-stantsii;legacy;7275;2;СТАТЬЯ_НЕ_НАША|DESC_ДЛИНА_166
+/catalog/kislorodnye-stantsii/;Кислородные станции и установки;kislorodnye-stantsii;legacy;9615;2;СТАТЬЯ_НЕ_НАША|БИТЫХ_ССЫЛОК_2
+/catalog/kompressornye-stantsii-szhatogo-vozdukha/dozhimnye-stantsii/;Дожимные станции сжатого воздуха;kompressornye-stantsii-szhatogo-vozdukha;legacy;3675;2;СТАТЬЯ_НЕ_НАША|DESC_ДЛИНА_166
+/catalog/kompressornye-stantsii-szhatogo-vozdukha/mobilnye-kompressornye-stantsii/;Мобильные компрессорные станции - дизельные и электрические;kompressornye-stantsii-szhatogo-vozdukha;legacy;9113;2;СТАТЬЯ_НЕ_НАША|TITLE_ДЛИНА_86|DESC_ДЛИНА_190|БИТЫХ_ССЫЛОК_1
+/catalog/osushiteli/adsorbtsionnye/dali_osush/;Адсорбционные осушители DALI;osushiteli;ours;4505;25;
+/catalog/osushiteli/adsorbtsionnye/das_osush/;Адсорбционные осушители сжатого воздуха DAS;osushiteli;ours;4588;16;
+/catalog/osushiteli/adsorbtsionnye/ekomak_osush/;Адсорбционные осушители Ekomak;osushiteli;ours;4797;25;DESC_ДЛИНА_227
+/catalog/osushiteli/adsorbtsionnye/enger_2/kholodnoy-regeneratsii/modulnogo-tipa_1/;Адсорбционные осушители холодной регенерации модульного типа;osushiteli;ours;4696;27;TITLE_ДЛИНА_78|DESC_ДЛИНА_224
+/catalog/osushiteli/adsorbtsionnye/evrazkompressor/;Адсорбционные осушители ЕвразКомпрессор;osushiteli;ours;4685;25;TITLE_ДЛИНА_73|DESC_ДЛИНА_236
+/catalog/osushiteli/adsorbtsionnye/kraftmachine_osush/;Адсорбционные осушители KRAFTMACHINE для сжатого воздуха;osushiteli;ours;4723;25;
+/catalog/osushiteli/adsorbtsionnye/ozen_osush/;Адсорбционные осушители OZEN;osushiteli;ours;4603;25;DESC_ДЛИНА_225
+/catalog/osushiteli/refrizheratornye/dalgakiran/;Рефрижераторные осушители DALGAKIRAN;osushiteli;ours;4070;25;DESC_ДЛИНА_233
+/catalog/osushiteli/refrizheratornye/dali/;Рефрижераторные осушители DALI;osushiteli;ours;4915;25;DESC_ДЛИНА_227
+/catalog/osushiteli/refrizheratornye/das/;Рефрижераторные осушители DAS;osushiteli;ours;4827;25;DESC_ДЛИНА_226
+/catalog/osushiteli/refrizheratornye/ekomak/;Рефрижераторные осушители Ekomak;osushiteli;ours;4327;25;
+/catalog/osushiteli/refrizheratornye/evrazkompressor/;Рефрижераторные осушители ЕвразКомпрессор;osushiteli;ours;4985;25;TITLE_ДЛИНА_75|DESC_ДЛИНА_238
+/catalog/osushiteli/refrizheratornye/fiac/;Рефрижераторные осушители FIAC;osushiteli;ours;4641;24;DESC_ДЛИНА_227
+/catalog/osushiteli/refrizheratornye/kraftmachine/;Рефрижераторные осушители KRAFTMACHINE;osushiteli;ours;4766;25;TITLE_ДЛИНА_72|DESC_ДЛИНА_235
+/catalog/osushiteli/refrizheratornye/pneumatech/;Рефрижераторные осушители Pneumatech;osushiteli;ours;4871;17;DESC_ДЛИНА_233
+/catalog/osushiteli/refrizheratornye/ozen/;Рефрижераторные осушители OZEN;osushiteli;ours;5125;24;DESC_ДЛИНА_227
+/catalog/podgotovka-vozdukha/dookhladiteli/ats/;Доохладители ATS;podgotovka-vozdukha;ours;4586;25;DESC_ДЛИНА_197
+/catalog/podgotovka-vozdukha/filtry-magistralnye/almig/;Фильтры магистральные ALMiG;podgotovka-vozdukha;ours;4562;25;DESC_ДЛИНА_200
+/catalog/podgotovka-vozdukha/filtry-magistralnye/bezhetsk/;Фильтры магистральные Бежецк;podgotovka-vozdukha;ours;4017;18;DESC_ДЛИНА_201
+/catalog/podgotovka-vozdukha/kondensatootvodchiki/comprag/;Конденсатоотводчики Comprag;podgotovka-vozdukha;ours;4686;12;DESC_ДЛИНА_185
+/catalog/podgotovka-vozdukha/kondensatootvodchiki/remeza/;Конденсатоотводчики Remeza;podgotovka-vozdukha;ours;4390;6;DESC_ДЛИНА_184
+/catalog/podgotovka-vozdukha/maslovlagorazdeliteli/almig/;Масловлагоотделители ALMiG для компрессоров;podgotovka-vozdukha;ours;3667;10;
+/catalog/podgotovka-vozdukha/maslovlagorazdeliteli/comprag/;Масловлагоразделители Comprag;podgotovka-vozdukha;ours;4618;8;DESC_ДЛИНА_165
+/catalog/podgotovka-vozdukha/maslovlagorazdeliteli/rkz/;Масловлагоразделители РКЗ;podgotovka-vozdukha;ours;4650;25;DESC_ДЛИНА_161
+/catalog/podgotovka-vozdukha/separatory-tsentrobezhnye-tsiklonnye/almig/;Циклонные сепараторы ALMiG;podgotovka-vozdukha;ours;4849;18;TITLE_ДЛИНА_78|DESC_ДЛИНА_176
+/catalog/podgotovka-vozdukha/separatory-tsentrobezhnye-tsiklonnye/ats/;Циклонные сепараторы ATS;podgotovka-vozdukha;ours;5022;19;TITLE_ДЛИНА_76|DESC_ДЛИНА_174
+/catalog/podgotovka-vozdukha/separatory-tsentrobezhnye-tsiklonnye/comprag/;Циклонные сепараторы Comprag;podgotovka-vozdukha;ours;4424;15;TITLE_ДЛИНА_80|DESC_ДЛИНА_178
+/catalog/podgotovka-vozdukha/separatory-tsentrobezhnye-tsiklonnye/kraftmann/;Циклонные сепараторы KRAFTMANN;podgotovka-vozdukha;ours;4152;19;TITLE_ДЛИНА_82|DESC_ДЛИНА_180
+/catalog/podgotovka-vozdukha/separatory-tsentrobezhnye-tsiklonnye/pneumatech/;Циклонные сепараторы Pneumatech;podgotovka-vozdukha;ours;4711;25;TITLE_ДЛИНА_83|DESC_ДЛИНА_181
+/catalog/podgotovka-vozdukha/separatory-tsentrobezhnye-tsiklonnye/remeza/;Циклонные сепараторы Remeza;podgotovka-vozdukha;ours;4533;11;TITLE_ДЛИНА_79|DESC_ДЛИНА_177
+/catalog/raskhodomery-i-datchiki/difmanometry/;Дифманометры;raskhodomery-i-datchiki;none;0;2;НЕТ_СТАТЬИ|DESC_ДЛИНА_175
+/catalog/raskhodomery-i-datchiki/datchiki/;Датчики;raskhodomery-i-datchiki;ours;4530;6;DESC_ДЛИНА_170
+/catalog/raskhodomery-i-datchiki/raskhodomery/;Расходомеры;raskhodomery-i-datchiki;ours;4533;24;DESC_ДЛИНА_174
+/catalog/zapasnye-chasti-i-raskhodniki/kontrollery/;Воздушные фильтры для компрессоров;zapasnye-chasti-i-raskhodniki;ours;4952;17;TITLE_ДУБЛЬ_x11|DESC_ДУБЛЬ_x11
+/catalog/zapasnye-chasti-i-raskhodniki/maslyanye-filtry/atmos/;Масляные фильтры Atmos;zapasnye-chasti-i-raskhodniki;ours;4773;8;DESC_ДЛИНА_239
+/catalog/zapasnye-chasti-i-raskhodniki/maslyanye-filtry/comaro/;Масляные фильтры COMARO;zapasnye-chasti-i-raskhodniki;ours;4646;11;DESC_ДЛИНА_240
+/catalog/zapasnye-chasti-i-raskhodniki/maslyanye-filtry/comprag/;Масляные фильтры Comprag;zapasnye-chasti-i-raskhodniki;ours;4629;10;DESC_ДЛИНА_241
+/catalog/zapasnye-chasti-i-raskhodniki/separatory-maslootdeliteli/atmos/;Сепараторы (маслоотделители) Atmos;zapasnye-chasti-i-raskhodniki;ours;4343;8;DESC_ДЛИНА_243
+/catalog/zapasnye-chasti-i-raskhodniki/vozdushnye-filtry/atmos/;Воздушные фильтры Atmos;zapasnye-chasti-i-raskhodniki;ours;3846;8;DESC_ДЛИНА_240
+/catalog/zapasnye-chasti-i-raskhodniki/vozdushnye-filtry/sotras/;Воздушные фильтры Sotras;zapasnye-chasti-i-raskhodniki;ours;3929;25;DESC_ДЛИНА_241
+/catalog/vozdushnye-kompressory/po-komplektatsii/;Компрессоры по комплектации;ВК / po-komplektatsii;ours;4851;24;DESC_ДЛИНА_190
+/catalog/vozdushnye-kompressory/po-komplektatsii/bazovoe-ispolnenie/;Компрессоры на раме (базовое исполнение);ВК / po-komplektatsii;legacy;1721;25;СТАТЬЯ_НЕ_НАША|DESC_ДЛИНА_178
+/catalog/vozdushnye-kompressory/po-moshchnosti/100-kvt/;Компрессоры 100 кВт;ВК / po-moshchnosti;ours;4557;24;
+/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-peskostruya/soplo-6-5-mm/;Винтовые компрессоры для пескоструя (сопло 6,5 мм);ВК / po-naznacheniyu;legacy;1819;24;СТАТЬЯ_НЕ_НАША|ДЛИННОЕ_ТИРЕ
+/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-vyduva-pet/16-bar-1/;Компрессоры для выдува ПЭТ 16 бар;ВК / po-naznacheniyu;ours;4922;26;DESC_ДЛИНА_262
+/catalog/vozdushnye-kompressory/po-naznacheniyu/dlya-vyduva-pet/vd-vyshe-40-bar/;Компрессоры для выдува ПЭТ выше 40 бар;ВК / po-naznacheniyu;ours;4729;26;TITLE_ДЛИНА_72|DESC_ДЛИНА_267
+/catalog/vozdushnye-kompressory/po-tipu/kompressornye-stantsii/modulnye/;Модульные компрессорные станции;ВК / po-tipu;legacy;3222;3;СТАТЬЯ_НЕ_НАША|DESC_ДЛИНА_178|TITLE_ДУБЛЬ_x3|DESC_ДУБЛЬ_x3
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/odnostupenchatye/;Компрессоры одноступенчатые;ВК / po-tipu;none;0;2;НЕТ_СТАТЬИ|DESC_ДЛИНА_191
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/peredvizhnye/dizelnye_1/;Передвижные дизельные компрессоры;ВК / po-tipu;none;0;2;НЕТ_СТАТЬИ|DESC_ДЛИНА_197
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/peredvizhnye/elektricheskie/bezhetsk_elektro/;Передвижные электрические компрессоры Бежецк;ВК / po-tipu;ours;4096;14;TITLE_ДЛИНА_78|DESC_ДЛИНА_208
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/peredvizhnye/elektricheskie/zega_2/;Передвижные электрические компрессоры ZEGA;ВК / po-tipu;ours;4944;28;TITLE_ДЛИНА_76|DESC_ДЛИНА_206
+/catalog/vozdushnye-kompressory/po-tipu/bustery/kraftmann/;Дожимающие компрессоры (бустеры) KRAFTMANN;ВК / po-tipu;ours;4897;26;DESC_ДЛИНА_201
+/catalog/vozdushnye-kompressory/po-tipu/nizkogo-davleniya/dalgakiran/;Компрессоры низкого давления DALGAKIRAN;ВК / po-tipu;ours;4471;26;TITLE_ДУБЛЬ_x5|DESC_ДУБЛЬ_x5
+/catalog/vozdushnye-kompressory/po-tipu/nizkogo-davleniya/dali/;Компрессоры низкого давления DALI;ВК / po-tipu;ours;5276;26;TITLE_ДУБЛЬ_x5|DESC_ДУБЛЬ_x5
+/catalog/vozdushnye-kompressory/po-tipu/nizkogo-davleniya/enger/;Компрессоры низкого давления Enger;ВК / po-tipu;ours;4919;26;TITLE_ДУБЛЬ_x5|DESC_ДУБЛЬ_x5
+/catalog/vozdushnye-kompressory/po-tipu/nizkogo-davleniya/zega/;Компрессоры низкого давления ZEGA;ВК / po-tipu;ours;4840;18;TITLE_ДУБЛЬ_x5|DESC_ДУБЛЬ_x5
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/100-to-132/;Винтовые компрессоры 100 кВт;ВК / po-tipu;ours;4635;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/10000-to-10000/;Винтовые компрессоры производительностью 10000 л/мин;ВК / po-tipu;ours;4827;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/110-to-110/;Винтовые компрессоры 110 кВт;ВК / po-tipu;ours;4142;26;TITLE_ДУБЛЬ_x2
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/11-to-11/;Винтовые компрессоры 11 кВт;ВК / po-tipu;ours;4818;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/15000-to-15000/;Винтовые компрессоры производительностью 15 м3/мин (15000 л/мин);ВК / po-tipu;ours;4841;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/185-to-185/;Винтовые компрессоры 185 кВт;ВК / po-tipu;ours;4769;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/200-to-200/;Винтовые компрессоры с ресивером 200 л;ВК / po-tipu;ours;4917;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/2000-to-2000/;Винтовые компрессоры производительностью 2000 л/мин;ВК / po-tipu;ours;4739;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/20000-to-20000/;Винтовые компрессоры производительностью 20000 л/мин;ВК / po-tipu;ours;4269;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/220-230/;Винтовые компрессоры 220/230 В;ВК / po-tipu;ours;3903;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/220-to-220/;Винтовые компрессоры 220 кВт;ВК / po-tipu;ours;4031;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/250-to-250/;Винтовые компрессоры с ресивером 250 л;ВК / po-tipu;ours;4470;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/23000-to-23000/;Винтовые компрессоры производительностью 23000 л/мин;ВК / po-tipu;ours;4357;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/225-to-225/;Винтовые компрессоры 225 кВт;ВК / po-tipu;ours;4817;10;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/400-to-400/;Винтовые компрессоры с ресивером 400 л;ВК / po-tipu;ours;4830;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/380-380-660-400/;Винтовые компрессоры 380 В;ВК / po-tipu;ours;4847;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/airbox/;Винтовые компрессоры Airbox;ВК / po-tipu;ours;3780;12;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/airman/;Винтовые компрессоры Airman;ВК / po-tipu;ours;4734;25;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/ariacom/;Винтовые компрессоры ARIACOM;ВК / po-tipu;ours;4962;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/belarus/;Белорусские винтовые компрессоры;ВК / po-tipu;ours;4950;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/atom/;Винтовые компрессоры ATOM;ВК / po-tipu;ours;4863;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/berg/;Винтовые компрессоры BERG;ВК / po-tipu;ours;5067;26;DESC_ДЛИНА_205
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/aztec/;Винтовые компрессоры AZTEC;ВК / po-tipu;ours;4602;13;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/bez-osushitelya-na-resivere-bez-chastotnogo-preobrazovatelya/;Винтовые компрессоры базового исполнения;ВК / po-tipu;ours;4022;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/bez-resivera/;Винтовые компрессоры без ресивера;ВК / po-tipu;ours;4208;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/chekhiya/;Чешские винтовые компрессоры;ВК / po-tipu;ours;4663;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/bez-osushitelya-na-resivere/;Винтовые компрессоры без осушителя на ресивере;ВК / po-tipu;ours;4892;26;DESC_ДЛИНА_165
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/bezhetsk/;Винтовые компрессоры Бежецк;ВК / po-tipu;ours;4703;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/comaro/;Винтовые компрессоры COMARO;ВК / po-tipu;ours;4341;26;TITLE_ДУБЛЬ_x2
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/comprag/;Винтовые компрессоры Comprag;ВК / po-tipu;ours;4624;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/das/;Винтовые компрессоры DAS;ВК / po-tipu;ours;4625;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/15-to-15/;Дизельные винтовые компрессоры 15 кВт;ВК / po-tipu;ours;4907;7;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/belarus/;Белорусские дизельные винтовые компрессоры;ВК / po-tipu;ours;4603;24;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/bezhetsk/;Дизельные компрессоры Бежецк;ВК / po-tipu;ours;4830;9;DESC_ДЛИНА_178
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/chekhiya/;Чешские дизельные винтовые компрессоры;ВК / po-tipu;ours;4550;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/das/;Дизельные компрессоры DAS;ВК / po-tipu;ours;4814;11;DESC_ДЛИНА_175
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/kraftmachine/;Дизельные компрессоры KRAFTMACHINE;ВК / po-tipu;ours;4900;27;DESC_ДЛИНА_184
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/minskiy-motornyy-zavod/;Дизельные компрессоры Минский моторный завод;ВК / po-tipu;ours;4902;20;TITLE_ДЛИНА_79|DESC_ДЛИНА_194
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/ozen/;Дизельные компрессоры OZEN;ВК / po-tipu;ours;4353;14;DESC_ДЛИНА_176
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/polsha/;Польские дизельные винтовые компрессоры;ВК / po-tipu;ours;4386;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/rossiya/;Российские дизельные винтовые компрессоры;ВК / po-tipu;ours;4711;27;TITLE_ДЛИНА_72
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/turtsiya/;Турецкие дизельные винтовые компрессоры;ВК / po-tipu;ours;4498;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dizelnye/shvetsiya/;Шведские дизельные винтовые компрессоры;ВК / po-tipu;ours;4411;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dvukhstupenchatye/dalgakiran/;Двухступенчатые компрессоры DALGAKIRAN;ВК / po-tipu;ours;4341;27;TITLE_ДЛИНА_73|DESC_ДЛИНА_185
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/dvukhstupenchatye/enger/;Двухступенчатые винтовые компрессоры Enger;ВК / po-tipu;ours;4606;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/ekomak/;Винтовые компрессоры Ekomak;ВК / po-tipu;ours;4280;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/18.5-to-18.5/;Электрические винтовые компрессоры 18,5 кВт;ВК / po-tipu;ours;4257;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/30-to-30/;Электрические винтовые компрессоры 30 кВт;ВК / po-tipu;ours;4268;27;TITLE_ДЛИНА_72
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/30000-to-30000/;Электрические винтовые компрессоры производительностью 30 м3/мин (30000 л/мин);ВК / po-tipu;ours;4422;27;TITLE_ДЛИНА_77
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/400-to-400/;Электрические винтовые компрессоры с ресивером 400 л;ВК / po-tipu;ours;4758;27;БИТЫХ_ССЫЛОК_1
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/7-to-7/;Электрические винтовые компрессоры 7 кВт;ВК / po-tipu;ours;4939;27;TITLE_ДЛИНА_71
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/800-to-800/;Электрические винтовые компрессоры производительностью 800 л/мин;ВК / po-tipu;ours;4674;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/belarus/;Белорусские электрические винтовые компрессоры;ВК / po-tipu;ours;4375;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/bez-resivera/;Электрические винтовые компрессоры без ресивера;ВК / po-tipu;ours;4486;27;DESC_ДЛИНА_166
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/bez-osushitelya-na-resivere-bez-chastotnogo-preobrazovatelya/;Электрические винтовые компрессоры базового исполнения;ВК / po-tipu;ours;4401;27;TITLE_ДЛИНА_73|DESC_ДЛИНА_161
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/bez-osushitelya-na-resivere/;Электрические винтовые компрессоры без осушителя на ресивере;ВК / po-tipu;ours;4289;27;DESC_ДЛИНА_165
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/bezhetsk/;Электрические винтовые компрессоры Бежецк;ВК / po-tipu;ours;4456;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/bezmaslyanyy/;Безмасляные электрические винтовые компрессоры;ВК / po-tipu;ours;3733;27;TITLE_ДЛИНА_71
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/chekhiya/;Чешские электрические винтовые компрессоры;ВК / po-tipu;ours;4607;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/das/;Электрические винтовые компрессоры DAS;ВК / po-tipu;ours;4836;27;DESC_ДЛИНА_215
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/germaniya-rossiya/;Немецкие и российские электрические винтовые компрессоры;ВК / po-tipu;ours;4935;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/germaniya/;Немецкие электрические винтовые компрессоры;ВК / po-tipu;ours;4484;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/italiya-kitay/;Итальянские и китайские электрические винтовые компрессоры;ВК / po-tipu;ours;4183;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/italiya/;Итальянские электрические винтовые компрессоры;ВК / po-tipu;ours;4905;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/kompressory-10-bar/;Электрические винтовые компрессоры 10 бар;ВК / po-tipu;ours;4256;27;TITLE_ДЛИНА_72
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/kraftmachine/;Электрические винтовые компрессоры KRAFTMACHINE;ВК / po-tipu;ours;4557;27;DESC_ДЛИНА_224
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/na-resivere/;Электрические винтовые компрессоры на ресивере;ВК / po-tipu;ours;4445;27;DESC_ДЛИНА_165
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/polsha/;Польские электрические винтовые компрессоры;ВК / po-tipu;ours;4898;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/remennyy/;Электрические винтовые компрессоры с ременным приводом;ВК / po-tipu;ours;3725;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/pryamoy/;Электрические винтовые компрессоры с прямым приводом;ВК / po-tipu;ours;4628;27;TITLE_ДЛИНА_71
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/rkz/;Электрические винтовые компрессоры РКЗ;ВК / po-tipu;ours;4540;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/rossiya/;Российские электрические винтовые компрессоры;ВК / po-tipu;ours;4793;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/s-osushitelem-na-resivere/;Электрические винтовые компрессоры с осушителем на ресивере;ВК / po-tipu;ours;4388;27;DESC_ДЛИНА_164
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/turtsiya-belgiya/;Турецкие и бельгийские электрические винтовые компрессоры;ВК / po-tipu;ours;4289;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/s-chastotnym-preobrazovatelem/;Электрические винтовые компрессоры с частотным преобразователем;ВК / po-tipu;ours;4586;27;DESC_ДЛИНА_168
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/s-osushitelem/;Электрические винтовые компрессоры с осушителем;ВК / po-tipu;ours;4635;27;DESC_ДЛИНА_166
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/turtsiya/;Турецкие электрические винтовые компрессоры;ВК / po-tipu;ours;4980;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/zega/;Электрические винтовые компрессоры ZEGA;ВК / po-tipu;ours;4867;27;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/fiac/;Винтовые компрессоры FIAC;ВК / po-tipu;ours;3763;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/fini/;Винтовые компрессоры Fini;ВК / po-tipu;ours;4342;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/germaniya-rossiya/;Немецкие и российские винтовые компрессоры;ВК / po-tipu;ours;4633;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/germaniya/;Немецкие винтовые компрессоры;ВК / po-tipu;ours;4128;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/italiya-kitay/;Итальянские и китайские винтовые компрессоры;ВК / po-tipu;ours;4671;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/kitay/;Китайские винтовые компрессоры;ВК / po-tipu;ours;4857;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/kraftmann/;Винтовые компрессоры KRAFTMANN;ВК / po-tipu;ours;5115;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/mark/;Винтовые компрессоры MARK;ВК / po-tipu;ours;4204;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/peredvizhnye/zega/;Передвижные винтовые компрессоры ZEGA;ВК / po-tipu;ours;4614;27;TITLE_ДЛИНА_72|DESC_ДЛИНА_191
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/peredvizhnye/zif/;Передвижные винтовые компрессоры ЗИФ;ВК / po-tipu;ours;4389;27;TITLE_ДЛИНА_71|DESC_ДЛИНА_190
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/polsha/;Польские винтовые компрессоры;ВК / po-tipu;ours;4358;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/turtsiya/;Турецкие винтовые компрессоры;ВК / po-tipu;ours;4556;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/shvetsiya/;Шведские винтовые компрессоры;ВК / po-tipu;ours;4372;26;
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/ultratech/;Винтовые компрессоры ULTRATECH;ВК / po-tipu;ours;4599;26;
+/catalog/vozdushnye-kompressory/po-tipu/vozdukhoduvki/rotornye/;Промышленные воздуходувки;ВК / po-tipu;none;0;26;НЕТ_СТАТЬИ|TITLE_ДУБЛЬ_x3|DESC_ДУБЛЬ_x3
+/catalog/vozdushnye-kompressory/po-tipu/vintovye/zega/;Винтовые компрессоры ZEGA;ВК / po-tipu;ours;4853;26;
+/catalog/vozdushnye-kompressory/po-tipu/vozdukhoduvki/vintovye_2/;Промышленные воздуходувки;ВК / po-tipu;none;0;26;НЕТ_СТАТЬИ|TITLE_ДУБЛЬ_x3|DESC_ДУБЛЬ_x3
+/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya/atmos/;Компрессоры высокого давления Atmos;ВК / po-tipu;ours;4868;8;DESC_ДЛИНА_199
+/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya/dali/;Компрессоры высокого давления DALI;ВК / po-tipu;ours;5004;26;DESC_ДЛИНА_198
+/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya/et-compressors/;Компрессоры высокого давления ET Compressors;ВК / po-tipu;ours;4020;19;DESC_ДЛИНА_208
+/catalog/vozdushnye-kompressory/po-tipu/vysokogo-davleniya/remeza/;Компрессоры высокого давления Remeza;ВК / po-tipu;ours;4551;9;DESC_ДЛИНА_200
+/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/spiralnye_1/das/;Спиральные безмасляные компрессоры DAS;ВК / po-tipu-smazki;ours;4800;13;TITLE_ДЛИНА_71|DESC_ДЛИНА_208
+/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/spiralnye_1/fini/;Спиральные безмасляные компрессоры Fini;ВК / po-tipu-smazki;ours;4909;27;
+/catalog/vozdushnye-kompressory/po-tipu-smazki/bezmaslyanye_1/spiralnye_1/lupamat/;Спиральные безмасляные компрессоры LUPAMAT;ВК / po-tipu-smazki;ours;4679;27;TITLE_ДЛИНА_75|DESC_ДЛИНА_212
+/catalog/vozdushnye-kompressory/225-to-225/;Воздушные компрессоры 225 кВт;ВК / бренд или параметр;ours;4106;14;
+/catalog/vozdushnye-kompressory/ariacom/;Воздушные компрессоры Ariacom;ВК / бренд или параметр;ours;4684;24;
+/catalog/vozdushnye-kompressory/belarus/;Воздушные компрессоры Беларусь;ВК / бренд или параметр;none;0;23;НЕТ_СТАТЬИ|DESC_ДЛИНА_171
+/catalog/vozdushnye-kompressory/bez-resivera/;Воздушные компрессоры без ресивера;ВК / бренд или параметр;ours;4304;24;
+/catalog/vozdushnye-kompressory/chekhiya/;Воздушные компрессоры Чехия;ВК / бренд или параметр;ours;4542;23;DESC_ДЛИНА_168
+/catalog/vozdushnye-kompressory/germaniya-rossiya/;Воздушные компрессоры Германия-Россия;ВК / бренд или параметр;ours;4357;23;TITLE_ДЛИНА_77|DESC_ДЛИНА_178
+/catalog/vozdushnye-kompressory/gretsiya/;Воздушные компрессоры Греция;ВК / бренд или параметр;ours;3998;15;DESC_ДЛИНА_169
+/catalog/vozdushnye-kompressory/italiya-kitay/;Воздушные компрессоры Италия-Китай;ВК / бренд или параметр;ours;4861;23;TITLE_ДЛИНА_74|DESC_ДЛИНА_175
+/catalog/vozdushnye-kompressory/kompressory-6-bar/;Воздушные компрессоры 6 бар;ВК / бренд или параметр;ours;4530;24;
+/catalog/vozdushnye-kompressory/kompressory-bazovoe-ispolnenie/;Воздушные компрессоры базового исполнения;ВК / бренд или параметр;ours;4000;24;
+/catalog/vozdushnye-kompressory/kompressory-s-resiverom-400-l/;Компрессоры с ресивером 400 л;ВК / бренд или параметр;ours;4715;24;TITLE_ДЛИНА_72|DESC_ДЛИНА_216
+/catalog/vozdushnye-kompressory/shvetsiya/;Воздушные компрессоры Швеция;ВК / бренд или параметр;ours;3614;23;DESC_ДЛИНА_169
+/catalog/vozdushnye-kompressory/sas/;Воздушные компрессоры СаС;ВК / бренд или параметр;ours;4947;24;
+/catalog/vozdushnye-kompressory/souair/;Воздушные компрессоры SOUAIR;ВК / бренд или параметр;ours;4223;24;
+/catalog/vozdushnye-kompressory/turtsiya/;Воздушные компрессоры из Турции;ВК / бренд или параметр;ours;3920;23;
