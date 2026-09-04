@@ -1,0 +1,151 @@
+
+========================================================================================================
+### ВСЕ (Google+Яндекс): ЗНАЧИМЫЕ ПЕРЕСЕЧЕНИЯ (у обоих сайтов >= 10 показов по запросу)
+========================================================================================================
+сайт A                    сайт B                      общих  перекр.  двойн. показы   доля A   доля B  кликов A  кликов B
+prokompressor.ru          enger-air.ru                1,142    55.7%        293,535    27.2%    58.7%       579       796
+prokompressor.ru          berg-compressor.com           324    45.2%        118,600    11.8%    55.8%       233     9,813
+berg-compressor.com       berg-kompressor.ru            295    61.0%         94,063    63.3%    66.1%    13,242       238
+enger-air.ru              berg-compressor.com           224    31.2%         65,516    18.9%    19.2%       332       156
+prokompressor.ru          remeza-kompressor.ru          186    28.8%         51,831     6.3%    38.0%        62       103
+prokompressor.ru          berg-kompressor.ru            194    40.1%         41,778     4.0%    40.0%        70       152
+prokompressor.ru          zif-kompressor.ru             109    44.3%         34,837     2.8%    65.4%        53       124
+prokompressor.ru          ac-kompressor.ru              148    45.3%         30,591     3.3%    39.3%       102       133
+prokompressor.ru          dali-kompressor.ru            111    54.4%         27,610     2.1%    61.3%        43       157
+enger-air.ru              berg-kompressor.ru             90    18.6%         21,897     7.0%     9.4%       125         5
+prokompressor.ru          comaro-kompressor.ru           59    45.7%         15,376     1.0%    61.1%         4        44
+enger-air.ru              remeza-kompressor.ru           34     5.3%         14,594     5.3%     3.2%        92         5
+prokompressor.ru          crossair-compressor.ru         86    50.6%         13,751     0.8%    55.2%        76       315
+prokompressor.ru          ekomak-kompressor.com          35    39.8%         13,306     0.4%    64.3%        10       148
+enger-air.ru              dali-kompressor.ru             42    20.6%         12,644     4.3%     7.4%        36         2
+prokompressor.ru          abac-kompressor.ru             32    12.2%         11,898     0.3%    33.6%         0        41
+dali-kompressor.ru        crossair-compressor.ru         54    31.8%         11,220    12.8%    46.2%         3       288
+ekomak-kompressor.com     ekomak-compressor.com          26    89.7%         10,386    51.2%    78.3%       183        47
+enger-air.ru              zif-kompressor.ru              37    15.0%          8,084     2.5%     6.6%        36         1
+enger-air.ru              comaro-kompressor.ru           32    24.8%          7,666     2.3%    12.6%         3         0
+meyer-corp.ru             vsefotoseparatory.ru           19    67.9%          7,303    17.7%    42.2%       121        29
+enger-air.ru              oil-free.ru                    21    48.8%          6,894     2.5%    25.4%        72         0
+prokompressor.ru          ironmac-compressor.com         32    48.5%          6,680     0.5%    55.5%        35        23
+enger-air.ru              ac-kompressor.ru               29     8.9%          6,172     2.0%     3.8%       100        19
+enger-air.ru              dizel-compressor.ru            15    45.5%          6,071     2.3%    19.7%        97         1
+enger-air.ru              crossair-compressor.ru         26    15.3%          5,969     2.1%     4.2%        19         1
+prokompressor.ru          barnaul.prokompressor.ru       18    60.0%          5,847     1.0%    34.3%       465        15
+prokompressor.ru          dizel-compressor.ru            27    81.8%          5,615     0.9%    32.5%        40         2
+berg-compressor.com       remeza-kompressor.ru           19     2.9%          5,342     4.7%     1.7%        51         5
+meyer-corp.ru             usort.ru                       41    70.7%          4,728     8.4%    30.3%        95        21
+
+========================================================================================================
+### ПОКАЗЫ «ВТОРЫМ НОМЕРОМ»: сайт показан по запросу, где его же соседний сайт стоит выше
+========================================================================================================
+сайт                             запросов   показов вторым   доля показов сайта  главный перехватчик
+prokompressor.ru                    1,807          160,791                29.5%  enger-air.ru (80,738)
+enger-air.ru                          543           44,023                17.8%  prokompressor.ru (21,722)
+berg-compressor.com                   358           30,705                31.6%  berg-kompressor.ru (14,637)
+berg-kompressor.ru                    318           27,531                55.9%  berg-compressor.com (21,950)
+remeza-kompressor.ru                  170            8,216                18.0%  prokompressor.ru (4,945)
+meyer-corp.ru                          25            1,446                 4.3%  vsefotoseparatory.ru (834)
+ac-kompressor.ru                      155           11,449                35.8%  prokompressor.ru (9,529)
+zif-kompressor.ru                      91            6,089                20.2%  prokompressor.ru (4,334)
+abac-kompressor.ru                     15            1,932                 6.5%  nsk.prokompressor.ru (1,171)
+dali-kompressor.ru                     80            4,108                15.6%  enger-air.ru (1,378)
+ekomak-kompressor.com                  22            3,473                19.8%  prokompressor.ru (2,311)
+crossair-compressor.ru                 72            6,435                38.0%  dali-kompressor.ru (4,048)
+comaro-kompressor.ru                   55            3,974                24.8%  prokompressor.ru (2,343)
+fini-compressor.com                    14              313                 2.8%  prokompressor.ru (278)
+ironmac-compressor.com                 24            2,124                30.0%  prokompressor.ru (2,038)
+kraftmann-kompressor.com               12              599                 9.5%  prokompressor.ru (560)
+usort.ru                               42            1,743                27.9%  meyer-corp.ru (1,356)
+cmprg.ru                                9              964                16.8%  vladivostok.prokompressor.ru (757)
+vsefotoseparatory.ru                   15            1,163                36.8%  meyer-corp.ru (1,101)
+oil-free.ru                            35            1,032                44.3%  enger-air.ru (762)
+dizel-compressor.ru                    30              782                34.4%  enger-air.ru (358)
+ekomak-compressor.com                  27            1,371                76.7%  ekomak-kompressor.com (1,082)
+nsk.prokompressor.ru                   18              515                31.3%  prokompressor.ru (319)
+barnaul.prokompressor.ru               11              270                17.8%  prokompressor.ru (144)
+vladivostok.prokompressor.ru           13              231                16.8%  prokompressor.ru (91)
+voronezh.prokompressor.ru               3               65                31.0%  ac-kompressor.ru (25)
+
+========================================================================================================
+### только Яндекс: ЗНАЧИМЫЕ ПЕРЕСЕЧЕНИЯ (у обоих сайтов >= 10 показов по запросу)
+========================================================================================================
+сайт A                    сайт B                      общих  перекр.  двойн. показы   доля A   доля B  кликов A  кликов B
+berg-compressor.com       berg-kompressor.ru            131    94.2%         45,548    59.1%    63.5%    13,028        29
+prokompressor.ru          enger-air.ru                  198    33.8%         31,990    11.8%    20.6%       137       171
+prokompressor.ru          berg-compressor.com           109    25.9%         24,350     4.8%    28.0%        62     4,318
+enger-air.ru              berg-compressor.com            61    14.5%         10,995     6.6%     9.8%        31        76
+prokompressor.ru          ac-kompressor.ru               59    29.9%         10,853     2.3%    29.5%        31        92
+prokompressor.ru          remeza-kompressor.ru           31    12.4%          8,908     2.8%    22.4%        16        68
+meyer-corp.ru             vsefotoseparatory.ru           19    67.9%          7,303    17.7%    42.2%       121        29
+meyer-corp.ru             usort.ru                       41    70.7%          4,728     8.4%    30.3%        95        21
+prokompressor.ru          dali-kompressor.ru             15    19.2%          3,360     0.4%    28.6%        15        64
+prokompressor.ru          crossair-compressor.ru         24    23.1%          3,010     0.7%    18.4%        63        49
+prokompressor.ru          ironmac-compressor.com         16    34.8%          2,937     0.4%    44.3%        22        11
+berg-compressor.com       remeza-kompressor.ru            8     3.2%          2,510     3.8%     0.7%        49         0
+enger-air.ru              remeza-kompressor.ru           14     5.6%          2,250     2.6%     1.7%        10         5
+usort.ru                  vsefotoseparatory.ru           14    50.0%          2,060    18.5%    28.6%        10        11
+ekomak-kompressor.com     ekomak-compressor.com          11   100.0%          1,919    33.5%    74.7%        92        43
+prokompressor.ru          abac-kompressor.ru             11    18.3%          1,905     0.2%    24.4%         0         5
+enger-air.ru              ac-kompressor.ru               18     9.1%          1,883     1.6%     2.9%        51        15
+ac-kompressor.ru          dizel-compressor.ru            15    65.2%          1,668     4.9%    27.7%         7         2
+prokompressor.ru          dizel-compressor.ru            18    78.3%          1,592     0.8%    30.2%        16         2
+prokompressor.ru          berg-kompressor.ru             13     9.4%          1,384     0.4%     6.0%         4         7
+prokompressor.ru          zif-kompressor.ru               8    14.5%          1,205     0.3%    17.8%         8         7
+prokompressor.ru          barnaul.prokompressor.ru        6   100.0%          1,116     0.7%    26.2%        99        11
+prokompressor.ru          fini-compressor.com             6    26.1%            726     0.2%     9.9%         0         3
+prokompressor.ru          ekomak-kompressor.com           5    22.7%            691     0.1%    15.7%         8        51
+prokompressor.ru          meyer-corp.ru                   7     2.7%            672     0.2%     1.2%        26         7
+enger-air.ru              dizel-compressor.ru             7    30.4%            603     0.6%    12.8%        37         1
+enger-air.ru              crossair-compressor.ru          7     6.7%            594     0.6%     1.5%         3         1
+meyer-corp.ru             ac-kompressor.ru                5     2.5%            448     0.7%     0.9%         4         5
+enger-air.ru              dali-kompressor.ru              4     5.1%            425     0.4%     1.1%         2         1
+prokompressor.ru          cmprg.ru                        4    18.2%            410     0.2%     7.4%         7         0
+
+========================================================================================================
+### только Google: ЗНАЧИМЫЕ ПЕРЕСЕЧЕНИЯ (у обоих сайтов >= 10 показов по запросу)
+========================================================================================================
+сайт A                    сайт B                      общих  перекр.  двойн. показы   доля A   доля B  кликов A  кликов B
+prokompressor.ru          enger-air.ru                  986    59.6%        239,860    28.8%    71.1%       213       554
+prokompressor.ru          berg-compressor.com           215    55.3%         64,656    11.1%    57.2%       137        95
+berg-kompressor.ru        berg-compressor.com           200    51.4%         42,432    62.9%    57.6%       201       107
+enger-air.ru              berg-compressor.com           148    38.0%         40,953    17.7%    29.1%       225        25
+prokompressor.ru          berg-kompressor.ru            182    45.7%         33,691     4.5%    43.9%        55       120
+prokompressor.ru          zif-kompressor.ru             102    50.2%         31,219     3.2%    71.0%        31       111
+prokompressor.ru          dali-kompressor.ru            100    64.5%         21,923     2.4%    73.1%        13        76
+enger-air.ru              berg-kompressor.ru             79    19.8%         18,129     8.2%    10.9%       106         2
+prokompressor.ru          remeza-kompressor.ru          154    32.6%         17,856     2.5%    33.4%        21         1
+prokompressor.ru          comaro-kompressor.ru           57    48.3%         13,940     1.2%    64.5%         2        39
+prokompressor.ru          ekomak-kompressor.com          31    40.3%         11,687     0.4%    70.4%         1        36
+prokompressor.ru          ac-kompressor.ru               64    46.4%         10,191     2.0%    31.2%        34         0
+enger-air.ru              dali-kompressor.ru             33    21.3%         10,027     4.8%     9.5%        28         1
+prokompressor.ru          abac-kompressor.ru             27    11.8%          9,393     0.4%    33.8%         0        31
+dali-kompressor.ru        crossair-compressor.ru         49    50.0%          7,828    18.5%    74.1%         2       134
+prokompressor.ru          crossair-compressor.ru         63    64.3%          7,636     0.7%    75.9%         2       112
+ekomak-kompressor.com     ekomak-compressor.com          17    85.0%          7,121    46.3%    78.7%        45         4
+enger-air.ru              comaro-kompressor.ru           32    27.1%          6,521     2.6%    14.3%         0         0
+enger-air.ru              zif-kompressor.ru              29    14.3%          5,981     2.6%     5.8%        21         1
+enger-air.ru              oil-free.ru                    19    47.5%          5,472     2.8%    32.0%        12         0
+enger-air.ru              crossair-compressor.ru         20    20.4%          4,590     2.3%     8.4%        13         0
+prokompressor.ru          kraftmann-kompressor.com       20    50.0%          3,952     0.2%    70.0%         1        12
+prokompressor.ru          barnaul.prokompressor.ru       13    52.0%          3,640     0.8%    37.2%       289         2
+prokompressor.ru          voronezh.prokompressor.ru       3    42.9%          3,627     0.9%    38.0%         5         0
+enger-air.ru              dizel-compressor.ru             7    70.0%          3,574     2.0%    20.0%        15         0
+berg-compressor.com       crossair-compressor.ru         17    17.3%          3,365     8.3%     7.6%        12         0
+prokompressor.ru          oil-free.ru                    28    70.0%          3,329     0.6%    45.4%         1         0
+enger-air.ru              remeza-kompressor.ru           18     3.8%          3,319     1.5%     2.8%        13         0
+prokompressor.ru          cmprg.ru                       15    46.9%          3,193     0.1%    68.2%         0        14
+prokompressor.ru          vladivostok.prokompressor.ru      31    86.1%          3,035     0.6%    51.8%         6         0
+
+========================================================================================================
+### КЛАСТЕРЫ (связь, если общих запросов >= 25% от меньшего сайта)
+========================================================================================================
+[СВЯЗАННЫЕ] показов   927,304: prokompressor.ru, enger-air.ru, ac-kompressor.ru, zif-kompressor.ru, dali-kompressor.ru, ekomak-kompressor.com, crossair-compressor.ru, oil-free.ru, dizel-compressor.ru, ekomak-compressor.com, nsk.prokompressor.ru, barnaul.prokompressor.ru, vladivostok.prokompressor.ru, voronezh.prokompressor.ru
+[СВЯЗАННЫЕ] показов   146,475: berg-compressor.com, berg-kompressor.ru
+[отдельно] показов    45,710: remeza-kompressor.ru
+[СВЯЗАННЫЕ] показов    43,155: meyer-corp.ru, usort.ru, vsefotoseparatory.ru
+[отдельно] показов    29,923: abac-kompressor.ru
+[отдельно] показов    16,021: comaro-kompressor.ru
+[отдельно] показов    11,107: fini-compressor.com
+[отдельно] показов     7,069: ironmac-compressor.com
+[отдельно] показов     6,336: kraftmann-kompressor.com
+[отдельно] показов     5,733: cmprg.ru
+[отдельно] показов       125: po22.ru
