@@ -77,13 +77,14 @@ def depth(p):
 
 
 def is_section(p, products):
+    """Кандидат в разделы. Точная классификация - после скачивания, по page_kind.
+
+    Раньше глубина 1 отсеивалась по sitemap товаров, но в нём лежат и разделы
+    (/catalog/vozdushnye-kompressory/ там есть), из-за чего корневые категории
+    выпадали из обхода. Поэтому здесь только грубый фильтр по форме URL.
+    """
     if not p.startswith('/catalog/') or not p.endswith('/'):
         return False
-    d = depth(p)
-    if d == 0:
-        return True                         # сам /catalog/
-    if d == 1:
-        return p not in products            # глубина 1 -> раздел, только если не товар
     return True
 
 
@@ -139,6 +140,7 @@ def parse(url, s):
         'facets': facets(s),
         'pagination_max': max([int(x) for x in re.findall(r'PAGEN_\d+=(\d+)', s)] or [1]),
         'products_on_page': len(re.findall(r'itemprop="name"', s)),
+        'page_kind': page_kind(s),
     }
     m = re.search(r'rel=["\']canonical["\'][^>]+href=["\']([^"\']+)', s, re.I)
     rec['canonical'] = m.group(1) if m else ''
@@ -152,6 +154,25 @@ def parse(url, s):
         rec['article_links'] = sorted(set(re.findall(r'<a[^>]+href="([^"]+)"', b)))
         rec['article_html'] = b
     return rec
+
+
+def page_kind(s):
+    """Раздел или карточка товара.
+
+    Проверено на живых страницах: у раздела с листингом есть смарт-фильтр
+    (MAX_SMART_FILTER / cf-opt__cnt) и ItemList; у карточки товара - одиночная
+    схема Product со sku и никакого фильтра. Отдельный случай - раздел-лендинг
+    без листинга (например /catalog/azotnye-stantsii/): фильтра нет, но нет и
+    схемы Product, поэтому он не путается с карточкой.
+    """
+    has_filter = 'MAX_SMART_FILTER' in s or 'cf-opt__cnt' in s
+    has_list = 'ItemList' in s
+    has_product = '"@type": "Product"' in s or '"@type":"Product"' in s
+    if has_filter or has_list:
+        return 'section'
+    if has_product:
+        return 'product'
+    return 'section_landing'
 
 
 def links_of(s):
