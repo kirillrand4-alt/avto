@@ -69,27 +69,50 @@ for р in s.execute("SELECT DISTINCT LOWER(r.email) e FROM messages m"
 
 паспорт_домен = {}
 годных, всего_адресов = [], 0
+чужая_ссылка = [0]
 for i in range(0, len(шаг4), 800):
     к = шаг4[i:i + 800]
     q = ",".join("?" * len(к))
     for р in e.execute("SELECT inn, site FROM site_facts WHERE inn IN (%s)" % q, к):
         if р["site"]:
             паспорт_домен[р["inn"]] = str(р["site"]).lower().replace("www.", "")
-для_инн = {}
+для_инн, свои_сайты = {}, {}
+
+
+def _дом(u):
+    import re as _re
+    u = str(u or "").strip().lower()
+    if not u:
+        return ""
+    u = _re.sub(r"^https?://", "", u).split("/")[0].split("?")[0]
+    return u[4:] if u.startswith("www.") else u
+
 for i in range(0, len(шаг4), 800):
     к = шаг4[i:i + 800]
     q = ",".join("?" * len(к))
-    for р in e.execute("SELECT inn, email, source FROM emails WHERE inn IN (%s)" % q, к):
+    for р in e.execute("SELECT inn, email, source, source_url FROM emails"
+                       " WHERE inn IN (%s)" % q, к):
         для_инн.setdefault(р["inn"], []).append((str(р["email"]).lower(),
-                                                 str(р["source"] or "")))
+                                                 str(р["source"] or ""),
+                                                 str(р["source_url"] or "")))
+    for р in e.execute("SELECT inn, site, cand_site, site_checko FROM companies"
+                       " WHERE inn IN (%s)" % q, к):
+        свои_сайты[р["inn"]] = {_дом(р["site"]), _дом(р["cand_site"]),
+                                _дом(р["site_checko"])} - {""}
 for inn in шаг4:
     пд = паспорт_домен.get(inn)
     свежие = []
-    for адрес, ист in для_инн.get(inn, []):
+    for адрес, ист, ссылка in для_инн.get(inn, []):
         if адрес in уже_писали_адреса:
             continue
         домен = адрес.partition("@")[2]
-        с_сайта = ист in ("own-site", "обзвон-сайт", "сайт:справочник")
+        свои = свои_сайты.get(inn) or set()
+        ссылка_своя = (not ссылка) or (not свои) or (_дом(ссылка) in свои)
+        с_сайта = (ист in ("own-site", "обзвон-сайт", "сайт:справочник")
+                   and ссылка_своя)
+        if ист == "own-site" and ссылка and свои and _дом(ссылка) not in свои:
+            чужая_ссылка[0] += 1
+            continue
         на_домене_паспорта = bool(пд) and домен == пд
         if с_сайта or на_домене_паспорта:
             свежие.append(адрес)
@@ -97,6 +120,7 @@ for inn in шаг4:
         годных.append((inn, свежие))
         всего_адресов += len(свежие)
 
+print("   отброшено адресов с чужой ссылкой (агрегаторы): %d" % чужая_ссылка[0])
 print("5) из них есть ещё адрес с сайта или на домене паспорта: %d" % len(годных))
 
 # --- 6. стоп-лист: сделки, отписки, отбивки ---
