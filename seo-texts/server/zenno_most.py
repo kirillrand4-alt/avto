@@ -48,6 +48,8 @@ RAZOBRANO = os.path.join(ZENNO, 'razobrano')
 OCHERED = os.path.join(ZENNO, 'ochered.txt')
 # Длина очереди, выше которой пополнение не запускаем.
 ПОРОГ_ПОПОЛНЕНИЯ = int(os.environ.get('ZENNO_POROG_OCHEREDI', '5000'))
+# Сколько раз компания может не открыться, прежде чем перестанем её выдавать.
+PREDEL_PADENIY = int(os.environ.get('ZENNO_PREDEL_PADENIY', '2'))
 OTDANO = os.path.join(ZENNO, 'otdano.txt')      # что уже клали в очередь — без повторов
 NE_OTKRYLIS = os.path.join(ZENNO, 'ne_otkrylis.txt')   # заслон/мёртвый сайт — на второй заход
 KESH = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
@@ -120,9 +122,27 @@ def ochered(predel=500):
                 _v_ocheredi = {s.split(';')[0].strip() for s in _f if ';' in s}
         except Exception:  # noqa: BLE001
             pass
+        # НЕ ВОСКРЕШАТЬ МЁРТВЫЕ САЙТЫ. Правило «отдали ≠ сделали» возвращало в
+        # очередь всех, по кому нет результата, — и не смотрело в ne_otkrylis.
+        # 01.09 очередь выродилась в кладбище: 833 строки, 832 из них уже
+        # помечены «не открылся», рекорд выдачи — 17 раз одной компании. Проба
+        # восьми сайтов подряд: семь мертвы (DNS, 403, 404, 500), восьмой отдаёт
+        # «Site under construction». Зенка честно открывала их девятью
+        # инстансами по кругу. Теперь после ПРЕДЕЛ_ПАДЕНИЙ отказов компания
+        # остаётся в «отдано» и в очередь не возвращается.
+        _padeniy = {}
+        try:
+            with open(NE_OTKRYLIS, encoding='utf-8', errors='replace') as _nf:
+                for _s in _nf:
+                    _s = _s.strip().split(';')[0]
+                    if _s:
+                        _padeniy[_s] = _padeniy.get(_s, 0) + 1
+        except OSError:
+            pass
         _bez_rezultata = {i for i in bylo
                           if i not in _est_kesh and i not in _s_pasportom
-                          and i not in _v_ocheredi}
+                          and i not in _v_ocheredi
+                          and _padeniy.get(i, 0) < PREDEL_PADENIY}
         if _bez_rezultata:
             bylo = bylo - _bez_rezultata
             print('снято с учёта «отдано» без результата: %d'
