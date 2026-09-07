@@ -38,7 +38,13 @@ import enrich_db as EDB                                        # noqa: E402
 ИСТОЧНИК = "чеко-агро-2026"
 ПРИМЕНИТЬ = "--primenit" in sys.argv or "--apply" in sys.argv
 ПОРОГ = 30_000_000
+ПРЕДЕЛ = None
 for а in sys.argv[1:]:
+    if а.startswith(("предел=", "predel=")):
+        try:
+            ПРЕДЕЛ = int(а.split("=", 1)[1])
+        except ValueError:
+            pass
     if а.startswith(("порог=", "porog=")):
         try:
             ПОРОГ = int(а.split("=", 1)[1])
@@ -114,11 +120,19 @@ for и, о, н, к in c.execute(
 c.close()
 
 store = Store(r"C:\sender\sender.db")
-занятые = set()
+# ЧУЖИЕ получатели — не трогаем: у них свой источник, свои группы в extra,
+# и перезапись затёрла бы их. А СВОИ (source=ИСТОЧНИК) прогоняем заново:
+# первый заход упал на 219-й компании ПОСЛЕ upsert_recipient, но ДО записи
+# фактов в обогащение — эти 219 сейчас без фактов, и пропустить их значит
+# оставить генератор писать по ним вслепую. upsert идемпотентен.
+занятые, наши = set(), set()
 with store._lock:
-    for (и,) in store._conn.execute(
-            "SELECT inn FROM recipients WHERE inn IS NOT NULL").fetchall():
-        занятые.add(str(и))
+    for и, ист in store._conn.execute(
+            "SELECT inn, source FROM recipients WHERE inn IS NOT NULL").fetchall():
+        if str(ист or "") == ИСТОЧНИК:
+            наши.add(str(и))
+        else:
+            занятые.add(str(и))
 
 счёт = Counter()
 к_заливке = []
@@ -149,7 +163,10 @@ for и, (огрн, имя, квэд) in реестр.items():
         счёт["не зерновые (01.41/01.50 и прочее)"] += 1
         continue
     if и in занятые:
-        счёт["получатель уже есть"] += 1
+        счёт["получатель уже есть (чужой источник)"] += 1
+        continue
+    if и in наши and и in уже_в_обог:
+        счёт["уже готово (получатель + факты)"] += 1
         continue
     занятые.add(и)
     расшифровка = str(z.get("okved_main_checko") or квэд or "")
@@ -182,6 +199,9 @@ for и, (огрн, имя, квэд) in реестр.items():
         extra=extra), расшифровка, выр, z))
     счёт["К ЗАЛИВКЕ"] += 1
 
+if ПРЕДЕЛ:
+    к_заливке = к_заливке[:ПРЕДЕЛ]
+
 коды = Counter(str(р.extra.get("okved") or "?")[:7] for р, _, _, _ in к_заливке)
 нет_в_обог = sum(1 for р, _, _, _ in к_заливке if р.inn not in уже_в_обог)
 
@@ -197,80 +217,137 @@ for к, в in коды.most_common(8):
     итог.append("   %-10s %6d" % (к, в))
 итог += ["", "из них нет в enrich.companies: %d" % нет_в_обог]
 
-def _слить_pachku(db, пачка):
-    """Записать пачку компаний одной транзакцией. Возврат: сколько легло.
+class _Тихое(object):
+    """Соединение, у которого commit и границы транзакции - пустышки.
 
-    upsert_company коммитит каждую строку сам; на время пачки подменяем
-    commit заглушкой и фиксируем один раз. При занятой базе повторяем всю
-    пачку целиком — она идемпотентна.
+    Подменить `commit` прямо на sqlite3.Connection нельзя, атрибут только
+    для чтения (первый заход упал ровно на этом). Поэтому оборачиваем.
+
+    Зачем вообще. И store.upsert_recipient, и enrich.upsert_company пишут
+    ПО ОДНОЙ строке отдельной транзакцией. На занятой базе - панель, работник
+    проб, демоны - одна такая запись обходилась в пять секунд: 200 компаний
+    за 37 минут, то есть больше суток на партию. Пачкой по сотне в одной
+    транзакции те же данные ложатся за секунды, а замок панель держит
+    короткими рывками, а не полчаса подряд.
     """
-    if not пачка:
-        return 0
-    настоящий = db.cx.commit
-    легло = 0
+
+    def __init__(self, настоящее):
+        self._настоящее = настоящее
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+    def execute(self, sql, *а, **к):
+        н = str(sql).strip().upper()
+        if н.startswith("BEGIN") or н.startswith("COMMIT") or н.startswith("ROLLBACK"):
+            return None
+        return self._настоящее.execute(sql, *а, **к)
+
+    def __getattr__(self, имя):
+        return getattr(self._настоящее, имя)
+
+
+def _пачкой(соед, поставить, вернуть, работа):
+    """Выполнить работу() одной транзакцией на соединении. Возврат: сколько легло.
+
+    поставить/вернуть - подмена соединения в объекте-владельце. Пачка
+    идемпотентна, поэтому при занятой базе повторяем её целиком.
+    """
     for попытка in range(30):
         try:
-            db.cx.commit = lambda: None
-            легло = 0
-            for р, расшифровка, выр in пачка:
+            соед.execute("BEGIN IMMEDIATE")
+        except Exception as ex:                                # noqa: BLE001
+            if "locked" in str(ex) or "busy" in str(ex):
+                time.sleep(3.0)
+                continue
+            raise
+        поставить()
+        try:
+            легло = работа()
+            вернуть()
+            соед.execute("COMMIT")
+            return легло
+        except Exception as ex:                                # noqa: BLE001
+            вернуть()
+            try:
+                соед.execute("ROLLBACK")
+            except Exception:                                  # noqa: BLE001
+                pass
+            if "locked" not in str(ex) and "busy" not in str(ex):
+                print("   пачка не легла: %s" % str(ex)[:110], flush=True)
+                return 0
+            time.sleep(3.0)
+    return 0
+
+
+ПАЧКА = 100
+
+if ПРИМЕНИТЬ and к_заливке:
+    db = EDB.EnrichDB()
+    ф = io.open(ЗАЛИТО, "a", encoding="utf-8")
+    залито = в_обог = 0
+    т0 = time.time()
+    for нач in range(0, len(к_заливке), ПАЧКА):
+        кусок = к_заливке[нач:нач + ПАЧКА]
+
+        # --- получатели -------------------------------------------------
+        настоящий_store = store._conn
+
+        def _пост_s():
+            store._conn = _Тихое(настоящий_store)
+
+        def _верн_s():
+            store._conn = настоящий_store
+
+        ид = {}
+
+        def _раб_s():
+            for р, _рас, _выр, _z in кусок:
+                ид[р.inn] = store.upsert_recipient(р)
+            return len(ид)
+
+        with store._lock:
+            легло = _пачкой(настоящий_store, _пост_s, _верн_s, _раб_s)
+        залито += легло
+
+        # --- факты в обогащение ------------------------------------------
+        настоящий_db = db.cx
+
+        def _пост_e():
+            db.cx = _Тихое(настоящий_db)
+
+        def _верн_e():
+            db.cx = настоящий_db
+
+        def _раб_e():
+            n = 0
+            for р, расшифровка, выр, _z in кусок:
                 db.upsert_company(р.inn, name=р.company_name,
                                   division="meyer",
                                   okved=str(р.extra.get("okved") or ""),
                                   activity=расшифровка,
                                   best_email=р.email,
                                   revenue_rub=выр)
-                легло += 1
-            db.cx.commit = настоящий
-            db.cx.commit()
-            return легло
-        except Exception as ex:                                # noqa: BLE001
-            db.cx.commit = настоящий
-            try:
-                db.cx.rollback()
-            except Exception:                                  # noqa: BLE001
-                pass
-            if "locked" not in str(ex) and "busy" not in str(ex):
-                print("   пачка не легла: %s" % str(ex)[:90], flush=True)
-                return 0
-            time.sleep(5.0)
-    return 0
+                n += 1
+            return n
 
+        в_обог += _пачкой(настоящий_db, _пост_e, _верн_e, _раб_e)
 
-if ПРИМЕНИТЬ and к_заливке:
-    db = EDB.EnrichDB()
-    ждут = []
-    ф = io.open(ЗАЛИТО, "a", encoding="utf-8")
-    залито = ошибок = в_обог = 0
-    for р, расшифровка, выр, z in к_заливке:
-        try:
-            rid = store.upsert_recipient(р)
-        except Exception as ex:                                # noqa: BLE001
-            ошибок += 1
-            continue
-        # ФАКТЫ В ОБОГАЩЕНИЕ — ПАЧКАМИ, А НЕ ПО ОДНОЙ. Первый заход бился
-        # в занятый enrich.db на КАЖДОЙ компании: upsert_company делает
-        # commit сам, и каждый коммит ждал своей очереди за замком. Вышло
-        # восемь компаний за три минуты, то есть девятнадцать часов на
-        # три тысячи. Копим и фиксируем раз в 200, как это уже сделано в
-        # pochty_iz_kesha_zapis.
-        ждут.append((р, расшифровка, выр))
-        if len(ждут) >= 200:
-            в_обог += _слить_pachku(db, ждут)
-            ждут.clear()
-        залито += 1
-        ф.write(json.dumps({"id": rid, "inn": р.inn, "почта": р.email,
-                            "имя": р.company_name, "выручка": выр},
-                           ensure_ascii=False) + "\n")
-        if залито % 200 == 0:
-            ф.flush()
-            os.fsync(ф.fileno())
-            print("   залито %d из %d" % (залито, len(к_заливке)), flush=True)
-    в_обог += _слить_pachku(db, ждут)
-    ф.flush()
-    os.fsync(ф.fileno())
+        for р, _рас, выр, _z in кусок:
+            ф.write(json.dumps({"id": ид.get(р.inn), "inn": р.inn,
+                                "почта": р.email, "имя": р.company_name,
+                                "выручка": выр}, ensure_ascii=False) + "\n")
+        ф.flush()
+        os.fsync(ф.fileno())
+        print("   залито %d из %d, фактов %d, %.0f с"
+              % (залито, len(к_заливке), в_обог, time.time() - т0), flush=True)
     ф.close()
-    итог += ["", "залито получателей: %d (ошибок %d)" % (залито, ошибок),
-             "записано в обогащение: %d" % в_обог]
+    итог += ["", "залито получателей: %d" % залито,
+             "записано в обогащение: %d" % в_обог,
+             "время: %.0f с" % (time.time() - т0)]
     группы = store.recipient_groups().get("по_id") or {}
     итог.append("в группе «%s»: %d"
                 % (ГРУППА, sum(1 for g in группы.values() if ГРУППА in g)))
