@@ -197,8 +197,48 @@ for к, в in коды.most_common(8):
     итог.append("   %-10s %6d" % (к, в))
 итог += ["", "из них нет в enrich.companies: %d" % нет_в_обог]
 
+def _слить_pachku(db, пачка):
+    """Записать пачку компаний одной транзакцией. Возврат: сколько легло.
+
+    upsert_company коммитит каждую строку сам; на время пачки подменяем
+    commit заглушкой и фиксируем один раз. При занятой базе повторяем всю
+    пачку целиком — она идемпотентна.
+    """
+    if not пачка:
+        return 0
+    настоящий = db.cx.commit
+    легло = 0
+    for попытка in range(30):
+        try:
+            db.cx.commit = lambda: None
+            легло = 0
+            for р, расшифровка, выр in пачка:
+                db.upsert_company(р.inn, name=р.company_name,
+                                  division="meyer",
+                                  okved=str(р.extra.get("okved") or ""),
+                                  activity=расшифровка,
+                                  best_email=р.email,
+                                  revenue_rub=выр)
+                легло += 1
+            db.cx.commit = настоящий
+            db.cx.commit()
+            return легло
+        except Exception as ex:                                # noqa: BLE001
+            db.cx.commit = настоящий
+            try:
+                db.cx.rollback()
+            except Exception:                                  # noqa: BLE001
+                pass
+            if "locked" not in str(ex) and "busy" not in str(ex):
+                print("   пачка не легла: %s" % str(ex)[:90], flush=True)
+                return 0
+            time.sleep(5.0)
+    return 0
+
+
 if ПРИМЕНИТЬ and к_заливке:
     db = EDB.EnrichDB()
+    ждут = []
     ф = io.open(ЗАЛИТО, "a", encoding="utf-8")
     залито = ошибок = в_обог = 0
     for р, расшифровка, выр, z in к_заливке:
@@ -207,21 +247,16 @@ if ПРИМЕНИТЬ and к_заливке:
         except Exception as ex:                                # noqa: BLE001
             ошибок += 1
             continue
-        # факты в обогащение — с повтором на занятой базе
-        for _п in range(6):
-            try:
-                db.upsert_company(р.inn, name=р.company_name,
-                                  division="meyer",
-                                  okved=str(р.extra.get("okved") or ""),
-                                  activity=расшифровка,
-                                  best_email=р.email,
-                                  revenue_rub=выр)
-                в_обог += 1
-                break
-            except Exception as ex:                            # noqa: BLE001
-                if "locked" not in str(ex) and "busy" not in str(ex):
-                    break
-                time.sleep(2.0)
+        # ФАКТЫ В ОБОГАЩЕНИЕ — ПАЧКАМИ, А НЕ ПО ОДНОЙ. Первый заход бился
+        # в занятый enrich.db на КАЖДОЙ компании: upsert_company делает
+        # commit сам, и каждый коммит ждал своей очереди за замком. Вышло
+        # восемь компаний за три минуты, то есть девятнадцать часов на
+        # три тысячи. Копим и фиксируем раз в 200, как это уже сделано в
+        # pochty_iz_kesha_zapis.
+        ждут.append((р, расшифровка, выр))
+        if len(ждут) >= 200:
+            в_обог += _слить_pachku(db, ждут)
+            ждут.clear()
         залито += 1
         ф.write(json.dumps({"id": rid, "inn": р.inn, "почта": р.email,
                             "имя": р.company_name, "выручка": выр},
@@ -230,6 +265,7 @@ if ПРИМЕНИТЬ and к_заливке:
             ф.flush()
             os.fsync(ф.fileno())
             print("   залито %d из %d" % (залито, len(к_заливке)), flush=True)
+    в_обог += _слить_pachku(db, ждут)
     ф.flush()
     os.fsync(ф.fileno())
     ф.close()
