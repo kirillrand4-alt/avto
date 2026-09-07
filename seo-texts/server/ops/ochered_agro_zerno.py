@@ -34,6 +34,9 @@ from sender.confirm import ConfirmSend                         # noqa: E402
 from sender.store import Store                                 # noqa: E402
 from sender.suppression import Suppression                     # noqa: E402
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from imya_v_pismo import итоговое_имя                           # noqa: E402
+
 ГРУППА = "Агро зерно 2026"
 КАМПАНИЯ = 11                     # meyer
 НАПРАВЛЕНИЕ = "meyer"
