@@ -45,7 +45,7 @@ if os.path.exists(F_A):
         except Exception: continue
         if not d.get('err'): gotovo.add((d['slovo'], d['stranica']))
         for r in d.get('stroki', []): vidennye.setdefault(r['kod'], r)
-fa = open(F_A, 'a', encoding='utf-8'); konch = {}; n_a = 0
+fa = open(F_A, 'a', encoding='utf-8'); konch = {}; pusto = {}; n_a = 0
 for st in range(1, 2000):
     if time.time() - T0 > BUDGET: break
     if all(konch.get(s) for s in SLOVA): break
@@ -63,7 +63,10 @@ for st in range(1, 2000):
         gotovo.add((slovo, st))
         for r in rows: vidennye.setdefault(r['kod'], r)
         n_a += len(novye)
-        if not rows or not novye: konch[slovo] = True
+        # конец выдачи по слову - только ПУСТАЯ страница (дважды подряд); страница без новых строк
+        # (все уже видены через другое слово) концом не считается
+        pusto[slovo] = pusto.get(slovo, 0) + 1 if not rows else 0
+        if pusto[slovo] >= 2 or st >= 400: konch[slovo] = True
         if TEST and st >= 2: konch[slovo] = True
         time.sleep(M.PAUZA)
 fa.close()

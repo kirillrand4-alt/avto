@@ -7,7 +7,7 @@ import os, sys, re, json, time, threading, argparse, random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.dirname(HERE))
 from gen_provider import make_client, call
-MODEL = 'claude-fable-5'; PACHKA = 10
+MODEL = 'claude-fable-5'; PACHKA = 20
 F_IN = os.path.join(HERE, 'AK-kandidaty.jsonl'); F_OUT = os.path.join(HERE, 'linzy-verdikty.jsonl'); F_ITOG = os.path.join(HERE, 'linzy-itog.jsonl')
 _lock = threading.Lock()
 ZADACHA = """Речь об Алтайском крае. Нужно понять, есть ли у предприятия в ТЕХНОЛОГИЧЕСКОМ ПРОЦЕССЕ компрессорное оборудование:
@@ -59,7 +59,9 @@ def parse(msg):
     except json.JSONDecodeError:
         m = re.search(r'\{.*\}', text, re.S); return json.loads(m.group(0))
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--nitey', type=int, default=4); ap.add_argument('--predel', type=int, default=0); ap.add_argument('--test', action='store_true'); a = ap.parse_args()
+    ap = argparse.ArgumentParser(); ap.add_argument('--nitey', type=int, default=4); ap.add_argument('--predel', type=int, default=0); ap.add_argument('--test', action='store_true'); ap.add_argument('--svod', action='store_true'); a = ap.parse_args()
+    if a.svod:
+        svod(None); return
     kand = [json.loads(l) for l in open(F_IN, encoding='utf-8') if l.strip()]
     kand = [k for k in kand if not k.get('fakty')]   # с прямым фактом класс уже есть
     kand.sort(key=lambda k: -((k.get('fin') or {}).get('vyruchka') or 0))   # крупные первыми
