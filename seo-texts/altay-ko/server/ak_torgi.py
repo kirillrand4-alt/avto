@@ -73,6 +73,9 @@ for lid, x in lots.items():
             if re.search(r'должник|собственник|правообладател|балансодержател', nm, re.I) and not d['vladelec']: d['vladelec'] = str(val)[:200]
         org = j.get('bidderOrg') or j.get('organizerOrg') or {}
         d['org'] = (org.get('fullName') or org.get('name') or '')[:200] if isinstance(org, dict) else ''
+        if not d['inn'] and str(j.get('depositRecipientINN') or '').startswith('22'):
+            d['inn'] = str(j.get('depositRecipientINN')); d['vladelec'] = d['vladelec'] or (j.get('depositRecipientName') or '') + ' (получатель задатка/организатор)'
+        d['estateAddress'] = (j.get('estateAddress') or '')[:200]
         m = re.search(r'(?:должник|собственник|правообладател|балансодержател)[^"]{0,60}"?[:\s]*"?([^"]{5,150})', s, re.I)
         if m and not d['vladelec']: d['vladelec'] = m.group(1)
         d['dolzhnik_inn_kandidat'] = [i for i in inns if i.startswith('22')]
