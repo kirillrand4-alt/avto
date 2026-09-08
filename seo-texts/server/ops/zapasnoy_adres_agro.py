@@ -31,6 +31,7 @@ from sender.dtos import RecipientIn                             # noqa: E402
 from sender.store import Store                                  # noqa: E402
 from sender.suppression import Suppression                      # noqa: E402
 from imya_v_pismo import итоговое_имя                           # noqa: E402
+from zona_po_innu import зона_по_inn                           # noqa: E402
 
 ТЕМА = "для качества: вопрос по сортировке зерна"
 ГРУППА = "Агро зерно 2026"
@@ -162,7 +163,7 @@ for р in снятые:
         segment=НАПРАВЛЕНИЕ,
         source=ИСТОЧНИК,
         region=getattr(rec, "region", None),
-        tz="Europe/Moscow",
+        tz=зона_по_inn(getattr(rec, "inn", "")),
         extra=новая), подл, str(getattr(rec, "email", "") or "")))
     счёт["К ПОСТАНОВКЕ"] += 1
 

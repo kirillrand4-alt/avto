@@ -31,6 +31,7 @@ sys.path.insert(0, r"C:\sender\server")
 from sender.dtos import RecipientIn                            # noqa: E402
 from sender.store import Store                                 # noqa: E402
 import enrich_db as EDB                                        # noqa: E402
+from zona_po_innu import зона_по_inn                           # noqa: E402
 
 ЖУРНАЛ = r"C:\sender\server\checko_finansy.jsonl"
 ЗАЛИТО = r"C:\sender\_ops\agro-zalito.jsonl"
@@ -195,7 +196,7 @@ for и, (огрн, имя, квэд) in реестр.items():
         segment="meyer",
         source=ИСТОЧНИК,
         region=регион or None,
-        tz="Europe/Moscow",
+        tz=зона_по_inn(и),
         extra=extra), расшифровка, выр, z))
     счёт["К ЗАЛИВКЕ"] += 1
 
