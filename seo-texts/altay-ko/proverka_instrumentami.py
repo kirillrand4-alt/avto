@@ -81,23 +81,33 @@ PROMPT_DOPRIPISKA = """Есть список приёмов (id + названи
 {idei}"""
 
 
-def svod(client):
-    idei = idei_ploskie()
-    kratko = '\n'.join(f'[{x["id"]}] {x["ideya"][:260]} || где: {str(x.get("gde_brat",""))[:140]}'
-                       for x in idei)
-    print(f'свод: идей {len(idei)}, знаков в промпте {len(kratko)}')
+PROMPT_SLIYANIE = """Ниже список приёмов поиска предприятий Алтайского края с компрессорным оборудованием,
+собранных независимо по 12 ракурсам. Между ракурсами много дублей: тот же источник и тот же механизм.
+Слей их в ГРУППЫ уникальных приёмов. Правило то же: группа = один источник + один механизм; разные
+механизмы на одном источнике - разные группы; один механизм на однотипных источниках - одна группа.
+КАЖДЫЙ id приёма должен попасть ровно в одну группу; не теряй ни одного id. Название группы -
+конкретное (источник + что делаем, до 120 знаков), sut - до 200 знаков.
+Верни СТРОГО JSON: {{"gruppy":[{{"nazvanie":"...","istochnik":"...","klass":"прямое|косвенное|кандидат|контроль/метод",
+"cena":"дёшево|средне|дорого","sut":"...","chleny":["id","id"]}}]}}
+
+ПРИЁМЫ:
+{priyomy}"""
+
+
+def _svod_odnogo(client, idei, metka):
+    """Свод списка идей в локальные приёмы с проверкой покрытия и доприпиской потерянных."""
+    kratko = '\n'.join(f'[{x["id"]}] {x["ideya"][:260]} || где: {str(x.get("gde_brat", ""))[:140]}' for x in idei)
     d = sprosit(client, PROMPT_SVOD.format(n=len(idei), idei=kratko))
     pr = d['priyomy']
     for i, p in enumerate(pr, 1):
-        p['id'] = f'P{i:03d}'
+        p['id'] = f'{metka}-p{i}'
     vse = {x['id'] for x in idei}
     naznacheno = {}
     for p in pr:
+        p['idei'] = [i for i in p.get('idei', []) if i in vse]
         for iid in p['idei']:
             naznacheno.setdefault(iid, p['id'])
     poteryany = sorted(vse - set(naznacheno))
-    lishnie = sorted(set(naznacheno) - vse)
-    print(f'  приёмов {len(pr)}, идей привязано {len(naznacheno)}, потеряно {len(poteryany)}, выдуманных id {len(lishnie)}')
     if poteryany:
         po_id = {x['id']: x for x in idei}
         kr = '\n'.join(f'[{i}] {po_id[i]["ideya"][:260]}' for i in poteryany)
@@ -105,25 +115,80 @@ def svod(client):
         d2 = sprosit(client, PROMPT_DOPRIPISKA.format(priyomy=krp, idei=kr))
         novye = {n['id']: n for n in d2.get('novye', [])}
         for pv in d2.get('privyazki', []):
-            pid = pv['priyom_id']
+            pid = pv.get('priyom_id', '')
+            iid = pv.get('ideya_id')
+            if iid not in vse or iid in naznacheno:
+                continue
             if pid.startswith('NEW'):
                 n = novye.get(pid)
                 if n is None:
                     continue
                 if 'real_id' not in n:
-                    n['real_id'] = f'P{len(pr)+1:03d}'
-                    pr.append({**{k: v for k, v in n.items() if k not in ('id', 'real_id')},
+                    n['real_id'] = f'{metka}-p{len(pr) + 1}'
+                    pr.append({'nazvanie': n.get('nazvanie', ''), 'istochnik': n.get('istochnik', ''),
+                               'klass': n.get('klass', ''), 'cena': n.get('cena', ''), 'sut': n.get('sut', ''),
                                'id': n['real_id'], 'idei': []})
                 pid = n['real_id']
             for p in pr:
-                if p['id'] == pid and pv['ideya_id'] in vse and pv['ideya_id'] not in naznacheno:
-                    p['idei'].append(pv['ideya_id']); naznacheno[pv['ideya_id']] = pid
+                if p['id'] == pid:
+                    p['idei'].append(iid); naznacheno[iid] = pid
         poteryany = sorted(vse - set(naznacheno))
-        print(f'  после доприписки: приёмов {len(pr)}, потеряно {len(poteryany)}')
-    # убрать выдуманные id
-    for p in pr:
-        p['idei'] = [i for i in p['idei'] if i in vse]
-    json.dump({'priyomy': pr, 'poteryany': poteryany}, open(F_PRIYOMY, 'w', encoding='utf-8'),
+    # всё ещё потерянные - каждая идея своим приёмом, чтобы ничего не выпало
+    po_id = {x['id']: x for x in idei}
+    for iid in poteryany:
+        x = po_id[iid]
+        pr.append({'nazvanie': x['ideya'][:120], 'istochnik': str(x.get('gde_brat', ''))[:80], 'klass': x.get('klass', ''),
+                   'cena': x.get('cena', ''), 'sut': x['ideya'][:200], 'id': f'{metka}-p{len(pr) + 1}', 'idei': [iid]})
+    return pr, len(poteryany)
+
+
+def svod(client, nitey=3):
+    idei = idei_ploskie()
+    po_meta = {}
+    for x in idei:
+        po_meta.setdefault(x['id'].split('-')[0], []).append(x)
+    print(f'свод: идей {len(idei)}, металинз {len(po_meta)}')
+    lokalnye = []
+
+    def odna(mid):
+        pr, ost = _svod_odnogo(client, po_meta[mid], mid)
+        return mid, pr, ost
+
+    with ThreadPoolExecutor(nitey) as ex:
+        for f in as_completed([ex.submit(odna, m) for m in sorted(po_meta)]):
+            mid, pr, ost = f.result()
+            lokalnye.extend(pr)
+            print(f'  {mid}: идей {len(po_meta[mid])}, локальных приёмов {len(pr)}, разложено поштучно {ost}')
+    json.dump(lokalnye, open(os.path.join(HERE, 'priyomy-lokalnye.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    # глобальное слияние
+    txt = '\n'.join(f'{p["id"]} | {p["nazvanie"]} | источник: {p.get("istochnik", "")} | класс: {p.get("klass", "")} | суть: {str(p.get("sut", ""))[:160]}'
+                    for p in lokalnye)
+    d = sprosit(client, PROMPT_SLIYANIE.format(priyomy=txt))
+    gruppy = d['gruppy']
+    lok_po_id = {p['id']: p for p in lokalnye}
+    naznacheno = {}
+    pr = []
+    for i, g in enumerate(gruppy, 1):
+        chleny = [c for c in g.get('chleny', []) if c in lok_po_id and c not in naznacheno]
+        for c in chleny:
+            naznacheno[c] = i
+        idei_g = [iid for c in chleny for iid in lok_po_id[c]['idei']]
+        pr.append({'id': f'P{i:03d}', 'nazvanie': g.get('nazvanie', ''), 'istochnik': g.get('istochnik', ''),
+                   'klass': g.get('klass', ''), 'cena': g.get('cena', ''), 'sut': g.get('sut', ''),
+                   'lokalnye': chleny, 'idei': idei_g})
+    poteryany = [p for p in lokalnye if p['id'] not in naznacheno]
+    for p in poteryany:
+        pr.append({'id': f'P{len(pr) + 1:03d}', 'nazvanie': p['nazvanie'], 'istochnik': p.get('istochnik', ''),
+                   'klass': p.get('klass', ''), 'cena': p.get('cena', ''), 'sut': p.get('sut', ''),
+                   'lokalnye': [p['id']], 'idei': p['idei']})
+    pr = [p for p in pr if p['idei']]
+    for i, p in enumerate(pr, 1):
+        p['id'] = f'P{i:03d}'
+    vse = {x['id'] for x in idei}
+    pokryto = {iid for p in pr for iid in p['idei']}
+    print(f'  глобально: групп от модели {len(gruppy)}, локальных не вошло (добавлены отдельно) {len(poteryany)}, '
+          f'итог приёмов {len(pr)}, идей покрыто {len(pokryto)}/{len(vse)}')
+    json.dump({'priyomy': pr, 'poteryany': sorted(vse - pokryto)}, open(F_PRIYOMY, 'w', encoding='utf-8'),
               ensure_ascii=False, indent=1)
     return pr
 
@@ -250,7 +315,7 @@ if __name__ == '__main__':
     a = ap.parse_args()
     client = make_client()
     if a.tolko in (None, 'svod'):
-        svod(client)
+        svod(client, a.nitey)
     if a.tolko in (None, 'proverka'):
         proverka(client, a.nitey)
     itog()
