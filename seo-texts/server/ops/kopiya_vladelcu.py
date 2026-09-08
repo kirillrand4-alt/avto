@@ -23,19 +23,22 @@ from sender.sender import Sender                                # noqa: E402
 from sender.store import Store                                  # noqa: E402
 from sender.suppression import Suppression                      # noqa: E402
 
-ТЕМА_ПАРТИИ = "Для качества: вопрос по сортировке зерна"
-КУДА = ["kirillrand4@gmail.com", "martiushov@prokompressor.ru"]
+sys.path.insert(0, r"C:\sender\server\ops")
+import varianty_pisma as V                                      # noqa: E402
+КУДА = ["kirill.martyuschov@yandex.ru"]
 ПРИМЕНИТЬ = "--primenit" in sys.argv or "--apply" in sys.argv
 
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 snd = Sender(cfg, store, Suppression(store), Gates(cfg, store), dry_run=False)
 
+import random                                                 # noqa: E402
 with store._lock:
-    р = store._conn.execute(
+    строки = store._conn.execute(
         "SELECT id, subject, body FROM confirm_reviews "
-        " WHERE subject=? AND status='pending' ORDER BY id LIMIT 1",
-        (ТЕМА_ПАРТИИ,)).fetchone()
+        " WHERE subject IN (%s) AND status='pending'"
+        % ",".join("?" * len(V.ТЕМЫ)), tuple(V.ТЕМЫ)).fetchall()
+р = random.choice(строки) if строки else None
 if р is None:
     print("в очереди нет ни одной карточки партии — нечего копировать")
     raise SystemExit(1)
