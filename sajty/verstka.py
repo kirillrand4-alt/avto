@@ -34,6 +34,10 @@ import sys
 # кнопка в статье; проверено по загрузчикам loader_<id>_<sec>.js и по тому,
 # есть ли форма на внутренних страницах каталога, а не только на главной.
 # shapka - высота липкой шапки сайта, замерена в браузере.
+# У berg, ekomak, fini и ironmac своей формы «Запросить КП» в Битрикс24 нет,
+# поэтому им поставлена общая форма 7/40ef1t - та же, что у шести других
+# сайтов портала. Заявки различаются по адресу страницы, который Битрикс24
+# записывает сам. Появится своя форма - поменять id в одной строке.
 SAJTY = {
     "abac-kompressor.ru": dict(
         klass="bxr-color-button", stil="color:#1a1a1a;",
@@ -43,8 +47,7 @@ SAJTY = {
         zakaz="https://ac-kompressor.ru/company/zakaz/", forma="click/7/40ef1t"),
     "berg-kompressor.ru": dict(
         klass="btn btn-primary", stil="color:#fff;", shapka=130,
-        zakaz="https://berg-kompressor.ru/contacts/", forma="click/164/7higok",
-        nadpis="Оставить заявку"),
+        zakaz="https://berg-kompressor.ru/contacts/", forma="click/7/40ef1t"),
     "crossair-compressor.ru": dict(
         klass="btn btn-primary", stil="",
         zakaz="https://crossair-compressor.ru/about/contacts/", forma="click/173/5pc41r"),
@@ -53,19 +56,16 @@ SAJTY = {
         zakaz="https://dali-kompressor.ru/company/contacts/", forma="click/7/40ef1t"),
     "ekomak-kompressor.com": dict(
         klass="btn btn-primary", stil="",
-        zakaz="https://ekomak-kompressor.com/contacts/", forma="click/8/cosa3e",
-        nadpis="Оставить заявку"),
+        zakaz="https://ekomak-kompressor.com/contacts/", forma="click/7/40ef1t"),
     "enger-air.ru": dict(
         klass="enger-btn enger-btn--primary", stil="", shapka=60,
         zakaz="https://enger-air.ru/company/contacts/", forma="click/160/lzzwog"),
     "fini-compressor.com": dict(
         klass="btn btn-primary", stil="",
-        zakaz="https://fini-compressor.com/about/contacts/", forma="click/200/pkoq43",
-        nadpis="Оставить заявку"),
+        zakaz="https://fini-compressor.com/about/contacts/", forma="click/7/40ef1t"),
     "ironmac-compressor.com": dict(
         klass="btn btn-primary", stil="",
-        zakaz="https://ironmac-compressor.com/company/contacts/", forma="click/193/h77r1g",
-        nadpis="Оставить заявку"),
+        zakaz="https://ironmac-compressor.com/company/contacts/", forma="click/7/40ef1t"),
     "kraftmann-kompressor.com": dict(
         klass="bxr-color-button", stil="",
         zakaz="https://kraftmann-kompressor.com/contacts/", forma="click/7/40ef1t"),
