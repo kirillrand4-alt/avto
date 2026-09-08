@@ -1,0 +1,131 @@
+# -*- coding: utf-8 -*-
+"""Т2.1. Реестр ЭПБ monitor-pb.ru по Алтайскому краю.
+Этап A: поиск по словам региона (города края + «Алтайский край»), type=ТУ, все страницы -> mpb-slova.jsonl (резюм по (слово, страница)).
+Этап B: полный список заключений по каждому ИНН края из AK-BAZA, у которого есть хоть один факт или который встретился в этапе A
+        (/conclusions?exploiter=<ИНН>&type=ТУ) -> mpb-po-inn.jsonl (резюм по ИНН). Параллелить нельзя: реестр душит.
+Этап C: факты (только наши машины: компрессор/воздуходувка/нагнетатель/ресивер/осушитель/ВРУ/генераторы) -> AK-BAZA.fakty, ссылка = /conclusion/<код>.
+argv: [бюджет_сек] [TEST]. Модуль mpb_po_inn.py должен лежать рядом (C:\\sender\\_ops\\ak)."""
+import os, sys, re, json, time, sqlite3, urllib.parse
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+AK = r'C:\sender\_ops\ak'; DB = os.path.join(AK, 'AK-BAZA.sqlite'); sys.path.insert(0, AK)
+import mpb_po_inn as M
+F_A = os.path.join(AK, 'mpb-slova.jsonl'); F_B = os.path.join(AK, 'mpb-po-inn.jsonl')
+BUDGET = int(sys.argv[1]) if len(sys.argv) > 1 else 1400; TEST = 'TEST' in sys.argv
+T0 = time.time(); TS = time.strftime('%Y-%m-%d %H:%M')
+SLOVA = ['Барнаул', 'Бийск', 'Рубцовск', 'Новоалтайск', 'Заринск', 'Славгород', 'Алейск', 'Яровое', 'Камень-на-Оби', 'Белокуриха', 'Змеиногорск', 'Горняк',
+         'Алтайский край', 'Алтайского края', 'Алтайском крае', 'Алтайкрай', 'Павловск Алтайский', 'Кулунда', 'Благовещенка', 'Тальменка', 'Поспелиха', 'Ребриха', 'Шипуново', 'Троицкое Алтайский', 'Степное Озеро']
+if TEST: SLOVA = ['Новоалтайск']
+MASH = re.compile(r'компрессор|воздуходув|нагнетател|турбокомпрессор|ресивер|воздухосборник|осушител|воздухоразделительн|\bВРУ\b|генератор\w*\s+(азота|кислорода)|азотн\w+\s+(станц|установ)|кислородн\w+\s+(станц|установ)|компрессорн', re.I)
+NASOS = M.NASOS
+VIDY = [('генератор кислорода', r'кислородн\w*\s*(станц|генератор|установ)|генератор\w*\s*кислород'), ('генератор азота', r'азотн\w*\s*(станц|генератор|установ)|генератор\w*\s*азот'),
+        ('ВРУ', r'воздухоразделительн|\bВРУ\b'), ('нагнетатель', r'нагнетател'), ('воздуходувка', r'воздуходув|турбовоздуходув'), ('осушитель', r'осушител'),
+        ('ресивер', r'ресивер|воздухосборник'), ('компрессорная станция', r'компрессорн\w+\s+(станц|установк|цех)'), ('компрессор', r'компрессор')]
+VIDY = [(v, re.compile(r, re.I)) for v, r in VIDY]
+def vid(s):
+    for v, rx in VIDY:
+        if rx.search(s or ''): return v
+    return ''
+def stroki_stranicy(url):
+    h = M._vzyat(url, popytok=2)
+    if h.startswith('__ОШИБКА__'): return None, h
+    if len(h) < 400: return None, 'заглушка'
+    rows = M._stroki(h)
+    # ИНН эксплуатанта из ссылки /customer/<ИНН> той же строки таблицы
+    po_kodu = {}
+    for tr in M.TR.findall(h):
+        n = M.NOMER.search(tr); x = M.EKSPL.search(tr)
+        if n and x: po_kodu[n.group(1)] = x.group(1)
+    for r in rows: r['inn'] = po_kodu.get(r['kod'], '')
+    return rows, ''
+# ---- этап A
+gotovo = set(); vidennye = {}
+if os.path.exists(F_A):
+    for l in open(F_A, encoding='utf-8'):
+        try: d = json.loads(l)
+        except Exception: continue
+        if not d.get('err'): gotovo.add((d['slovo'], d['stranica']))
+        for r in d.get('stroki', []): vidennye.setdefault(r['kod'], r)
+fa = open(F_A, 'a', encoding='utf-8'); konch = {}; n_a = 0
+for st in range(1, 2000):
+    if time.time() - T0 > BUDGET: break
+    if all(konch.get(s) for s in SLOVA): break
+    for slovo in SLOVA:
+        if konch.get(slovo) or (slovo, st) in gotovo: continue
+        if time.time() - T0 > BUDGET: break
+        qs = {'q': slovo, 'type': 'ТУ'}
+        if st > 1: qs['page'] = st
+        rows, err = stroki_stranicy(f'{M.BAZA}/conclusions?' + urllib.parse.urlencode(qs))
+        if rows is None:
+            fa.write(json.dumps({'slovo': slovo, 'stranica': st, 'err': err[:60], 'stroki': []}, ensure_ascii=False) + '\n'); fa.flush(); time.sleep(3); continue
+        novye = [r for r in rows if r['kod'] not in vidennye]
+        h_rows = [{k: r.get(k) for k in ('kod', 'nomer', 'data', 'zakazchik', 'obekt', 'tip', 'org', 'inn')} for r in rows]
+        fa.write(json.dumps({'slovo': slovo, 'stranica': st, 'err': '', 'stroki': h_rows, 'novyh': len(novye)}, ensure_ascii=False) + '\n'); fa.flush()
+        gotovo.add((slovo, st))
+        for r in rows: vidennye.setdefault(r['kod'], r)
+        n_a += len(novye)
+        if not rows or not novye: konch[slovo] = True
+        if TEST and st >= 2: konch[slovo] = True
+        time.sleep(M.PAUZA)
+fa.close()
+print(f'этап A: страниц готово {len(gotovo)}, заключений увидено {len(vidennye)} (новых {n_a}), слов кончилось {sum(1 for s in SLOVA if konch.get(s))}/{len(SLOVA)}', flush=True)
+# ИНН эксплуатанта в строках списка нет (только имя) - берём его через _stroki? В EKSPL есть /customer/<inn>: перечитаем из html нельзя, поэтому этап A даёт имена,
+# а ИНН достаём так: имя -> predpriyatiya.nazvanie (совпадение) или этап B по ИНН базы. Плюс отдельный проход ниже по /customer/ ссылкам.
+# ---- этап B
+c = sqlite3.connect(DB, timeout=120)
+kandidaty = [r[0] for r in c.execute("select distinct inn from predpriyatiya where inn like '22%' and (inn in (select inn from fakty) or istochniki_zapisi like '%park%' or istochniki_zapisi like '%eis%')")]
+# + ИНН, которые упоминаются в obekt строк этапа A? нет ИНН. Добавим ИНН по совпадению имени
+imena = {}
+for inn, naz in c.execute("select inn, nazvanie from predpriyatiya where inn like '22%' and nazvanie is not null"):
+    k = re.sub(r'[^а-яa-z0-9]', '', (naz or '').lower())
+    if len(k) >= 6: imena.setdefault(k, inn)
+dop = set(); n_novyh_pred = 0
+have0 = {r[0] for r in c.execute('select inn from predpriyatiya')}
+for r in vidennye.values():
+    inn = r.get('inn') or ''
+    if inn.startswith('22'):
+        dop.add(inn)
+        if inn not in have0:
+            c.execute('insert or ignore into predpriyatiya(inn, nazvanie, istochniki_zapisi, ts) values(?,?,?,?)', (inn, r.get('zakazchik'), 'mpb', TS)); have0.add(inn); n_novyh_pred += 1
+    else:
+        k = re.sub(r'[^а-яa-z0-9]', '', (r.get('zakazchik') or '').lower())
+        if k in imena: dop.add(imena[k])
+c.commit()
+kandidaty = sorted(set(kandidaty) | dop)
+print(f'этап A->B: ИНН края из списков {len(dop)}, новых предприятий {n_novyh_pred}', flush=True)
+if TEST: kandidaty = kandidaty[:3]
+gotovo_b = {}
+if os.path.exists(F_B):
+    for l in open(F_B, encoding='utf-8'):
+        try: d = json.loads(l); gotovo_b[d['inn']] = d
+        except Exception: pass
+fb = open(F_B, 'a', encoding='utf-8'); n_b = 0
+for inn in kandidaty:
+    if inn in gotovo_b: continue
+    if time.time() - T0 > BUDGET: break
+    rows, err = M.po_inn(inn, max_stranic=60 if not TEST else 3, tolko_tu=True)
+    d = {'inn': inn, 'err': err[:80] if err else '', 'n': len(rows), 'stroki': [{k: r.get(k) for k in ('nomer', 'data', 'obekt', 'tip', 'ekspertnaya_org', 'ssylka', 'nashe_oborudovanie', 'centrobezhnoe', 'nasos', 'predpriyatie')} for r in rows]}
+    if not err: gotovo_b[inn] = d
+    fb.write(json.dumps(d, ensure_ascii=False) + '\n'); fb.flush(); n_b += 1
+    time.sleep(M.PAUZA)
+fb.close()
+print(f'этап B: ИНН-кандидатов {len(kandidaty)}, готово {len(gotovo_b)}, за заход {n_b}', flush=True)
+# ---- этап C: факты
+have = {r[0] for r in c.execute('select inn from predpriyatiya')}
+n_f = 0
+for inn, d in gotovo_b.items():
+    for r in d['stroki']:
+        ob = r.get('obekt') or ''
+        if not MASH.search(ob) or NASOS.search(ob): continue
+        tip = vid(ob)
+        if not tip: continue
+        m = re.search(r'([А-ЯA-Z][\w\-/.]{1,25}\s?[\-\d][\w\-/.,]{0,20})', ob)
+        kl = f'{inn}|{r.get("ssylka")}|{tip}||{ob[:80]}'
+        c.execute('''insert or ignore into fakty(inn,predpriyatie,vid_fakta,tip,marka_model,sreda,data,srok_do,status_sroka,sila,istochnik,ssylka,citata,kto_sobral,ts,klyuch)
+                     values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                  (inn, r.get('predpriyatie'), 'ЭПБ', tip, '', M.sreda(ob) if hasattr(M, 'sreda') else '', r.get('data'), '', '', 5, 'monitor-pb.ru', r.get('ssylka'), (ob[:400] + ' | ' + (r.get('nomer') or '') + ' | ' + (r.get('ekspertnaya_org') or ''))[:500], 'ak_mpb', TS, kl))
+        n_f += 1
+c.commit()
+print('этап C: строк-кандидатов', n_f, '| фактов ЭПБ ak_mpb:', c.execute("select count(*) from fakty where kto_sobral='ak_mpb'").fetchone()[0], '| ИНН с ЭПБ:', c.execute("select count(distinct inn) from fakty where vid_fakta='ЭПБ'").fetchone()[0], flush=True)
+c.close()
+if all(konch.get(s) for s in SLOVA) and all(i in gotovo_b for i in kandidaty):
+    print('ГОТОВО')
