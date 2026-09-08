@@ -51,6 +51,19 @@ def priyomy_md():
         return
     pr = json.load(open(p, encoding='utf-8'))['priyomy']
     prov = {r['id']: r for r in load_jsonl('proverka-priyomov.jsonl')}
+    popr_p = os.path.join(HERE, 'ruchnye-popravki.json')
+    popr = json.load(open(popr_p, encoding='utf-8')) if os.path.exists(popr_p) else {}
+    for k, v in popr.items():
+        if k.startswith('_') or k not in prov:
+            continue
+        r = prov[k]
+        r['status_modeli'] = r.get('status_ishodnyy') or r['status']
+        r.pop('status_ishodnyy', None)
+        if 'status' in v:
+            r['status'] = v['status']
+        if 'chem' in v:
+            r['chem'] = v['chem']
+        r['popravka'] = v.get('prichina', '')
     poryadok = ['реализовано', 'частично', 'закрыт', 'не подтверждено цитатой', 'нет']
     c = Counter((prov.get(x['id']) or {}).get('status', 'не проверено') for x in pr)
     out = ['# Алтайский край, предприятия с КО: уникальные приёмы и проверка по инструментам', '',
@@ -58,7 +71,8 @@ def priyomy_md():
            'Документы, по которым проверялось: PARK-2S-INSTRUMENTY-peredacha.md, INSTRUMENTY-I-PRIYOMY.md, '
            'DOKA-kakoy-skript-chto-delaet.md (замена отсутствующего INSTRUMENTY-KAK-POLZOVATSYA.md). '
            'Статусы «реализовано»/«частично»/«закрыт» засчитаны только с дословной цитатой, найденной в документе '
-           'механически; без найденной цитаты статус понижен до «не подтверждено цитатой».', '']
+           'механически; без найденной цитаты статус понижен до «не подтверждено цитатой». Затем вердикты '
+           'проверены глазами, поправки записаны в ruchnye-popravki.json и показаны у каждого приёма.', '']
     for k in prov:
         if k.startswith('K-'):
             r = prov[k]
@@ -83,6 +97,8 @@ def priyomy_md():
                     out.append(f'- цитата ({r.get("dokument_fakt") or r.get("dokument", "")}{"" if r.get("citata_naydena") else ", НЕ найдена в документе"}): «{r["citata"]}»')
                 if r.get('status_ishodnyy'):
                     out.append(f'- статус по ответу модели был «{r["status_ishodnyy"]}», понижен: цитата не найдена')
+                if r.get('popravka'):
+                    out.append(f'- ручная поправка (у модели было «{r.get("status_modeli", "")}»): {r["popravka"]}')
                 if r.get('chto_dodelat'):
                     out.append(f'- что доделать: {r["chto_dodelat"]}')
             out.append('')
