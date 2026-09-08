@@ -33,7 +33,7 @@ from sender.suppression import Suppression                      # noqa: E402
 from imya_v_pismo import итоговое_имя                           # noqa: E402
 from zona_po_innu import зона_по_inn                           # noqa: E402
 
-ТЕМА = "для качества: вопрос по сортировке зерна"
+ТЕМА = "Для качества: вопрос по сортировке зерна"
 ГРУППА = "Агро зерно 2026"
 ИСТОЧНИК = "чеко-агро-2026-второй"
 КАМПАНИЯ = 11

@@ -41,7 +41,7 @@ if n:
     with store._lock:
         for р in store._conn.execute(
                 "SELECT LENGTH(panel_json) L FROM confirm_reviews "
-                " WHERE subject=?", ("для качества: вопрос по сортировке зерна",)):
+                " WHERE subject=?", ("Для качества: вопрос по сортировке зерна",)):
             сейчас += int(р["L"] or 0)
     print("   панели партии: было %.1f МБ на %d карточек, стало %.1f МБ"
           % (до / 1048576.0, n, сейчас / 1048576.0))

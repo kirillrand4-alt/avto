@@ -11,7 +11,7 @@ from collections import Counter
 sys.path.insert(0, r"C:\sender")
 from sender.store import Store                                 # noqa: E402
 
-ТЕМА = "для качества: вопрос по сортировке зерна"
+ТЕМА = "Для качества: вопрос по сортировке зерна"
 ПРИЗНАК = "адрес центра занятости"
 store = Store(r"C:\sender\sender.db")
 счёт = Counter()

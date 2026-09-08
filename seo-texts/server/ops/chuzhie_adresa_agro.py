@@ -10,7 +10,7 @@ from collections import Counter
 sys.path.insert(0, r"C:\sender")
 from sender.store import Store                                 # noqa: E402
 
-ТЕМА = "для качества: вопрос по сортировке зерна"
+ТЕМА = "Для качества: вопрос по сортировке зерна"
 ПРИЗНАКИ = [
     ("центр занятости", re.compile(r"(?i)(^|[^a-z])czn|czn\.|zan\.|zanyat|"
                                    r"trud[a-z]*\.|rabota\.|szn\.")),

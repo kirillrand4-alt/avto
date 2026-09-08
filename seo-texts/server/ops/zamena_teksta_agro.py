@@ -27,7 +27,7 @@ from collections import Counter
 sys.path.insert(0, r"C:\sender")
 from sender.store import Store                                  # noqa: E402
 
-ТЕМА = "для качества: вопрос по сортировке зерна"
+ТЕМА = "Для качества: вопрос по сортировке зерна"
 ПРИМЕНИТЬ = "--primenit" in sys.argv or "--apply" in sys.argv
 СНИМОК = (r"C:\sender\_ops\agro-tekst-do-zameny-"
           + time.strftime("%m%d-%H%M%S") + ".jsonl")

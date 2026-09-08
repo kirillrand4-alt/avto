@@ -20,7 +20,7 @@ from sender.sender import Sender                                # noqa: E402
 from sender.store import Store                                  # noqa: E402
 from sender.suppression import Suppression                      # noqa: E402
 
-ТЕМА = "для качества: вопрос по сортировке зерна"
+ТЕМА = "Для качества: вопрос по сортировке зерна"
 СКОЛЬКО = 250
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))

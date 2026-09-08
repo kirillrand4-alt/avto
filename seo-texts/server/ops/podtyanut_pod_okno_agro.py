@@ -20,7 +20,7 @@ from sender.auto_send import next_slot, window_from             # noqa: E402
 from sender.config import Config                                # noqa: E402
 from sender.store import Store                                  # noqa: E402
 
-ТЕМА = "для качества: вопрос по сортировке зерна"
+ТЕМА = "Для качества: вопрос по сортировке зерна"
 ПРИМЕНИТЬ = "--primenit" in sys.argv or "--apply" in sys.argv
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))

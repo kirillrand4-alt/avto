@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, r"C:\sender")
 from sender.store import Store                                 # noqa: E402
 
-ТЕМА = "для качества: вопрос по сортировке зерна"
+ТЕМА = "Для качества: вопрос по сортировке зерна"
 НОВЫЙ = "решето и аспирация"
 store = Store(r"C:\sender\sender.db")
 with store._lock:

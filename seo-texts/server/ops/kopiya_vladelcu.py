@@ -23,7 +23,7 @@ from sender.sender import Sender                                # noqa: E402
 from sender.store import Store                                  # noqa: E402
 from sender.suppression import Suppression                      # noqa: E402
 
-ТЕМА_ПАРТИИ = "для качества: вопрос по сортировке зерна"
+ТЕМА_ПАРТИИ = "Для качества: вопрос по сортировке зерна"
 КУДА = ["kirillrand4@gmail.com", "martiushov@prokompressor.ru"]
 ПРИМЕНИТЬ = "--primenit" in sys.argv or "--apply" in sys.argv
 
