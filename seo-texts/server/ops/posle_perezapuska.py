@@ -1,78 +1,74 @@
 # -*- coding: utf-8 -*-
-"""Работают ли правки после перезапуска панели: по делам, а не по файлам.
+"""Что панель увидела после перезапуска: пороги, потолок, паузы, темп."""
+import subprocess, sys, time
+from collections import Counter
+from datetime import datetime, timezone
+sys.path.insert(0, r"C:\sender")
+from sender.auto_send import ENABLED_KEY                        # noqa: E402
+from sender.config import Config                                # noqa: E402
+from sender.otkaz_spam import porogi, min_yashchikov            # noqa: E402
+from sender.store import Store                                  # noqa: E402
 
-Смотрим три следа: журнал панели (строки probe_sync/addr_probe), снятые
-пробой карточки с новыми причинами и остаток непроверенных одобренных
-(было 66 без пробы и 10 с «неясно»).
-"""
-import glob
-import io
-import os
-import sqlite3
-import time
+cfg = Config.load(r"C:\sender\sender.yaml")
+store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
+теперь = datetime.now(timezone.utc)
 
-print("=== ЖИВА ЛИ ПАНЕЛЬ И ЧТО В ЖУРНАЛЕ ===")
-логи = []
-for корень in (r"C:\sender", r"C:\sender\logs", r"C:\sender\sender"):
-    логи += glob.glob(os.path.join(корень, "*.log"))
-логи = sorted(set(логи), key=lambda п: -os.path.getmtime(п))[:4]
-for п in логи:
-    возраст = (time.time() - os.path.getmtime(п)) / 60.0
-    print("\n  %s (обновлён %.1f мин назад, %.0f КБ)"
-          % (os.path.basename(п), возраст, os.path.getsize(п) / 1024.0))
-    try:
-        with io.open(п, encoding="utf-8", errors="replace") as ф:
-            хвост = ф.readlines()[-4000:]
-    except Exception as e:  # noqa: BLE001
-        print("    не прочитан: %s" % e)
+ком = ("Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
+       "Where-Object {$_.CommandLine -like '*serve-api*'} | "
+       "Select-Object ProcessId,CreationDate | Format-List")
+r = subprocess.run(["powershell", "-NoProfile", "-Command", ком],
+                   capture_output=True, timeout=120)
+т = (r.stdout or b"").decode("cp866", errors="replace")
+if not т.strip():
+    т = (r.stdout or b"").decode("utf-8", errors="replace")
+print("--- процесс панели ---")
+print(т.strip()[:400])
+
+пауз = 0
+готовы = []
+for mb in cfg.mailboxes():
+    if str(getattr(mb, "division", "")).lower() != "meyer":
         continue
-    интересно = [с for с in хвост
-                 if "probe_sync" in с or "addr_probe" in с
-                 or "цикл запущен" in с or "Started" in с or "Uvicorn" in с]
-    for с in интересно[-14:]:
-        print("    %s" % с.rstrip()[:190])
-    if not интересно:
-        print("    (строк про пробу нет)")
+    st = store.get_mailbox_state(mb.mailbox_id)
+    if st is not None and getattr(st, "paused", False):
+        пауз += 1
+    else:
+        готовы.append(mb.mailbox_id)
 
-c = sqlite3.connect(r"C:\sender\sender.db")
-c.row_factory = sqlite3.Row
+ушло = отказ = 0
+по_часам = Counter()
+with store._lock:
+    кол = [c[1] for c in store._conn.execute("PRAGMA table_info(events)")]
+    вр = next((c for c in ("ts", "created_at") if c in кол), None)
+    тп = next((c for c in ("type", "event_type") if c in кол), None)
+    ушло = store._conn.execute(
+        "SELECT COUNT(*) FROM messages WHERE status='sent' AND sent_at >= "
+        "datetime('now','start of day')").fetchone()[0]
+    отказ = store._conn.execute(
+        "SELECT COUNT(*) FROM events WHERE %s='reject_spam' AND %s >= "
+        "datetime('now','start of day')" % (тп, вр)).fetchone()[0]
+    for р in store._conn.execute(
+            "SELECT sent_at FROM messages WHERE status='sent' AND sent_at >= "
+            "datetime('now','-3 hours')"):
+        по_часам[str(р["sent_at"]).replace("T", " ")[:13]] += 1
+    ждут = store._conn.execute(
+        "SELECT COUNT(*) FROM messages WHERE status='scheduled'").fetchone()[0]
 
-print("\n=== СНЯТЫЕ ПРОБОЙ КАРТОЧКИ (сегодня) ===")
-есть = False
-for р in c.execute(
-        "SELECT decided_by, reason, COUNT(*) n, MAX(decided_at) t "
-        "  FROM confirm_reviews "
-        " WHERE status='skipped' AND substr(COALESCE(decided_at,''),1,10)=date('now') "
-        "   AND COALESCE(decided_by,'') LIKE '%проба%' "
-        " GROUP BY decided_by, substr(COALESCE(reason,''),1,28) "
-        " ORDER BY t DESC LIMIT 12"):
-    есть = True
-    print("  %-34s %-46s %3d  последняя %s"
-          % (str(р["decided_by"])[:34], str(р["reason"] or "")[:46], р["n"],
-             str(р["t"])[:19]))
-if not есть:
-    print("  пока ничего не снято")
-
-print("\n=== ЧТО ОСТАЛОСЬ В ОЧЕРЕДИ ===")
-без_пробы = c.execute(
-    "SELECT COUNT(*) n FROM confirm_reviews cr "
-    "  JOIN recipients r ON r.id=cr.recipient_id "
-    "  LEFT JOIN addr_probe p ON lower(p.email)=lower(r.email) "
-    " WHERE cr.status='approved' AND p.email IS NULL").fetchone()["n"]
-print("  одобренных без пробы вовсе: %d  (было 66)" % без_пробы)
-for р in c.execute(
-        "SELECT p.verdict, COUNT(*) n FROM confirm_reviews cr "
-        "  JOIN recipients r ON r.id=cr.recipient_id "
-        "  JOIN addr_probe p ON lower(p.email)=lower(r.email) "
-        " WHERE cr.status IN ('approved','pending') "
-        "   AND p.verdict IN ('неясно','нет ящика','нет MX') "
-        " GROUP BY p.verdict ORDER BY n DESC"):
-    print("  одобренных/ждущих с приговором «%s»: %d" % (р["verdict"], р["n"]))
-
-print("\n=== СВЕЖИЕ ВЕРДИКТЫ ПРОБЫ (последние 10 минут) ===")
-for р in c.execute(
-        "SELECT verdict, source, COUNT(*) n, MAX(ts) t FROM addr_probe "
-        " WHERE ts >= datetime('now','-10 minutes') GROUP BY verdict, source "
-        " ORDER BY n DESC"):
-    print("  %-16s [%-12s] %4d  последний %s"
-          % (р["verdict"], str(р["source"] or "-"), р["n"], str(р["t"])[:19]))
+print("")
+print("--- отправки по часам (UTC, 3 часа) ---")
+for к in sorted(по_часам):
+    print("   %s  %4d" % (к, по_часам[к]))
+print("")
+print("=" * 74)
+print("=== ПОСЛЕ ПЕРЕЗАПУСКА ===")
+print("сейчас UTC %s" % теперь.strftime("%H:%M"))
+п_я, п_н = porogi(cfg)
+print("пороги заслона: ящик %s, направление %s, минимум ящиков %s"
+      % (п_я, п_н, min_yashchikov(cfg)))
+try:
+    print("автоотправка включена: %s" % store.get_setting(ENABLED_KEY, False))
+    print("send_limits: %s" % store.get_setting("send_limits"))
+except Exception as ex:                                         # noqa: BLE001
+    print("настройки не прочитались: %s" % str(ex)[:70])
+print("ящиков Meyer готовы: %d, на паузе: %d" % (len(готовы), пауз))
+print("за сегодня: ушло %d, отказов %d; ждут отправки %d" % (ушло, отказ, ждут))
