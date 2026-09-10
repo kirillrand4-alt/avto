@@ -126,7 +126,7 @@
 - **Место:** в разделе «Что входит в стоимость станции и что докупается отдельно»
 - **Промпт (EN):** Flat vector infographic diagram of a diesel compressor station: connected icons for a diesel engine, a screw compressor block, a control panel and a chassis/frame base, plus optional icons for an air receiver, a dryer, filters and a noise-enclosure, linked left to right by thin arrows, flat design with three to four flat colors (dark graphite, mid gray, blue accent, white background), thin line icons, generous white space, no gradients, no shadows, 4:3 aspect ratio, no text labels, no logos, no people.
 - **Что должно получиться (RU):** Блок-схема состава станции: дизель → компрессорный блок → щит управления на раме, плюс опциональные ресивер, осушитель, фильтры и шумозащитный кожух.
-- **alt:** Схема состава дизельной компрессорной станции на шасси
+- **alt:** Схема состава дизельной компрессорной станции на шасси с шумозащитным кожухом
 - **Подпись:** Система автозапуска включает станцию при падении давления в сети без участия оператора.
 
 ### 3. Узел крупным планом
@@ -222,7 +222,7 @@
 - **Место:** в разделе «Резервная линия генерации: исключение простоя при обслуживании основной»
 - **Промпт (EN):** Flat vector infographic diagram showing two full-capacity oxygen-generation lines in an N+1 scheme, each with a compressor icon and a generator icon, both connected to one shared oxygen-receiver icon, a switching-arrow icon between the lines marked as automatic, flat design with three to four flat colors (dark graphite, mid gray, blue accent, white background), thin line icons, generous white space, no gradients, no shadows, 4:3 aspect ratio, no text labels, no logos, no people.
 - **Что должно получиться (RU):** Схема N+1: две полнонагруженные линии генерации сходятся к общему ресиверу, между ними автоматическое переключение.
-- **alt:** Схема резервной линии генерации кислорода по принципу N+1
+- **alt:** Схема резервной линии генерации кислорода на производстве по принципу N+1
 - **Подпись:** Автоматическое переключение на резервную линию занимает обычно несколько секунд.
 
 ### 3. Узел крупным планом
@@ -438,4 +438,148 @@
 - **Что должно получиться (RU):** Станция с осушителем на бетонном фундаменте под всесезонным навесом на открытой площадке.
 - **alt:** Компрессорная станция с осушителем под навесом на открытой площадке
 - **Подпись:** Для наружного размещения осушителю нужен обогрев при температуре ниже +5 °C.
+
+## porshnevye-kompressory.html
+
+Поршневые компрессоры Atlas Copco 1,5-15 кВт: безмасляное исполнение,
+встроенный ресивер и применение в фармацевтике и пищевом производстве.
+
+### 1. Обложка
+
+- **Файл:** `porshnevye-kompressory-1-oblozhka.webp`
+- **Размер:** 1600 x 900 (16:9)
+- **Место:** после вводного абзаца, до блока «Содержание страницы»
+- **Промпт (EN):** Industrial photograph of a compact oil-free piston air-compressor unit with a horizontal receiver tank standing in a small workshop or laboratory utility room, painted metal casing, a short outlet pipe, daylight from a side window, calm gray-blue industrial tones, three-quarter wide angle, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
+- **Что должно получиться (RU):** Компактный безмасляный поршневой компрессор с горизонтальным ресивером в небольшом техническом помещении.
+- **alt:** Безмасляный поршневой компрессор с ресивером в техническом помещении
+- **Подпись:** Давление 10 бар даёт запас 2-4 бара на потери в трубопроводах до потребителя.
+
+### 2. Схема процесса
+
+- **Раздел:** `pochemu-bezmaslyanye-porshnevye-kompressory-atlas` | Почему безмасляные поршневые компрессоры Atlas Copco стоят дороже масляных
+- **Файл:** `bezmaslyanyy-porshen-2-shema.webp`
+- **Размер:** 1200 x 900
+- **Место:** в разделе «Почему безмасляные поршневые компрессоры Atlas Copco стоят дороже масляных»
+- **Промпт (EN):** Flat vector infographic cutaway diagram comparing two piston-cylinder mechanisms side by side: the left side shows a piston with a dry PTFE coating and clean air flowing out, the right side shows an oil-lubricated piston with small oil-droplet icons carried into the air stream, flat design with three to four flat colors (dark graphite, mid gray, blue accent, white background), thin line icons, generous white space, no gradients, no shadows, 4:3 aspect ratio, no text labels, no logos, no people.
+- **Что должно получиться (RU):** Сравнение в разрезе: слева поршень с сухим PTFE-покрытием и чистый воздух, справа масляный поршень с каплями масла в потоке.
+- **alt:** Схема сравнения безмасляного и масляного поршневого компрессора в разрезе
+- **Подпись:** Безмасляный поршневой компрессор той же мощности стоит в 1,8-2,2 раза дороже масляного.
+
+### 3. Узел крупным планом
+
+- **Раздел:** `zachem-nuzhen-vstroennyy-resiver-na` | Зачем нужен встроенный ресивер на 270 литров при постоянной нагрузке
+- **Файл:** `vstroennyy-resiver-3-uzel.webp`
+- **Размер:** 1200 x 800 (3:2)
+- **Место:** в разделе «Зачем нужен встроенный ресивер на 270 литров при постоянной нагрузке»
+- **Промпт (EN):** Photorealistic close-up industrial photograph of a piston-compressor head mounted directly on top of a horizontal receiver tank, visible cooling fins on the cylinder, a pressure gauge with no readable numbers, painted steel surfaces, soft diffuse daylight, calm gray-blue tones, shallow depth of field, close three-quarter angle, 3:2 aspect ratio, photorealistic industrial photography, no logos, no people.
+- **Что должно получиться (RU):** Крупный план поршневой головки компрессора на горизонтальном ресивере, видны рёбра охлаждения цилиндра.
+- **alt:** Поршневая головка компрессора на встроенном ресивере с рёбрами охлаждения
+- **Подпись:** Ресивер снижает число пусков двигателя с 10-15 до 4-6 раз в час, уменьшая износ обмотки.
+
+### 4. Компоновка / применение
+
+- **Раздел:** `kakie-zadachi-reshaet-kompressor-na` | Какие задачи решает компрессор на 1860 л/мин в фармацевтике и пищевом производстве
+- **Файл:** `primenenie-farmatsevtika-4-primenenie.webp`
+- **Размер:** 1200 x 800 (3:2)
+- **Место:** в разделе «Какие задачи решает компрессор на 1860 л/мин в фармацевтике и пищевом производстве»
+- **Промпт (EN):** Wide industrial photograph of a clean production line in a pharmaceutical or food packaging facility, bottles or vials moving along a conveyor with a thin compressed-air blow-off nozzle positioned above the line, bright clean-room style lighting, calm gray-blue tones, wide three-quarter view, 3:2 aspect ratio, photorealistic industrial photography, no logos, no text, no people, no readable labels on containers.
+- **Что должно получиться (RU):** Линия упаковки в пищевом или фармацевтическом производстве, над конвейером тонкое сопло обдува сжатым воздухом.
+- **alt:** Обдув тары сжатым воздухом на линии упаковки пищевого производства
+- **Подпись:** Станция на 1860 л/мин закрывает потребности одного участка производства или небольшого цеха.
+
+## spiralnye-kompressory.html
+
+Спиральные маслозаполненные компрессоры Atlas Copco 1.5-22 кВт для
+круглосуточной работы: прямой и ременный привод.
+
+### 1. Обложка
+
+- **Файл:** `spiralnye-kompressory-1-oblozhka.webp`
+- **Размер:** 1600 x 900 (16:9)
+- **Место:** после вводного абзаца, до блока «Содержание страницы»
+- **Промпт (EN):** Industrial photograph of a compact scroll air-compressor unit with a belt-driven motor assembly visible through a ventilation grille, standing on a workshop floor, steel outlet piping, daylight from a side window, calm gray-blue industrial tones, three-quarter wide angle, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
+- **Что должно получиться (RU):** Спиральный компрессор с ременным приводом виден через вентиляционную решётку кожуха, цех на заднем плане.
+- **alt:** Спиральный компрессор с ременным приводом в производственном цехе
+- **Подпись:** Час простоя фасовочной линии часто стоит дороже, чем годовое обслуживание компрессора.
+
+### 2. Схема процесса
+
+- **Раздел:** `pochemu-spiralnaya-gruppa-vyderzhivaet-kruglosutochnyy` | Почему спиральная группа выдерживает круглосуточный режим
+- **Файл:** `spiralnaya-para-2-shema.webp`
+- **Размер:** 1200 x 900
+- **Место:** в разделе «Почему спиральная группа выдерживает круглосуточный режим»
+- **Промпт (EN):** Flat vector infographic cutaway diagram of a scroll-compressor pair: a fixed spiral shown static and an orbiting spiral shown moving along a small circular arrow path around it, continuous compression-flow arrows from the outer edge toward the center outlet, no valve icons, flat design with three to four flat colors (dark graphite, mid gray, blue accent, white background), thin line icons, generous white space, no gradients, no shadows, 4:3 aspect ratio, no text labels, no logos, no people.
+- **Что должно получиться (RU):** Схема спиральной пары в разрезе: неподвижная спираль и орбитально движущаяся, поток сжимается непрерывно к центру без клапанов.
+- **alt:** Схема работы спиральной пары компрессора с орбитальным движением
+- **Подпись:** В спиральной группе нет клапанов, поэтому сжатие идёт непрерывно, без пульсаций.
+
+### 3. Узел крупным планом
+
+- **Раздел:** `maslyanoe-ohlazhdenie-resurs-pri-vysokoy` | Масляное охлаждение: ресурс при высокой нагрузке
+- **Файл:** `maslyanoe-ohlazhdenie-3-uzel.webp`
+- **Размер:** 1200 x 800 (3:2)
+- **Место:** в разделе «Масляное охлаждение: ресурс при высокой нагрузке»
+- **Промпт (EN):** Photorealistic close-up industrial photograph of an oil-cooling radiator and sump on a scroll-compressor unit, cooling fins and a small sight glass, brushed metal surfaces, soft diffuse daylight, calm gray-blue tones, shallow depth of field, close three-quarter angle, 3:2 aspect ratio, photorealistic industrial photography, no readable markings, no logos, no people.
+- **Что должно получиться (RU):** Крупный план масляного радиатора и картера спиральной группы со смотровым окном уровня масла.
+- **alt:** Система масляного охлаждения спирального компрессора с радиатором
+- **Подпись:** Масло охлаждает рабочие поверхности, смазывает привод и уплотняет зазоры между спиралями.
+
+### 4. Компоновка / применение
+
+- **Раздел:** `diapazon-moschnosti-1-5-22` | Диапазон мощности 1.5-22 кВт: от небольшого цеха до производственной линии
+- **Файл:** `uchastok-proizvodstva-4-primenenie.webp`
+- **Размер:** 1200 x 800 (3:2)
+- **Место:** в разделе «Диапазон мощности 1.5-22 кВт: от небольшого цеха до производственной линии»
+- **Промпт (EN):** Wide industrial photograph of a production line with pneumatic packaging machines and conveyor cylinders fed by compressed air, a compressor visible in the background against a wall, calm gray-blue industrial tones, wide three-quarter view, 3:2 aspect ratio, photorealistic industrial photography, no logos, no text, no people.
+- **Что должно получиться (RU):** Производственный участок с упаковочными автоматами и пневмоцилиндрами на конвейере, компрессор виден у стены.
+- **alt:** Пневмоцилиндры упаковочной линии производственного участка на сжатом воздухе
+- **Подпись:** Мощности 18,5-22 кВт соответствуют линии с постоянной нагрузкой и производительностью до 2440 л/мин.
+
+## vintovye-kompressory.html
+
+Винтовые компрессоры Atlas Copco 2-500 кВт: сухое и масляное сжатие,
+частотный привод и класс чистоты воздуха ISO 8573-1.
+
+### 1. Обложка
+
+- **Файл:** `vintovye-kompressory-1-oblozhka.webp`
+- **Размер:** 1600 x 900 (16:9)
+- **Место:** после вводного абзаца, до блока «Содержание страницы»
+- **Промпт (EN):** Industrial photograph of a large industrial screw air-compressor unit standing in a spacious machine hall, thick outlet piping running toward a distribution header, concrete floor, daylight from high windows, calm gray-blue industrial tones, wide three-quarter angle, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
+- **Что должно получиться (RU):** Крупный промышленный винтовой компрессор в просторном машинном зале, толстая труба уходит к распределительному коллектору.
+- **alt:** Промышленный винтовой компрессор для непрерывного снабжения цеха воздухом
+- **Подпись:** Одна и та же машина при разном давлении настройки даёт разную производительность за те же деньги.
+
+### 2. Схема процесса
+
+- **Раздел:** `bezmaslyanye-vintovye-kompressory-atlas-copco-tehnologiya-su` | Безмасляные винтовые компрессоры Atlas Copco: технология сухого сжатия
+- **Файл:** `suhoe-szhatie-2-shema.webp`
+- **Размер:** 1200 x 900
+- **Место:** в разделе «Безмасляные винтовые компрессоры Atlas Copco: технология сухого сжатия»
+- **Промпт (EN):** Flat vector infographic cutaway diagram comparing two screw-compressor paths side by side: the left path shows a dry screw pair with no oil film and clean air flowing directly to the outlet, the right path shows an oil-flooded screw pair with an oil-separator icon and a filter icon before the outlet, flat design with three to four flat colors (dark graphite, mid gray, blue accent, white background), thin line icons, generous white space, no gradients, no shadows, 4:3 aspect ratio, no text labels, no logos, no people.
+- **Что должно получиться (RU):** Сравнение в разрезе: слева сухая винтовая пара без масла и чистый воздух на выходе, справа масляная пара с маслоотделителем и фильтром.
+- **alt:** Схема сухого сжатия винтового компрессора без контакта с маслом
+- **Подпись:** Безмасляный винтовой компрессор дороже масляного той же мощности в 1,8-2,5 раза.
+
+### 3. Узел крупным планом
+
+- **Раздел:** `chastotnoe-regulirovanie-v-87-modelyah-upravlenie-proizvodit` | Частотное регулирование в 87 моделях: управление производительностью
+- **Файл:** `chastotnyy-privod-3-modul.webp`
+- **Размер:** 1200 x 800 (3:2)
+- **Место:** в разделе «Частотное регулирование в 87 моделях: управление производительностью»
+- **Промпт (EN):** Photorealistic close-up industrial photograph of a frequency-inverter drive module installed inside an open compressor control cabinet, cooling fins and cable terminals visible, indicator lights, brushed metal surface, soft diffuse light, calm gray-blue tones, close three-quarter angle, 3:2 aspect ratio, photorealistic industrial photography, no readable text, no logos, no people.
+- **Что должно получиться (RU):** Крупный план модуля частотного привода внутри открытого шкафа управления компрессором.
+- **alt:** Модуль частотного привода в шкафу управления винтового компрессора
+- **Подпись:** Надбавка за частотный привод на мощности до 37 кВт достигает 150-170% от цены компрессора.
+
+### 4. Компоновка / применение
+
+- **Раздел:** `klass-chistoty-vozduha-iso-8573-1-sertifikaciya-dlya-pischev` | Класс чистоты воздуха ISO 8573-1: сертификация для пищевых и фармацевтических производств
+- **Файл:** `klass-chistoty-4-primenenie.webp`
+- **Размер:** 1200 x 800 (3:2)
+- **Место:** в разделе «Класс чистоты воздуха ISO 8573-1: сертификация для пищевых и фармацевтических производств»
+- **Промпт (EN):** Wide industrial photograph of a clean food or pharmaceutical production hall with stainless-steel equipment and overhead compressed-air piping feeding the line, bright even lighting, calm gray-blue tones, wide three-quarter view, 3:2 aspect ratio, photorealistic industrial photography, no logos, no text, no people, no readable labels.
+- **Что должно получиться (RU):** Чистое производственное помещение пищевого или фармацевтического профиля с трубопроводом сжатого воздуха над линией.
+- **alt:** Подача сжатого воздуха на линию пищевого производства с классом чистоты ISO
+- **Подпись:** Класс чистоты по ISO 8573-1 обеспечивается либо безмасляным компрессором, либо фильтрацией на выходе.
 
