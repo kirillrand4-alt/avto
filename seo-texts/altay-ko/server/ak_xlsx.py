@@ -41,7 +41,9 @@ def luchshee(inn):
     return vyr, prib, nal, ssch
 KLASS_ORDER = {'доказано': 0, 'косвенно': 1, 'доказано (слабо)': 2, 'кандидат': 3, 'кандидат (линзы разошлись)': 4, 'кандидат (слабый)': 5, 'без вердикта': 6, 'не оценено': 6, 'не наше': 7}
 rows_out = []
-for r in c.execute("select * from predpriyatiya where inn like '22%' or adres like '%Алтайский край%'"):
+# третье условие: эксплуатант ОПО в крае может быть зарегистрирован в другом регионе -
+# если по нему есть карточка доказательства, он наш, каким бы ни был ИНН
+for r in c.execute("select * from predpriyatiya where inn like '22%' or adres like '%Алтайский край%' or inn in (select distinct inn from fakty)"):
     inn = r['inn']; fs = fakty.get(inn, [])
     silnye = [f for f in fs if (f['sila'] or 0) >= 3 and f['tip'] not in SLAB and f['vid_fakta'] != 'расход газа ЕИС']
     kl = 'доказано' if silnye else ('доказано (слабо)' if fs else (r['klass'] or 'не оценено'))
