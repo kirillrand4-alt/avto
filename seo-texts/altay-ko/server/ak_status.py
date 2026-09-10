@@ -30,7 +30,7 @@ c = sqlite3.connect(DB, timeout=180)
 if VSE:
     kand = [r[0] for r in c.execute("select distinct inn from fakty")]
 else:
-    kand = [r[0] for r in c.execute("select distinct inn from fakty where vozduh=1")]
+    kand = [r[0] for r in c.execute("select distinct inn from fakty where vozduh in (1,2)")]
 gotovo = {}
 if os.path.exists(F):
     for l in open(F, encoding='utf-8', errors='replace'):

@@ -17,10 +17,15 @@ SLAB = ('холодильный компрессор', 'ОПО (иное)')
 fakty = collections.defaultdict(list); spornye = []; otbrosheno = collections.Counter()
 for r in c.execute('select * from fakty order by sila desc'):
     d = dict(r); v = d.get('vozduh')
-    if TOLKO_VOZDUH and v != 1:
+    if TOLKO_VOZDUH and v not in (1, 2):
         otbrosheno['мусор' if v == 0 else 'спорное'] += 1
         if v is None: spornye.append(d)
         continue
+    if v == 2:
+        # компрессор назван, но тип не уточнён: факт берём, силу понижаем на единицу и говорим об этом прямо
+        d['sila'] = max(1, (d['sila'] or 2) - 1)
+        d['vid_fakta'] = (d['vid_fakta'] or '') + ' (тип не уточнён)'
+        otbrosheno['вероятно воздушное'] += 1
     fakty[d['inn']].append(d)
 fin = collections.defaultdict(list)
 for r in c.execute('select * from finansy'):
@@ -128,7 +133,8 @@ stroki.append(['По классам', ''])
 for k in ['доказано', 'доказано (слабо)', 'косвенно', 'кандидат', 'кандидат (слабый)', 'кандидат (линзы разошлись)']:
     if kl_cnt.get(k): stroki.append([k, kl_cnt[k]])
 stroki += [[], ['Карточек доказательств всего (воздушное КО)', len(d2)], ['Предприятий с карточкой', len({x[0] for x in d2})],
-           ['Отброшено как не воздушное КО', otbrosheno['мусор']], ['Вынесено в «Спорное»', otbrosheno['спорное']], []]
+           ['Отброшено как не воздушное КО', otbrosheno['мусор']], ['Из них «тип не уточнён»', otbrosheno['вероятно воздушное']],
+           ['Вынесено в «Спорное»', otbrosheno['спорное']], []]
 stroki.append(['Карточки по источникам', ''])
 for k, v in ist_cnt.most_common(): stroki.append([k, v])
 stroki += [[], ['Карточки по виду факта', '']]
