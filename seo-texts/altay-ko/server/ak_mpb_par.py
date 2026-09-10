@@ -77,6 +77,8 @@ ochered = [i for i in kand if i not in gotovo]
 # OBRATNO: второй прогон идёт с хвоста очереди навстречу первому - два независимых захода
 # не перепахивают одни и те же ИНН, пока не встретятся посередине.
 if 'OBRATNO' in sys.argv: ochered = ochered[::-1]
+# SEREDINA: третий прогон стартует с середины очереди - три захода расходятся по разным её частям
+if 'SEREDINA' in sys.argv: ochered = ochered[len(ochered) // 2:] + ochered[:len(ochered) // 2]
 if TEST: ochered = ochered[:6]; POTOKOV = 3
 print(f'производственных ИНН {len(kand)}, готово {len(gotovo)}, в очереди {len(ochered)}, потоков {POTOKOV}', flush=True)
 
