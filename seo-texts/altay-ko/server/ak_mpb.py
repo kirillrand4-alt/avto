@@ -12,8 +12,15 @@ import mpb_po_inn as M
 F_A = os.path.join(AK, 'mpb-slova.jsonl'); F_B = os.path.join(AK, 'mpb-po-inn.jsonl')
 BUDGET = int(sys.argv[1]) if len(sys.argv) > 1 else 1400; TEST = 'TEST' in sys.argv
 T0 = time.time(); TS = time.strftime('%Y-%m-%d %H:%M')
+MASHINY = ['компрессор', 'компрессорная установка', 'винтовой компрессор', 'поршневой компрессор', 'центробежный компрессор', 'турбокомпрессор', 'воздушный компрессор',
+           'дожимной компрессор', 'мембранный компрессор', 'спиральный компрессор', 'компрессорная станция', 'передвижная компрессорная', 'мобильная компрессорная',
+           'воздуходувка', 'турбовоздуходувка', 'газодувка', 'нагнетатель', 'ресивер', 'воздухосборник', 'осушитель воздуха', 'азотная станция', 'генератор азота',
+           'азотная установка', 'мембранная азотная', 'адсорбционная азотная', 'кислородная станция', 'генератор кислорода', 'кислородная установка',
+           'воздухоразделительная установка', 'криогенная установка']
 SLOVA = ['Барнаул', 'Бийск', 'Рубцовск', 'Новоалтайск', 'Заринск', 'Славгород', 'Алейск', 'Яровое', 'Камень-на-Оби', 'Белокуриха', 'Змеиногорск', 'Горняк',
          'Алтайский край', 'Алтайского края', 'Алтайском крае', 'Алтайкрай', 'Павловск Алтайский', 'Кулунда', 'Благовещенка', 'Тальменка', 'Поспелиха', 'Ребриха', 'Шипуново', 'Троицкое Алтайский', 'Степное Озеро']
+if 'MASHINY' in sys.argv:      # режим «обход реестра по номенклатуре машин, регион режем по ИНН строки»
+    SLOVA = MASHINY
 if TEST: SLOVA = ['Новоалтайск']
 MASH = re.compile(r'компрессор|воздуходув|нагнетател|турбокомпрессор|ресивер|воздухосборник|осушител|воздухоразделительн|\bВРУ\b|генератор\w*\s+(азота|кислорода)|азотн\w+\s+(станц|установ)|кислородн\w+\s+(станц|установ)|компрессорн', re.I)
 NASOS = M.NASOS
@@ -46,7 +53,7 @@ if os.path.exists(F_A):
         if not d.get('err'): gotovo.add((d['slovo'], d['stranica']))
         for r in d.get('stroki', []): vidennye.setdefault(r['kod'], r)
 fa = open(F_A, 'a', encoding='utf-8'); konch = {}; pusto = {}; n_a = 0
-A_BUDGET = min(BUDGET, 300)   # этапу A - не больше 300 с за заход, остальное этапам B/B2 (по ИНН)
+A_BUDGET = BUDGET if 'MASHINY' in sys.argv else min(BUDGET, 300)
 for st in range(1, 2000):
     if time.time() - T0 > A_BUDGET: break
     if all(konch.get(s) for s in SLOVA): break
@@ -96,6 +103,24 @@ for r in vidennye.values():
 c.commit()
 kandidaty = sorted(set(kandidaty) | dop)
 print(f'этап A->B: ИНН края из списков {len(dop)}, новых предприятий {n_novyh_pred}', flush=True)
+if 'MASHINY' in sys.argv:
+    # факты прямо из строк списка: слово = машина, ИНН эксплуатанта на 22 -> доказательство
+    n_pr = 0
+    for r in vidennye.values():
+        inn = (r.get('inn') or '')
+        ob = r.get('obekt') or ''
+        if not inn.startswith('22') or not MASH.search(ob) or NASOS.search(ob): continue
+        tip = vid(ob)
+        if not tip: continue
+        ss = f'{M.BAZA}/conclusion/{r["kod"]}'
+        cit = (ob[:400] + ' | ' + (r.get('nomer') or '') + ' | ' + (r.get('org') or ''))[:500]
+        c.execute('''insert or ignore into fakty(inn,predpriyatie,vid_fakta,tip,marka_model,sreda,data,srok_do,status_sroka,sila,istochnik,ssylka,citata,kto_sobral,ts,klyuch) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                  (inn, r.get('zakazchik'), 'ЭПБ', tip, '', '', r.get('data'), '', '', 5, 'monitor-pb.ru', ss, cit, 'ak_mpb_slova', TS, f'{inn}|{ss}|{tip}||{cit[:80]}')); n_pr += 1
+    c.commit()
+    print('этап A-факты (по номенклатуре):', c.execute("select count(*), count(distinct inn) from fakty where kto_sobral='ak_mpb_slova'").fetchone(), '| строк-кандидатов', n_pr, flush=True)
+    print('ИНН края с ЭПБ всего:', c.execute("select count(distinct inn) from fakty where vid_fakta='ЭПБ'").fetchone()[0], flush=True)
+    if all(konch.get(s) for s in SLOVA): print('ГОТОВО')
+    c.close(); sys.exit(0)
 # этап B2: остальные юрлица края с производственным ОКВЭД, крупные первыми (полный список заключений по каждому ИНН)
 CAND = re.compile(r'^(0[1-9]|1\d|2\d|3[0-9]|4[1-3]|45\.2|49|52|71\.12|71\.2|72|77\.3|86\.1)')
 vyr = {r[0]: r[1] for r in c.execute("select inn, max(vyruchka_rub) from finansy where istochnik='girbo' group by 1")}
