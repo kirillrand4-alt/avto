@@ -22,7 +22,11 @@ def vid(s):
     return 'компрессор'
 
 def kolonki(vals):
-    """Шапка бывает с разным числом колонок - ищем по названиям, а не по номерам."""
+    """Шапка бывает с разным числом колонок - ищем по названиям, а не по номерам.
+    Выгрузки до 2024 года устроены беднее: ни субъекта РФ, ни ИНН, только названия организаций.
+    Регион в них зашит в префикс регистрационного номера, но нумерация со временем менялась
+    (у «Алтай-Кокса» в 2021 это 63, а в 2026 край идёт под 22), поэтому на префикс не опираемся:
+    такие строки отдаём без ИНН, а край определяем сведением названия с базой юрлиц."""
     i = {}
     for n, v in enumerate(vals):
         v = v.strip()
@@ -37,7 +41,11 @@ def kolonki(vals):
         elif v.startswith('Класс опасности'): i['klass'] = n
         elif v.startswith('Наименование эксплуатирующей'): i['imya'] = n
         elif v.startswith('ИНН эксп'): i['inn'] = n
-    return i if {'subekt', 'zepb', 'inn'} <= set(i) else None
+        elif v.startswith('Наименование заявителя'): i['zayavitel'] = n
+        elif v.startswith('Наименование заключения'): i['zepb'] = n
+    if {'subekt', 'zepb', 'inn'} <= set(i): i['vid'] = 'novyy'; return i
+    if 'zepb' in i and ('imya' in i or 'zayavitel' in i): i['vid'] = 'staryy'; return i
+    return None
 
 kartochki = []; svod = {'strok': 0, 'kray': 0, 'mashin': 0, 'opo': 0, 'listov': 0}
 for put in sys.argv[1:]:
@@ -54,7 +62,8 @@ for put in sys.argv[1:]:
             def p(k):
                 n = idx.get(k)
                 return vals[n].strip() if n is not None and n < len(vals) else ''
-            if 'Алтайский край' not in p('subekt'): continue
+            staryy = idx.get('vid') == 'staryy'
+            if not staryy and 'Алтайский край' not in p('subekt'): continue
             svod['kray'] += 1
             zepb = re.sub(r'\s+', ' ', p('zepb'))
             opo_imya = re.sub(r'\s+', ' ', p('opo_imya'))
@@ -64,10 +73,13 @@ for put in sys.argv[1:]:
             if not (v_zepb or v_opo): continue
             svod['mashin' if v_zepb else 'opo'] += 1
             inn = re.sub(r'\D', '', p('inn'))
-            if len(inn) not in (10, 12): continue
+            if len(inn) not in (10, 12):
+                if not staryy: continue
+                inn = ''   # ИНН подберём сведением названия на сервере
             citata = (zepb if v_zepb else opo_imya)[:450]
             hvost = ' | '.join(x for x in (opo_imya if v_zepb else '', p('klass'), p('vyvod')[:60]) if x)
-            kartochki.append({'inn': inn, 'imya': p('imya'), 'vid_fakta': 'ЭПБ' if v_zepb else 'ОПО',
+            kartochki.append({'inn': inn, 'imya': p('imya') or p('zayavitel'), 'zayavitel': p('zayavitel'),
+                              'vid_fakta': 'ЭПБ' if v_zepb else 'ОПО',
                               'tip': vid(zepb if v_zepb else opo_imya),
                               'data': p('data'), 'srok_do': p('srok') if v_zepb else '', 'reg': p('reg'),
                               'opo': p('opo_nom'), 'klass': p('klass'),
@@ -77,7 +89,9 @@ for put in sys.argv[1:]:
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kartochki-rtn.json')
 json.dump(kartochki, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
 print('листов', svod['listov'], '| строк', svod['strok'], '| край', svod['kray'], '| машина в заключении', svod['mashin'], '| машина в имени ОПО', svod['opo'])
-print('карточек с ИНН:', len(kartochki), '| предприятий:', len({k['inn'] for k in kartochki}))
+s_inn = [k for k in kartochki if k['inn']]
+print('карточек всего:', len(kartochki), '| с ИНН:', len(s_inn), '| без ИНН (сведение по названию):', len(kartochki) - len(s_inn))
+print('предприятий по ИНН:', len({k['inn'] for k in s_inn}), '| разных названий без ИНН:', len({k['imya'] for k in kartochki if not k['inn']}))
 vidy = {}
 for k in kartochki: vidy[k['tip']] = vidy.get(k['tip'], 0) + 1
 print('по типам:', vidy)

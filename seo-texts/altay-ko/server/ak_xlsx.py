@@ -49,7 +49,9 @@ for r in c.execute("select * from predpriyatiya where inn like '22%' or adres li
     kl = 'доказано' if silnye else ('доказано (слабо)' if fs else (r['klass'] or 'не оценено'))
     if TOLKO_FAKTY and not fs: continue
     if not TOLKO_FAKTY and not FULL and kl in ('не наше', 'не оценено', 'без вердикта'): continue
-    if r['status_egrul'] and re.search(r'LIQUIDAT|ликвидир|прекрат', r['status_egrul'], re.I) and not fs: continue
+    # ликвидированные и банкроты не нужны даже с фактами: покупать компрессор им уже некому
+    mertvo = r['status_egrul'] and re.search(r'LIQUIDATED|BANKRUPT|ликвидир|прекрат|банкрот', r['status_egrul'], re.I)
+    if mertvo: continue
     vyr, prib, nal, ssch = luchshee(inn)
     vidy = collections.Counter(f['vid_fakta'] for f in fs); tipy = collections.Counter(f['tip'] for f in fs if f['tip'])
     marki = sorted({f['marka_model'] for f in fs if f['marka_model']})[:6]
