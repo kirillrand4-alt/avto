@@ -46,12 +46,13 @@ if os.path.exists(F_A):
         if not d.get('err'): gotovo.add((d['slovo'], d['stranica']))
         for r in d.get('stroki', []): vidennye.setdefault(r['kod'], r)
 fa = open(F_A, 'a', encoding='utf-8'); konch = {}; pusto = {}; n_a = 0
+A_BUDGET = min(BUDGET, 300)   # этапу A - не больше 300 с за заход, остальное этапам B/B2 (по ИНН)
 for st in range(1, 2000):
-    if time.time() - T0 > BUDGET: break
+    if time.time() - T0 > A_BUDGET: break
     if all(konch.get(s) for s in SLOVA): break
     for slovo in SLOVA:
         if konch.get(slovo) or (slovo, st) in gotovo: continue
-        if time.time() - T0 > BUDGET: break
+        if time.time() - T0 > A_BUDGET: break
         qs = {'q': slovo, 'type': 'ТУ'}
         if st > 1: qs['page'] = st
         rows, err = stroki_stranicy(f'{M.BAZA}/conclusions?' + urllib.parse.urlencode(qs))
