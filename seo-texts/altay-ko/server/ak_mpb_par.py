@@ -74,6 +74,9 @@ if os.path.exists(F_B):
             if not d.get('err'): gotovo.add(d['inn'])
         except Exception: pass
 ochered = [i for i in kand if i not in gotovo]
+# OBRATNO: второй прогон идёт с хвоста очереди навстречу первому - два независимых захода
+# не перепахивают одни и те же ИНН, пока не встретятся посередине.
+if 'OBRATNO' in sys.argv: ochered = ochered[::-1]
 if TEST: ochered = ochered[:6]; POTOKOV = 3
 print(f'производственных ИНН {len(kand)}, готово {len(gotovo)}, в очереди {len(ochered)}, потоков {POTOKOV}', flush=True)
 
