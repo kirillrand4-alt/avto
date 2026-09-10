@@ -95,6 +95,13 @@ for r in vidennye.values():
 c.commit()
 kandidaty = sorted(set(kandidaty) | dop)
 print(f'этап A->B: ИНН края из списков {len(dop)}, новых предприятий {n_novyh_pred}', flush=True)
+# этап B2: остальные юрлица края с производственным ОКВЭД, крупные первыми (полный список заключений по каждому ИНН)
+CAND = re.compile(r'^(0[1-9]|1\d|2\d|3[0-9]|4[1-3]|45\.2|49|52|71\.12|71\.2|72|77\.3|86\.1)')
+vyr = {r[0]: r[1] for r in c.execute("select inn, max(vyruchka_rub) from finansy where istochnik='girbo' group by 1")}
+b2 = [r[0] for r in c.execute("select inn, okved_osn from predpriyatiya where inn like '22%' and (status_egrul is null or status_egrul not like '%LIQUID%')") if CAND.match(r[1] or '') and r[0] not in set(kandidaty)]
+b2.sort(key=lambda i: -(vyr.get(i) or 0))
+kandidaty = kandidaty + b2
+print(f'этап B2: добавлено ИНН по ОКВЭД {len(b2)}', flush=True)
 if TEST: kandidaty = kandidaty[:3]
 gotovo_b = {}
 if os.path.exists(F_B):

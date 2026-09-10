@@ -20,9 +20,11 @@ TEL = re.compile(r'\+7[\s(]?\d{3}[\s)]?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}')
 POCHTA = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}')
 CHUZHIE = re.compile(r'@checko\.|noreply|support@|example', re.I)
 def chislo(s):
-    m = re.search(r'(-?[\d\s]+(?:[.,]\d+)?)\s*(млрд|млн|тыс)?', s or '')
+    m = re.search(r'(-?\d[\d\s]*(?:[.,]\d+)?)\s*(млрд|млн|тыс)?\s*(?:руб|₽)', s or '')
     if not m: return None
-    v = float(m.group(1).replace(' ', '').replace(',', '.')); e = m.group(2) or ''
+    try: v = float(m.group(1).replace(' ', '').replace(',', '.'))
+    except ValueError: return None
+    e = m.group(2) or ''
     return v * {'млрд': 1e9, 'млн': 1e6, 'тыс': 1e3}.get(e, 1)
 def polye(t, label, n=80):
     m = re.search(label + r'[^|]{0,30}\|[\s|]*([^|]{1,%d})' % n, t)
@@ -32,18 +34,23 @@ lock = threading.Lock()
 gotovo = {}
 if os.path.exists(F):
     for l in open(F, encoding='utf-8'):
-        try: d = json.loads(l); gotovo[d['inn']] = d
+        try:
+            d = json.loads(l)
+            if d.get('err') != '429': gotovo[d['inn']] = d
         except Exception: pass
 c = sqlite3.connect(DB, timeout=120)
+vyr = {r[0]: r[1] for r in c.execute("select inn, max(vyruchka_rub) from finansy group by 1")}
+ogrny = {r[0]: r[1] for r in c.execute("select inn, ogrn from predpriyatiya where ogrn is not null and ogrn!=''")}
 s_fakt = [r[0] for r in c.execute("select distinct inn from fakty where inn like '22%'")]
-vse = c.execute("select inn, okved_osn, okved_vse, sayt from predpriyatiya where inn like '22%' and (status_egrul is null or status_egrul not like '%LIQUID%' and status_egrul not like '%иквид%')").fetchall()
+kosv = [r[0] for r in c.execute("select inn from predpriyatiya where inn like '22%' and klass like 'косвенно%'")]
+kand = [r[0] for r in c.execute("select inn from predpriyatiya where inn like '22%' and klass like 'кандидат%'")]
 c.close()
-fk = set(s_fakt)
-kand = [r[0] for r in vse if r[0] not in fk and CAND.match(r[1] or '')]
-ost = [r[0] for r in vse if r[0] not in fk and r[0] not in set(kand)]
-ochered = [i for i in s_fakt + kand + ost if i not in gotovo]
+fk = set(s_fakt); ost = []
+kosv = [i for i in kosv if i not in fk]; kand = [i for i in kand if i not in fk and i not in set(kosv)]
+for lst in (s_fakt, kosv, kand): lst.sort(key=lambda i: -(vyr.get(i) or 0))
+ochered = [i for i in s_fakt + kosv + kand if i not in gotovo]
 if TEST: ochered = ochered[:6]
-print(f'очередь: с фактами {len(s_fakt)}, кандидатов {len(kand)}, остальных {len(ost)} | готово {len(gotovo)} | в очереди {len(ochered)}', flush=True)
+print(f'очередь: с фактами {len(s_fakt)}, косвенно {len(kosv)}, кандидатов {len(kand)} | готово {len(gotovo)} | в очереди {len(ochered)}', flush=True)
 f = open(F, 'a', encoding='utf-8'); schet = {'ok': 0, 'net': 0, 'err': 0}
 def odin(par):
     k, inn = par
@@ -51,9 +58,14 @@ def odin(par):
     S = requests.Session(); S.headers.update(UA); px = prox(k)
     d = {'inn': inn, 'ts': TS}
     try:
-        r = S.get('https://checko.ru/search?query=' + inn, proxies=px, timeout=45, verify=False, allow_redirects=True)
+        u0 = ('https://checko.ru/company/' + ogrny[inn]) if ogrny.get(inn) else ('https://checko.ru/search?query=' + inn)
+        r = S.get(u0, proxies=px, timeout=45, verify=False, allow_redirects=True)
         if r.status_code == 429:
-            px = prox(k + 17); r = S.get('https://checko.ru/search?query=' + inn, proxies=px, timeout=45, verify=False, allow_redirects=True)
+            time.sleep(20); px = prox(k + 17); r = S.get(u0, proxies=px, timeout=45, verify=False, allow_redirects=True)
+        if r.status_code == 429:
+            d['err'] = '429'
+            with lock: schet['err'] += 1; f.write(json.dumps(d, ensure_ascii=False) + '\n'); f.flush()
+            time.sleep(60); return
         if r.status_code != 200 or '/company/' not in r.url:
             d['err'] = f'нет карточки {r.status_code} {r.url[-60:]}'
             with lock: schet['net'] += 1; f.write(json.dumps(d, ensure_ascii=False) + '\n'); f.flush()
@@ -71,7 +83,7 @@ def odin(par):
         d['okved_osn'] = polye(t, 'Основной вид деятельности', 200) or polye(t, 'ОКВЭД', 120)
         d['adres'] = polye(t, 'Адрес', 200) or polye(t, 'Юридический адрес', 200)
         d['rukovoditel'] = polye(t, 'Руководитель', 120) or polye(t, 'Директор', 120)
-        time.sleep(0.3)
+        time.sleep(1.5)
         r2 = S.get(url + '/activity', proxies=px, timeout=45, verify=False)
         if r2.status_code == 200:
             t2 = tekst(r2.text); m = re.search(r'Виды деятельности|Коды ОКВЭД|ОКВЭД', t2)
@@ -80,7 +92,7 @@ def odin(par):
             for kd in KOD.findall(kusok):
                 if kd not in kody and not re.match(r'^(1\.|2\.|3\.)', kd): kody.append(kd)
             d['okved_vse'] = kody[:80]
-        time.sleep(0.3)
+        time.sleep(1.5)
         r3 = S.get(url + '/contacts', proxies=px, timeout=45, verify=False)
         if r3.status_code == 200:
             t3 = tekst(r3.text)
@@ -93,8 +105,8 @@ def odin(par):
         with lock: schet['err'] += 1
     with lock:
         f.write(json.dumps(d, ensure_ascii=False) + '\n'); f.flush()
-with ThreadPoolExecutor(4) as ex:
-    list(ex.map(odin, enumerate(ochered)))
+for par in enumerate(ochered):
+    odin(par); time.sleep(2.0)
 f.close()
 print('за заход:', schet, '| прошло', round(time.time() - T0), 'с', flush=True)
 # влив
