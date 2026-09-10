@@ -12,7 +12,42 @@ PARKI = [('парк-снимок', os.path.join(DS, 'park-snimok.db')), ('пар
          ('парк-снапшот', os.path.join(DS, 'park_snapshot.db')), ('парк-панель', os.path.join(DS, 'park_panel.db')),
          ('парк-ранний', os.path.join(DS, 'park.db'))]
 def ro(p): return sqlite3.connect(f'file:{p}?mode=ro', uri=True, timeout=90)
-def kray(i): return isinstance(i, str) and i.startswith('22') and len(i) in (10, 12)
+
+# Край - это ИНН на 22 ИЛИ адрес в Алтайском крае: у части заводов регистрация в другом регионе.
+# «Республика Алтай» - чужой субъект, и её город Горно-Алтайск ловится наивным «Алтайск», поэтому
+# ищем именно «Алтайский край» и почтовые индексы 656-659.
+ADRES_KRAY = re.compile(r'Алтайский\s+кра[йя]|\b65[6-9]\d{3}\b', re.I)
+NE_KRAY = re.compile(r'Республик\w*\s+Алтай|Горно-?Алтайск', re.I)
+KRAY_INN = set()
+def sobrat_adresa():
+    isto = [r'C:\seostat\data\park_panel.db', os.path.join(DS, 'park-snimok.db'), os.path.join(DS, 'PARK-SNIMOK-1S.db'),
+            os.path.join(DS, 'park_snapshot.db'), os.path.join(DS, 'atlas_copco.db'), r'C:\seostat\data\centrifugal.db']
+    for p in isto:
+        if not os.path.exists(p): continue
+        try: s = ro(p)
+        except Exception: continue
+        for t, in s.execute("select name from sqlite_master where type='table'"):
+            cols = [r[1] for r in s.execute('pragma table_info("%s")' % t)]
+            ic = [x for x in cols if x.lower() == 'inn']
+            rc = [x for x in cols if re.search(r'region|adres|address|subekt', x, re.I)]
+            if not (ic and rc): continue
+            for col in rc:
+                try:
+                    for i, a in s.execute('select %s, %s from "%s" where %s is not null' % (ic[0], col, t, col)):
+                        i = (i or '').strip(); a = a or ''
+                        if len(i) in (10, 12) and i.isdigit() and ADRES_KRAY.search(a) and not NE_KRAY.search(a): KRAY_INN.add(i)
+                except Exception: pass
+        s.close()
+    try:
+        d = ro(DB)
+        for i, in d.execute("select inn from predpriyatiya where adres like '%Алтайский край%'"):
+            if i: KRAY_INN.add(i.strip())
+        d.close()
+    except Exception: pass
+sobrat_adresa()
+print('ИНН края по адресу (сверх ИНН-22):', len({i for i in KRAY_INN if not i.startswith('22')}))
+def kray(i):
+    return isinstance(i, str) and len(i) in (10, 12) and (i.startswith('22') or i in KRAY_INN)
 c = sqlite3.connect(DB, timeout=180)
 POLYA = 'inn,predpriyatie,vid_fakta,tip,marka_model,sreda,data,srok_do,status_sroka,sila,istochnik,ssylka,citata,kto_sobral,ts,klyuch'
 SQL = f'insert or ignore into fakty({POLYA}) values({",".join("?" * 16)})'
