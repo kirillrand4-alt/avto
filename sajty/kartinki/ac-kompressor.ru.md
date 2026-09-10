@@ -327,7 +327,7 @@
 - **Файл:** `obsluzhivanie-stancii-3-uzel.webp`
 - **Размер:** 1200 x 800 (3:2)
 - **Место:** в разделе «Обслуживание компрессорной станции без остановки цеха»
-- **Промпт (EN):** Photorealistic close-up industrial photograph of an open service compartment on a screw compressor, showing a radiator core, the screw airend and an oil-separator vessel, an access panel swung open, soft diffuse daylight, calm gray-blue tones, shallow depth of field, close three-quarter angle, 3:2 aspect ratio, photorealistic industrial photography, no logos, no people.
+- **Промпт (EN):** Photorealistic close-up industrial photograph of an open service compartment on a screw compressor, showing a radiator core, the screw airend and an oil-separator vessel, an access panel swung open, soft diffuse daylight, calm gray-blue tones, shallow depth of field, close three-quarter angle, 3:2 aspect ratio, photorealistic industrial photography, no logos, no readable text or markings, no people.
 - **Что должно получиться (RU):** Открытый сервисный отсек компрессора: радиатор, винтовой блок и маслоотделитель за откинутой панелью.
 - **alt:** Открытый сервисный отсек винтового компрессора с радиатором и маслоотделителем
 - **Подпись:** Первое техническое обслуживание проводится через 500 часов, затем каждые 4000-8000 часов.

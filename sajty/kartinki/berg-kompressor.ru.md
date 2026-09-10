@@ -24,7 +24,7 @@
 - **Файл:** `azotnaya-stanciya-modulnaya-2-shema-obogreva-zimoy.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="obogrev-resivera-i-zaschita-kondensata" (H2 "Обогрев ресивера и защита конденсата перед адсорбером зимой")
-- **Промпт (EN):** Flat vector technical diagram of a winterized nitrogen air-preparation tract inside a container, simple rectangular blocks connected by directional arrows in strict left-to-right order: compressor block, air cooler block, heated automatic condensate drain block marked with a small heater icon, insulated and heated receiver tank block, refrigerant or adsorption dryer block, nitrogen adsorber block, flat minimal industrial diagram style, three to four flat colors only graphite grey amber accent off-white background thin dark outline, thin lines, generous white space, no gradients, no shadows, no 3D effects, aspect ratio 4:3, no text labels, no logos, no photorealism.
+- **Промпт (EN):** Flat vector technical diagram of a winterized nitrogen air-preparation tract inside a container, simple rectangular blocks connected by directional arrows in strict left-to-right order: compressor block, air cooler block, heated automatic condensate drain block marked with a small heater icon, insulated and heated receiver tank block, refrigerant or adsorption dryer block, nitrogen adsorber block, flat minimal industrial diagram style, three to four flat colors only graphite grey amber accent off-white background thin dark outline, thin lines, generous white space, no gradients, no shadows, no 3D effects, aspect ratio 4:3, no text labels, no logos, no photorealism, no faces.
 - **Результат (RU):** Плоская схема зимнего тракта: компрессор, охладитель, обогреваемый конденсатоотводчик, утеплённый ресивер, осушитель, адсорбер, слева направо, в графитово-янтарной палитре.
 - **Alt:** Схема прогрева ресивера и осушителя азотной станции для защиты от замерзания конденсата
 - **Подпись:** Обогрев конденсатоотводчика включается автоматикой при падении температуры внутри контейнера ниже порога.
@@ -34,7 +34,7 @@
 - **Файл:** `azotnaya-stanciya-modulnaya-3-datchik-kisloroda-na-dveri.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="datchik-kisloroda-s-blokirovkoy-dveri" (H2 "Датчик кислорода с блокировкой двери: технические требования к размещению")
-- **Промпт (EN):** Close-up industrial photograph of an oxygen concentration sensor unit with a small digital display and an amber warning light mounted next to a heavy container door with an electromechanical door interlock latch, visible conduit and cabling, tight framing on the device and door frame, soft diffuse indoor light, calm grey-blue tones, shallow depth of field, photorealistic close shot, no logos, no readable text on the display, no faces.
+- **Промпт (EN):** Close-up industrial photograph of an oxygen concentration sensor unit with a small digital display and an amber warning light mounted next to a heavy container door with an electromechanical door interlock latch, visible conduit and cabling, tight framing on the device and door frame, soft diffuse indoor light, calm grey-blue tones, shallow depth of field, photorealistic close shot, no logos, no text, no faces, digital display left blank or blurred.
 - **Результат (RU):** Крупный план датчика кислорода с сигнальной лампой рядом с блокировкой двери контейнера, без людей и надписей.
 - **Alt:** Датчик кислорода с блокировкой входа у двери контейнера азотной станции от удушья
 - **Подпись:** При падении концентрации кислорода ниже 19% датчик блокирует дверь и включает аварийную вентиляцию.
@@ -68,7 +68,7 @@
 - **Файл:** `azotnaya-stanciya-2-shema-adsorbciya-membrana.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="adsorbcionnaya-i-membrannaya-tehnologiya-polucheniya" (H2 "Адсорбционная и мембранная технология получения азота")
-- **Промпт (EN):** Flat vector diagram comparing two nitrogen generation paths side by side: top path shows compressed air entering two cylindrical adsorber towers with a cyclic switch arrow between them and a small vent arrow with an icon for released oxygen, leading to a high purity nitrogen output arrow; bottom path shows compressed air entering a single bundle of thin parallel membrane fibers with a side vent arrow for oxygen and a lower pressure nitrogen output arrow, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin outlines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector diagram comparing two nitrogen generation paths side by side: top path shows compressed air entering two cylindrical adsorber towers with a cyclic switch arrow between them and a small vent arrow with an icon for released oxygen, leading to a high purity nitrogen output arrow; bottom path shows compressed air entering a single bundle of thin parallel membrane fibers with a side vent arrow for oxygen and a lower pressure nitrogen output arrow, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin outlines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Две параллельные схемы получения азота: адсорбционные колонны с переключением наверху, мембранный блок с волокнами внизу, обе с выходом газа и сбросом кислорода.
 - **Alt:** Схема адсорбционного и мембранного способов получения азота из сжатого воздуха
 - **Подпись:** Адсорбционный способ сохраняет давление газа, мембранный проще по конструкции, но теряет часть давления.
@@ -78,7 +78,7 @@
 - **Файл:** `azotnaya-stanciya-3-resiver-azota.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="pikovyy-rashod-i-rol-resivera" (H2 "Пиковый расход и роль ресивера в сглаживании графика")
-- **Промпт (EN):** Close-up industrial photograph of a vertical cylindrical buffer receiver tank painted graphite grey with an amber pressure gauge and a safety valve on top, connecting pipework visible, tight three-quarter close shot filling most of the frame, soft diffuse indoor light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable text on the gauge, no faces.
+- **Промпт (EN):** Close-up industrial photograph of a vertical cylindrical buffer receiver tank painted graphite grey with an amber pressure gauge and a safety valve on top, connecting pipework visible, tight three-quarter close shot filling most of the frame, soft diffuse indoor light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, gauge face left blank or blurred.
 - **Результат (RU):** Крупный план ресивера азота с манометром и предохранительным клапаном сверху, без надписей.
 - **Alt:** Ресивер азотной станции сглаживает пиковый расход при лазерной резке и накачке шин
 - **Подпись:** Объём ресивера рассчитывается под длительность пика и допустимое падение давления в сети.
@@ -112,7 +112,7 @@
 - **Файл:** `filtry-magistralnye-2-shema-stupeney-ochistki.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="chto-udalyaet-magistralnyy-filtr-i" (H2 "Что удаляет магистральный фильтр и зачем это нужно")
-- **Промпт (EN):** Flat vector diagram showing compressed air flowing left to right through four sequential filter stage blocks: coarse particulate filter icon, coalescing oil filter icon with a droplet symbol, activated carbon odor filter icon, and a clean air output arrow, small labeled icons above for removed contaminants dust oil droplet water droplet wavy odor lines crossed out at each stage, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, generous white space, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector diagram showing compressed air flowing left to right through four sequential filter stage blocks: coarse particulate filter icon, coalescing oil filter icon with a droplet symbol, activated carbon odor filter icon, and a clean air output arrow, small labeled icons above for removed contaminants dust oil droplet water droplet wavy odor lines crossed out at each stage, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, generous white space, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема из четырёх блоков очистки по цепочке: грубая механика, коалесцирующий, угольный, чистый воздух на выходе.
 - **Alt:** Схема ступеней очистки магистрального фильтра от частиц, масла и запаха
 - **Подпись:** Пропуск одной ступени фильтрации перегружает следующую и снижает итоговый класс чистоты воздуха.
@@ -143,7 +143,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `berg-kislorodnaya-stanciya-modulnaya-1-konteyner-na-ploschadke.webp`
+- **Файл:** `kislorodnaya-stanciya-modulnaya-1-konteyner-na-ploschadke.webp`
 - **Размер:** 1600x900 (16:9)
 - **Место:** после вводного абзаца
 - **Промпт (EN):** Industrial photograph of a self-contained shipping-container oxygen generation module on a concrete pad, exterior three-quarter view, graphite grey container body with an amber warning signage plate left blank, visible vent stacks and external gas piping, overcast daylight, calm grey-blue tones, wide shot, photorealistic, 16:9, no logos, no text, no faces.
@@ -156,7 +156,7 @@
 - **Файл:** `kislorodnaya-stanciya-modulnaya-2-shema-zon-i-vytyazhki.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="razdelenie-zon-vnutri-modulya-i" (H2 "Разделение зон внутри модуля и безопасный вывод сбросов наружу")
-- **Промпт (EN):** Flat vector top-down floor plan diagram of a container interior divided by a partition line into two zones, left zone labeled with a compressor icon and air-prep icons, right zone labeled with an oxygen generator icon and adsorber icons, arrows showing relief and drain lines routed straight through the outer wall to the outside, small directional ventilation arrows showing airflow from the clean zone toward the zone with possible leaks, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector top-down floor plan diagram of a container interior divided by a partition line into two zones, left zone labeled with a compressor icon and air-prep icons, right zone labeled with an oxygen generator icon and adsorber icons, arrows showing relief and drain lines routed straight through the outer wall to the outside, small directional ventilation arrows showing airflow from the clean zone toward the zone with possible leaks, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема сверху: контейнер разделён перегородкой на зону компрессора и зону генератора, сбросы выведены наружу стрелками через стену.
 - **Alt:** Схема разделения зон компрессора и генератора кислорода внутри контейнера станции
 - **Подпись:** Сбросы адсорбера выводятся наружу трубопроводом, чтобы не обогащать кислородом воздух внутри модуля.
@@ -166,7 +166,7 @@
 - **Файл:** `kislorodnaya-stanciya-modulnaya-3-dozhimnoy-uzel-i-rampa.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="zapravka-ballonov-vnutri-modulya-otdelnyy" (H2 "Заправка баллонов внутри модуля: отдельный отсек под дожим и рампу")
-- **Промпт (EN):** Close-up industrial photograph of a compact high-pressure booster compressor unit next to a cylinder filling manifold rack with several pressure gauges and hoses, inside a narrow separated compartment, tight three-quarter close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable numbers on gauges, no faces.
+- **Промпт (EN):** Close-up industrial photograph of a compact high-pressure booster compressor unit next to a cylinder filling manifold rack with several pressure gauges and hoses, inside a narrow separated compartment, tight three-quarter close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, gauge faces left blank or blurred.
 - **Результат (RU):** Крупный план дожимного компрессора и рампы наполнения баллонов в отдельном отсеке, без людей.
 - **Alt:** Дожимной компрессор и рампа наполнения баллонов в отдельном отсеке кислородного модуля
 - **Подпись:** Отдельный отсек для дожима снижает риск при обслуживании оборудования высокого давления.
@@ -200,7 +200,7 @@
 - **Файл:** `kislorodnaya-stanciya-2-shema-generator-resiver-dozhim.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="nakopitelnyy-resiver-kisloroda-mezhdu-generatorom" (H2 "Накопительный ресивер кислорода между генератором и дожимным узлом")
-- **Промпт (EN):** Flat vector process diagram with sequential blocks connected by arrows: oxygen generator block producing continuous low pressure gas, buffer receiver tank block, booster compressor block, cylinder filling ramp block, small icons showing a continuous flow arrow into the receiver and pulsed batch arrows out toward the ramp, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector process diagram with sequential blocks connected by arrows: oxygen generator block producing continuous low pressure gas, buffer receiver tank block, booster compressor block, cylinder filling ramp block, small icons showing a continuous flow arrow into the receiver and pulsed batch arrows out toward the ramp, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема цепочки: генератор кислорода, накопительный ресивер, дожимной компрессор, рампа заправки, стрелки показывают непрерывный поток и партии.
 - **Alt:** Схема ресивера кислорода между генератором и дожимным компрессором перед заправкой
 - **Подпись:** Ресивер позволяет генератору работать непрерывно, пока дожимной компрессор заправляет баллоны партиями.
@@ -210,7 +210,7 @@
 - **Файл:** `kislorodnaya-stanciya-3-dozhimnoy-kompressor.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="zapravka-ballonov-raschet-proizvoditelnosti-dozhimnogo" (H2 "Заправка баллонов: расчёт производительности дожимного компрессора")
-- **Промпт (EN):** Close-up industrial photograph of a high-pressure piston booster compressor unit with visible cylinder heads, pressure gauges and a connecting hose to a cylinder ramp, tight three-quarter close shot, soft diffuse indoor light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable numbers, no faces.
+- **Промпт (EN):** Close-up industrial photograph of a high-pressure piston booster compressor unit with visible cylinder heads, pressure gauges and a connecting hose to a cylinder ramp, tight three-quarter close shot, soft diffuse indoor light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, gauge numbers left blank or blurred.
 - **Результат (RU):** Крупный план дожимного поршневого компрессора с манометрами и шлангом к рампе, без людей.
 - **Alt:** Дожимной компрессор для заправки кислородных баллонов до рабочего давления рампы
 - **Подпись:** Время заправки одного баллона зависит от производительности дожимного узла и объёма баллона.
@@ -244,7 +244,7 @@
 - **Файл:** `kompressornaya-stanciya-2-shema-podgotovki-vozduha.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="podgotovka-vozduha-osushenie-i-filtraciya" (H2 "Подготовка воздуха: осушение и фильтрация в общей схеме")
-- **Промпт (EN):** Flat vector process diagram with sequential blocks left to right connected by arrows: compressor block, receiver block, cyclone separator block, dryer block with a small snowflake icon, coalescing filter block, carbon filter block, clean air output arrow toward a generic consumer icon, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, generous white space, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector process diagram with sequential blocks left to right connected by arrows: compressor block, receiver block, cyclone separator block, dryer block with a small snowflake icon, coalescing filter block, carbon filter block, clean air output arrow toward a generic consumer icon, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, generous white space, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема общей цепочки: компрессор, ресивер, циклонный сепаратор, осушитель, коалесцирующий и угольный фильтры, чистый воздух на выходе.
 - **Alt:** Общая схема подготовки сжатого воздуха от компрессора до фильтров тонкой очистки
 - **Подпись:** Каждая ступень фильтрации решает свою задачу, пропуск одной перегружает следующую по цепочке.
@@ -288,7 +288,7 @@
 - **Файл:** `mks-2-shema-ventilyacii-modulya.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="ventilyaciya-modulya-i-otvod-tepla" (H2 "Вентиляция модуля и отвод тепла при работе компрессора")
-- **Промпт (EN):** Flat vector cross-section diagram of a container interior showing intake louver icons at the bottom of the wall with an inward airflow arrow, a compressor block in the middle with heat-wave icons rising from it, exhaust fan icons at the top of the wall with an outward airflow arrow, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector cross-section diagram of a container interior showing intake louver icons at the bottom of the wall with an inward airflow arrow, a compressor block in the middle with heat-wave icons rising from it, exhaust fan icons at the top of the wall with an outward airflow arrow, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема сечения контейнера: приток снизу, компрессор с волнами тепла в центре, вытяжка сверху, стрелки потока воздуха.
 - **Alt:** Схема притока и вытяжки воздуха для охлаждения компрессора внутри модуля
 - **Подпись:** Вытяжные вентиляторы включаются одновременно с пуском компрессора и работают по тепловыделению.
@@ -298,7 +298,7 @@
 - **Файл:** `mks-3-dostup-k-filtram-vnutri.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="komponovka-pod-dostup-k-filtram" (H2 "Компоновка под доступ к фильтрам и точкам слива масла")
-- **Промпт (EN):** Close-up industrial photograph through an open side access door of a compressor showing the air filter housing, oil filter and separator, a drain plug at the base, and small gauges, tight three-quarter close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable numbers, no faces.
+- **Промпт (EN):** Close-up industrial photograph through an open side access door of a compressor showing the air filter housing, oil filter and separator, a drain plug at the base, and small gauges, tight three-quarter close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, gauge numbers left blank or blurred.
 - **Результат (RU):** Крупный план через открытую боковую дверь компрессора: воздушный фильтр, масляный фильтр, сливная пробка.
 - **Alt:** Открытая дверь компрессора для доступа к фильтрам и сливной пробке внутри контейнера
 - **Подпись:** Расстояние от стенки контейнера до корпуса рассчитано под извлечение картриджа при замене.
@@ -332,7 +332,7 @@
 - **Файл:** `osushiteli-2-shema-mnogostupenchatoy-podgotovki.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="filtraciya-vlagi-i-masla-kak" (H2 "Фильтрация влаги и масла: как строится чистота воздуха")
-- **Промпт (EN):** Flat vector process diagram with sequential blocks left to right connected by arrows: compressor block, receiver block, coarse pre-filter block, dryer block with a snowflake icon, submicron filter block, carbon filter block, arrow to a generic consumer icon, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, generous white space, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector process diagram with sequential blocks left to right connected by arrows: compressor block, receiver block, coarse pre-filter block, dryer block with a snowflake icon, submicron filter block, carbon filter block, arrow to a generic consumer icon, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, generous white space, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема цепочки очистки: компрессор, ресивер, грубый фильтр, осушитель, субмикронный и угольный фильтры, потребитель.
 - **Alt:** Схема многоступенчатой подготовки воздуха от осушителя до фильтров тонкой очистки
 - **Подпись:** Пропуск ступени грубой очистки перед осушителем сокращает ресурс его теплообменника.
@@ -376,7 +376,7 @@
 - **Файл:** `tsiklonnye-separatory-2-shema-centrobezhnogo-otdeleniya.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="diapazon-davleniy-12-16-bar" (H2 "Диапазон давлений 12-16 бар и выбор модели под параметры сети")
-- **Промпт (EN):** Flat vector cutaway diagram of a cyclone separator showing compressed air entering tangentially at the top with a curved swirl arrow inside the cylindrical body, small water droplet icons flung toward the outer wall and falling to a drain arrow at the bottom, a clean dry air arrow exiting upward through the center, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector cutaway diagram of a cyclone separator showing compressed air entering tangentially at the top with a curved swirl arrow inside the cylindrical body, small water droplet icons flung toward the outer wall and falling to a drain arrow at the bottom, a clean dry air arrow exiting upward through the center, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема в разрезе: воздух входит по касательной, закручивается, капли летят к стенке и стекают вниз, сухой воздух выходит по центру вверх.
 - **Alt:** Схема центробежного отделения влаги внутри циклонного сепаратора сжатого воздуха
 - **Подпись:** Превышение расчётного давления повышает риск разрушения корпуса сепаратора при работе.
@@ -420,7 +420,7 @@
 - **Файл:** `vintovye-kompressory-2-shema-vybora-osushitelya.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="100-modeley-s-osushitelem-adsorbcionnyy" (H2 "100 моделей с осушителем: адсорбционный или рефрижераторный")
-- **Промпт (EN):** Flat vector diagram showing a compressor block with output splitting into two parallel labeled paths: top path through a refrigerant dryer icon (snowflake, moderate) leading to a general industrial use icon, bottom path through an adsorption dryer icon (snowflake, intense) leading to an electronics or paint-booth use icon, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector diagram showing a compressor block with output splitting into two parallel labeled paths: top path through a refrigerant dryer icon (snowflake, moderate) leading to a general industrial use icon, bottom path through an adsorption dryer icon (snowflake, intense) leading to an electronics or paint-booth use icon, flat minimal industrial diagram, three to four flat colors graphite grey amber accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема развилки после компрессора: рефрижераторный осушитель к обычным задачам, адсорбционный к жёстким требованиям.
 - **Alt:** Схема выбора рефрижераторного или адсорбционного осушителя для комплекта с компрессором
 - **Подпись:** Класс чистоты воздуха по ISO 8573-1 два-три требует адсорбционного осушителя без исключений.

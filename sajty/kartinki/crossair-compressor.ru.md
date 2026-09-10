@@ -24,7 +24,7 @@
 - **Файл:** `azotnaya-stanciya-modulnaya-2-shema-zimnego-obogreva.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="chto-zamerzaet-zimoy-v-azotnoy" (H2 "Что замерзает зимой в азотной схеме: точка росы и обогрев ресивера")
-- **Промпт (EN):** Flat vector diagram of a winterized container interior showing an insulation outline around the walls, a compressor block with a small heat-reuse arrow looping toward the receiver, a heated receiver tank block marked with a heater icon, an adsorption dryer block, a temperature sensor icon connected to an automatic heater control block, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector diagram of a winterized container interior showing an insulation outline around the walls, a compressor block with a small heat-reuse arrow looping toward the receiver, a heated receiver tank block marked with a heater icon, an adsorption dryer block, a temperature sensor icon connected to an automatic heater control block, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема утеплённого контейнера: компрессор с обратной подачей тепла, обогреваемый ресивер, осушитель, датчик температуры с автоматикой обогрева.
 - **Alt:** Схема обогрева ресивера и утепления контейнера азотной станции в зимнем исполнении
 - **Подпись:** Тепло работающего компрессора частично используется для поддержания плюсовой температуры в контейнере.
@@ -34,7 +34,7 @@
 - **Файл:** `azotnaya-stanciya-modulnaya-3-datchik-kisloroda.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="azot-vytesnyaet-kislorod-kak-rabotaet" (H2 "Азот вытесняет кислород: как работает датчик O2 в контейнере")
-- **Промпт (EN):** Close-up industrial photograph of an oxygen concentration sensor with a small digital readout and a turquoise indicator light mounted on the interior wall of a container near the entrance, visible cabling and an alarm horn beside it, tight close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable digits, no faces.
+- **Промпт (EN):** Close-up industrial photograph of an oxygen concentration sensor with a small digital readout and a turquoise indicator light mounted on the interior wall of a container near the entrance, visible cabling and an alarm horn beside it, tight close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, sensor digits left blank or blurred.
 - **Результат (RU):** Крупный план датчика кислорода с сигнальной лампой и сиреной у входа в контейнер, без людей.
 - **Alt:** Датчик кислорода с аварийной сигнализацией у входа в контейнер дизельной азотной станции
 - **Подпись:** При срабатывании датчика автоматика запускает аварийную вентиляцию раньше, чем откроется дверь.
@@ -68,7 +68,7 @@
 - **Файл:** `azotnaya-stanciya-2-shema-psa-adsorbciya.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="adsorbcionnaya-tehnologiya-psa-kak-ceolit" (H2 "Адсорбционная технология PSA: как цеолит отделяет азот от кислорода")
-- **Промпт (EN):** Flat vector diagram of two cylindrical adsorber towers filled with a granular texture pattern representing zeolite, connected by a cyclic switch-over arrow between them, one tower shown actively separating with a nitrogen output arrow, the other shown venting with a small released-oxygen arrow to atmosphere, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector diagram of two cylindrical adsorber towers filled with a granular texture pattern representing zeolite, connected by a cyclic switch-over arrow between them, one tower shown actively separating with a nitrogen output arrow, the other shown venting with a small released-oxygen arrow to atmosphere, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема двух колонн с цеолитом: одна разделяет и выдаёт азот, вторая сбрасывает кислород, между ними стрелка переключения.
 - **Alt:** Схема циклического адсорбционного разделения азота и кислорода в колоннах с цеолитом
 - **Подпись:** Пока одна колонна выдаёт азот, вторая регенерируется, поэтому подача газа остаётся непрерывной.
@@ -78,7 +78,7 @@
 - **Файл:** `azotnaya-stanciya-3-bufernyy-resiver.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="pikovyy-rashod-i-bufernyy-resiver" (H2 "Пиковый расход и буферный ресивер вместо избыточной мощности генератора")
-- **Промпт (EN):** Close-up industrial photograph of a horizontal buffer receiver tank with a turquoise pressure gauge and a safety relief valve, mounted on support legs outdoors under a canopy, tight three-quarter close shot, soft diffuse daylight, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable numbers, no faces.
+- **Промпт (EN):** Close-up industrial photograph of a horizontal buffer receiver tank with a turquoise pressure gauge and a safety relief valve, mounted on support legs outdoors under a canopy, tight three-quarter close shot, soft diffuse daylight, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, gauge numbers left blank or blurred.
 - **Результат (RU):** Крупный план горизонтального буферного ресивера с манометром и клапаном под навесом, без надписей.
 - **Alt:** Буферный ресивер азота вместо избыточной мощности генератора для сглаживания пиков
 - **Подпись:** Ресивер дешевле, чем генератор и компрессор с запасом мощности под редкие пиковые нагрузки.
@@ -112,7 +112,7 @@
 - **Файл:** `dizelnye-kompressory-2-shema-pryamogo-privoda.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="avtonomnye-kompressornye-stancii-dlya-obektov" (H2 "Автономные компрессорные станции для объектов без электросети")
-- **Промпт (EN):** Flat vector diagram comparing two energy paths stacked vertically: top path shows a diesel engine icon connected by a short direct arrow to a screw compressor block, labeled as fewer conversion losses; bottom path shows a diesel engine icon connected to a generator block, then an electric motor block, then a compressor block, with multiple arrows indicating extra conversion steps, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector diagram comparing two energy paths stacked vertically: top path shows a diesel engine icon connected by a short direct arrow to a screw compressor block, labeled as fewer conversion losses; bottom path shows a diesel engine icon connected to a generator block, then an electric motor block, then a compressor block, with multiple arrows indicating extra conversion steps, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Две схемы друг под другом: прямой привод дизель-компрессор короткой стрелкой, и длинная цепочка дизель-генератор-двигатель-компрессор с потерями.
 - **Alt:** Схема прямого привода компрессора от дизеля против цепочки генератор и электродвигатель
 - **Подпись:** Прямой привод сокращает потери энергии по сравнению со связкой генератора и электродвигателя.
@@ -122,7 +122,7 @@
 - **Файл:** `dizelnye-kompressory-3-vstroennyy-osushitel.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="vstroennyy-osushitel-v-6-modelyah" (H2 "Встроенный осушитель в 6 моделях: когда он необходим")
-- **Промпт (EN):** Close-up industrial photograph of a compact refrigerant dryer module built into the frame of a mobile compressor station, small gauge and connecting pipework visible, tight three-quarter close shot, soft diffuse daylight, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable text, no faces.
+- **Промпт (EN):** Close-up industrial photograph of a compact refrigerant dryer module built into the frame of a mobile compressor station, small gauge and connecting pipework visible, tight three-quarter close shot, soft diffuse daylight, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, readout left blank or blurred.
 - **Результат (RU):** Крупный план встроенного осушителя на раме передвижной станции, виден манометр и обвязка.
 - **Alt:** Встроенный осушитель на раме передвижной станции защищает магистраль от замерзания
 - **Подпись:** Встроенный блок компактнее отдельного осушителя и не занимает лишнего места на шасси.
@@ -156,7 +156,7 @@
 - **Файл:** `kislorodnaya-stanciya-modulnaya-2-shema-zon-kompressora-generatora.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="razdelenie-zon-kompressora-i-generatora" (H2 "Разделение зон компрессора и генератора внутри одного контейнера")
-- **Промпт (EN):** Flat vector top-down floor plan diagram of a container interior split by a partition into a compressor zone with a compressor icon air-prep icon and air receiver icon, and a generator zone with an adsorber icon oxygen receiver icon and high pressure piping icon, separate ventilation arrows for each zone, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector top-down floor plan diagram of a container interior split by a partition into a compressor zone with a compressor icon air-prep icon and air receiver icon, and a generator zone with an adsorber icon oxygen receiver icon and high pressure piping icon, separate ventilation arrows for each zone, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема сверху: перегородка делит контейнер на зону компрессора и зону генератора, у каждой своя вентиляция.
 - **Alt:** Схема разделения зон компрессора и кислородного генератора внутри одного контейнера
 - **Подпись:** Компрессорная зона греется сильнее и требует больше вентиляции, чем зона генератора.
@@ -166,7 +166,7 @@
 - **Файл:** `kislorodnaya-stanciya-modulnaya-3-dozhimnoy-otsek.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="zapravochnyy-otsek-vnutri-modulya-dozhimnoy" (H2 "Заправочный отсек внутри модуля: дожимной компрессор и баллонная рампа")
-- **Промпт (EN):** Close-up industrial photograph of a booster compressor and a cylinder filling ramp with several gauges inside a narrow separated compartment with an external access hatch, tight three-quarter close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable numbers, no faces.
+- **Промпт (EN):** Close-up industrial photograph of a booster compressor and a cylinder filling ramp with several gauges inside a narrow separated compartment with an external access hatch, tight three-quarter close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, gauge numbers left blank or blurred.
 - **Результат (RU):** Крупный план дожимного компрессора и рампы в отдельном отсеке с внешним лючком доступа.
 - **Alt:** Дожимной компрессор и баллонная рампа в заправочном отсеке кислородного модуля
 - **Подпись:** Заправочная зона доступна снаружи модуля, чтобы подавать баллоны без входа в рабочую зону.
@@ -200,7 +200,7 @@
 - **Файл:** `kislorodnaya-stanciya-2-shema-zapravki-ballonov.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="zapravka-ballonov-generator-resiver-nizkogo" (H2 "Заправка баллонов: генератор, ресивер низкого давления, дожимной компрессор")
-- **Промпт (EN):** Flat vector process diagram with sequential blocks connected by arrows: oxygen generator block with a continuous flow arrow, low-pressure buffer receiver block, booster compressor block, cylinder filling ramp block with several cylinder icons, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector process diagram with sequential blocks connected by arrows: oxygen generator block with a continuous flow arrow, low-pressure buffer receiver block, booster compressor block, cylinder filling ramp block with several cylinder icons, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема цепочки: генератор кислорода, ресивер низкого давления, дожимной компрессор, рампа с баллонами.
 - **Alt:** Схема заправки баллонов от генератора кислорода через ресивер и дожимной компрессор
 - **Подпись:** Ресивер низкого давления сглаживает разницу между непрерывной генерацией и партиями заправки.
@@ -210,7 +210,7 @@
 - **Файл:** `kislorodnaya-stanciya-3-dizel-generator.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="avtonomnyy-rezhim-raboty-na-dizel" (H2 "Автономный режим работы на дизель-генераторе: расход топлива и моторесурс")
-- **Промпт (EN):** Close-up industrial photograph of a diesel generator set with a fuel gauge and hour meter on its control panel, exhaust pipe and fuel line visible, tight three-quarter close shot, soft diffuse daylight, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable numbers, no faces.
+- **Промпт (EN):** Close-up industrial photograph of a diesel generator set with a fuel gauge and hour meter on its control panel, exhaust pipe and fuel line visible, tight three-quarter close shot, soft diffuse daylight, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, gauge numbers left blank or blurred.
 - **Результат (RU):** Крупный план дизель-генератора с указателем топлива и счётчиком моточасов на панели.
 - **Alt:** Дизель-генератор с указателем топлива питает кислородную станцию в автономном режиме
 - **Подпись:** Моторесурс дизель-генератора считается в моточасах и определяет срок до капитального ремонта.
@@ -244,7 +244,7 @@
 - **Файл:** `kompressornaya-stanciya-2-shema-ventilyacii-zala.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="trebovaniya-k-pomescheniyu-kompressornoy-ventilyaciya" (H2 "Требования к помещению компрессорной: вентиляция и отвод тепла")
-- **Промпт (EN):** Flat vector cross-section diagram of a machine room showing an intake louver arrow at one wall, a compressor block with heat-wave icons, an exhaust fan arrow at the opposite wall, and a separate small exhaust pipe arrow leading outside for a diesel option, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector cross-section diagram of a machine room showing an intake louver arrow at one wall, a compressor block with heat-wave icons, an exhaust fan arrow at the opposite wall, and a separate small exhaust pipe arrow leading outside for a diesel option, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема зала: приток с одной стороны, компрессор с волнами тепла, вытяжка с другой, отдельная труба выхлопа для дизельного варианта.
 - **Alt:** Схема притока и вытяжки воздуха в помещении компрессорной станции
 - **Подпись:** На каждый киловатт мощности компрессора закладывается около 200-300 кубометров вентиляции в час.
@@ -288,7 +288,7 @@
 - **Файл:** `mks-2-shema-ventilyacii-i-vyhlopa.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="sistema-ventilyacii-dlya-otvoda-vyhlopnyh" (H2 "Система вентиляции для отвода выхлопных газов и тепла компрессора")
-- **Промпт (EN):** Flat vector cross-section diagram of a container interior showing intake louver icons at the bottom with an inward airflow arrow, a compressor block with heat-wave icons, exhaust fan icons at the top with an outward airflow arrow, and a separate diesel exhaust pipe with a muffler icon routed straight outside through the roof, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector cross-section diagram of a container interior showing intake louver icons at the bottom with an inward airflow arrow, a compressor block with heat-wave icons, exhaust fan icons at the top with an outward airflow arrow, and a separate diesel exhaust pipe with a muffler icon routed straight outside through the roof, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема сечения контейнера: приток снизу, компрессор с теплом, вытяжка сверху, отдельная труба выхлопа дизеля через крышу.
 - **Alt:** Схема вентиляции и отвода выхлопных газов дизельного модуля компрессорной станции
 - **Подпись:** Выхлопная труба выведена так, чтобы газы не попадали в приток вентиляции компрессора.
@@ -298,7 +298,7 @@
 - **Файл:** `mks-3-toplivnyy-bak-i-schity-avtomatiki.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="komponovka-v-konteynere-dizel-kompressor" (H2 "Компоновка в контейнере: дизель, компрессор, топливный бак")
-- **Промпт (EN):** Close-up industrial photograph of a fuel day tank with a level gauge standing next to automation control cabinets inside a container, visible fuel lines and cable conduits, tight three-quarter close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no readable numbers, no faces.
+- **Промпт (EN):** Close-up industrial photograph of a fuel day tank with a level gauge standing next to automation control cabinets inside a container, visible fuel lines and cable conduits, tight three-quarter close shot, soft diffuse light, calm grey-blue tones, shallow depth of field, photorealistic, no logos, no text, no faces, gauge numbers left blank or blurred.
 - **Результат (RU):** Крупный план топливного бака с указателем уровня рядом со шкафами автоматики внутри контейнера.
 - **Alt:** Топливный бак и шкафы автоматики внутри контейнера автономной компрессорной станции
 - **Подпись:** Вводы силового кабеля, воздуховода и дренажа в стенке контейнера герметизируются от влаги.
@@ -332,7 +332,7 @@
 - **Файл:** `osushiteli-2-shema-suhogo-vozduha-v-pole.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="kak-poluchit-suhoy-vozduh-v" (H2 "Как получить сухой воздух в удалённой точке")
-- **Промпт (EN):** Flat vector process diagram with sequential blocks connected by arrows: engine-driven compressor block, dryer block with a snowflake icon, automatic condensate drain block with a droplet icon falling away, dry air output arrow toward a pneumatic tool icon, small generator icon feeding power into the dryer block from below, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector process diagram with sequential blocks connected by arrows: engine-driven compressor block, dryer block with a snowflake icon, automatic condensate drain block with a droplet icon falling away, dry air output arrow toward a pneumatic tool icon, small generator icon feeding power into the dryer block from below, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема цепочки: компрессор от двигателя, осушитель с питанием от генератора, конденсатоотводчик, сухой воздух к инструменту.
 - **Alt:** Схема получения сухого воздуха от автономной станции с осушителем в удалённой точке
 - **Подпись:** Осушитель и компрессор синхронизированы автоматикой, иначе конденсат уйдёт в магистраль.
@@ -352,7 +352,7 @@
 - **Файл:** `osushiteli-4-peskostruynaya-obrabotka.webp`
 - **Размер:** 1200x800
 - **Место:** в разделе id="gde-primenyayutsya-avtonomnye-stancii-s" (H2 "Где применяются автономные станции с осушением воздуха")
-- **Промпт (EN):** Wide industrial photograph of a worker in protective gear sandblasting a large steel structure outdoors, hose running back to a mobile compressor station with dryer visible at a distance, daylight, calm grey-blue tones, wide establishing shot, photorealistic, no logos, no text, worker shown only from behind in full protective gear with no visible face.
+- **Промпт (EN):** Wide industrial photograph of a worker in protective gear sandblasting a large steel structure outdoors, hose running back to a mobile compressor station with dryer visible at a distance, daylight, calm grey-blue tones, wide establishing shot, photorealistic, no logos, no text, no faces, worker shown only from behind in full protective gear.
 - **Результат (RU):** Пескоструйная обработка стальной конструкции на улице, шланг тянется к станции с осушителем вдалеке.
 - **Alt:** Пескоструйная обработка металлоконструкции от автономной станции с осушителем воздуха
 - **Подпись:** Влажный воздух в пескоструйной обработке слипает абразив и снижает качество подготовки поверхности.
@@ -376,7 +376,7 @@
 - **Файл:** `vintovye-kompressory-2-shema-vstroennogo-osushitelya.webp`
 - **Размер:** 1200x900
 - **Место:** в разделе id="36-stanciy-s-osushitelem-zaschita" (H2 "36 станций с осушителем: защита пневмосистемы от влаги в полевых условиях")
-- **Промпт (EN):** Flat vector process diagram with sequential blocks connected by arrows: screw airend block, integrated dryer heat exchanger block with a snowflake icon, condensate separator block, drain valve block with a droplet falling away, dry air output arrow toward a pneumatic tool icon, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism.
+- **Промпт (EN):** Flat vector process diagram with sequential blocks connected by arrows: screw airend block, integrated dryer heat exchanger block with a snowflake icon, condensate separator block, drain valve block with a droplet falling away, dry air output arrow toward a pneumatic tool icon, flat minimal industrial diagram, three to four flat colors graphite grey turquoise accent off-white background, thin lines, no gradients, no shadows, aspect ratio 4:3, no text, no logos, no photorealism, no faces.
 - **Результат (RU):** Схема цепочки: винтовой блок, теплообменник встроенного осушителя, сепаратор конденсата, дренажный клапан, сухой воздух к инструменту.
 - **Alt:** Схема встроенного осушителя компрессора для защиты пневмоинструмента от влаги в поле
 - **Подпись:** Перепады температуры между днём и ночью в поле усиливают конденсацию влаги в магистрали.
