@@ -74,7 +74,11 @@ if 'SLOVA' in sys.argv:
     F_S = os.path.join(AK, 'rel-slova.jsonl'); gs = set(); rows_s = []
     if os.path.exists(F_S):
         for l in open(F_S, encoding='utf-8'):
-            try: d0 = json.loads(l); gs.add(d0['klyuch']); rows_s += d0.get('rows', [])
+            try:
+                d0 = json.loads(l); gs.add(d0['klyuch'])
+                sl0 = d0['klyuch'].rsplit('|', 1)[0]
+                for x0 in d0.get('rows', []):
+                    x0.setdefault('slovo', sl0); rows_s.append(x0)
             except Exception: pass
     fs = open(F_S, 'a', encoding='utf-8'); n_s = 0
     for slovo in (SLOVA_MASH[:1] if TEST else SLOVA_MASH):
@@ -87,6 +91,7 @@ if 'SLOVA' in sys.argv:
             except Exception: break
             cards = re.split(r'<div class="search-results__item', t)[1:]
             rows = [x for x in (razbor_rel(cd) for cd in cards) if x]
+            for x in rows: x['slovo'] = slovo
             fs.write(json.dumps({'klyuch': kl, 'rows': rows}, ensure_ascii=False) + '\n'); fs.flush(); gs.add(kl); rows_s += rows; n_s += len(rows)
             time.sleep(0.5)
             if len(cards) < 10 or TEST: break
@@ -96,15 +101,18 @@ if 'SLOVA' in sys.argv:
         inn = x.get('inn') or ''
         if not inn.startswith('22') or '22.' not in (x.get('region') or '22. '): 
             if not inn.startswith('22'): continue
-        tl = x['title']
-        if not MASH.search(tl) or AVTO.search(tl): continue
-        tip = vid(tl)
+        tl = x['title']; slovo_poiska = x.get('slovo') or ''
+        if AVTO.search(tl): continue
+        po_zagolovku = bool(MASH.search(tl))
+        tip = vid(tl) if po_zagolovku else vid(slovo_poiska)
         if not tip: continue
         if inn not in have2:
             c2.execute('insert or ignore into predpriyatiya(inn, nazvanie, istochniki_zapisi, ts) values(?,?,?,?)', (inn, x.get('zakazchik'), 'roseltorg', TS)); have2.add(inn); n_p2 += 1
-        gr = gruppa(tl); cit = (tl[:350] + ' | ' + (x.get('nomer') or '') + ' | ' + (x.get('date') or '') + ' | ' + (x.get('region') or ''))[:500]
+        gr = gruppa(tl if po_zagolovku else (tl + ' ' + slovo_poiska))
+        cit = ((tl[:300] if po_zagolovku else (tl[:200] + ' | найдено поиском площадки по слову «' + slovo_poiska + '», в заголовке предмет не назван')) +
+               ' | ' + (x.get('nomer') or '') + ' | ' + (x.get('date') or '') + ' | ' + (x.get('region') or ''))[:500]
         c2.execute('''insert or ignore into fakty(inn,predpriyatie,vid_fakta,tip,marka_model,sreda,data,srok_do,status_sroka,sila,istochnik,ssylka,citata,kto_sobral,ts,klyuch) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                   (inn, x.get('zakazchik'), gr, tip, '', '', x.get('date'), '', '', 4 if gr == 'закупка машины' else 5, 'roseltorg.ru', x['url'], cit, 'ak_rel_slova', TS, f'{inn}|{x["url"]}|{tip}||{cit[:80]}')); n_f2 += 1
+                   (inn, x.get('zakazchik'), gr, tip, '', '', x.get('date'), '', '', (4 if gr == 'закупка машины' else 5) if po_zagolovku else 3, 'roseltorg.ru', x['url'], cit, 'ak_rel_slova', TS, f'{inn}|{x["url"]}|{tip}||{cit[:80]}')); n_f2 += 1
     c2.commit()
     print('Росэлторг по словам: строк', len(rows_s), '(за заход', n_s, ') | фактов', c2.execute("select count(*), count(distinct inn) from fakty where kto_sobral='ak_rel_slova'").fetchone(), '| новых предприятий', n_p2, flush=True)
     c2.close()
