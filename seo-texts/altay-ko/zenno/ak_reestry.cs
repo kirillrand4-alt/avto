@@ -111,7 +111,7 @@ try
     while (DateTime.Now < kray)
     {
         instance.ActiveTab.WaitDownloading();
-        string h = instance.ActiveTab.DocumentText;
+        string h = instance.ActiveTab.MainDocument.DocumentElement.InnerHtml;
         if (h == null) h = "";
         if (h.IndexOf("captcha", StringComparison.OrdinalIgnoreCase) >= 0 ||
             h.IndexOf("recaptcha", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -138,14 +138,14 @@ try
     {
         for (int p = 1; p <= maxStranic; p++)
         {
-            string html = instance.ActiveTab.DocumentText;
+            string html = instance.ActiveTab.MainDocument.DocumentElement.InnerHtml;
             if (html == null) html = "";
             if (html.Length < 500) { prichina = "пустая страница на " + p.ToString(); break; }
             string imya = (p == 1) ? (id + ".html") : (id + "_p" + p.ToString() + ".html");
             System.IO.File.WriteAllText(System.IO.Path.Combine(dGotovo, imya), html, System.Text.Encoding.UTF8);
             stranicSohraneno = p;
 
-            HtmlElement dalee = instance.ActiveTab.FindElementByAttribute("a", "class", "pagination__next", "text", 0);
+            var dalee = instance.ActiveTab.FindElementByAttribute("a", "class", "pagination__next", "text", 0);
             if (dalee.IsVoid) dalee = instance.ActiveTab.FindElementByAttribute("a", "rel", "next", "text", 0);
             if (dalee.IsVoid) dalee = instance.ActiveTab.FindElementByAttribute("a", "innertext", "Следующая", "text", 0);
             if (dalee.IsVoid) dalee = instance.ActiveTab.FindElementByAttribute("a", "innertext", "Далее", "text", 0);

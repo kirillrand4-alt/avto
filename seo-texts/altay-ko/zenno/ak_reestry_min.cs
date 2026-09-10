@@ -43,7 +43,7 @@ else
     instance.ActiveTab.WaitDownloading();
     System.Threading.Thread.Sleep(15000);
 
-    string html = instance.ActiveTab.DocumentText;
+    string html = instance.ActiveTab.MainDocument.DocumentElement.InnerHtml;
     if (html == null) html = "";
     System.IO.File.WriteAllText(dGotovo + "\\" + id + ".html", html, System.Text.Encoding.UTF8);
     project.SendInfoToLog("сохранено " + id + ", знаков " + html.Length.ToString(), true);
