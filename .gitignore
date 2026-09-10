@@ -4,3 +4,9 @@ screenshots/
 state.json
 config.json
 .env
+seo-texts/altay-ko/linzy-verdikty.jsonl
+seo-texts/altay-ko/linzy-itog.jsonl
+seo-texts/altay-ko/AK-linzy-verdikty.jsonl
+seo-texts/altay-ko/AK-linzy-itog.jsonl
+seo-texts/altay-ko/linzy.log
+seo-texts/altay-ko/*.log
