@@ -14,7 +14,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `azotnaya-stanciya-modulnaya-1-oblozhka.webp`
+- **Файл:** `azotnaya-stanciya-modulnaya-1-oblozhka-ploshadka.webp`
 - **Размер:** 1600 x 900 (16:9)
 - **Место:** после вводного абзаца, до блока «Содержание страницы»
 - **Промпт (EN):** Industrial photograph of a steel block-container nitrogen generation module positioned on gravel ground at an industrial site, an external cable tray entering the base, ventilation louvers along the upper wall, an access ladder to the door, cloudy diffuse daylight, calm gray-blue industrial tones, three-quarter angle from a slightly elevated vantage point, wide shot, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
@@ -62,7 +62,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `azotnaya-stanciya-1-oblozhka.webp`
+- **Файл:** `azotnaya-stanciya-1-oblozhka-dva-kontura.webp`
 - **Размер:** 1600 x 900 (16:9)
 - **Место:** после вводного абзаца, до блока «Содержание страницы»
 - **Промпт (EN):** Industrial photograph of an industrial nitrogen generation station in a large machine hall: a screw air compressor and air receiver on one side connected by piping to twin adsorption generator vessels and a nitrogen receiver on the other side, overhead lighting mixed with daylight from high windows, calm gray-blue industrial tones, wide three-quarter angle, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
@@ -158,7 +158,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `kislorodnaya-stanciya-modulnaya-1-oblozhka.webp`
+- **Файл:** `kislorodnaya-stanciya-modulnaya-1-oblozhka-antenna.webp`
 - **Размер:** 1600 x 900 (16:9)
 - **Место:** после вводного абзаца, до блока «Содержание страницы»
 - **Промпт (EN):** Industrial photograph of a steel block-container oxygen generation module on a concrete pad at an industrial site, a small antenna and a warning beacon on the roof, ventilation louvers along the wall, cloudy diffuse daylight, calm gray-blue industrial tones, three-quarter angle from a slightly elevated vantage point, wide shot, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
@@ -206,7 +206,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `kislorodnaya-stanciya-1-oblozhka.webp`
+- **Файл:** `kislorodnaya-stanciya-1-oblozhka-nepreryvnaya.webp`
 - **Размер:** 1600 x 900 (16:9)
 - **Место:** после вводного абзаца, до блока «Содержание страницы»
 - **Промпт (EN):** Industrial photograph of an industrial oxygen generation station in a large machine hall: a screw air compressor, adsorption generator vessels and a large oxygen receiver connected by steel piping, overhead lighting, concrete floor, calm gray-blue industrial tones, wide three-quarter angle, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
@@ -254,7 +254,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `kompressornaya-stanciya-1-oblozhka.webp`
+- **Файл:** `kompressornaya-stanciya-1-oblozhka-dve-linii.webp`
 - **Размер:** 1600 x 900 (16:9)
 - **Место:** после вводного абзаца, до блока «Содержание страницы»
 - **Промпт (EN):** Industrial photograph of an industrial compressor station in a machine hall with two screw-compressor units side by side, each connected to its own receiver and dryer, a common header pipe overhead, concrete floor, daylight from high windows, calm gray-blue industrial tones, wide three-quarter angle, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
@@ -350,7 +350,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `mks-1-oblozhka.webp`
+- **Файл:** `mks-1-oblozhka-kran.webp`
 - **Размер:** 1600 x 900 (16:9)
 - **Место:** после вводного абзаца, до блока «Содержание страницы»
 - **Промпт (EN):** Industrial photograph of a large 40-foot block-container compressor station being lifted by a mobile crane at an industrial site, rigging slings attached to the container corners, other containers and a fence visible in the background, overcast daylight, calm gray-blue industrial tones, wide three-quarter angle from a low vantage point, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, one worker in a hard hat seen only from behind at a safe distance for scale, no visible face.
@@ -398,7 +398,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `osushiteli-1-oblozhka.webp`
+- **Файл:** `osushiteli-1-oblozhka-promyshlennyy.webp`
 - **Размер:** 1600 x 900 (16:9)
 - **Место:** после вводного абзаца, до блока «Содержание страницы»
 - **Промпт (EN):** Industrial photograph of a large industrial refrigeration dryer unit installed next to a big screw-compressor station in a machine hall, thick steel piping, condensate drain lines, daylight from high windows, calm gray-blue industrial tones, wide three-quarter angle, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.
@@ -542,7 +542,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `vintovye-kompressory-1-oblozhka.webp`
+- **Файл:** `vintovye-kompressory-1-oblozhka-promyshlennyy.webp`
 - **Размер:** 1600 x 900 (16:9)
 - **Место:** после вводного абзаца, до блока «Содержание страницы»
 - **Промпт (EN):** Industrial photograph of a large industrial screw air-compressor unit standing in a spacious machine hall, thick outlet piping running toward a distribution header, concrete floor, daylight from high windows, calm gray-blue industrial tones, wide three-quarter angle, 16:9, photorealistic industrial photography, no logos, no text, no brand plates, no people.

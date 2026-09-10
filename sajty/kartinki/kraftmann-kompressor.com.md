@@ -69,7 +69,7 @@
 - Подпись: Основной компрессор и генератор работают постоянно на расчётном режиме, бустер включается только по требованию.
 
 ### Картинка 3 - Узел крупным планом
-- Файл: `azotnaya-stanciya-03-resiver-nakopitel.webp`
+- Файл: `kraftmann-azotnaya-stanciya-03-resiver-nakopitel.webp`
 - Размер: 1200x800
 - Место: в разделе id="resiver-nakopitel-dlya-sglazhivaniya-pikovogo" - «Ресивер-накопитель для сглаживания пикового отбора»
 - Промпт (EN): Photorealistic close-up of a large vertical gray steel receiver tank in an industrial setting with an unlabeled pressure gauge and safety valve on top, connecting pipe entering from the side, soft even light from above, camera at a slightly low three-quarter angle emphasizing the tank's fittings, calm gray-blue tones, no gloss, no HDR, no people, industrial photography look, 3:2.
@@ -171,7 +171,7 @@
 ## 5. kislorodnaya-stanciya-modulnaya.html - Модульная кислородная станция (с дожимом до 200-300 бар)
 
 ### Картинка 1 - Обложка
-- Файл: `kislorodnaya-stanciya-modulnaya-01-konteyner-s-otsekom-dozhima.webp`
+- Файл: `kraftmann-kislorodnaya-stanciya-modulnaya-01-konteyner-s-otsekom-dozhima.webp`
 - Размер: 1600x900
 - Место: после вводного абзаца, до блока «Содержание страницы»
 - Промпт (EN): Photorealistic wide exterior shot of an unmarked industrial block-container on a hard-surfaced pad with a visibly separated end section suggesting a dedicated compartment, perimeter warning bollards at a distance, overcast even daylight, calm gray-blue color grading, three-quarter angle from a slightly elevated camera position, no people, industrial photography look, 16:9.
@@ -229,7 +229,7 @@
 - Подпись: Степень сжатия на одной ступени не должна превышать 3,5-4,0, иначе температура на выходе станет слишком высокой.
 
 ### Картинка 3 - Узел крупным планом
-- Файл: `kislorodnaya-stanciya-03-dozhimnoy-kompressor.webp`
+- Файл: `kraftmann-kislorodnaya-stanciya-03-dozhimnoy-kompressor.webp`
 - Размер: 1200x800
 - Место: в разделе id="dozhimnoy-kompressor-dlya-zapravki-ballonov" - «Дожимной компрессор для заправки баллонов до давления 150-200 бар»
 - Промпт (EN): Photorealistic close-up of a compact multi-stage booster compressor skid, unlabeled pressure gauges and safety relief valves visible on the outlet manifold, clean metal surfaces, soft even shop light, camera at a three-quarter angle close to the machine, calm gray-blue tones, no gloss, no HDR, no people, industrial photography look, 3:2.
@@ -291,7 +291,7 @@
 ## 8. mks.html - Модульная компрессорная станция (двухступенчатая, высокое давление)
 
 ### Картинка 1 - Обложка
-- Файл: `mks-01-konteyner-vysokogo-davleniya.webp`
+- Файл: `kraftmann-mks-01-konteyner-vysokogo-davleniya.webp`
 - Размер: 1600x900
 - Место: после вводного абзаца, до блока «Содержание страницы»
 - Промпт (EN): Photorealistic wide exterior shot of an unmarked factory-finished block-container on an open industrial pad, insulated wall panels and a ventilation louver visible, a short pipe run exiting the container wall, overcast even daylight, calm gray-blue color grading, three-quarter angle from a slightly low camera position, no people, industrial photography look, 16:9.

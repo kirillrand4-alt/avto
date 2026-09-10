@@ -143,7 +143,7 @@
 
 ### 1. Обложка
 
-- **Файл:** `kislorodnaya-stanciya-modulnaya-1-konteyner-na-ploschadke.webp`
+- **Файл:** `berg-kislorodnaya-stanciya-modulnaya-1-konteyner-na-ploschadke.webp`
 - **Размер:** 1600x900 (16:9)
 - **Место:** после вводного абзаца
 - **Промпт (EN):** Industrial photograph of a self-contained shipping-container oxygen generation module on a concrete pad, exterior three-quarter view, graphite grey container body with an amber warning signage plate left blank, visible vent stacks and external gas piping, overcast daylight, calm grey-blue tones, wide shot, photorealistic, 16:9, no logos, no text, no faces.

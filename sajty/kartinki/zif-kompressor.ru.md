@@ -91,7 +91,7 @@
 ## 3. kislorodnaya-stanciya-modulnaya.html - Модульная кислородная станция с дожимом
 
 ### Картинка 1 - Обложка
-- Файл: `kislorodnaya-stanciya-modulnaya-01-konteyner-s-otsekom-dozhima.webp`
+- Файл: `zif-kislorodnaya-stanciya-modulnaya-01-konteyner-s-otsekom-dozhima.webp`
 - Размер: 1600x900
 - Место: после вводного абзаца, до блока «Содержание страницы»
 - Промпт (EN): Photorealistic wide-angle exterior shot of a graphite-grey shipping-container module for oxygen production with a visible booster-section extension at one end, on a concrete pad, warning-yellow ventilation louvers and a partition line visible on the side wall, overcast diffuse daylight, cool grey-blue color grading with a faint ochre accent on the trim, three-quarter elevated view of the full container, distant fence softly blurred, photorealistic industrial photography, no gloss, no people, 16:9.
@@ -100,7 +100,7 @@
 - Подпись: При дожиме выше 150 бар дожимная часть выносится в отдельный отсек со своей вентиляцией и контролем концентрации.
 
 ### Картинка 2 - Схема процесса
-- Файл: `kislorodnaya-stanciya-modulnaya-02-shema-zonirovaniya.webp`
+- Файл: `zif-kislorodnaya-stanciya-modulnaya-02-shema-zonirovaniya.webp`
 - Размер: 1200x900
 - Место: в разделе id="vnutrennee-zonirovanie-modulya-generaciya-otdelno" - «Внутреннее зонирование модуля: генерация отдельно от дожимной зоны»
 - Промпт (EN): Flat vector top-down floor-plan diagram of a container interior divided by thin partition lines into four zones in a row: compressor zone, generator zone with twin cylinder icons, a separated booster zone marked off by a double partition line, and a small switchboard zone, each zone with its own small ventilation-arrow icon. Graphite grey shapes, one ochre accent, flat fill, no gradients or shadows, wide white background, no text, no numbers, minimal infographic style, 4:3.
@@ -198,7 +198,7 @@
 - Подпись: Для покрасочной камеры нужна точка росы около минус 20 градусов, а для уличного пневмотранспорта зимой - до минус 40.
 
 ### Картинка 4 - Компоновка или контекст применения
-- Файл: `kompressornaya-stanciya-04-prohody-obsluzhivaniya.webp`
+- Файл: `zif-kompressornaya-stanciya-04-prohody-obsluzhivaniya.webp`
 - Размер: 1200x800
 - Место: в разделе id="prohody-dlya-obsluzhivaniya-i-zony" - «Проходы для обслуживания и зоны доступа»
 - Промпт (EN): Photorealistic wide photograph of a machine room with two compressors positioned in a row, clear marked floor aisles between and around each unit, an overhead monorail beam running above the compressors for lifting heavy parts, bright even industrial lighting, cool grey-blue tones, elevated wide angle capturing the full row and aisles, photorealistic industrial photography, no gloss, no people, 3:2.
@@ -211,7 +211,7 @@
 ## 6. mks.html - Модульная станция высокого давления
 
 ### Картинка 1 - Обложка
-- Файл: `mks-01-konteyner-vysokogo-davleniya.webp`
+- Файл: `zif-mks-01-konteyner-vysokogo-davleniya.webp`
 - Размер: 1600x900
 - Место: после вводного абзаца, до блока «Содержание страницы»
 - Промпт (EN): Photorealistic wide-angle exterior shot of a large graphite-grey modular compressor-station container built for high-pressure operation, thick pipe entries and extra ventilation grilles visible on the side wall, concrete pad, overcast diffuse daylight, cool grey-blue color grading with a faint ochre accent on the trim, three-quarter elevated view of the full container length, distant building softly blurred, photorealistic industrial photography, no gloss, no people, 16:9.

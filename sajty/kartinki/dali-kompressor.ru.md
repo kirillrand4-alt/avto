@@ -104,7 +104,7 @@
 - Подпись: Обогащённая кислородом атмосфера внутри контейнера требует усиленной принудительной вентиляции.
 
 ### Картинка 2 - Схема процесса
-- Файл: `kislorodnaya-stanciya-modulnaya-02-shema-zonirovaniya.webp`
+- Файл: `dali-kislorodnaya-stanciya-modulnaya-02-shema-zonirovaniya.webp`
 - Размер: 1200x900
 - Место: в разделе `zonirovanie-vnutri-modulya-razdelenie-generacii` "Зонирование внутри модуля: разделение генерации, дожима и заправки баллонов"
 - Промпт (EN): Flat vector top-down floor plan of a container interior divided into three zones separated by thin partition lines: a compressor and air-prep zone, a PSA generator zone with two small column icons, and a filling zone with simple cylinder-rack icons behind a separate door symbol, graphite gray outlines, indigo-blue accent fills marking the zone boundaries, thin strokes, generous white space, no gradients, no shadows, square 4:3 composition, no logos, no readable text or numbers, no photorealistic rendering.

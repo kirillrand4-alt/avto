@@ -11,7 +11,7 @@
 ## 1. azotnaya-stanciya-modulnaya.html - Модульная азотная станция
 
 ### Картинка 1 - Обложка
-- Файл: `azotnaya-stanciya-modulnaya-01-konteyner-na-ploshchadke.webp`
+- Файл: `remeza-azotnaya-stanciya-modulnaya-01-konteyner-na-ploshchadke.webp`
 - Размер: 1600x900
 - Место: после вводного абзаца, до блока «Содержание страницы»
 - Промпт (EN): Photorealistic wide-angle exterior shot of a matte graphite-grey shipping-container module standing on a concrete outdoor pad at a factory yard, insulated pipe and cable runs entering through the side wall, overcast diffuse daylight, cool grey-blue color grading, low three-quarter angle showing the container's full length and door end, distant industrial building and fence softly out of focus, photorealistic industrial photography, no gloss, no HDR, no people, 16:9.
@@ -189,7 +189,7 @@
 - Подпись: При добавлении дожимного компрессора давление кислорода поднимается с 8 бар генератора до 150-200 бар для заправки баллонов.
 
 ### Картинка 3 - Узел крупным планом
-- Файл: `kislorodnaya-stanciya-03-dozhimnoy-kompressor.webp`
+- Файл: `remeza-kislorodnaya-stanciya-03-dozhimnoy-kompressor.webp`
 - Размер: 1200x800
 - Место: в разделе id="zapravka-ballonov-generaciya-nakopitelnyy-resiver" - «Заправка баллонов: генерация, накопительный ресивер, дожимной компрессор до 150-200 бар»
 - Промпт (EN): Close-up photorealistic industrial photograph of a compact piston booster compressor skid with visible high-pressure steel piping and a small round high-pressure gauge, a cylinder filling rack blurred softly in the background, matte graphite grey housing, workshop interior lighting, cool grey-blue tones, three-quarter angle on the gauge and piping, shallow depth of field, no people, 3:2.
@@ -211,7 +211,7 @@
 ## 6. kompressornaya-stanciya.html - Компрессорная станция
 
 ### Картинка 1 - Обложка
-- Файл: `kompressornaya-stanciya-01-mashinnyy-zal.webp`
+- Файл: `remeza-kompressornaya-stanciya-01-mashinnyy-zal.webp`
 - Размер: 1600x900
 - Место: после вводного абзаца, до блока «Содержание страницы»
 - Промпт (EN): Photorealistic wide industrial photograph of a machine-room interior with a matte graphite-grey screw compressor on a painted concrete floor, a vertical air receiver beside it, wall-mounted dryer cabinet and filter housings connected by overhead pipework, bright even ceiling lighting, cool grey-blue tones, three-quarter angle from a slightly elevated position showing the full equipment row, photorealistic industrial photography, no gloss, no people, 16:9.
@@ -260,7 +260,7 @@
 - Подпись: Внутри модуля винтовой компрессор, ресивер и тракт подготовки воздуха размещены и согласованы ещё на заводе.
 
 ### Картинка 2 - Схема процесса
-- Файл: `mks-02-shema-komponovki-vnutri.webp`
+- Файл: `remeza-mks-02-shema-komponovki-vnutri.webp`
 - Размер: 1200x900
 - Место: в разделе id="komponovka-oborudovaniya-odnogo-proizvoditelya-v" - «Компоновка оборудования одного производителя в ограниченном объёме»
 - Промпт (EN): Flat vector top-down floor-plan diagram of a rectangular container interior divided into simple blocks: compressor block, receiver block, dryer-and-filter block, small automation-cabinet block near the entrance, thin line paths between them representing service aisles. Graphite grey shapes, one burgundy accent, flat fill, no gradients or shadows, wide white background, no text, no numbers, minimal infographic style, 4:3.
@@ -269,7 +269,7 @@
 - Подпись: Габариты узлов берутся из заводской документации, поэтому дверь ресивера не упирается в соседний шкаф.
 
 ### Картинка 3 - Узел крупным планом
-- Файл: `mks-03-shkaf-avtomatiki.webp`
+- Файл: `remeza-mks-03-shkaf-avtomatiki.webp`
 - Размер: 1200x800
 - Место: в разделе id="raspolozhenie-shkafov-avtomatiki-odnoy-sistemy" - «Расположение шкафов автоматики одной системы и точек подключения»
 - Промпт (EN): Close-up photorealistic industrial photograph of an open grey electrical control cabinet mounted on a container wall near the compressor, rows of contactors, circuit breakers and a small controller display inside, neatly bundled cables entering from below, warm interior work-light, cool grey-blue tones overall, straight-on eye-level angle, shallow depth of field, no people, 3:2.

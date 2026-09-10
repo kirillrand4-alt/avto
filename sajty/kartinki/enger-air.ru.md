@@ -154,7 +154,7 @@
 
 ### Картинка 1 - Обложка
 
-- Файл: `kislorodnaya-stanciya-modulnaya-1-konteyner-na-ploschadke.webp`
+- Файл: `enger-kislorodnaya-stanciya-modulnaya-1-konteyner-na-ploschadke.webp`
 - Размер: 1600x900 (16:9)
 - Место: после вводного абзаца
 - Промпт (EN): Wide photorealistic establishing photo of a light gray insulated shipping-container module for an oxygen station standing on an open concrete pad outdoors, external ventilation louvers and a warning-light fixture visible on the near wall, no signage, overcast diffuse daylight, wide-angle three-quarter low angle, calm gray-blue color grading, photorealistic industrial photography, no glossy advertising look, no HDR, 16:9 aspect ratio; no logos, no brand names, no readable text or signage, no visible faces, if a person appears show them only from behind wearing a hard hat for scale, no certificates or seals.

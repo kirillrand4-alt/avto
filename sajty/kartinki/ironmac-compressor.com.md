@@ -11,7 +11,7 @@
 ## 1. azotnaya-stanciya-modulnaya.html - Модульная азотная станция (блок-контейнер)
 
 ### Картинка 1 - Обложка
-- Файл: `azotnaya-stanciya-modulnaya-01-konteyner-na-ploshchadke.webp`
+- Файл: `ironmac-azotnaya-stanciya-modulnaya-01-konteyner-na-ploshchadke.webp`
 - Размер: 1600x900
 - Место: после вводного абзаца, до блока «Содержание страницы»
 - Промпт (EN): Photorealistic wide exterior shot of an unmarked steel industrial block-container standing on a concrete industrial yard, insulated cable and pipe entries visible on the near end wall, a short run of aboveground pipe leading away from the container toward an out-of-frame building, overcast even daylight, calm gray and steel-blue color grading, three-quarter angle from slightly low camera height showing the container's length and one closed door, no people, industrial photography look, 16:9.
@@ -69,7 +69,7 @@
 - Подпись: Адсорбционная технология даёт чистоту до 99,999%, мембранная эффективна только до 99,5%.
 
 ### Картинка 3 - Узел крупным планом
-- Файл: `azotnaya-stanciya-03-resiver-nakopitel.webp`
+- Файл: `ironmac-azotnaya-stanciya-03-resiver-nakopitel.webp`
 - Размер: 1200x800
 - Место: в разделе id="nerovnyy-otbor-azota-resiver-nakopitel" - «Неровный отбор азота: ресивер-накопитель дешевле лишней производительности»
 - Промпт (EN): Photorealistic close-up of a vertical gray steel receiver tank in an industrial setting, an unlabeled pressure gauge and safety valve visible on top, connecting pipe entering from the side, painted concrete floor, soft even light from above, camera at a slightly low three-quarter angle emphasizing the tank's rounded top and fittings, calm gray-blue tones, no gloss, no HDR, no people, industrial photography look, 3:2.
@@ -140,7 +140,7 @@
 - Подпись: Модуль поставляется готовым к запуску - тракт собран, автоматика настроена, датчики установлены на заводе.
 
 ### Картинка 2 - Схема процесса
-- Файл: `kislorodnaya-stanciya-modulnaya-02-shema-zonirovaniya.webp`
+- Файл: `ironmac-kislorodnaya-stanciya-modulnaya-02-shema-zonirovaniya.webp`
 - Размер: 1200x900
 - Место: в разделе id="zonirovanie-generacii-i-dozhima-vnutri" - «Зонирование генерации и дожима внутри модуля»
 - Промпт (EN): Flat vector top-down floor-plan diagram of a rectangular container split into two zones by a vertical partition line: the left zone contains three simple icons (compressor square, generator rectangle, low-pressure receiver circle), the right zone contains a booster square and a small manifold with cylinder-outline icons; two separate door icons on the outer wall, one per zone; a ventilation arrow icon on each zone's roof. Graphite gray lines and blocks, one steel-blue accent for the partition line and vent arrows, white background, thin lines, generous whitespace, no gradients, no shadows, no text, no numbers, minimal architectural-diagram style.
@@ -211,7 +211,7 @@
 ## 6. kompressornaya-stanciya.html - Компрессорная станция
 
 ### Картинка 1 - Обложка
-- Файл: `kompressornaya-stanciya-01-mashinnyy-zal.webp`
+- Файл: `ironmac-kompressornaya-stanciya-01-mashinnyy-zal.webp`
 - Размер: 1600x900
 - Место: после вводного абзаца, до блока «Содержание страницы»
 - Промпт (EN): Photorealistic wide shot of a stationary machine room with a gray screw compressor unit, an adjacent horizontal receiver tank, and overhead pipework running along the wall, concrete floor with clear service clearance around the equipment, even diffuse daylight, calm gray-blue tones, camera at eye level from a corner angle showing the room layout, no people, industrial photography look, 16:9.
@@ -238,7 +238,7 @@
 - Подпись: Ресивер, подобранный под редкие короткие пики, заменяет второй компрессор меньшей мощности и не требует электроэнергии.
 
 ### Картинка 4 - Компоновка/применение
-- Файл: `kompressornaya-stanciya-04-prohody-obsluzhivaniya.webp`
+- Файл: `ironmac-kompressornaya-stanciya-04-prohody-obsluzhivaniya.webp`
 - Размер: 1200x800
 - Место: в разделе id="trebovaniya-k-pomescheniyu-ploschad-mashinnogo" - «Требования к помещению: площадь машинного зала и проходы для обслуживания»
 - Промпт (EN): Photorealistic wide shot of a machine room floor plan view from a corner, showing a compressor, receiver and dryer positioned with clearly visible walking clearance on multiple sides, floor markings-free concrete, even shop lighting, calm gray-blue tones, wide angle to show the spacing between units, no people, no logos, industrial photography look, 3:2.
@@ -260,7 +260,7 @@
 - Подпись: Модуль привозится готовым и подключается за одну смену - остаётся только электричество и магистраль воздуха.
 
 ### Картинка 2 - Схема процесса
-- Файл: `mks-02-shema-komponovki-vnutri.webp`
+- Файл: `ironmac-mks-02-shema-komponovki-vnutri.webp`
 - Размер: 1200x900
 - Место: в разделе id="komponovka-oborudovaniya-s-chastotnikom-v" - «Компоновка оборудования с частотником в ограниченном объёме»
 - Промпт (EN): Flat vector top-down floor-plan diagram of a rectangular container interior showing simple block icons positioned inside: a compressor square with a small attached VFD rectangle, a horizontal cylinder for the receiver along one wall, a small automation-cabinet square near the opposite wall, and arrow icons indicating airflow toward a ventilation duct on the roof outline. Graphite gray lines and blocks, one steel-blue accent for the airflow arrows, white background, thin lines, generous whitespace, no gradients, no shadows, no text, no numbers, minimal architectural-diagram style.
@@ -269,7 +269,7 @@
 - Подпись: Ресивер размещают горизонтально вдоль стены или вертикально, если площади пола не хватает.
 
 ### Картинка 3 - Узел крупным планом
-- Файл: `mks-03-shkaf-avtomatiki.webp`
+- Файл: `ironmac-mks-03-shkaf-avtomatiki.webp`
 - Размер: 1200x800
 - Место: в разделе id="shkafy-avtomatiki-i-vvod-silovyh" - «Шкафы автоматики и ввод силовых кабелей в контейнер»
 - Промпт (EN): Photorealistic close-up inside a container interior of a closed gray metal automation cabinet mounted on the wall, sealed cable glands visible at the bottom feeding into a cable tray, soft even ceiling light, camera at eye level straight-on with a slight side angle to show the cabinet's depth, calm gray-blue tones, no gloss, no HDR, no people, industrial photography look, 3:2.
