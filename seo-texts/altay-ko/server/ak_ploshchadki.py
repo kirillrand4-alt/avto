@@ -20,6 +20,21 @@ def vid(s):
     for v, rx in VIDY:
         if re.search(rx, s or '', re.I): return v
     return ''
+def razbor_rel(cd):
+    """Карточка Росэлторга -> предмет (весь текст ссылки), ИНН и название заказчика, регион, номер, дата."""
+    mu = re.search(r'href="(/procedure/[^"]+)"', cd)
+    if not mu: return None
+    mt = re.search(r'search-results__link--description">(.*?)</a>', cd, re.S)
+    title = html.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', mt.group(1)))).strip() if mt else ''
+    minn = re.search(r'/companies/resolve/(\d{10,12})/', cd) or re.search(r"tooltip__inn'>ИНН (\d{10,12})", cd)
+    mnaz = re.search(r'link_primary_active[^>]*>\s*([^<]{4,200})', cd)
+    mreg = re.search(r'search-results__region">\s*<p[^>]*>([^<]{2,40})', cd)
+    num = re.search(r'procedure-number="([\w\d]+)"', cd); dat = re.search(r'(\d{2}\.\d{2}\.\d{4})', cd)
+    return {'url': 'https://www.roseltorg.ru' + mu.group(1), 'title': title, 'inn': minn.group(1) if minn else '',
+            'zakazchik': html.unescape(mnaz.group(1)).strip() if mnaz else '', 'region': (mreg.group(1) or '').strip() if mreg else '',
+            'nomer': num.group(1) if num else '', 'date': dat.group(1) if dat else ''}
+
+
 def gruppa(s):
     for g, rx in GR:
         if re.search(rx, s or '', re.I): return g
@@ -52,6 +67,49 @@ f = open(F, 'a', encoding='utf-8'); n_r = n_t = 0
 try:
     r = S.get('https://www.tektorg.ru/procedures', timeout=60, verify=False); BID = re.search(r'"buildId":"([^"]+)"', r.text).group(1)
 except Exception: BID = ''
+SLOVA_MASH = ['компрессор', 'компрессорная станция', 'компрессорная установка', 'винтовой компрессор', 'поршневой компрессор', 'воздуходувка', 'нагнетатель воздуха',
+              'осушитель сжатого воздуха', 'ресивер', 'воздухосборник', 'генератор азота', 'генератор кислорода', 'азотная станция', 'кислородная станция',
+              'воздухоразделительная установка', 'сжатый воздух', 'ремонт компрессора', 'обслуживание компрессора', 'запчасти компрессор', 'масло компрессорное', 'винтовой блок']
+if 'SLOVA' in sys.argv:
+    F_S = os.path.join(AK, 'rel-slova.jsonl'); gs = set(); rows_s = []
+    if os.path.exists(F_S):
+        for l in open(F_S, encoding='utf-8'):
+            try: d0 = json.loads(l); gs.add(d0['klyuch']); rows_s += d0.get('rows', [])
+            except Exception: pass
+    fs = open(F_S, 'a', encoding='utf-8'); n_s = 0
+    for slovo in (SLOVA_MASH[:1] if TEST else SLOVA_MASH):
+        for pg in range(0, 60):
+            kl = f'{slovo}|{pg}'
+            if kl in gs: continue
+            if time.time() - T0 > BUDGET: break
+            try:
+                r = S.get('https://www.roseltorg.ru/procedures/search_ajax', params={'query_field': slovo, 'region[]': '22', 'page': pg}, timeout=60, verify=False); t = r.text
+            except Exception: break
+            cards = re.split(r'<div class="search-results__item', t)[1:]
+            rows = [x for x in (razbor_rel(cd) for cd in cards) if x]
+            fs.write(json.dumps({'klyuch': kl, 'rows': rows}, ensure_ascii=False) + '\n'); fs.flush(); gs.add(kl); rows_s += rows; n_s += len(rows)
+            time.sleep(0.5)
+            if len(cards) < 10 or TEST: break
+    fs.close()
+    c2 = sqlite3.connect(DB, timeout=120); have2 = {r[0] for r in c2.execute('select inn from predpriyatiya')}; n_f2 = n_p2 = 0
+    for x in rows_s:
+        inn = x.get('inn') or ''
+        if not inn.startswith('22') or '22.' not in (x.get('region') or '22. '): 
+            if not inn.startswith('22'): continue
+        tl = x['title']
+        if not MASH.search(tl) or AVTO.search(tl): continue
+        tip = vid(tl)
+        if not tip: continue
+        if inn not in have2:
+            c2.execute('insert or ignore into predpriyatiya(inn, nazvanie, istochniki_zapisi, ts) values(?,?,?,?)', (inn, x.get('zakazchik'), 'roseltorg', TS)); have2.add(inn); n_p2 += 1
+        gr = gruppa(tl); cit = (tl[:350] + ' | ' + (x.get('nomer') or '') + ' | ' + (x.get('date') or '') + ' | ' + (x.get('region') or ''))[:500]
+        c2.execute('''insert or ignore into fakty(inn,predpriyatie,vid_fakta,tip,marka_model,sreda,data,srok_do,status_sroka,sila,istochnik,ssylka,citata,kto_sobral,ts,klyuch) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                   (inn, x.get('zakazchik'), gr, tip, '', '', x.get('date'), '', '', 4 if gr == 'закупка машины' else 5, 'roseltorg.ru', x['url'], cit, 'ak_rel_slova', TS, f'{inn}|{x["url"]}|{tip}||{cit[:80]}')); n_f2 += 1
+    c2.commit()
+    print('Росэлторг по словам: строк', len(rows_s), '(за заход', n_s, ') | фактов', c2.execute("select count(*), count(distinct inn) from fakty where kto_sobral='ak_rel_slova'").fetchone(), '| новых предприятий', n_p2, flush=True)
+    c2.close()
+    if all(f'{sl}|0' in gs for sl in SLOVA_MASH) and not TEST: print('ГОТОВО')
+    sys.exit(0)
 if TEST: ochered = ochered[:5]
 print(f'очередь ИНН {len(ochered)} (готово ключей {len(gotovo)}), tektorg buildId {"есть" if BID else "НЕТ"}', flush=True)
 for inn, kl, ok, naz, nazp in ochered:
@@ -67,10 +125,8 @@ for inn, kl, ok, naz, nazp in ochered:
             cards = re.split(r'<div class="search-results__item', t)[1:]
             if not cards: break
             for cd in cards:
-                mu = re.search(r'href="(/procedure/[^"]+)"', cd); title = re.search(r'search-results__header[^>]*>(?:\s*<[^>]+>)*\s*([^<]{5,300})', cd)
-                title = html.unescape(re.sub(r'\s+', ' ', title.group(1))).strip() if title else ''
-                dat = re.search(r'(\d{2}\.\d{2}\.\d{4})', cd); num = re.search(r'procedure-number="(\d+)"', cd)
-                if mu: items.append({'url': 'https://www.roseltorg.ru' + mu.group(1), 'title': title, 'date': dat.group(1) if dat else '', 'nomer': num.group(1) if num else ''})
+                x = razbor_rel(cd)
+                if x: items.append(x)
             time.sleep(0.4)
             if len(cards) < 10: break
         mash = [x for x in items if MASH.search(x['title']) and not AVTO.search(x['title'])]
