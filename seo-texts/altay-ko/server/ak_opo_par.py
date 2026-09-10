@@ -14,7 +14,7 @@ requests.packages.urllib3.disable_warnings()
 import park_opo_po_inn as O
 
 BUDGET = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else 1300
-POTOKOV = int(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2].isdigit() else 6
+POTOKOV = min(4, int(sys.argv[2])) if len(sys.argv) > 2 and sys.argv[2].isdigit() else 3  # больше четырёх реестр не держит
 TEST = 'TEST' in sys.argv
 T0 = time.time(); TS = time.strftime('%Y-%m-%d %H:%M')
 F = os.path.join(AK, 'opo-po-inn.jsonl')
@@ -69,6 +69,29 @@ if 'OBRATNO' in sys.argv: ochered = ochered[::-1]
 if 'SEREDINA' in sys.argv: ochered = ochered[len(ochered) // 2:] + ochered[:len(ochered) // 2]
 if TEST: ochered = ochered[:6]; POTOKOV = 3
 print(f'производственных ИНН {len(kand)}, готово {len(gotovo)}, в очереди {len(ochered)}, потоков {POTOKOV}', flush=True)
+
+
+# ---- проверка живости реестра. Когда monitor-pb молчит, парсер отдаёт пустой список БЕЗ ошибки,
+# и прогон записывает «ничего нет» для непроверенных предприятий - хуже, чем не работать вовсе.
+# Поэтому сначала спрашиваем предприятия, у которых записи заведомо есть.
+def _reestr_zhiv():
+    import sqlite3 as _s
+    _c = _s.connect(f'file:{DB}?mode=ro', uri=True, timeout=60)
+    _k = [r[0] for r in _c.execute("select inn from fakty where vid_fakta='ОПО' limit 3")]
+    _c.close()
+    for _inn in _k:
+        try:
+            _r = O.po_inn(_inn) if 'O' == 'O' else O.po_inn(_inn, max_stranic=2, tolko_tu=True)
+            if isinstance(_r, tuple): _r = _r[0]
+            if _r: return True, _inn
+        except Exception:
+            pass
+    return False, ','.join(_k)
+_zhiv, _kto = _reestr_zhiv()
+if not _zhiv:
+    print('РЕЕСТР МОЛЧИТ: контрольные ИНН', _kto, 'не дали ни одной записи - выходим, чтобы не записать ложные пустышки', flush=True)
+    sys.exit(2)
+print('реестр живой, контроль прошёл на', _kto, flush=True)
 
 zamok = threading.Lock(); f = open(F, 'a', encoding='utf-8')
 sch = {'ok': 0, 'err': 0, 'obektov': 0}
