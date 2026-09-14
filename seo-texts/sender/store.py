@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import hashlib as _hashlib
 import json
 import logging
 import re
@@ -1509,6 +1510,7 @@ class Store:
         """
         now_iso = _now_iso()
         msgid = self._msgid_sobytiya(e.detail)
+        ключ = e.dedup_key
         with self.transaction() as conn:
             if msgid:
                 была = conn.execute(
@@ -1516,6 +1518,22 @@ class Store:
                     " ORDER BY id LIMIT 1", (e.mailbox_id, msgid)).fetchone()
                 if была:
                     return int(была["id"]), False
+                # ЗАНЯТЫЙ КЛЮЧ — НЕ ВСЕГДА ПОВТОР. Ключ входящих собран как
+                # imap:{uidvalidity}:{номер}:{вид}, а нумерация писем в ящике
+                # съезжает: удалили письмо — номера сдвинулись и разошлись с
+                # UID. Повтор ТОГО ЖЕ письма отсечён строкой выше, по его
+                # собственному Message-ID; значит здесь письмо ДРУГОЕ и ему
+                # нужен свой ключ. Иначе append_event отвечает «уже видели»,
+                # обработчик молча выходит, сборщик ставит письму \\Seen — и
+                # живой ответ пропадает навсегда. Так 04.09 потеряли
+                # «Пришлите предложение по оборудованию» от Медведовского ЗПП:
+                # ключ ...:32:reply был занят автоответом X5 от 02.09.
+                занято = conn.execute(
+                    "SELECT rfc_msgid FROM events WHERE dedup_key=?",
+                    (ключ,)).fetchone()
+                if занято is not None and (занято["rfc_msgid"] or "") != msgid:
+                    ключ = "%s:%s" % (ключ, _hashlib.sha1(
+                        msgid.encode("utf-8")).hexdigest()[:10])
             cur = conn.execute(
                 """
                 INSERT INTO events
@@ -1526,7 +1544,7 @@ class Store:
                 ON CONFLICT(dedup_key) DO NOTHING
                 """,
                 (
-                    e.dedup_key, e.event_type, e.message_id, e.recipient_id,
+                    ключ, e.event_type, e.message_id, e.recipient_id,
                     e.campaign_id, e.mailbox_id, e.provider, _to_iso(e.event_ts),
                     _json_dump(e.detail), now_iso, msgid or None,
                 ),
@@ -1534,7 +1552,7 @@ class Store:
             if cur.rowcount == 1:
                 return int(cur.lastrowid), True
             row = conn.execute(
-                "SELECT id FROM events WHERE dedup_key=?", (e.dedup_key,)
+                "SELECT id FROM events WHERE dedup_key=?", (ключ,)
             ).fetchone()
             return int(row["id"]), False
 
