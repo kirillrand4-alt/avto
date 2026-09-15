@@ -1,124 +1,47 @@
 # -*- coding: utf-8 -*-
-"""Наложение фирменного знака ENGER на панель машины.
+"""Знак Enger на кадры категорий: место ищется по картинке, не на глаз.
 
-Почему так, а не проще. Две прошлые попытки сажали знак «не туда», и обе
-по одной причине: я на глаз ловил маленький прямоугольник под сам знак.
-Промах в пять пикселей на такой рамке - это уже перекос или съезд с кромки.
+Панели заданы руками - их видно точно. А КУДА внутри панели ляжет знак,
+решает chistoe_mesto: под знаком не должно быть ни одной резкой детали.
+Три захода до этого сажали знак поперёк стыка двух дверей, на защёлку, на
+болт и на угол балки под кабелями - ровно потому, что место выбирал я.
 
-Теперь задаются углы ВСЕЙ панели: их видно точно, ошибка в те же пять
-пикселей на панели в пятьсот - ничто. Положение знака внутри панели
-считается долями, снятыми с настоящей машины (prokompressor, карточка
-Enger HB-37DT): знак стоит внизу слева, ширина примерно 45% ширины панели.
-
-Знак берётся двухъярусный - ENGER плюс COMPRESSOR SYSTEM. Одноярусный,
-которым я пользовался раньше, на машинах Enger не стоит нигде.
+Знак двухъярусный (ENGER + COMPRESSOR SYSTEM), как на настоящих машинах.
+Исключение - центробежный: он широкий, любая плоская площадка на нём мелкая,
+и подпись вторым ярусом превращается в кашу. Там одноярусный ENGER.
 """
 import os
 import sys
 
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image, ImageDraw
 
-OPORA = 1024      # в этой рамке сняты углы; кадр может быть крупнее
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import chistoe_mesto as C  # noqa: E402
 
-# Углы ПАНЕЛИ: левый верх, правый верх, правый низ, левый низ.
-# Второе поле - какой знак, тёмный или светлый.
+OPORA = 1024
+
+# Углы панели: левый верх, правый верх, правый низ, левый низ.
+# Сняты замером светлой области двери по строкам и столбцам.
 PANELI = {
-    # Углы панелей сняты ЗАМЕРОМ, а не на глаз: по строкам и столбцам ищется
-    # сплошная светлая область двери. На глаз я промахивался трижды.
-    'nizkogo-davleniya': (((336, 170), (712, 199), (712, 761), (336, 796)), 'тёмный', {}),
-    'spiralnye':         (((469, 232), (738, 245), (738, 839), (469, 866)), 'тёмный', {}),
-    'peredvizhnye':      (((445, 247), (621, 258), (621, 540), (445, 529)), 'светлый', {}),
-    # У центробежного ровных дверей нет вовсе: знак идёт на переднюю полку
-    # рамы. Полка низкая, поэтому доли свои - иначе знак не влезает по высоте.
-    'centrobezhnye':     (((132, 821), (430, 864), (430, 919), (132, 875)), 'светлый',
-                          {'shirina': 0.52, 'snizu': 0.16, 'sleva': 0.08}),
+    'nizkogo-davleniya': (((336, 170), (712, 199), (712, 761), (336, 796)),
+                          'тёмный', 'znak'),
+    'spiralnye':         (((469, 232), (738, 245), (738, 839), (469, 866)),
+                          'тёмный', 'znak'),
+    'peredvizhnye':      (((445, 247), (621, 258), (621, 540), (445, 529)),
+                          'светлый', 'znak'),
+    # Площадка на корпусе редуктора - самая большая плоская на этой машине.
+    'centrobezhnye':     (((673, 421), (841, 431), (836, 531), (673, 523)),
+                          'светлый', 'znak1'),
 }
-
-# Доли сняты с настоящей машины: отступ слева, отступ снизу, ширина знака -
-# всё в долях панели.
-OTSTUP_SLEVA = 0.10
-OTSTUP_SNIZU = 0.09
-SHIRINA = 0.45
-PLOTNOST = 0.95
-
-
-def _koef(uglami, w, h):
-    """Коэффициенты PIL PERSPECTIVE: выходной квадрат -> входной прямоугольник."""
-    cel = [(0, 0), (w, 0), (w, h), (0, h)]
-    A, B = [], []
-    for (x, y), (u, v) in zip(uglami, cel):
-        A.append([x, y, 1, 0, 0, 0, -u * x, -u * y])
-        B.append(u)
-        A.append([0, 0, 0, x, y, 1, -v * x, -v * y])
-        B.append(v)
-    n = 8
-    M = [A[i][:] + [B[i]] for i in range(n)]
-    for i in range(n):
-        p = max(range(i, n), key=lambda r: abs(M[r][i]))
-        if abs(M[p][i]) < 1e-12:
-            raise ValueError('вырожденные углы панели')
-        M[i], M[p] = M[p], M[i]
-        dl = M[i][i]
-        M[i] = [v / dl for v in M[i]]
-        for r in range(n):
-            if r == i:
-                continue
-            k = M[r][i]
-            if k:
-                M[r] = [a - k * b for a, b in zip(M[r], M[i])]
-    return [M[i][n] for i in range(n)]
-
-
-def _tochka(panel, u, v):
-    """Точка внутри четырёхугольника по долям u (слева направо) и v (сверху вниз)."""
-    (x0, y0), (x1, y1), (x2, y2), (x3, y3) = panel
-    verh = (x0 + (x1 - x0) * u, y0 + (y1 - y0) * u)
-    niz = (x3 + (x2 - x3) * u, y3 + (y2 - y3) * u)
-    return (verh[0] + (niz[0] - verh[0]) * v, verh[1] + (niz[1] - verh[1]) * v)
-
-
-def ramka_znaka(panel, znak, sleva=OTSTUP_SLEVA, snizu=OTSTUP_SNIZU, shirina=SHIRINA):
-    """Четырёхугольник под знак внутри панели, по долям."""
-    # высота в долях: считаем через реальные пропорции панели по верхней кромке
-    (x0, y0), (x1, y1), _, (x3, y3) = panel
-    shir_px = ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5
-    vys_px = ((x3 - x0) ** 2 + (y3 - y0) ** 2) ** 0.5
-    vysota = shirina * shir_px / (znak.width / znak.height) / vys_px
-    u1, u2 = sleva, sleva + shirina
-    v2 = 1.0 - snizu
-    v1 = v2 - vysota
-    return tuple(_tochka(panel, u, v) for u, v in
-                 ((u1, v1), (u2, v1), (u2, v2), (u1, v2)))
-
-
-def polozhit(kadr, znak, uglami, plotnost=PLOTNOST, rezhim='умножение'):
-    """Не простой альфой: краска на панели подхватывает её освещение.
-
-    Тёмный знак кладём умножением, светлый осветлением - иначе он светится
-    ровно, пока панель под ним уходит в тень, и читается наклейкой.
-    """
-    sloy = znak.transform(kadr.size, Image.PERSPECTIVE,
-                          _koef(uglami, znak.width, znak.height), Image.BICUBIC)
-    a = sloy.getchannel('A').filter(ImageFilter.GaussianBlur(0.5))
-    a = a.point(lambda v: int(v * plotnost))
-    osnova = kadr.convert('RGBA')
-    b = osnova.convert('RGB')
-    l = sloy.convert('RGB')
-    smes = ImageChops.multiply(b, l) if rezhim == 'умножение' else ImageChops.screen(b, l)
-    out = osnova.copy()
-    out.paste(smes, (0, 0), a)
-    return out
 
 
 def main():
     vhod = sys.argv[1] if len(sys.argv) > 1 else 'syrye'
     vyhod = sys.argv[2] if len(sys.argv) > 2 else 'syrye-logo'
-    put = sys.argv[3] if len(sys.argv) > 3 else 'znak.png'
+    risovat = '--risovat' in sys.argv
     os.makedirs(vyhod, exist_ok=True)
-    koren, rasshirenie = os.path.splitext(put)
-    znaki = {'тёмный': Image.open(put).convert('RGBA'),
-             'светлый': Image.open(koren + '-svetlyy' + rasshirenie).convert('RGBA')}
-    for imya, (panel, kakoy, svoi) in PANELI.items():
+    kuski = []
+    for imya, (panel, kakoy, nabor) in PANELI.items():
         p = os.path.join(vhod, imya + '.png')
         if not os.path.exists(p):
             print('нет кадра:', p)
@@ -126,15 +49,34 @@ def main():
         kadr = Image.open(p).convert('RGBA')
         k = kadr.width / OPORA
         pan = tuple((x * k, y * k) for x, y in panel)
-        znak = znaki[kakoy]
-        ramka = ramka_znaka(pan, znak,
-                            sleva=svoi.get('sleva', OTSTUP_SLEVA),
-                            snizu=svoi.get('snizu', OTSTUP_SNIZU),
-                            shirina=svoi.get('shirina', SHIRINA))
-        rezhim = 'умножение' if kakoy == 'тёмный' else 'осветление'
-        polozhit(kadr, znak, ramka, rezhim=rezhim).save(os.path.join(vyhod, imya + '.png'))
-        print('%-20s знак %s, рамка %s' % (
-            imya, kakoy, tuple((round(x), round(y)) for x, y in ramka)), flush=True)
+        put = nabor + ('-svetlyy.png' if kakoy == 'светлый' else '.png')
+        znak = Image.open(put).convert('RGBA')
+        doli, gryaz, dolya = C.nayti_mesto(kadr, pan, znak)
+        ram = C.ramka(pan, doli)
+        print('%-20s %-6s ширина %.0f%% панели, грязь %.1f'
+              % (imya, nabor, dolya * 100, gryaz), flush=True)
+        if risovat:
+            im = kadr.convert('RGB')
+            d = ImageDraw.Draw(im)
+            d.polygon(list(pan), outline=(0, 210, 0), width=5)
+            d.polygon(list(ram), outline=(255, 0, 0), width=5)
+            im.thumbnail((440, 440))
+            kuski.append((imya, im))
+        else:
+            rezhim = 'умножение' if kakoy == 'тёмный' else 'осветление'
+            C.polozhit(kadr, znak, ram, rezhim=rezhim).save(
+                os.path.join(vyhod, imya + '.png'))
+    if risovat and kuski:
+        W = sum(i.width + 10 for _, i in kuski)
+        H = max(i.height for _, i in kuski) + 20
+        lst = Image.new('RGB', (W, H), 'white')
+        d = ImageDraw.Draw(lst)
+        x = 0
+        for imya, i in kuski:
+            d.text((x + 4, 3), imya, fill=(0, 0, 0))
+            lst.paste(i, (x, 18))
+            x += i.width + 10
+        lst.save('mesta.png')
 
 
 if __name__ == '__main__':
