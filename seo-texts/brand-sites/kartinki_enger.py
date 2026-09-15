@@ -37,13 +37,16 @@ ZADANIYA = {
         'cabinet, light grey panels with dark graphite frame and base skids, '
         'control panel with small display on the upper right of the front panel.'),
     # Форма снята с настоящих снимков поставок: это турбомашина, а не насос.
+    # Шкаф управления намеренно маленький: на снимках поставок машина
+    # доминирует в кадре, а высокий шкаф во весь рост её визуально давил.
     'centrobezhnye': (
-        'Large industrial centrifugal turbo air compressor package. Massive round '
-        'volute casing with a wide bolted flange ring on its face, a large diameter '
-        'air inlet duct entering from the side and a large discharge duct leaving '
-        'upward, heavy bolted gearbox body behind the volute, intercooler vessel '
-        'along the base, all mounted on a heavy welded base frame, tall control '
-        'cabinet standing at the left end of the frame.'),
+        'Large industrial centrifugal turbo air compressor package, the machine '
+        'itself dominating the frame. Massive round volute casing with a wide '
+        'bolted flange ring on its face, a large diameter air inlet duct entering '
+        'from the side and a large discharge duct leaving upward, heavy bolted '
+        'gearbox body behind the volute, intercooler vessel along the base, all '
+        'mounted on a heavy welded base frame. Only a small compact control box '
+        'mounted low on the frame, no tall free-standing control cabinet.'),
     'peredvizhnye': (
         'Portable diesel screw air compressor on a two-wheel road trailer with a '
         'drawbar and support jack, dark graphite metal canopy with side service '
