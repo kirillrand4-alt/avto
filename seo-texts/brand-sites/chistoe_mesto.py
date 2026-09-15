@@ -116,13 +116,19 @@ def _summa_okna(pom, x1, y1, x2, y2):
     return s / n + 90.0 * rezkih / n
 
 
-def nayti_mesto(kadr, panel, znak, storona=360):
-    """Доли (u1, v1, u2, v2) под знак: самое чистое место в панели."""
+def nayti_mesto(kadr, panel, znak, storona=360, shiriny=None):
+    """Доли (u1, v1, u2, v2) под знак: самое чистое место в панели.
+
+    shiriny - какие доли ширины панели пробовать. По умолчанию около 40%,
+    как на дверях настоящих машин. Но если панель сама мелкая (площадка на
+    редукторе центробежного), сорок процентов от неё дают нечитаемый знак,
+    и доля задаётся своя - шильдик там занимает почти всю площадку.
+    """
     pl = razvernut(kadr, panel, storona)
     pom = karta_pomeh(pl)
     otn = znak.width / znak.height
     luchshee = None
-    for dolya in SHIRINY:
+    for dolya in (shiriny or SHIRINY):
         w = int(storona * dolya)
         h = int(w / otn)
         if h >= storona * 0.6:

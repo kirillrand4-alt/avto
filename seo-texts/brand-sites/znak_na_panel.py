@@ -31,7 +31,7 @@ PANELI = {
                           'светлый', 'znak'),
     # Площадка на корпусе редуктора - самая большая плоская на этой машине.
     'centrobezhnye':     (((673, 421), (841, 431), (836, 531), (673, 523)),
-                          'светлый', 'znak1'),
+                          'светлый', 'znak1', (0.80, 0.70, 0.60)),
 }
 
 
@@ -41,7 +41,9 @@ def main():
     risovat = '--risovat' in sys.argv
     os.makedirs(vyhod, exist_ok=True)
     kuski = []
-    for imya, (panel, kakoy, nabor) in PANELI.items():
+    for imya, nastroyka in PANELI.items():
+        panel, kakoy, nabor = nastroyka[:3]
+        shiriny = nastroyka[3] if len(nastroyka) > 3 else None
         p = os.path.join(vhod, imya + '.png')
         if not os.path.exists(p):
             print('нет кадра:', p)
@@ -51,7 +53,7 @@ def main():
         pan = tuple((x * k, y * k) for x, y in panel)
         put = nabor + ('-svetlyy.png' if kakoy == 'светлый' else '.png')
         znak = Image.open(put).convert('RGBA')
-        doli, gryaz, dolya = C.nayti_mesto(kadr, pan, znak)
+        doli, gryaz, dolya = C.nayti_mesto(kadr, pan, znak, shiriny=shiriny)
         ram = C.ramka(pan, doli)
         print('%-20s %-6s ширина %.0f%% панели, грязь %.1f'
               % (imya, nabor, dolya * 100, gryaz), flush=True)
