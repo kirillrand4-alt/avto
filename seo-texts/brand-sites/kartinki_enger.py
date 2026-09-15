@@ -1,0 +1,93 @@
+# -*- coding: utf-8 -*-
+"""Картинки товарных категорий Enger через картиночные модели шлюза.
+
+Шлюз отдаёт 524 (таймаут Cloudflare) на долгих запросах, поэтому: ретраи с
+отступом, разные модели по кругу, каждый готовый файл пишется на диск сразу
+и повторно не заказывается. Прогон переживает рестарт песочницы.
+"""
+import base64
+import json
+import os
+import time
+import urllib.error
+import urllib.request
+
+RAB = os.environ.get('KARTINKI_DIR', '.')
+BAZA = os.environ.get('PROVIDER_BASE_URL', 'https://router.cheap').rstrip('/')
+KLYUCH = os.environ.get('PROVIDER_API_KEY', '')
+# Порядок попыток: сначала та, что дешевле по прайсу шлюза, потом запасные.
+MODELI = ('gpt-image-2', 'gpt-image-2.5', 'gpt-image-2.5-flare')
+POPYTOK = 5
+
+# Фон просим белый, а не прозрачный: вырезаем сами - так контролируем край.
+HVOST = (' Studio product photography, three-quarter front view from the left, '
+         'even soft lighting, pure flat white background #FFFFFF, no floor, no '
+         'shadow on the background, no text, no logos, no watermark, no people, '
+         'photorealistic industrial equipment render, centered, full machine in frame.')
+
+ZADANIYA = {
+    'nizkogo-davleniya': (
+        'Industrial low-pressure screw air compressor in a rectangular sound-proof '
+        'cabinet, light grey panels with dark graphite frame and base skids, '
+        'control panel with small display on the upper right of the front panel.'),
+    'centrobezhnye': (
+        'Large industrial centrifugal turbo air compressor package, glossy light grey '
+        'casing with dark grey base frame, large round inlet duct on the side, '
+        'bolted gearbox housing, control cabinet attached at the left end.'),
+    'peredvizhnye': (
+        'Portable diesel screw air compressor on a two-wheel road trailer with a '
+        'drawbar and support jack, dark graphite metal canopy with side service '
+        'doors and ventilation louvres, road lights on the rear.'),
+    'spiralnye': (
+        'Compact oil-free scroll air compressor, tall narrow cabinet, off-white and '
+        'beige panels, round pressure gauge and small round indicator lamps on the '
+        'upper front panel, low dark base.'),
+}
+
+
+def poprosit(model, zadanie, timeout):
+    telo = json.dumps({'model': model, 'prompt': zadanie + HVOST,
+                       'size': '1024x1024', 'n': 1}).encode()
+    r = urllib.request.Request(
+        BAZA + '/v1/images/generations', data=telo,
+        headers={'Authorization': 'Bearer ' + KLYUCH,
+                 'User-Agent': 'curl/8.5.0',
+                 'Content-Type': 'application/json'})
+    d = json.loads(urllib.request.urlopen(r, timeout=timeout).read().decode())
+    it = d['data'][0]
+    if it.get('b64_json'):
+        return base64.b64decode(it['b64_json'])
+    ssylka = urllib.request.Request(it['url'], headers={'User-Agent': 'curl/8.5.0'})
+    return urllib.request.urlopen(ssylka, timeout=180).read()
+
+
+def main():
+    os.makedirs(os.path.join(RAB, 'syrye'), exist_ok=True)
+    for imya, zadanie in ZADANIYA.items():
+        put = os.path.join(RAB, 'syrye', imya + '.png')
+        if os.path.exists(put) and os.path.getsize(put) > 20000:
+            print('%s: уже есть' % imya, flush=True)
+            continue
+        for n in range(POPYTOK):
+            model = MODELI[n % len(MODELI)]
+            try:
+                bajty = poprosit(model, zadanie, 300)
+            except urllib.error.HTTPError as e:
+                print('%s: %s HTTP %s' % (imya, model, e.code), flush=True)
+            except Exception as e:
+                print('%s: %s %s' % (imya, model, type(e).__name__), flush=True)
+            else:
+                with open(put, 'wb') as f:
+                    f.write(bajty)
+                    f.flush()
+                    os.fsync(f.fileno())
+                print('%s: готово через %s, %.0f КБ' % (imya, model, len(bajty) / 1024),
+                      flush=True)
+                break
+            time.sleep(2 ** n)
+        else:
+            print('%s: не вышло за %d попыток' % (imya, POPYTOK), flush=True)
+
+
+if __name__ == '__main__':
+    main()
