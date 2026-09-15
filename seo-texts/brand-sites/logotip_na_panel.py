@@ -7,7 +7,7 @@
 import os
 import sys
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 # Углы панели сняты по сетке setka.png, которая рисовалась в опорной рамке
 # 1024x1024. Модель отдаёт кадры другого размера (видели 1254), поэтому углы
@@ -17,10 +17,16 @@ OPORA = 1024
 # «светлый» - там, где поверхность тёмная и чёрные буквы на ней пропадают:
 # на передвижном это графитовый капот, на центробежном - рама-основание.
 PANELI = {
-    'nizkogo-davleniya': (((230, 575), (462, 571), (462, 641), (230, 646)), 'тёмный'),
-    'spiralnye':         (((714, 688), (876, 694), (876, 757), (714, 751)), 'тёмный'),
-    'peredvizhnye':      (((490, 355), (611, 366), (611, 408), (490, 398)), 'светлый'),
-    'centrobezhnye':     (((106, 723), (294, 745), (294, 802), (106, 780)), 'светлый'),
+    # Углы сняты по зум-сетке с шагом 32 px, а не на глаз: прошлый заход давал
+    # наклейку именно потому, что логотип лежал плоско, пока панель уходила вбок.
+    'nizkogo-davleniya': (((384, 642), (506, 638), (506, 675), (384, 679)), 'тёмный'),
+    'spiralnye':         (((588, 696), (702, 694), (702, 728), (588, 730)), 'тёмный'),
+    'peredvizhnye':      (((498, 351), (612, 357), (612, 391), (498, 385)), 'светлый'),
+    # На центробежном ровных панелей нет: кладём на стенку рамы-основания.
+    # Кромки полосы сняты замером яркости по колонкам, а не на глаз: первый
+    # заход промахнулся ниже кромки и логотип свесился на белый фон.
+    # Полоса: верх y=900+0,2*(x-180), низ y=948+0,233*(x-180).
+    'centrobezhnye':     (((176, 747), (261, 766), (261, 792), (176, 773)), 'светлый'),
 }
 PLOTNOST = 0.94        # чуть просвечивает, чтобы не выглядело наклейкой
 
@@ -53,16 +59,30 @@ def _koef(uglami, w, h):
     return [M[i][n] for i in range(n)]
 
 
-def polozhit(kadr, logotip, uglami, plotnost=PLOTNOST):
-    holst = Image.new('RGBA', kadr.size, (0, 0, 0, 0))
+def polozhit(kadr, logotip, uglami, plotnost=PLOTNOST, rezhim='умножение'):
+    """Кладём логотип НЕ простой альфой.
+
+    Простая альфа даёт наклейку: краска светится ровно, пока панель под ней
+    уходит в тень. Настоящая печать подхватывает освещение поверхности,
+    поэтому тёмный логотип кладём умножением (тень панели проступает сквозь
+    буквы), светлый - осветлением. Разница видна сразу.
+    """
+    from PIL import ImageFilter
     sloy = logotip.transform(kadr.size, Image.PERSPECTIVE,
                              _koef(uglami, logotip.width, logotip.height),
                              Image.BICUBIC)
-    a = sloy.getchannel('A').point(lambda v: int(v * plotnost))
-    sloy.putalpha(a)
-    holst.alpha_composite(sloy)
-    out = kadr.convert('RGBA')
-    out.alpha_composite(holst)
+    # Мягкий край: после перспективы ступеньки, рендер вокруг гладкий.
+    a = sloy.getchannel('A').filter(ImageFilter.GaussianBlur(0.5))
+    a = a.point(lambda v: int(v * plotnost))
+    osnova = kadr.convert('RGBA')
+    b = osnova.convert('RGB')
+    l = sloy.convert('RGB')
+    if rezhim == 'умножение':
+        smes = ImageChops.multiply(b, l)
+    else:
+        smes = ImageChops.screen(b, l)
+    out = osnova.copy()
+    out.paste(smes, (0, 0), a)
     return out
 
 
@@ -84,8 +104,11 @@ def main():
             raise ValueError('ожидался квадратный кадр, а тут %s' % (kadr.size,))
         k = kadr.width / OPORA
         masshtab = tuple((round(x * k), round(y * k)) for x, y in uglami)
-        polozhit(kadr, logotipy[kakoy], masshtab).save(os.path.join(vyhod, imya + '.png'))
-        print('%-20s логотип %s, масштаб углов x%.3f' % (imya, kakoy, k), flush=True)
+        rezhim = 'умножение' if kakoy == 'тёмный' else 'осветление'
+        polozhit(kadr, logotipy[kakoy], masshtab, rezhim=rezhim).save(
+            os.path.join(vyhod, imya + '.png'))
+        print('%-20s логотип %s (%s), масштаб углов x%.3f'
+              % (imya, kakoy, rezhim, k), flush=True)
 
 
 if __name__ == '__main__':

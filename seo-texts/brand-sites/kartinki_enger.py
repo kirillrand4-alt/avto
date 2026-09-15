@@ -20,6 +20,12 @@ MODELI = ('gpt-image-2', 'gpt-image-2.5', 'gpt-image-2.5-flare')
 POPYTOK = 5
 
 # Фон просим белый, а не прозрачный: вырезаем сами - так контролируем край.
+# Палитра задана жёстко: владелец требует, чтобы все карточки серии читались
+# как одна линейка - графит плюс светло-серые панели, как на шести готовых.
+PALITRA = (' Colour palette strictly graphite: dark graphite grey RAL 7024 frame, '
+           'base and structural parts, light warm grey RAL 7035 panels, matte '
+           'finish, no beige, no cream, no white paint, no blue, no green.')
+
 HVOST = (' Studio product photography, three-quarter front view from the left, '
          'even soft lighting, pure flat white background #FFFFFF, no floor, no '
          'shadow on the background, no text, no logos, no watermark, no people, '
@@ -30,18 +36,22 @@ ZADANIYA = {
         'Industrial low-pressure screw air compressor in a rectangular sound-proof '
         'cabinet, light grey panels with dark graphite frame and base skids, '
         'control panel with small display on the upper right of the front panel.'),
+    # Форма снята с настоящих снимков поставок: это турбомашина, а не насос.
     'centrobezhnye': (
-        'Large industrial centrifugal turbo air compressor package, glossy light grey '
-        'casing with dark grey base frame, large round inlet duct on the side, '
-        'bolted gearbox housing, control cabinet attached at the left end.'),
+        'Large industrial centrifugal turbo air compressor package. Massive round '
+        'volute casing with a wide bolted flange ring on its face, a large diameter '
+        'air inlet duct entering from the side and a large discharge duct leaving '
+        'upward, heavy bolted gearbox body behind the volute, intercooler vessel '
+        'along the base, all mounted on a heavy welded base frame, tall control '
+        'cabinet standing at the left end of the frame.'),
     'peredvizhnye': (
         'Portable diesel screw air compressor on a two-wheel road trailer with a '
         'drawbar and support jack, dark graphite metal canopy with side service '
         'doors and ventilation louvres, road lights on the rear.'),
     'spiralnye': (
-        'Compact oil-free scroll air compressor, tall narrow cabinet, off-white and '
-        'beige panels, round pressure gauge and small round indicator lamps on the '
-        'upper front panel, low dark base.'),
+        'Compact oil-free scroll air compressor, tall narrow rectangular cabinet, '
+        'light grey panels with dark graphite frame and low dark base, round '
+        'pressure gauge and small round indicator lamps on the upper front panel.'),
 }
 
 
@@ -71,7 +81,7 @@ def main():
         for n in range(POPYTOK):
             model = MODELI[n % len(MODELI)]
             try:
-                bajty = poprosit(model, zadanie, 300)
+                bajty = poprosit(model, zadanie + PALITRA, 300)
             except urllib.error.HTTPError as e:
                 print('%s: %s HTTP %s' % (imya, model, e.code), flush=True)
             except Exception as e:
