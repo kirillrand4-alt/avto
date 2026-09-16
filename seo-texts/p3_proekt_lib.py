@@ -257,10 +257,12 @@ def _reg_re(r):
 
 
 REG_RE = [(r, _reg_re(r)) for r in REGIONY]
-GOR_RE = [(g, re.compile(r'(?<![а-яё])' + re.escape(osnova(g)) + OKONCH, re.I))
+# Дефис перед именем запрещён: «Северо-Комсомольское месторождение» в ЯНАО давало
+# город Комсомольск-на-Амуре — поймано на живой склейке десяти улик «Роснефти».
+GOR_RE = [(g, re.compile(r'(?<![а-яё-])' + re.escape(osnova(g)) + OKONCH, re.I))
           for g in GORODA_ODNO]
 # в составных именах склоняется и первая часть: «Каменске-Уральском»
-GOR_RE += [(g, re.compile(r'(?<![а-яё])(?:'
+GOR_RE += [(g, re.compile(r'(?<![а-яё-])(?:'
                           + '|'.join(p.replace('-', r'[а-яё]*-') for p in ps)
                           + r')' + OKONCH, re.I))
            for g, ps in GORODA_SOSTAV]

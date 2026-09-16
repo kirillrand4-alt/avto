@@ -530,7 +530,9 @@ def kontrol_negodnym(slov):
                 ('запущена клинкерная линия цементного завода', set()),
                 ('в городе Тайшет Иркутской области', {'Тайшет'}),
                 ('в Каменске-Уральском на УАЗе', {'Каменск-Уральский'}),
-                ('свободный доступ к октябрьским данным', set())]
+                ('свободный доступ к октябрьским данным', set()),
+                ('ДКС на Северо-Комсомольском месторождении в ЯНАО', set()),
+                ('НПЗ в Комсомольске-на-Амуре', {'Комсомольск-на-Амуре'})]
     for t, zhd in lovushki:
         p = L.razobrat_signal({'what': t, 'event_type': ''})
         ok = p['goroda'] == zhd
@@ -742,7 +744,7 @@ class Teh(object):
 TABLICY = ('proekty', 'proekt_uliki', 'proekt_slovar', 'proekt_gashenie')
 
 
-def slit(rab, zhivaya_put, popytok=50, pauza=12):
+def slit(rab, zhivaya_put, popytok=50, pauza=12, ochistit=False):
     """Перелить готовые таблицы в живую базу ОДНИМ КОРОТКИМ РЫВКОМ.
 
     Почему так, а не писать в живую по ходу сборки: замер показал, что enrich.db
@@ -764,6 +766,9 @@ def slit(rab, zhivaya_put, popytok=50, pauza=12):
             zh.execute('BEGIN IMMEDIATE')
             for sql in SHEMA:
                 zh.execute(sql)
+            if ochistit:
+                for t_ in TABLICY:            # чистим ТОЛЬКО свои новые таблицы
+                    zh.execute('delete from %s' % t_)
             for t in TABLICY:
                 rows, kol = dannye[t]
                 if not rows:
@@ -845,7 +850,7 @@ def main(argv):
         print('=' * 74)
         print('ПЕРЕЛИВ В ЖИВУЮ БАЗУ %s' % put)
         print('=' * 74)
-        slit(con, put)
+        slit(con, put, ochistit='--ochistit' in argv)
     if '--kontrol' in argv:
         print()
         print('=' * 74)
