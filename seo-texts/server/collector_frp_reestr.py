@@ -265,9 +265,10 @@ def _find_sum(text):
                 re.sub(r'[\s ]+', ' ', m.group(1)).strip(),
                 'млрд' if m.group(2).lower().startswith(('млрд', 'миллиард')) else 'млн')
             left = sent[max(0, m.start() - 45):m.start()]
+            right = sent[m.end():m.end() + 45]
             if _PROJ_CTX.search(left):
                 proj.append((rub, human))
-            elif _LOAN_CTX.search(left) or (s_loan and not s_proj):
+            elif _LOAN_CTX.search(left) or _LOAN_CTX.search(right) or (s_loan and not s_proj):
                 loan.append((rub, human))
             elif s_proj:
                 proj.append((rub, human))
