@@ -274,6 +274,7 @@ def col_egrz(days=90, max_items=400, regions=None, sections=SECTIONS_PROM,
     flt = _build_filter(date_from, sections, work_types, positive_only, codes, keywords)
 
     code, data = _page(flt, 0)
+    fallback = False
     if code != 200:
         # Фолбэк: если сервис не принял составной фильтр (сменилась схема полей),
         # тянем только по дате и фильтруем на своей стороне — лучше медленно, чем никак.
@@ -283,6 +284,7 @@ def col_egrz(days=90, max_items=400, regions=None, sections=SECTIONS_PROM,
         code, data = _page(flt, 0)
         if code != 200:
             return []
+        fallback = True
 
     total = data.get('@odata.count')
     items, seen, skip = [], set(), 0
@@ -292,10 +294,17 @@ def col_egrz(days=90, max_items=400, regions=None, sections=SECTIONS_PROM,
             if not key or key in seen:
                 continue
             seen.add(key)
-            it = _to_item(rec, sections, region_names, require_prod_kw, drop_social)
+            it = _to_item(rec, sections, region_names,
+                          # в фолбэке серверного фильтра не было — догоняем клиентом
+                          codes if fallback else None,
+                          work_types if fallback else None,
+                          positive_only if fallback else False,
+                          require_prod_kw, drop_social)
             if it:
                 items.append(it)
-                if len(items) >= int(max_items):
+                # max_items=None читаем как «без потолка»: у остальных
+                # коллекторов None означает именно это, и int(None) здесь падал.
+                if max_items is not None and len(items) >= int(max_items):
                     if verbose:
                         sys.stderr.write('ЕГРЗ: всего по фильтру %s, взято %d\n'
                                          % (total, len(items)))
@@ -313,8 +322,12 @@ def col_egrz(days=90, max_items=400, regions=None, sections=SECTIONS_PROM,
     return items
 
 
-def _to_item(rec, sections, region_names, require_prod_kw, drop_social):
-    """Запись книги регистрации -> item коллектора (или None, если отсеяли)."""
+def _to_item(rec, sections, region_names, region_codes=None, work_types=None,
+             positive_only=False, require_prod_kw=False, drop_social=True):
+    """Запись книги регистрации -> item коллектора (или None, если отсеяли).
+
+    region_codes/work_types/positive_only заполняются ТОЛЬКО в фолбэк-режиме,
+    когда серверный $filter не отработал и всё это надо проверить самим."""
     obj = re.sub(r'\s+', ' ', str(rec.get('ExpertiseObjectName') or '')).strip().strip('"')
     if not obj:
         return None
@@ -330,9 +343,15 @@ def _to_item(rec, sections, region_names, require_prod_kw, drop_social):
     region, region_code = _region(rec)
     if region_names and not any(n in region.lower() for n in region_names):
         return None
+    if region_codes and region_code not in region_codes:
+        return None
 
     company, inn, role = _company(rec)
     work = str(rec.get('WorkType') or '').strip()
+    if work_types and work not in work_types:
+        return None
+    if positive_only and str(rec.get('ExpertiseResultType') or '') != 'Положительное заключение':
+        return None
     num = str(rec.get('ExpertiseNumber') or '').strip()
     date = str(rec.get('ExpertiseConclusionDate') or '')
     short = _short_name(company)

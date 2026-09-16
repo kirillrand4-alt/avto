@@ -48,6 +48,7 @@ import json
 import os
 import re
 import sqlite3
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -99,7 +100,14 @@ _RE_PLOSHCHADKA = re.compile(
     r'(?:ОЭЗ|ТОР|ТОСЭР|особ\w+\s+экономическ\w+\s+зон\w*|территори\w+\s+опережающ\w+\s+развити\w*)'
     r'(?:\s+(?:ППТ|ПТ|ТВТ|ПОЭЗ))?\s*[«"„\']?([А-ЯЁ][А-Яа-яЁё\- ]{2,30})?', re.I)
 
+# СОБСТВЕННЫЙ opener БЕЗ прокси-хендлеров. Причина ровно та, что записана в
+# news_scan.dadata_suggest (инцидент 28.07): при импорте news_scan → verify_company
+# ставит install_opener на мобильный прокси из PROXY_URL, и когда тот мёртв, КАЖДЫЙ
+# urlopen тихо падает. Наши реестры и инвестпорталы — обычные сайты, им прокси не нужен.
+_NOPROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
 _KESH_TTL = 24 * 3600      # сутки: реестры и инвестпорталы меняются медленно
+_OKNO_REESTRA = 220        # символов вокруг имени в реестре — «описание этого резидента»
 _UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
        '(KHTML, like Gecko) Chrome/126.0 Safari/537.36')
 
@@ -145,6 +153,18 @@ def _region_tokeny(s):
     s = re.sub(r'(области|область|обл\.|края|край|республик\w*|респ\.|округ\w*|район\w*|г\.|город\w*)',
                ' ', s)
     return {x[:6] for x in re.sub(r'[^а-яё ]', ' ', s).split() if len(x) >= 4}
+
+
+def _bez_geo(tokeny, *geo_stroki):
+    """Выкинуть из набора токенов географию (регион события, имя площадки).
+
+    Зачем: без этого «Липецк» на странице реестра считался ПРЕДМЕТНЫМ совпадением,
+    и завод влажных кормов «подтверждал» стекольный завод на той же площадке
+    (поймано на офлайн-тесте 16.09). География проверяется отдельной уликой
+    (region_ok) и второй раз считаться не должна.
+    """
+    geo = _region_tokeny(' '.join([g or '' for g in geo_stroki]))
+    return {t for t in tokeny if t[:6] not in geo}
 
 
 def _klass_obekta(txt):
@@ -250,7 +270,8 @@ def podtverdit(sob, kand_tekst='', kand_region='', kand_data='', strukturnyy=Fal
         uliki.append('регион совпал: %s' % (sob.get('region') or '')[:40])
 
     s_kl, k_kl = _klass_obekta(s_txt), _klass_obekta(kand_tekst)
-    obshchie = _tokeny(s_txt, minlen=6) & _tokeny(kand_tekst, minlen=6)
+    obshchie = _bez_geo(_tokeny(s_txt, minlen=6) & _tokeny(kand_tekst, minlen=6),
+                        sob.get('region'), kand_region)
     klass_ok = bool(s_kl and k_kl and (s_kl & k_kl))
     otrasl_ok = klass_ok or bool(obshchie)
     if klass_ok:
@@ -416,6 +437,10 @@ class Kontekst(object):
                             False: на балансе 299 ₽ и трата не согласована;
       internet            — разрешён ли выход в сеть вообще (реестры/порталы);
       dadata_token        — токен dadata для привязки ИНН (по умолчанию из окружения);
+      egrz_lenta          — можно ли снимать ленту соседского коллектора ЕГРЗ (да, бесплатно);
+      fedresurs_lenta     — то же для Федресурса; ПО УМОЛЧАНИЮ НЕТ (см. poisk_v_fedresurse);
+      feed_dney           — глубина ленты соседей в днях (по умолчанию 180);
+      feed_max            — потолок записей в снимаемой ленте соседей (по умолчанию 400);
       reestry             — путь к JSON-справочнику площадок и инвестпорталов;
       kesh_dir            — куда складывать скачанные страницы реестров;
       puti                — какие пути включены (по умолчанию все);
@@ -423,7 +448,8 @@ class Kontekst(object):
     """
 
     def __init__(self, korpus=None, razresheno_platit=False, internet=True, dadata_token=None,
-                 reestry=None, kesh_dir=None, puti=None, log=None, dadata=None):
+                 reestry=None, kesh_dir=None, puti=None, log=None, dadata=None,
+                 egrz_lenta=True, fedresurs_lenta=False, feed_dney=180, feed_max=400):
         self.korpus = korpus
         self.razresheno_platit = bool(razresheno_platit)
         self.internet = bool(internet)
@@ -435,6 +461,10 @@ class Kontekst(object):
         self.puti = puti            # None = все пути; список имён = только они
         self.log = log or (lambda *a: None)
         self._dadata = dadata       # можно подменить в тестах
+        self.egrz_lenta = bool(egrz_lenta)          # снимать ли ленту ЕГРЗ (бесплатно)
+        self.fedresurs_lenta = bool(fedresurs_lenta)  # лента Федресурса — по умолчанию нет
+        self.feed_dney = int(feed_dney)             # глубина ленты соседей, дней
+        self.feed_max = int(feed_max)               # потолок записей в ленте соседей
         self._spravochnik = None
 
     # --- справочник площадок/порталов (JSON рядом с модулем, правится руками)
@@ -461,7 +491,7 @@ class Kontekst(object):
                 return open(p, encoding='utf-8', errors='replace').read()
             req = urllib.request.Request(url, headers={'User-Agent': _UA,
                                                        'Accept-Language': 'ru,en;q=0.8'})
-            body = urllib.request.urlopen(req, timeout=timeout).read()
+            body = _NOPROXY.open(req, timeout=timeout).read()
             txt = body.decode('utf-8', 'replace')
             with open(p, 'w', encoding='utf-8') as f:
                 f.write(txt)
@@ -472,6 +502,10 @@ class Kontekst(object):
 
     # --- привязка имени к ИНН (переиспользуем боевую dadata из news_scan, не дублируем)
     def dadata(self, imya):
+        """Имя → карточка ЕГРЮЛ через `news_scan.dadata_suggest` (там уже есть расклонка,
+        матч-скор и защита от тёзок — дублировать нельзя). Импорт ленивый: у news_scan
+        при импорте есть побочный эффект (install_opener на прокси), поэтому свои
+        HTTP-запросы модуль делает через собственный _NOPROXY."""
         if self._dadata is not None:
             return self._dadata(imya)
         if not self.dadata_token:
@@ -508,17 +542,65 @@ class Kontekst(object):
 
 
 # ----------------------------------------------------------------- общие точки с соседями
-def poisk_v_egrz(objekt, region='', data=''):
-    """АБСТРАКЦИЯ над коллектором ЕГРЗ (его делает другой агент — задача 1 ТЗ).
+# Ленты соседних коллекторов тянутся ОДИН РАЗ на процесс (окно дней + потолок) и
+# лежат в памяти: doopredelit зовут из пула в 12-64 потока, и без этого кэша каждый
+# поток дёргал бы ЕГРЗ заново.
+_FEED_KESH = {}
+_FEED_LOCK = threading.Lock()
 
-    Умеет: найти чужой модуль по списку известных имён и позвать его поиск.
-    Ожидаемый контракт ответа: список словарей с ключами
-    `zakazchik`/`customer`, `zastroyshchik`/`developer`, `object`, `region`, `date`,
-    `sum`, `url`.
-    Не умеет: сама ходить в ЕГРЗ. Пока коллектора нет — честно возвращает [].
+
+def _feed(kluch, sobrat):
+    with _FEED_LOCK:
+        if kluch in _FEED_KESH:
+            return _FEED_KESH[kluch]
+    try:
+        items = sobrat() or []
+    except Exception:  # noqa: BLE001
+        items = []
+    with _FEED_LOCK:
+        _FEED_KESH.setdefault(kluch, items)
+    return _FEED_KESH[kluch]
+
+
+def _otobrat_po_obektu(items, objekt, region, tekst_polya, region_pole, min_obshchih=2):
+    """Из ленты коллектора выбрать записи про НАШ объект.
+
+    Требуется И совпадение региона, И не менее `min_obshchih` общих ПРЕДМЕТНЫХ слов
+    (география из них вычищена). Порог именно 2: с порогом 1 живая проба по ленте
+    ЕГРЗ 16.09 дала 15 «попаданий» на 60 событий, и глазами почти все оказались
+    мусором («13 заводов редких металлов в Хакасии» → стекольная компания). Одно
+    общее слово в двух текстах про стройку — это не улика.
+    """
+    q = _bez_geo(_tokeny(objekt, minlen=6), region)
+    reg = _region_tokeny(region)
+    out = []
+    for it in items:
+        t = ' '.join([str(it.get(k) or '') for k in tekst_polya])
+        r = _region_tokeny(it.get(region_pole))
+        if reg and not (r and (reg & r)):
+            continue          # регион события известен → запись без совпавшего региона мимо
+        obshchie = _bez_geo(_tokeny(t, minlen=6), region) & q
+        if len(obshchie) >= min_obshchih:
+            out.append((len(obshchie), it))
+    out.sort(key=lambda x: -x[0])
+    return [it for _n, it in out]
+
+
+def poisk_v_egrz(objekt, region='', data='', days=180, max_items=400, feed=True):
+    """АБСТРАКЦИЯ над коллектором ЕГРЗ (его пишет другой агент — задача 1 ТЗ).
+
+    Умеет: (1) позвать `poisk`/`search` у модуля ЕГРЗ, если тот появится с таким
+    интерфейсом; (2) иначе — снять ленту заключений соседского `collector_egrz.col_egrz`
+    ОДИН РАЗ на процесс и отобрать из неё записи про наш объект (регион + общее
+    предметное слово). Своей ходьбы в ЕГРЗ здесь нет — реализацию не дублируем.
+
+    Отдаёт список словарей: `zakazchik`/`zastroyshchik`, `inn`, `object`, `text`,
+    `region`, `date`, `sum`, `url`.
+    Не умеет: искать по объекту точечным запросом — публичная книга ЕГРЗ
+    отдаётся лентой, поэтому первое обращение стоит одну выгрузку за `days` дней.
     """
     for mod, fn in (('egrz_collector', 'poisk'), ('egrz_collector', 'search'),
-                    ('egrz', 'poisk'), ('egrz', 'search'), ('news_scan', 'col_egrz_poisk')):
+                    ('egrz', 'poisk'), ('egrz', 'search')):
         try:
             m = __import__(mod)
             f = getattr(m, fn, None)
@@ -526,16 +608,62 @@ def poisk_v_egrz(objekt, region='', data=''):
                 return f(objekt, region=region, data=data) or []
         except Exception:  # noqa: BLE001
             continue
-    return []
+    if not feed:
+        return []
+    try:
+        import collector_egrz as CE
+    except Exception:  # noqa: BLE001
+        return []
+    if not hasattr(CE, 'col_egrz'):
+        return []
+    # ТОЧЕЧНЫЙ запрос лучше ленты: у соседского коллектора есть серверные фильтры
+    # `keywords` (слово в названии объекта) и `regions`. Одна выдача на событие
+    # вместо просеивания общей ленты — и попаданий больше (замер 16.09: по ленте
+    # в 400 записей путь 2 давал 2% кандидатов).
+    slova = sorted(_bez_geo(_tokeny(objekt, minlen=6), region))[:3]
+    items = []
+    if slova:
+        items = _feed(('egrz-точечно', days, tuple(slova), region),
+                      lambda: CE.col_egrz(days=days, max_items=60, keywords=slova,
+                                          regions=[region] if region else None))
+    if not items:      # фолбэк: общая лента за окно (кэшируется на весь процесс)
+        items = _feed(('egrz', days, max_items),
+                      lambda: CE.col_egrz(days=days, max_items=max_items))
+    out = []
+    for it in _otobrat_po_obektu(items, objekt, region,
+                                 ('title', 'what', 'address', 'functional_purpose'), 'region')[:5]:
+        rol = (it.get('company_role') or '').lower()
+        imya = it.get('company_name') or it.get('company_name_short') or ''
+        zap = {'inn': it.get('inn') or '', 'object': it.get('what') or it.get('title') or '',
+               'text': ' '.join([it.get('title') or '', it.get('address') or '']),
+               'region': it.get('region') or '', 'date': it.get('event_date') or it.get('pubDate') or '',
+               'sum': it.get('sum') or '', 'url': it.get('link') or '',
+               # пометка «запись выужена из ЛЕНТЫ, а не найдена точечным запросом»:
+               # для такой находки подтверждение должно быть полным (регион И объект)
+               '_lenta': True}
+        # «технический заказчик» в ЕГРЗ — это как раз инвестор/владелец будущего
+        # производства, застройщик бывает подрядчиком; роль решает, в какое поле класть
+        zap['zakazchik' if 'заказчик' in rol else 'zastroyshchik'] = imya
+        out.append(zap)
+    return out
 
 
-def poisk_v_fedresurse(objekt, region='', data='', okved=''):
-    """АБСТРАКЦИЯ над коллектором Федресурса (задача 3 ТЗ, делает другой агент).
+def poisk_v_fedresurse(objekt, region='', data='', okved='', days=180, max_items=300,
+                       feed=False):
+    """АБСТРАКЦИЯ над коллектором Федресурса (задача 3 ТЗ, пишет другой агент).
 
-    Ожидаемый контракт ответа: список словарей с `inn`, `name`, `type` (тип
-    сообщения), `date`, `text`, `url`. Федресурс — единственный источник, где ИНН
-    стоит прямо в сообщении, поэтому dadata здесь не нужна.
-    Пока коллектора нет — честно возвращает [].
+    Умеет: позвать `poisk`/`search`, если такой интерфейс появится, и отдать
+    словари `inn`, `name`, `type`, `date`, `text`, `region`, `url`. ИНН там стоит
+    в самом сообщении, поэтому dadata для этого пути не нужна.
+
+    Чего НЕ умеет и почему это важно знать: соседский `collector_fedresurs`
+    работает ОТ ИНН — берёт наши компании и спрашивает их сообщения. Нам нужно
+    обратное (от объекта к компании), а лента сообщений у него есть только в
+    режиме `rezhim='lenta'`, который сам коллектор помечает как спорный по
+    robots. Поэтому лента здесь по умолчанию ВЫКЛЮЧЕНА (`feed=False`) и
+    включается сознательно, а без неё путь 4 честно отвечает «поиска по объекту
+    нет». Это ограничение источника, а не недоделка: для задачи 4 Федресурс
+    полезен, когда имя уже есть и нужно подтверждение сделкой.
     """
     for mod, fn in (('fedresurs_collector', 'poisk'), ('fedresurs_collector', 'search'),
                     ('fedresurs', 'poisk'), ('fedresurs', 'search')):
@@ -546,7 +674,23 @@ def poisk_v_fedresurse(objekt, region='', data='', okved=''):
                 return f(objekt, region=region, data=data, okved=okved) or []
         except Exception:  # noqa: BLE001
             continue
-    return []
+    if not feed:
+        return []
+    try:
+        import collector_fedresurs as CF
+    except Exception:  # noqa: BLE001
+        return []
+    if not hasattr(CF, 'col_fedresurs'):
+        return []
+    items = _feed(('fedresurs', days, max_items),
+                  lambda: CF.col_fedresurs(days=days, max_items=max_items, rezhim='lenta'))
+    out = []
+    for it in _otobrat_po_obektu(items, objekt, region, ('title', 'query'), 'region')[:5]:
+        out.append({'inn': it.get('inn') or '', 'name': it.get('company_name') or '',
+                    'type': it.get('msg_type') or '', 'date': it.get('pubDate') or '',
+                    'text': it.get('title') or '', 'region': it.get('region') or '',
+                    'url': it.get('link') or '', '_lenta': True})
+    return out
 
 
 # ----------------------------------------------------------------- стратегии
@@ -595,7 +739,10 @@ def strategiya_oez_reestr(sob, ctx):
     выдрать юрлица и выбрать то, у которого профиль совпадает с объектом события.
     Не умеет: работать без заполненного справочника площадок и без открытой
     страницы резидентов (у части ОЭЗ список только в PDF/презентации). Не умеет
-    выбрать резидента, когда на площадке два похожих профиля — тогда вернёт 'low'.
+    уверенно выбрать резидента, когда на площадке два похожих профиля ИЛИ когда
+    страница-список настолько плотная, что описания соседних резидентов попадают
+    в одно окно (±220 символов) — в обоих случаях имя возвращается с 'low', и
+    решение остаётся за оператором.
 
     Применимость на наших данных (16.09): ОЭЗ/ТОР/резидентство упоминают 8,3%
     безымянных событий, имя площадки разбирается у 6,1%.
@@ -622,27 +769,38 @@ def strategiya_oez_reestr(sob, ctx):
         return None, ['путь 1: страница резидентов «%s» не открылась' % ploshchadka[:30]]
     chistyy = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', stranica, flags=re.S)
     chistyy = re.sub(r'<[^>]+>', ' ', chistyy)
-    s_kl = _klass_obekta(_tekst(sob))
-    s_tok = _tokeny(_tekst(sob), minlen=6)
-    luchshiy = None
+    # география из предметных слов вычищена: имя площадки и регион подтверждением
+    # профиля не являются (иначе любой резидент «подтвердит» любой объект зоны)
+    s_tok = _bez_geo(_tokeny(_tekst(sob), minlen=6), sob.get('region'), ploshchadka)
+    # ВЫБОР РЕЗИДЕНТА идёт по ПРОФИЛЮ (предметные слова), а не по классу объекта:
+    # на одной площадке «завод» у всех, и по классу подошёл бы любой резидент
+    # (поймано офлайн-тестом 16.09: производитель кормов «подтверждал» стекольный завод).
+    podoshli = []
     for imya in _imena_iz_teksta(chistyy):
-        # окно вокруг имени в тексте реестра — по нему и проверяем профиль
         i = chistyy.find(imya)
         if i < 0:
             continue
-        okno = chistyy[max(0, i - 300):i + 300]
-        if (s_kl and (_klass_obekta(okno) & s_kl)) or (_tokeny(okno, minlen=6) & s_tok):
-            luchshiy = (imya, okno)
-            break
-    if not luchshiy:
+        okno = chistyy[max(0, i - _OKNO_REESTRA):i + _OKNO_REESTRA]
+        sovpalo = _bez_geo(_tokeny(okno, minlen=6), sob.get('region'), ploshchadka) & s_tok
+        if sovpalo:
+            podoshli.append((len(sovpalo), imya, okno))
+    if not podoshli:
         return None, ['путь 1: в реестре «%s» профиль объекта не сошёлся ни с одним резидентом'
                       % ploshchadka[:30]]
-    imya, okno = luchshiy
+    podoshli.sort(key=lambda x: -x[0])
+    _n, imya, okno = podoshli[0]
+    # ничья по профилю = площадка не различает резидентов (окна описаний налезли
+    # друг на друга) → имя берём лучшее, но уверенность принудительно низкая
+    mnogo = len(podoshli) > 1 and podoshli[1][0] >= _n
     ok, uver, uliki = podtverdit(sob, kand_tekst=okno, kand_region=zapis.get('region')
                                  or sob.get('region'), strukturnyy=True)
     uliki = ['путь 1: реестр резидентов %s (%s)' % (ploshchadka[:30], (zapis.get('url') or '')[:70])] + uliki
     if not ok:
         return None, uliki
+    if mnogo:
+        uver = 'low'
+        uliki.append('понижено до low: профилю подошёл не один резидент площадки (%d)'
+                     % len(podoshli))
     dd = ctx.dadata(imya)
     return _itog(imya, (dd or {}).get('inn'), 'реестр ОЭЗ/ТОР', uver, uliki), uliki
 
@@ -671,7 +829,7 @@ def strategiya_investportal(sob, ctx):
     if not urls:
         return None, ['путь 3: инвестпортала для региона «%s» нет в справочнике'
                       % (sob.get('region') or '')[:30]]
-    s_tok = _tokeny(_tekst(sob), minlen=6)
+    s_tok = _bez_geo(_tokeny(_tekst(sob), minlen=6), sob.get('region'))
     for u in urls[:3]:
         stranica = ctx.skachat(u)
         if not stranica:
@@ -706,7 +864,9 @@ def strategiya_egrz(sob, ctx):
     objekt = ' '.join(sorted(_tokeny(_tekst(sob), minlen=6))[:6]) or _bez_izdaniya(sob.get('title'))
     try:
         nahodki = poisk_v_egrz(objekt, region=sob.get('region') or '',
-                               data=_data_iso(sob.get('published')))
+                               data=_data_iso(sob.get('published')),
+                               days=ctx.feed_dney, max_items=ctx.feed_max,
+                               feed=(ctx.internet and ctx.egrz_lenta))
     except Exception as e:  # noqa: BLE001
         return None, ['путь 2: коллектор ЕГРЗ упал: %s' % str(e)[:60]]
     if not nahodki:
@@ -719,10 +879,13 @@ def strategiya_egrz(sob, ctx):
             rol = 'застройщик'
         if not imya:
             continue
+        # запись из ЛЕНТЫ (мы сами её выудили по словам) структурной не считается:
+        # послабление «хватит одного совпадения» действует только для точечного
+        # поиска по объекту, когда реестр сам связал имя с объектом
         ok, uver, uliki = podtverdit(sob, kand_tekst=' '.join([z.get('object') or '',
                                                                z.get('text') or '']),
                                      kand_region=z.get('region'), kand_data=z.get('date'),
-                                     strukturnyy=True)
+                                     strukturnyy=not z.get('_lenta'))
         uliki = ['путь 2: ЕГРЗ, %s = %s, %s' % (rol, imya[:50], (z.get('url') or '')[:70])] + uliki
         if not ok:
             continue
@@ -745,7 +908,9 @@ def strategiya_fedresurs(sob, ctx):
     objekt = ' '.join(sorted(_tokeny(_tekst(sob), minlen=6))[:6])
     try:
         soobshcheniya = poisk_v_fedresurse(objekt, region=sob.get('region') or '',
-                                           data=_data_iso(sob.get('published')))
+                                           data=_data_iso(sob.get('published')),
+                                           days=ctx.feed_dney, max_items=ctx.feed_max,
+                                           feed=(ctx.internet and ctx.fedresurs_lenta))
     except Exception as e:  # noqa: BLE001
         return None, ['путь 4: коллектор Федресурса упал: %s' % str(e)[:60]]
     if not soobshcheniya:
@@ -756,7 +921,7 @@ def strategiya_fedresurs(sob, ctx):
             continue
         ok, uver, uliki = podtverdit(sob, kand_tekst=s.get('text') or '',
                                      kand_region=s.get('region'), kand_data=s.get('date'),
-                                     strukturnyy=True)
+                                     strukturnyy=not s.get('_lenta'))
         uliki = ['путь 4: Федресурс, %s, ИНН %s, %s' % ((s.get('type') or 'сообщение')[:30],
                                                         inn or '—', (s.get('url') or '')[:60])] + uliki
         if ok:
