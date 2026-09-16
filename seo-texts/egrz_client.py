@@ -10,7 +10,7 @@
 ЭНДПОИНТ. https://open-api.egrz.ru/api/PublicRegistrationBook - OData v4, без ключа
 и без авторизации. На 16.09.2026 в реестре 596903 записи, отвечает 200.
 
-ТРИ ЛОВУШКИ, каждая проверена прямым замером (не догадки):
+ПЯТЬ ЛОВУШЕК, каждая проверена прямым замером (не догадки):
 
 1. TLS. egrz.ru требует legacy renegotiation. Лечится конфигом OpenSSL, НЕ
    отключением проверки сертификата. Переменная OPENSSL_CONF читается OpenSSL при
@@ -28,6 +28,20 @@
 
 3. $top больше 100 - это HTTP 400, а не усечение. 500/1000/5000 проверены, все 400.
    Поэтому страница 100 записей и никак иначе.
+
+4. Сложность запроса ограничена: "The node count limit of '100' has been exceeded".
+   Фильтр из 32 условий contains(tolower(...)) через or сервер отверг с HTTP 400.
+   Поэтому длинный список слов тянем режимом vygruzka-po-slovam - слово за словом,
+   со сшивкой по Key и накоплением провенанса (nayden_po, nayden_slov).
+
+5. Хост рвёт соединение (Connection reset by peer) примерно каждые полторы-две
+   страницы. Ретраи спасают, но скорость упирается в ~500 записей в минуту, то
+   есть сплошная выгрузка 70 тысяч свежих заключений идёт около двух часов.
+   Отсюда возобновление: см. vygruzka(prodolzhit=True). И отсюда же главное -
+   ОБОРВАННАЯ ВЫГРУЗКА ОБЯЗАНА БЫТЬ ОТЛИЧИМА ОТ УСПЕШНОЙ. Первый прогон встал на
+   skip=6600 из 70235, исчерпав ретраи, и завершился кодом 0 со словами "выгрузка
+   окончена" - то есть неполнота была не видна. Теперь неполная выгрузка говорит
+   "НЕПОЛНАЯ (оборвана)" и выходит кодом 2.
 
 КОНТРОЛЬ. Любой замер сопровождается запросом с заведомо выдуманным словом
 "щварцкопфер": он обязан дать ровно 0. Если даёт не 0 - фильтр не фильтрует,
@@ -365,6 +379,62 @@ def vygruzka(filtr, predel=None, vyhod=None, shag=100, select=None, prodolzhit=F
     return sobrano, zavershena
 
 
+def vygruzka_po_slovam(slova, obshchie=None, vyhod=None, pole='ExpertiseObjectName',
+                       select=None, predel_na_slovo=None):
+    """Выгрузка ПО ОДНОМУ СЛОВУ с накоплением источников, вместо одного большого or.
+
+    ПОЧЕМУ НЕ ОДНИМ ФИЛЬТРОМ. Фильтр из 32 условий contains(tolower(...)) сервер
+    отвергает: HTTP 400, "The node count limit of '100' has been exceeded". То
+    есть сложность запроса ограничена, и длинный список слов в один $filter не
+    помещается. Разбивать на пачки можно, но пословная выгрузка вдобавок даёт
+    провенанс: видно, КАКИМ словом найдена каждая запись.
+
+    Источники НАКАПЛИВАЮТСЯ, а не заменяются: если запись нашлась по трём словам,
+    в поле nayden_po стоят все три и в nayden_slov - их число. Запись, найденная
+    тремя словами, должна быть отличима от найденной одним.
+    """
+    svodka = {}
+    poryadok = []
+    otdacha = []
+    for slovo in slova:
+        filtr = uslovie_slova(slovo, pole)
+        if obshchie:
+            filtr += ' and ' + obshchie
+        print('\n--- слово %r ---' % slovo, flush=True)
+        zapisi, zavershena = vygruzka(filtr, predel=predel_na_slovo, vyhod=None,
+                                      select=select)
+        otdacha.append({'slovo': slovo, 'naydeno': len(zapisi), 'zavershena': zavershena})
+        for z in zapisi:
+            k = z.get('Key')
+            if k not in svodka:
+                svodka[k] = z
+                svodka[k]['nayden_po'] = []
+                poryadok.append(k)
+            if slovo not in svodka[k]['nayden_po']:
+                svodka[k]['nayden_po'].append(slovo)
+    for k in poryadok:
+        svodka[k]['nayden_slov'] = len(svodka[k]['nayden_po'])
+        svodka[k]['nayden_po'] = ' | '.join(svodka[k]['nayden_po'])
+    if vyhod:
+        with open(vyhod, 'w', encoding='utf-8') as f:
+            for k in poryadok:
+                f.write(json.dumps(svodka[k], ensure_ascii=False) + '\n')
+    print('\nОТДАЧА КАЖДОГО СЛОВА (в выгрузке):')
+    summa = 0
+    for o in otdacha:
+        summa += o['naydeno']
+        print('   %-26s %6d %s' % (o['slovo'], o['naydeno'],
+                                   '' if o['zavershena'] else '  <- ОБОРВАНО, неполно'))
+    nol = [o['slovo'] for o in otdacha if not o['naydeno']]
+    print('   слова с НУЛЁМ (в список не идут): %s' % (', '.join(nol) if nol else '(нет)'))
+    print('СВОД: сумма по словам=%d, уникальных записей=%d, пересечений=%d'
+          % (summa, len(svodka), summa - len(svodka)))
+    nepolnye = [o['slovo'] for o in otdacha if not o['zavershena']]
+    if nepolnye:
+        print('ВНИМАНИЕ: оборвались слова: %s - выгрузка НЕПОЛНАЯ' % ', '.join(nepolnye))
+    return svodka, otdacha, not nepolnye
+
+
 SLOVA_PO_UMOLCHANIYU = [
     'компрессорная', 'компрессорной', 'компрессор',
     'воздухоразделительная', 'азотная станция', 'кислородная станция',
@@ -398,7 +468,8 @@ def proba_slov(slova, obshchie=None, pole='ExpertiseObjectName'):
 
 def glavnaya():
     razbor = argparse.ArgumentParser(description='Клиент ЕГРЗ')
-    razbor.add_argument('rezhim', choices=['polya', 'schet', 'proba-slov', 'vygruzka', 'kontrol'])
+    razbor.add_argument('rezhim', choices=['polya', 'schet', 'proba-slov', 'vygruzka',
+                                           'vygruzka-po-slovam', 'kontrol'])
     razbor.add_argument('--slovo', action='append', default=[])
     razbor.add_argument('--slova-fayl')
     razbor.add_argument('--s-daty')
@@ -442,6 +513,14 @@ def glavnaya():
 
     if a.rezhim == 'proba-slov':
         proba_slov(slova or SLOVA_PO_UMOLCHANIYU, obshchie or None, a.pole)
+        return
+
+    if a.rezhim == 'vygruzka-po-slovam':
+        _, _, polno = vygruzka_po_slovam(
+            slova or SLOVA_PO_UMOLCHANIYU, obshchie or None, vyhod=a.vyhod, pole=a.pole,
+            select=POLYA_COMPACT if a.compact else None, predel_na_slovo=a.predel)
+        if not polno:
+            sys.exit(2)
         return
 
     filtr = sobrat_filtr(slova=slova or None, s_daty=a.s_daty, po_datu=a.po_datu,

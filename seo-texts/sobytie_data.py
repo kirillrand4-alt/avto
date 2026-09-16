@@ -31,8 +31,11 @@
 import datetime
 import re
 
-# Разумные границы: раньше - архив не нашей эпохи, позже - ошибка разбора/часовой пояс.
-NIZ = datetime.date(2015, 1, 1)
+# Разумные границы. Нижняя стояла на 2015 и ОТБРАСЫВАЛА живые даты: замер по всей базе
+# нашёл 5 строк с датами 2009, 2013, 2014 - это настоящие даты старых статей, и они не мусор,
+# а ценный признак «сигнал протухший». Гейт нужен против мусора (epoch 1970, год 2099), а не
+# против старых новостей, поэтому нижняя граница опущена до 2005.
+NIZ = datetime.date(2005, 1, 1)
 
 
 def _verh():
@@ -77,6 +80,14 @@ def iso_iz_ts(ts):
     if m:
         d = _sobrat(m.group(1), m.group(2), m.group(3))
         return (d if razumnaya(d) else None), 'karta'
+    m = re.match(r'^(\d{4})-(\d{2})$', t)
+    if m:
+        # ТОЧНОСТЬ ДО МЕСЯЦА. Так ЕИС отдаёт план закупки: «2026-07» это планируемый МЕСЯЦ,
+        # дня в источнике нет. Замер: 129 строк. Раньше они попадали в «ts не разобрался»,
+        # то есть месяц был известен, а числилось «даты нет». Подставлять 1-е число молча
+        # нельзя - поэтому день ставим первым, но вид отдаём отдельный, и точность видна.
+        d = _sobrat(m.group(1), m.group(2), 1)
+        return (d if razumnaya(d) or (d and d <= datetime.date(2040, 12, 31)) else None), 'karta_mesyac'
     m = re.match(r'^(\d{1,2})\.(\d{1,2})\.(\d{4})', t)
     if m:
         d = _sobrat(m.group(3), m.group(2), m.group(1))
@@ -169,7 +180,8 @@ def normalizovat(ts='', source_url='', what='', source='', vk_epoch=None,
     vzyatie/seen_ts - даты ВЗЯТИЯ (updated_at / seen_news), в data_iso не попадают НИКОГДА.
     """
     r = {'data_iso': '', 'data_otkuda': '', 'data_vzyatiya': '', 'data_vzyatiya_otkuda': '',
-         'data_plana': '', 'prichina_bez_daty': '', 'ts_syraya': (ts or '').strip()}
+         'data_plana': '', 'prichina_bez_daty': '', 'data_tochnost': '',
+         'ts_syraya': (ts or '').strip()}
 
     # дата взятия - отдельно и всегда честно помечена
     for znach, yarlyk in ((seen_ts, 'seen_news'), (vzyatie, 'updated_at')):
@@ -179,25 +191,40 @@ def normalizovat(ts='', source_url='', what='', source='', vk_epoch=None,
             r['data_vzyatiya_otkuda'] = yarlyk
             break
 
+    segodnya = datetime.date.today()
     d = iso_iz_epoch(vk_epoch) if vk_epoch else None
     if d:
         r['data_iso'], r['data_otkuda'] = d.isoformat(), 'karta_vk'
+        r['data_tochnost'] = 'день'
     if not r['data_iso']:
         d, vid = iso_iz_ts(ts)
-        if d:
+        if d and vid == 'karta_mesyac':
+            # «2026-07» из плана закупки ЕИС: месяц известен, дня нет. Если месяц ещё не
+            # наступил, это СРОК, а не дата события, и в data_iso ему не место.
+            if d > segodnya:
+                r['data_plana'] = d.strftime('%Y-%m')
+                r['prichina_bez_daty'] = ('в карточке только планируемый месяц закупки (%s), '
+                                          'он в будущем: это срок, а не дата события'
+                                          % d.strftime('%Y-%m'))
+            else:
+                r['data_iso'], r['data_otkuda'] = d.isoformat(), vid
+                r['data_tochnost'] = 'месяц'
+        elif d:
             r['data_iso'], r['data_otkuda'] = d.isoformat(), vid
+            r['data_tochnost'] = 'день'
     if not r['data_iso']:
         d = data_iz_url(source_url)
         if d:
             r['data_iso'], r['data_otkuda'] = d.isoformat(), 'url'
+            r['data_tochnost'] = 'день'
 
     # текст: берём только НЕ будущую дату; будущая - это срок проекта, ей своё поле
     daty = daty_iz_teksta(what)
-    segodnya = datetime.date.today()
     proshlye = [x for x in daty if x <= segodnya]
     budushchie = [x for x in daty if x > segodnya]
     if not r['data_iso'] and proshlye:
         r['data_iso'], r['data_otkuda'] = proshlye[-1].isoformat(), 'tekst'
+        r['data_tochnost'] = 'день'
     if budushchie:
         r['data_plana'] = budushchie[0].isoformat()
     elif not r['data_plana']:
@@ -205,7 +232,7 @@ def normalizovat(ts='', source_url='', what='', source='', vk_epoch=None,
         if gg:
             r['data_plana'] = str(gg[0])          # только год, дня в тексте нет
 
-    if not r['data_iso']:
+    if not r['data_iso'] and not r['prichina_bez_daty']:
         u = (source_url or '').lower()
         if 'vk.com' in u or 'вконтакте' in (source or '').lower():
             r['prichina_bez_daty'] = PRICHINY['vk']
@@ -228,6 +255,8 @@ NEGODNOE = [
     ('из будущего', '01.01.2099'),
     ('число без даты', '12345'),
     ('похоже на дату, но не она', 'ГОСТ 12.1.005-88'),
+    ('несуществующий месяц', '2026-13'),
+    ('год без месяца', '2026'),
 ]
 NEGODNYE_URL = [
     ('без даты', 'https://example.ru/news/kompressor-kupili'),
@@ -256,7 +285,9 @@ def kontrol(pechat=True):
     godnye = [('Sun, 28 Jun 2026 03:18:57 GMT', datetime.date(2026, 6, 28), 'rss'),
               ('Wed, 08 Jul 26 08:00:28 +0300', datetime.date(2026, 7, 8), 'rss'),
               ('13.07.2026', datetime.date(2026, 7, 13), 'karta'),
-              ('2026-07-26', datetime.date(2026, 7, 26), 'karta')]
+              ('2026-07-26', datetime.date(2026, 7, 26), 'karta'),
+              ('2026-07', datetime.date(2026, 7, 1), 'karta_mesyac'),
+              ('18.06.2009', datetime.date(2009, 6, 18), 'karta')]
     for s, zhdem, vid_zhdem in godnye:
         d, vid = iso_iz_ts(s)
         ok = (d == zhdem and vid == vid_zhdem)

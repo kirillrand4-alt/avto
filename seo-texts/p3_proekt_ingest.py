@@ -44,6 +44,7 @@ import os
 import random
 import sqlite3
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, r'C:\sender\_ops')
@@ -120,10 +121,8 @@ def perechitat_slovar(con, con_w):
     n = 0
     teksty = [(r[0] or '') + ' ' + (r[1] or '')
               for r in con.execute('select what, event_type from signals')]
-    try:
-        teksty += [(r[0] or '') for r in con.execute('select citata from proekt_uliki')]
-    except sqlite3.Error:
-        pass
+    # корпус словаря — ИМЕННО signals: цитаты улик это те же тексты, и их подмешивание
+    # удвоило бы счёт слов после первого же перелива.
     for t in teksty:
         n += 1
         vid = set()
@@ -538,6 +537,20 @@ def kontrol_negodnym(slov):
         print('  ловушка «%s» -> %s %s' % (t[:44], sorted(p['goroda']) or '—',
                                            'ВЕРНО' if ok else 'НЕВЕРНО, ждали %s' % zhd))
         itog.append((t, len(zhd), len(p['goroda']), ok))
+    # регион: ловушки, на которых прибор уже врал
+    reg_lov = [('ОЭЗ «Новоорловская» в Приморском районе Санкт-Петербурга',
+                {'Санкт-Петербург'}),
+               ('северная площадка предприятия', set()),
+               ('Ямало-Ненецкий автономный округ, Новый Уренгой', {'ЯНАО'}),
+               ('завод в ЯНАО', {'ЯНАО'}),
+               ('Комсомольский НПЗ в Комсомольске-на-Амуре', set()),
+               ('в Красноярском крае построят завод', {'Красноярский край'})]
+    for t, zhd in reg_lov:
+        p = L.razobrat_signal({'what': t, 'event_type': ''})
+        ok = p['regiony'] == zhd
+        print('  регион «%s» -> %s %s' % (t[:40], sorted(p['regiony']) or '—',
+                                          'ВЕРНО' if ok else 'НЕВЕРНО, ждали %s' % zhd))
+        itog.append((t, len(zhd), len(p['regiony']), ok))
     # отрасль: заведомо негодный вход
     p = L.razobrat_signal({'what': 'Компания открыла новый офис продаж и склад запчастей',
                            'event_type': ''})
@@ -638,16 +651,163 @@ def kontrol_skleek(con, skolko_pok=10):
                                 (u['citata'] or '').replace('\n', ' ')[:230]))
 
 
+# ───────────────────────────────────── где в живом конвейере звать приём
+def tochka_vhoda():
+    """Найти в модулях сервера места, где рождается сигнал. Точку вызова не выдумываем,
+    а показываем строкой файла: приём проекта ставится сразу после вставки в signals."""
+    import glob
+    import re as _re
+    nash = _re.compile(r'insert\s+(?:or\s+\w+\s+)?into\s+signals|INSERT\s+INTO\s+signals',
+                       _re.I)
+    naydeno = 0
+    for f in sorted(glob.glob(r'C:\sender\*.py')):
+        try:
+            tekst = io.open(f, encoding='utf-8', errors='replace').read().splitlines()
+        except OSError:
+            continue
+        for i, line in enumerate(tekst, 1):
+            if nash.search(line):
+                naydeno += 1
+                print('  %s:%d  %s' % (os.path.basename(f), i, line.strip()[:110]))
+                for j in range(i, min(i + 4, len(tekst))):
+                    print('        %s' % tekst[j].strip()[:110])
+    print('  мест вставки сигнала найдено: %d' % naydeno)
+    return naydeno
+
+
+def vylozhit(f):
+    try:
+        import urllib.request
+        op = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        rq = urllib.request.Request(
+            '%s/%s' % (os.environ.get('DROP_URL', '').rstrip('/'), os.path.basename(f)),
+            data=io.open(f, 'rb').read(), method='PUT',
+            headers={'X-Drop-Token': os.environ.get('DROP_TOKEN', '')})
+        print('  дроп %s: %s' % (os.path.basename(f),
+                                 op.open(rq, timeout=300).read()
+                                 .decode('utf-8', 'replace')[:80]))
+    except Exception as e:  # noqa: BLE001
+        print('  на дроп не выложено: %s' % str(e)[:110])
+
+
+def chernovik(con):
+    """Черновик для показа примеров: CSV проектов и улик в _ops + на дроп.
+    Хранилище — база; файлы только чтобы посмотреть глазами."""
+    import csv
+    for tabl, put in (('proekty', r'C:\sender\_ops\3s_proekty.csv'),
+                      ('proekt_uliki', r'C:\sender\_ops\3s_proekt_uliki.csv')):
+        rows = list(con.execute('select * from %s' % tabl))
+        if not rows:
+            continue
+        kol = rows[0].keys()
+        with io.open(put, 'w', encoding='utf-8-sig', newline='') as f:
+            w = csv.writer(f, delimiter=';')
+            w.writerow(kol)
+            for r in rows:
+                w.writerow([('' if r[k] is None else str(r[k]).replace('\n', ' '))
+                            for k in kol])
+        print('  черновик %s: %d строк' % (put, len(rows)))
+        vylozhit(put)
+
+
+class Teh(object):
+    """Вывод возвращается ХВОСТОМ, а контроль склейки длинный. Поэтому весь вывод
+    пишется в файл и на дроп целиком, а в stdout уходит только выжимка."""
+
+    def __init__(self):
+        self.buf = []
+        self.staryy = sys.stdout
+
+    def write(self, t):
+        self.buf.append(t)
+
+    def flush(self):
+        pass
+
+    def vyzhimka(self):
+        vse = ''.join(self.buf).splitlines()
+        out, propusk = [], False
+        for line in vse:
+            if 'КОНТРОЛЬ 2' in line or 'КОНТРОЛЬ 3' in line:
+                propusk = True
+                out.append(line + '  [полностью — в файле на дропе]')
+                continue
+            if 'КОНТРОЛЬ 4' in line or 'ЧИСЛА' in line or 'КОНТРОЛЬ 1' in line:
+                propusk = False
+            if not propusk:
+                out.append(line)
+        return '\n'.join(out)
+
+
+TABLICY = ('proekty', 'proekt_uliki', 'proekt_slovar', 'proekt_gashenie')
+
+
+def slit(rab, zhivaya_put, popytok=50, pauza=12):
+    """Перелить готовые таблицы в живую базу ОДНИМ КОРОТКИМ РЫВКОМ.
+
+    Почему так, а не писать в живую по ходу сборки: замер показал, что enrich.db
+    занята наглухо — запись не бралась ни за 5, ни за 30, ни за 120 секунд подряд
+    (на сервере параллельно работают 8 процессов python, режим журнала откатный, и
+    читатели не дают взять исключительную блокировку). Поэтому вся сборка идёт в
+    рабочей базе в _ops, а живая база трогается один раз, транзакцией на секунды, и с
+    повторами: сколько бы ни было занято, рано или поздно окно найдётся."""
+    dannye = {}
+    for t in TABLICY:
+        rows = [tuple(r) for r in rab.execute('select * from %s' % t)]
+        kol = len(rab.execute('select * from %s limit 1' % t).description) if rows else 0
+        dannye[t] = (rows, kol)
+        print('  готово к переливу %s: %d строк' % (t, len(rows)))
+    for i in range(1, popytok + 1):
+        try:
+            zh = sqlite3.connect(zhivaya_put, timeout=pauza)
+            zh.execute('PRAGMA busy_timeout=%d' % (pauza * 1000))
+            zh.execute('BEGIN IMMEDIATE')
+            for sql in SHEMA:
+                zh.execute(sql)
+            for t in TABLICY:
+                rows, kol = dannye[t]
+                if not rows:
+                    continue
+                zh.executemany('insert or replace into %s values (%s)'
+                               % (t, ','.join('?' * kol)), rows)
+            zh.commit()
+            zh.close()
+            print('  ПЕРЕЛИТО в живую базу с попытки %d' % i)
+            return True
+        except sqlite3.Error as e:  # noqa: BLE001
+            try:
+                zh.close()
+            except Exception:  # noqa: BLE001
+                pass
+            if i % 5 == 0 or i == 1:
+                print('  попытка %d: база занята (%s)' % (i, str(e)[:60]))
+            time.sleep(pauza)
+    print('  НЕ ПЕРЕЛИТО: живая база занята все %d попыток' % popytok)
+    return False
+
+
 # ─────────────────────────────────────────────────────────────── main
 def main(argv):
     put = argv[argv.index('--baza') + 1] if '--baza' in argv else BAZA
+    rab_put = (argv[argv.index('--rabochaya') + 1] if '--rabochaya' in argv
+               else r'C:\sender\_ops\3s_proekty.db')
     suho = '--suho' in argv
-    con = otkryt(put, not suho)
+    teh = None
+    if '--v-fayl' in argv:
+        teh = Teh()
+        sys.stdout = teh
+    if put == rab_put:                       # отладка в песочнице: одна база на всё
+        con = otkryt(put, not suho)
+        zhivaya = con
+    else:
+        con = otkryt(rab_put, True)          # рабочая: сюда пишем
+        zhivaya = otkryt(put, False)         # живая: только чтение
+        print('рабочая база %s ; живая (только чтение) %s' % (rab_put, put))
     if '--shema' in argv:
         novye = sozdat_tablicy(con)
         print('таблицы созданы (новых: %d) %s' % (len(novye), novye))
     if '--slovar' in argv:
-        n, osn, gash = perechitat_slovar(con, con)
+        n, osn, gash = perechitat_slovar(zhivaya, con)
         print('словарь: текстов %d, основ %d, погашенных якорей по ИНН %d'
               % (n, osn, gash))
     slov = zagruzit_slovar(con)
@@ -657,8 +817,8 @@ def main(argv):
     if '--proba-arhiv' in argv:
         i = argv.index('--proba-arhiv')
         lim = int(argv[i + 1]) if len(argv) > i + 1 and argv[i + 1].isdigit() else 0
-        imena = imena_kompaniy(con)
-        rows = [dict(r) for r in con.execute(
+        imena = imena_kompaniy(zhivaya)
+        rows = [dict(r) for r in zhivaya.execute(
             'select rowid as _rid, * from signals order by updated_at, rowid')]
         if lim:
             rows = rows[:lim]
@@ -672,8 +832,20 @@ def main(argv):
                 print('  прогнано %d: %s' % (k + 1, dict(itog)))
         con.commit()
         print('ПРОБА НА АРХИВЕ: подано %d, %s' % (len(rows), dict(itog)))
+    if '--tochka-vhoda' in argv:
+        print('=' * 74)
+        print('ГДЕ ЗВАТЬ ПРИЁМ: места вставки сигнала в живых модулях сервера')
+        print('=' * 74)
+        tochka_vhoda()
     if '--chisla' in argv:
         chisla(con)
+    if '--chernovik' in argv:
+        chernovik(con)
+    if '--slit' in argv:
+        print('=' * 74)
+        print('ПЕРЕЛИВ В ЖИВУЮ БАЗУ %s' % put)
+        print('=' * 74)
+        slit(con, put)
     if '--kontrol' in argv:
         print()
         print('=' * 74)
@@ -683,6 +855,12 @@ def main(argv):
         print('  ИТОГ КОНТРОЛЕЙ: верно %d из %d' % (sum(1 for x in it if x[3]), len(it)))
         kontrol_skleek(con, 10)
     con.close()
+    if teh is not None:
+        sys.stdout = teh.staryy
+        f = r'C:\sender\_ops\3s_proekt_kontrol.txt'
+        io.open(f, 'w', encoding='utf-8').write(''.join(teh.buf))
+        vylozhit(f)
+        print(teh.vyzhimka()[-5200:])
 
 
 if __name__ == '__main__':
