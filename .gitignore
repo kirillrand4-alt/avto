@@ -56,3 +56,6 @@ seo-texts/lpr-obratnyy-*.jsonl
 seo-texts/3s_*.json
 seo-texts/3s_*.jsonl
 seo-texts/3s_*.csv
+
+# временные пробы агентов: живут до конца прогона, в историю не идут
+seo-texts/_tmp_*
