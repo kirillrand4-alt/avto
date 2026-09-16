@@ -29,7 +29,8 @@
 `https://fedresurs.ru/backend/...` — это JSON-API, которым пользуется сам сайт
 (SPA). Он отвечает обычному HTTP-клиенту, без ключей и без регистрации.
 Более того, **спецификация опубликована**: `/backend/swagger/v1/swagger.json`
-отдаёт 200 и 366 КБ OpenAPI 3.0.1 (`title: "Fedresurs"`, 199 путей). То есть это
+отдаёт 200 и 366 014 байт OpenAPI 3.0.1 (`title: "Fedresurs"`, **129 путей,
+133 операции, 243 схемы**). То есть это
 не «нашли дырку», а документированный интерфейс, просто не разрекламированный.
 (Сам `swagger/index.html` при этом закрыт: 403.)
 
@@ -51,7 +52,7 @@ API нет.** Это главный вывод разведки, и он опр�
 (`/backend/sfactmessages`, `/backend/sfacts`, `/backend/messages`,
 `/backend/publications`, `/backend/sfact-messages/search`, `/backend/search/*`,
 `/backend/licenses/search`, `/backend/reorganizations/search` и ещё два десятка)
-дают **404**, и в полном списке из 199 путей OpenAPI такой ручки тоже нет.
+дают **404**, и в полном списке из 129 путей OpenAPI такой ручки тоже нет.
 
 Единственная сквозная лента — `/backend/encumbrances` (залог, лизинг, факторинг,
 гарантия). Она отвечает 200 и отдаёт свежие сообщения по всей стране. **Но она
@@ -235,7 +236,10 @@ Referer: https://fedresurs.ru/search/encumbrances
 
 ## 4. Какие типы сообщений полезны нам и почему
 
-Полный справочник — 199 типов, из них 125 банкротных. Ниже — отобранное,
+Полный справочник `/backend/reference-book/message-types` — **231 запись**
+(199 уникальных названий): **118 относятся к ЕФРСФДЮЛ** (`project: 0`, из них 101
+действующая), 113 — к банкротному ЕФРСБ (`project: 1`); 44 помечены `isOld`.
+Ниже — отобранное,
 `TIPY_CAPEX` в коде. Колонка «стадия» — шкала задачи 5 ТЗ (1 проект, 2 стройка и
 закупка, 3 пуск, 4 действующее/расширение).
 
@@ -280,13 +284,16 @@ Referer: https://fedresurs.ru/search/encumbrances
 ### 4.5 Чего в реестре НЕТ, вопреки формулировке ТЗ
 
 В ТЗ сказано «намерение совершить крупную сделку». **Такого типа сообщения в
-ЕФРСФДЮЛ нет.** Я прошёл весь справочник из 199 типов: слово «намерение»
-встречается только в банкротном и почтовом контексте —
-`CreditorIntentionGoToCourt` и `DebtorIntentionGoToCourt` (намерение обратиться
-в суд с заявлением о банкротстве, сигнал ровно обратного знака),
-`RussianPostIntentionToRegisterOwnership`, `IntentionOfDemandsFulfilment`,
-`IntentionInheritanceOfLandProperty`. Крупные сделки как таковые здесь не
-раскрываются. Ближайшее по смыслу, что реестр действительно даёт, —
+ЕФРСФДЮЛ нет.** Я прошёл весь справочник из 231 записи и выбрал все названия
+со словом «намерен» — их 13, и все они про другое: `CreditorIntentionGoToCourt`
+и `DebtorIntentionGoToCourt` (намерение обратиться в суд с заявлением о
+банкротстве — сигнал ровно обратного знака), `IntentionCreditOrg`,
+`RefusalOfIntentionCreditOrg`, `IntentionOfDemandsFulfilment` (все — про
+исполнение обязательств в банкротстве), `RussianPostIntentionToRegisterOwnership`
+и `RussianPostIntentionDisputeToRegisterOwnership` (недвижимость Почты России),
+`IntentionInheritanceOfLandProperty` (наследство на землю),
+`IntentionExerciseTheRightsOfShareholderNonResident` (права акционера-нерезидента).
+Крупные сделки как таковые здесь не раскрываются. Ближайшее по смыслу, что реестр действительно даёт, —
 `ConclusionConcessionAgreement`, `FirmAuthorizedCapitalIncrease` и
 `SaleOrLeaseEnterprise2`; они и включены. Подменять отсутствующий тип похожим и
 молчать об этом было бы неправильно.
