@@ -532,7 +532,10 @@ def kontrol_negodnym(slov):
                 ('в Каменске-Уральском на УАЗе', {'Каменск-Уральский'}),
                 ('свободный доступ к октябрьским данным', set()),
                 ('ДКС на Северо-Комсомольском месторождении в ЯНАО', set()),
-                ('НПЗ в Комсомольске-на-Амуре', {'Комсомольск-на-Амуре'})]
+                ('НПЗ в Комсомольске-на-Амуре', {'Комсомольск-на-Амуре'}),
+                ('ГОК на Черногорском месторождении в Норильском районе',
+                 {'Норильск'}),
+                ('завод в городе Черногорск', {'Черногорск'})]
     for t, zhd in lovushki:
         p = L.razobrat_signal({'what': t, 'event_type': ''})
         ok = p['goroda'] == zhd
@@ -655,26 +658,42 @@ def kontrol_skleek(con, skolko_pok=10):
 
 # ───────────────────────────────────── где в живом конвейере звать приём
 def tochka_vhoda():
-    """Найти в модулях сервера места, где рождается сигнал. Точку вызова не выдумываем,
-    а показываем строкой файла: приём проекта ставится сразу после вставки в signals."""
-    import glob
+    """Где в живом конвейере рождается сигнал. Точку вызова не выдумываем, а показываем
+    строкой файла. Первый поиск (только «insert into signals» в C:\\sender\\*.py) дал НОЛЬ —
+    значит искали не то: смотрим подпапки и любые обращения к таблице на запись."""
     import re as _re
-    nash = _re.compile(r'insert\s+(?:or\s+\w+\s+)?into\s+signals|INSERT\s+INTO\s+signals',
-                       _re.I)
-    naydeno = 0
-    for f in sorted(glob.glob(r'C:\sender\*.py')):
-        try:
-            tekst = io.open(f, encoding='utf-8', errors='replace').read().splitlines()
-        except OSError:
-            continue
-        for i, line in enumerate(tekst, 1):
-            if nash.search(line):
-                naydeno += 1
-                print('  %s:%d  %s' % (os.path.basename(f), i, line.strip()[:110]))
-                for j in range(i, min(i + 4, len(tekst))):
-                    print('        %s' % tekst[j].strip()[:110])
-    print('  мест вставки сигнала найдено: %d' % naydeno)
-    return naydeno
+    zapis = _re.compile(r"(insert|replace|update|executemany|upsert|add_signal|"
+                        r"save_signal|into)\s*[^\n]{0,40}signals", _re.I)
+    upom = _re.compile(r"['\"]signals['\"]|\bsignals\b", _re.I)
+    fayly, mest = [], 0
+    for koren, papki, imena in os.walk(r'C:\sender'):
+        papki[:] = [d for d in papki if d.lower() not in
+                    ('__pycache__', 'node_modules', '.git', 'venv', '_ops', 'logs')]
+        if koren.count(os.sep) > 4:
+            papki[:] = []
+        for im in imena:
+            if not im.endswith('.py'):
+                continue
+            f = os.path.join(koren, im)
+            try:
+                stroki = io.open(f, encoding='utf-8', errors='replace').read().splitlines()
+            except OSError:
+                continue
+            n_up = sum(1 for x in stroki if upom.search(x))
+            if not n_up:
+                continue
+            zap = [(i, x) for i, x in enumerate(stroki, 1) if zapis.search(x)]
+            fayly.append((os.path.relpath(f, r'C:\sender'), n_up, len(zap)))
+            for i, x in zap[:3]:
+                mest += 1
+                print('  ЗАПИСЬ %s:%d  %s' % (os.path.relpath(f, r'C:\sender'), i,
+                                              x.strip()[:100]))
+    fayly.sort(key=lambda z: -z[1])
+    print('  файлов, упоминающих signals: %d' % len(fayly))
+    for f, n_up, n_z in fayly[:10]:
+        print('    %-36s упоминаний %3d, строк записи %d' % (f[:36], n_up, n_z))
+    print('  мест записи в signals найдено: %d' % mest)
+    return mest
 
 
 def vylozhit(f):
@@ -808,6 +827,14 @@ def main(argv):
         con = otkryt(rab_put, True)          # рабочая: сюда пишем
         zhivaya = otkryt(put, False)         # живая: только чтение
         print('рабочая база %s ; живая (только чтение) %s' % (rab_put, put))
+    if '--zanovo' in argv:          # пересборка с нуля в РАБОЧЕЙ базе (живую не трогает)
+        for t_ in ('proekty', 'proekt_uliki', 'proekt_slovar', 'proekt_gashenie'):
+            try:
+                con.execute('drop table if exists %s' % t_)
+            except sqlite3.Error as e:  # noqa: BLE001
+                print('  не удалось очистить %s: %s' % (t_, str(e)[:60]))
+        con.commit()
+        print('рабочая база очищена под пересборку')
     if '--shema' in argv:
         novye = sozdat_tablicy(con)
         print('таблицы созданы (новых: %d) %s' % (len(novye), novye))
@@ -846,6 +873,34 @@ def main(argv):
         chisla(con)
     if '--chernovik' in argv:
         chernovik(con)
+    if '--sverka' in argv:
+        print('=' * 74)
+        print('СВЕРКА ЖИВОЙ БАЗЫ (только чтение, отдельным подключением)')
+        print('=' * 74)
+        sv = otkryt(put, False)
+        tabl = [r[0] for r in sv.execute(
+            "select name from sqlite_master where type='table' order by name")]
+        print('  таблиц в живой базе: %d' % len(tabl))
+        for t_ in TABLICY:
+            try:
+                print('  %-16s %6d строк' % (t_, sv.execute(
+                    'select count(*) from %s' % t_).fetchone()[0]))
+            except sqlite3.Error as e:  # noqa: BLE001
+                print('  %-16s НЕТ (%s)' % (t_, str(e)[:40]))
+        print('  signals (не трогали): %d строк'
+              % sv.execute('select count(*) from signals').fetchone()[0])
+        try:
+            for r in sv.execute('select proekt_id, inn, zakazchik, mesto, stadiya, '
+                                'ulik, istochnikov, otrasl from proekty '
+                                'order by istochnikov desc limit 3'):
+                print('  · %s ИНН %s %s | %s | %s | улик %d ист %d | %s'
+                      % (r[0], r[1], (r[2] or '')[:26], (r[3] or '—')[:18], r[4], r[5],
+                         r[6], (r[7] or '—')[:28]))
+            r = sv.execute('select count(*) from proekt_uliki where citata=\'\'').fetchone()
+            print('  улик без цитаты: %d' % r[0])
+        except sqlite3.Error as e:  # noqa: BLE001
+            print('  выборка не прошла: %s' % str(e)[:60])
+        sv.close()
     if '--slit' in argv:
         print('=' * 74)
         print('ПЕРЕЛИВ В ЖИВУЮ БАЗУ %s' % put)

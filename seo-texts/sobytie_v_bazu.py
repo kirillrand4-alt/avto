@@ -90,8 +90,9 @@ def otkryt(put=None, sekund=60):
     cx.execute('PRAGMA busy_timeout=%d' % (sekund * 1000))
     try:
         jm = cx.execute('PRAGMA journal_mode').fetchone()[0]
-        print('журнал базы: %s (в режиме delete один писатель запирает всех)' % jm,
-              file=sys.stderr)
+        # замер 16.09: журнал wal, то есть «database is locked» здесь - это ДЛИННЫЙ чужой
+        # писатель (конвейер/панель/соседняя сессия), а не режим журнала. Ждать и повторять.
+        print('журнал базы: %s' % jm, file=sys.stderr)
     except Exception:  # noqa: BLE001
         pass
     return cx
