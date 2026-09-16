@@ -330,11 +330,18 @@ _FIRST_TOKEN_DEADLINE = float(
     os.environ.get('PROVIDER_FIRST_TOKEN_SEC', 90))
 
 
-def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
+def _raw_stream(messages, model, max_tokens, thinking=True, effort=None, stream=True):
     """Сырой SSE-парсинг через httpx — минует .model_dump() SDK (провайдер иногда шлёт dict-кадр,
     на котором SDK-аккумулятор падает). Возвращает _Msg, совместимый с остальным кодом.
     Бросает httpx.HTTPStatusError на не-200 (в т.ч. 400 при отклонённом thinking, 403 при балансе).
-    Бросает TimeoutError, если стрим не отдал текста в отведённые часы."""
+    Бросает TimeoutError, если стрим не отдал текста в отведённые часы.
+
+    stream=False - ЗАПАСНАЯ ДВЕРЬ (16.09.2026). Шлюз может рвать SSE-соединение
+    на первом же кадре, отвечая при этом на тот же запрос без stream. Зонд на
+    боевом сервере в этот день: /v1/messages без stream - 200 за 2.4 с, со
+    stream - ConnectionReset 10054, и так у КАЖДОГО вызова. Из-за этого 768
+    паспортов встали с «провайдер не отдал ответ». Тело запроса, дверь и
+    заголовки строим тем же кодом - иначе запасной путь разойдётся с основным."""
     model = resolve_model(model)
     e = env()
     # ДВЕ ДВЕРИ У ШЛЮЗА (замер 13.08). router.cheap отдаёт клодовские модели по
@@ -353,7 +360,7 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
         headers = dict(_RAW_HEADERS)
         headers.pop('anthropic-version', None)
         headers['Authorization'] = 'Bearer ' + e['PROVIDER_API_KEY']
-    body = {'model': model, 'max_tokens': max_tokens, 'stream': True, 'messages': messages}
+    body = {'model': model, 'max_tokens': max_tokens, 'stream': stream, 'messages': messages}
     if po_anthropic:
         if thinking:
             body['thinking'] = {'type': 'adaptive'}
@@ -365,6 +372,30 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None):
         body['stream_options'] = {'include_usage': True}
     text_parts, think_parts = [], []
     usage = {}; stop_reason = None
+    if not stream:
+        # Ответ приходит целиком, ping-кадров нет - дедлайны первого токена
+        # здесь неприменимы, а вот общий таймаут нужен прежний.
+        r = httpx.post(url, headers=headers, json=body, timeout=600.0)
+        if r.status_code != 200:
+            raise httpx.HTTPStatusError(f'HTTP {r.status_code}: {r.text[:200]}',
+                                        request=r.request, response=r)
+        d = r.json()
+        if po_anthropic:
+            for blok in (d.get('content') or []):
+                if blok.get('type') == 'text':
+                    text_parts.append(blok.get('text') or '')
+                elif blok.get('type') == 'thinking':
+                    think_parts.append(blok.get('thinking') or '')
+            usage.update(d.get('usage') or {})
+            stop_reason = d.get('stop_reason')
+        else:
+            for ch in (d.get('choices') or []):
+                text_parts.append((ch.get('message') or {}).get('content') or '')
+                stop_reason = ch.get('finish_reason') or stop_reason
+            u = d.get('usage') or {}
+            usage['input_tokens'] = u.get('prompt_tokens') or u.get('input_tokens') or 0
+            usage['output_tokens'] = u.get('completion_tokens') or u.get('output_tokens') or 0
+        return _Msg(''.join(text_parts), ''.join(think_parts), usage, stop_reason)
     with httpx.stream('POST', url, headers=headers, json=body, timeout=600.0) as r:
         if r.status_code != 200:
             r.read()
@@ -485,7 +516,20 @@ def call(client, messages, model='claude-opus-4-8', attempts=8, effort=None):
             continue
         except (httpx.HTTPError, Exception) as ex:
             last = 'сбой стрима: ' + repr(ex)[:160]
-            continue
+            # ПЕРЕД ТЕМ КАК ЖЕЧЬ ПОПЫТКУ - СТУЧИМСЯ БЕЗ СТРИМА. 16.09.2026 шлюз
+            # рвал SSE у каждого вызова (ConnectionReset 10054), отвечая на тот
+            # же запрос без stream за 2.4 с. Пока это лечится ретраями, цикл
+            # разбора просто стоит: 768 паспортов встали именно так. Запасная
+            # дверь пробуется ОДИН раз на попытку и не заменяет стрим: вернётся
+            # стрим - вернётся и потоковая отдача, эта ветка сама перестанет
+            # срабатывать.
+            try:
+                msg = _raw_stream(messages, текущая, 16000, thinking=thinking,
+                                  effort=effort, stream=False)
+                print('стрим оборван, ответ получен без стрима', file=sys.stderr)
+            except Exception as ex2:  # noqa: BLE001
+                last += ' | без стрима: ' + repr(ex2)[:140]
+                continue
         text = ''.join(b.text for b in msg.content if b.type == 'text').strip()
         if len(text) > 200:
             return msg
