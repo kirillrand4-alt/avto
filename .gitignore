@@ -51,3 +51,8 @@ seo-texts/PARK-*.jsonl
 seo-texts/lpr-obratnyy-1s.jsonl
 seo-texts/lpr-obratnyy-2s.jsonl
 seo-texts/lpr-obratnyy-*.jsonl
+
+# рабочие дампы агентов: тяжёлые данные живут на дропе и в скретчпаде, не в репозитории
+seo-texts/3s_*.json
+seo-texts/3s_*.jsonl
+seo-texts/3s_*.csv
