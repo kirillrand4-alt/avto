@@ -90,6 +90,7 @@ SHEMA = [
 ]
 
 SEYCHAS = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+_FORMY = {}
 
 
 def otkryt(put, zapis):
@@ -172,6 +173,7 @@ def zagruzit_slovar(con):
     gash = collections.defaultdict(set)
     for r in con.execute('select inn, osnova from proekt_gashenie'):
         gash[r[0]].add(r[1])
+    _FORMY.update(forma)     # чтобы «объект» писался «Тайшет», а не основой «тайшет»
     return {'df': df, 'zagl': zagl, 'stroch': stroch, 'forma': forma, 'gash': gash}
 
 
@@ -215,8 +217,30 @@ def priznaki(row, slov):
     return p
 
 
+def _ryad(con):
+    """Курсор, отдающий строки по ИМЕНИ колонки, независимо от настроек вызывающего.
+
+    Так точка входа не требует от коллектора ставить `row_factory`: без этого
+    `dict(строка)` и `u['goroda']` молча падали бы уже внутри живого конвейера."""
+    cur = con.cursor()
+    cur.row_factory = sqlite3.Row
+    return cur
+
+
 # ─────────────────────────────────────────────── предикаты склейки (заслоны)
+def _yak_ob(d):
+    """Якоря БЕЗ топонимов: собственно объект, а не место. Общий город доказывает
+    место, но не проект — на площадке предприятия их бывает несколько."""
+    mesta = {L.osnova(g) for g in d['goroda']}
+    mesta |= {L.osnova(r.split()[0]) for r in d['regiony']}
+    return d['yak'] - mesta
+
+
 def protivorechie(a, b):
+    ao, bo = _yak_ob(a), _yak_ob(b)
+    if ao and bo and not (ao & bo):
+        return 'объекты разные: %s / %s' % (','.join(sorted(ao)[:3]),
+                                            ','.join(sorted(bo)[:3]))
     if a['goroda'] and b['goroda'] and not (a['goroda'] & b['goroda']):
         return 'города разные'
     if a['regiony'] and b['regiony'] and not (a['regiony'] & b['regiony']):
@@ -289,8 +313,8 @@ def prinyat_sobytie(con, row, slov, imena=None, pisat=True, kesh=None):
         kand = kesh[inn]
     else:
         kand = []
-        for pr in con.execute('select * from proekty where inn=?', (inn,)):
-            ul = [ulika_v_priznaki(u) for u in con.execute(
+        for pr in _ryad(con).execute('select * from proekty where inn=?', (inn,)):
+            ul = [ulika_v_priznaki(u) for u in _ryad(con).execute(
                 'select * from proekt_uliki where proekt_id=?', (pr['proekt_id'],))]
             kand.append({'row': dict(pr), 'chleny': ul})
         if kesh is not None:
@@ -317,10 +341,10 @@ def prinyat_sobytie(con, row, slov, imena=None, pisat=True, kesh=None):
         rabota = ' | '.join(sorted(p['raboty'])[:2])
         pid, sostav = L.klyuch_proekta(inn, mesto or region, obekt, rabota)
         zanyat = {k['row']['proekt_id'] for k in kand}
-        i = 1
-        while pid in zanyat:
+        baza_id, i = pid, 1
+        while pid in zanyat:          # разные дела с одинаковыми якорями: -2, -3, …
             i += 1
-            pid = '%s-%d' % (pid.split('-x')[0], i)
+            pid = '%s-%d' % (baza_id, i)
         chto, prich = 'новый', 'ни один проект ИНН не подошёл'
         cel = {'row': {'proekt_id': pid, 'klyuch_sostav': sostav, 'created_at': SEYCHAS},
                'chleny': []}
@@ -333,8 +357,37 @@ def prinyat_sobytie(con, row, slov, imena=None, pisat=True, kesh=None):
     if pisat:
         zapisat_uliku(con, pid, row, p, uid, prich)
         peresobrat_kartochku(con, pid, cel['row'].get('klyuch_sostav', ''),
-                             cel['row'].get('created_at', SEYCHAS), imena or {})
+                             cel['row'].get('created_at', SEYCHAS),
+                             imena if imena is not None else _imya_odnogo(con, inn))
     return pid, chto, prich
+
+
+_KESH_IMEN = {}
+
+
+def _imya_odnogo(con, inn):
+    """Название заказчика по одному ИНН — чтобы поток не обязан был знать про
+    `companies`. Пакетный прогон передаёт готовый словарь и сюда не заходит."""
+    if inn in _KESH_IMEN:
+        return _KESH_IMEN[inn]
+    d = {'name': '', 'region': '', 'adres': '', 'otkuda': ''}
+    for tabl, k_name, k_reg, k_adr in (('companies', 'name', 'region', None),
+                                       ('requisites', 'name_short', None, 'address')):
+        try:
+            sel = ','.join(c for c in (k_name, k_reg, k_adr) if c)
+            r = _ryad(con).execute('select %s from %s where inn=? limit 1'
+                                   % (sel, tabl), (inn,)).fetchone()
+        except sqlite3.Error:
+            continue
+        if r and r[k_name] and not d['name']:
+            d['name'] = str(r[k_name])[:160]
+            d['otkuda'] = tabl + '.' + k_name
+        if r and k_reg and r[k_reg] and not d['region']:
+            d['region'] = str(r[k_reg])[:80]
+        if r and k_adr and r[k_adr] and not d['adres']:
+            d['adres'] = str(r[k_adr])[:200]
+    _KESH_IMEN[inn] = {inn: d}
+    return _KESH_IMEN[inn]
 
 
 def zapisat_uliku(con, pid, row, p, uid, prich):
@@ -355,7 +408,7 @@ def zapisat_uliku(con, pid, row, p, uid, prich):
 def peresobrat_kartochku(con, pid, sostav, created, imena):
     """Карточка проекта пересобирается из ВСЕХ его улик. Ничего не перезаписывается
     молча: источники складываются, их число стоит рядом."""
-    ul = list(con.execute('select * from proekt_uliki where proekt_id=?', (pid,)))
+    ul = list(_ryad(con).execute('select * from proekt_uliki where proekt_id=?', (pid,)))
     if not ul:
         return
     gor, reg, rab, otr, yak = (collections.Counter() for _ in range(5))
@@ -390,11 +443,13 @@ def peresobrat_kartochku(con, pid, sostav, created, imena):
         '(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
         (pid, inn, im.get('name', ''), im.get('otkuda', ''),
          ' | '.join(o for o, _ in otr.most_common(3)), prior,
-         '', ' | '.join(r for r, _ in reg.most_common(2)),
+         ' ; '.join('%s — по %d уликам из %d' % (o, c, len(ul))
+                    for o, c in otr.most_common(3)),
+         ' | '.join(r for r, _ in reg.most_common(2)),
          'текст улик' if reg else ('регистрация по ИНН' if im.get('region') else ''),
          ' | '.join(g for g, _ in gor.most_common(3)), im.get('adres', ''),
          ' '.join(_forma(o) for o, c in yak.most_common()
-                  if c >= max(2, len(ul) // 2))[:120],
+                  if c >= (1 if len(ul) == 1 else max(2, len(ul) // 2)))[:120],
          ' | '.join(r for r, _ in rab.most_common(2)),
          pozdn['stadiya'], pozdn['stadiya_kod'], daty[-1] if daty else '',
          (pozdn['source'] or '') + ' ' + (pozdn['source_url'] or '')[:150],
@@ -414,7 +469,6 @@ def peresobrat_kartochku(con, pid, sostav, created, imena):
 
 
 PRIOR_OTRASLI = {n for n, p, _ in L.OTRASLI if p}
-_FORMY = {}
 
 
 def _forma(o):
@@ -500,6 +554,12 @@ def kontrol_negodnym(slov):
               ts='2026-01-10', rid=6)], 2),
         ('пустые тексты — не должны слипаться в один проект-помойку',
          [sob('4', '', rid=7 + i, src='s%d.ru' % i) for i in range(5)], 5),
+        ('одно место, но РАЗНЫЕ названные объекты — склейки быть не должно',
+         [sob('8', 'В Тобольске отработаны пусковые режимы Амурского ГХК на пилотной '
+                   'площадке, моделирование запуска линии полиэтилена', rid=30),
+          sob('8', 'В Тобольске идёт реконструкция компрессорного блока подачи водорода '
+                   'на площадке ЗапСиб по проекту технического перевооружения', rid=31)],
+         2),
         ('РАЗНЫЕ ИНН с одинаковым текстом — общего проекта быть не должно',
          [sob('5', 'В Тайшете строится алюминиевый завод, монтаж газоочистки', rid=20),
           sob('6', 'В Тайшете строится алюминиевый завод, монтаж газоочистки', rid=21)],
@@ -763,7 +823,7 @@ class Teh(object):
 TABLICY = ('proekty', 'proekt_uliki', 'proekt_slovar', 'proekt_gashenie')
 
 
-def slit(rab, zhivaya_put, popytok=50, pauza=12, ochistit=False):
+def slit(rab, zhivaya_put, popytok=120, pauza=5, ochistit=False):
     """Перелить готовые таблицы в живую базу ОДНИМ КОРОТКИМ РЫВКОМ.
 
     Почему так, а не писать в живую по ходу сборки: замер показал, что enrich.db
@@ -782,6 +842,7 @@ def slit(rab, zhivaya_put, popytok=50, pauza=12, ochistit=False):
         try:
             zh = sqlite3.connect(zhivaya_put, timeout=pauza)
             zh.execute('PRAGMA busy_timeout=%d' % (pauza * 1000))
+            # окно между читателями короткое: лучше часто пробовать, чем долго ждать
             zh.execute('BEGIN IMMEDIATE')
             for sql in SHEMA:
                 zh.execute(sql)
@@ -803,7 +864,7 @@ def slit(rab, zhivaya_put, popytok=50, pauza=12, ochistit=False):
                 zh.close()
             except Exception:  # noqa: BLE001
                 pass
-            if i % 5 == 0 or i == 1:
+            if i % 10 == 0 or i == 1:
                 print('  попытка %d: база занята (%s)' % (i, str(e)[:60]))
             time.sleep(pauza)
     print('  НЕ ПЕРЕЛИТО: живая база занята все %d попыток' % popytok)
@@ -873,6 +934,11 @@ def main(argv):
         chisla(con)
     if '--chernovik' in argv:
         chernovik(con)
+    if '--slit' in argv:
+        print('=' * 74)
+        print('ПЕРЕЛИВ В ЖИВУЮ БАЗУ %s' % put)
+        print('=' * 74)
+        slit(con, put, ochistit='--ochistit' in argv)
     if '--sverka' in argv:
         print('=' * 74)
         print('СВЕРКА ЖИВОЙ БАЗЫ (только чтение, отдельным подключением)')
@@ -901,11 +967,6 @@ def main(argv):
         except sqlite3.Error as e:  # noqa: BLE001
             print('  выборка не прошла: %s' % str(e)[:60])
         sv.close()
-    if '--slit' in argv:
-        print('=' * 74)
-        print('ПЕРЕЛИВ В ЖИВУЮ БАЗУ %s' % put)
-        print('=' * 74)
-        slit(con, put, ochistit='--ochistit' in argv)
     if '--kontrol' in argv:
         print()
         print('=' * 74)

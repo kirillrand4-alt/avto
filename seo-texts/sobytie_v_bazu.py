@@ -146,6 +146,30 @@ def zapisat(cx, rec):
     return True
 
 
+def zapisat_mnogo(cx, recs):
+    """Заливка пачкой в ОДНОЙ транзакции.
+
+    Построчный commit на живой базе - дорогая ошибка: 60 строк это 60 отдельных
+    транзакций, каждая из которых конкурирует с чужим длинным писателем. Замер 16.09:
+    построчная заливка съела восемь попыток по 10 с и умерла на «database is locked»,
+    хотя те же 60 строк одной транзакцией проходят за миг.
+    """
+    gotovo = []
+    for rec in recs:
+        if not rec.get('rid'):
+            continue
+        rec.setdefault('updated_at', datetime.datetime.now().replace(microsecond=0).isoformat())
+        gotovo.append([rec.get(p) if not isinstance(rec.get(p), bool) else int(rec.get(p))
+                       for p in POLYA])
+
+    def _z():
+        cx.executemany('INSERT OR REPLACE INTO signal_stadiya(%s) VALUES(%s)'
+                       % (','.join(POLYA), ','.join('?' * len(POLYA))), gotovo)
+        cx.commit()
+    poterpet(_z)
+    return len(gotovo)
+
+
 def naydti_rid(cx, inn, source_url, what):
     """rowid только что вставленного сигнала. add_signal делает INSERT OR IGNORE и rowid не
     возвращает, поэтому ищем по той же тройке, по которой сигнал и опознаётся."""
@@ -214,7 +238,8 @@ if __name__ == '__main__':
             n = _skachat_s_dropa(os.path.basename(a.zagruzit), put)
             print('скачано с дропа: %s (%d байт)' % (put, n))
         sozdat(cx)
-        vsego = zapisano = 0
+        vsego = 0
+        pachka = []
         for line in open(put, encoding='utf-8'):
             if not line.strip():
                 continue
@@ -231,8 +256,9 @@ if __name__ == '__main__':
                    'uverennost': r.get('st_uverennost'), 'zacepka': r.get('st_zacepka'),
                    'otrasl': r.get('st_otrasl'), 'status': r.get('st_status'),
                    'vydumka': int(bool(r.get('st_vydumka'))), 'model': 'claude-fable-5'}
-            zapisano += 1 if zapisat(cx, rec) else 0
-        print('влито строк: %d из %d' % (zapisano, vsego))
+            pachka.append(rec)
+        zapisano = zapisat_mnogo(cx, pachka)
+        print('влито строк: %d из %d (одной транзакцией)' % (zapisano, vsego))
 
     if a.odno:
         # одиночный путь на сервере: провайдер тут зовётся через verify_company
