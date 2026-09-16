@@ -594,6 +594,11 @@ def obremeneniya_kompanii(guid, pause=0.35):
 
 # --------------------------------------------------------------------- сборка item'а
 
+# Словесные названия стадий — чтобы item читался и человеком, и соседним
+# коллектором `collector_egrz.py`, который пишет стадию строкой.
+STAGE_NAME = {1: 'проект', 2: 'стройка', 3: 'пуск', 4: 'расширение', 0: ''}
+
+
 def _item(msg_guid, code_tipa, name_tipa, date_pub, inn, company, predmet, summa, query):
     stage = _tip_meta(code_tipa).get('stage', 0)
     zagolovok = '%s — %s' % (company or ('ИНН ' + str(inn)), name_tipa or code_tipa)
@@ -615,7 +620,12 @@ def _item(msg_guid, code_tipa, name_tipa, date_pub, inn, company, predmet, summa
         'company_name': company or '',
         'msg_type': code_tipa or '',
         'sum': summa or '',
-        'stage': stage,
+        'stage': stage,                  # число по шкале задачи 5 ТЗ
+        # --- служебное, чтобы стыковаться с соседями без переходника ---
+        'stage_name': STAGE_NAME.get(stage, ''),   # как в collector_egrz.py
+        'inn_conf': 'high',              # ИНН пришёл из самого сообщения, dadata не нужна
+        'event_date': date_pub or '',    # уже ISO YYYY-MM-DD (задача 6 ТЗ)
+        'what': (predmet or name_tipa or '')[:400],
     }
 
 
