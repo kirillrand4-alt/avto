@@ -107,7 +107,14 @@ def main():
         уже.add((str(inn), str(url)))
     c.close()
 
-    добавлено = пропущено = ошибок = 0
+    # ЧЕСТНЫЙ СЧЁТ. add_signal в enrich_db — это INSERT OR IGNORE, он молча
+    # глотает повтор. Поэтому «сколько добавили» считаем не по числу вызовов
+    # (16.09 такой счётчик показал 1957 при реальных 92), а по разнице итогов
+    # таблицы до и после.
+    c = _соединение()
+    было_сигналов = c.execute('select count(*) from signals').fetchone()[0]
+    c.close()
+    попыток = пропущено = ошибок = 0
     for d in новые:
         k = _ключ(d)
         if k in уже:
@@ -126,7 +133,7 @@ def main():
                           hotness=int(d.get('hotness') or 0),
                           ts=d.get('published') or '')
             уже.add(k)
-            добавлено += 1
+            попыток += 1
         except Exception as e:  # noqa: BLE001
             ошибок += 1
             итог.setdefault('примеры_ошибок', [])
@@ -140,9 +147,12 @@ def main():
         os.fsync(f.fileno())
 
     c = _соединение()
-    итог['сигналов_в_базе_теперь'] = c.execute('select count(*) from signals').fetchone()[0]
+    стало = c.execute('select count(*) from signals').fetchone()[0]
     c.close()
-    итог.update({'добавлено': добавлено, 'уже_были': пропущено, 'ошибок': ошибок})
+    итог.update({'сигналов_было': было_сигналов, 'сигналов_стало': стало,
+                 'добавлено_строк': стало - было_сигналов,
+                 'попыток_записи': попыток,
+                 'отсеяно_нашим_ключом': пропущено, 'ошибок': ошибок})
     print('===ИТОГ===')
     print(json.dumps(итог, ensure_ascii=False, indent=1))
     return 0
