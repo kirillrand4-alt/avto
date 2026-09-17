@@ -1198,6 +1198,73 @@ def chislo_MVt(s):
         return '', len(ch)
 
 
+# Признаки производства, где центробежный компрессор практически неизбежен: воздухоразделение
+# (кислород/азот), газопереработка и газохимия, СПГ, аммиак и карбамид, нефтепереработка,
+# металлургия и обогащение, цемент, целлюлоза. Это не «угадывание потребности», а отбор по
+# ТИПУ ОБЪЕКТА, который прямо назван в графе «Наименование инвестиционного проекта».
+CENTROBEZHNYY = re.compile(
+    r'воздухоразделит|разделени\w*\s+воздуха|кислород|азотн|аммиак|метанол|карбамид'
+    r'|газохим|газоперераб|нефтеперераб|\bСПГ\b|сжижен\w*\s+природн|этилен|полимер|полиэтилен'
+    r'|цемент|металлург|\bГОК\b|обогатительн|окатыш|доменн|коксов|целлюлоз|глинозём|глинозем'
+    r'|компрессорн', re.I)
+
+
+def perepisat_csv(vse, kuda):
+    """Собрать CSV из снятых строк. Вынесено отдельно, чтобы пересобирать выгрузку из
+    сохранённого состояния, не разбирая 87 PDF заново."""
+    import csv as _csv
+    polya = ['naimenovanie', 'region', 'proekt', 'ranee_MVt_chislo', 'uvelichenie_MVt_chislo',
+             'moshchnost_somnitelna', 'zayavitel_somnitelen', 'priznak_centrobezhnogo',
+             'napryazhenie_kV', 'god_chislo', 'god_vvoda_syroj',
+             'centr_pitaniya', 'fajl', 'stranica', 'nomer_v_tablice', 'istochnik', 'istochnikov']
+    n = 0
+    with open(kuda, 'w', encoding='utf-8-sig', newline='') as f:
+        w = _csv.DictWriter(f, fieldnames=polya, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for s in vse:
+            imya = (s.get('zayavitel') or '').strip(' –—-')
+            if not imya:
+                continue
+            n += 1
+            w.writerow({
+                'naimenovanie': s['zayavitel'], 'region': s['region'],
+                'proekt': s.get('proekt', ''),
+                'ranee_MVt_chislo': s.get('ranee_MVt_chislo', ''),
+                'uvelichenie_MVt_chislo': s.get('uvelichenie_MVt_chislo', ''),
+                'moshchnost_somnitelna': s.get('moshchnost_somnitelna', ''),
+                'zayavitel_somnitelen': s.get('zayavitel_somnitelen', ''),
+                'priznak_centrobezhnogo': 'да' if CENTROBEZHNYY.search(
+                    (s.get('proekt') or '') + ' ' + (s.get('zayavitel') or '')) else '',
+                'napryazhenie_kV': s.get('napryazhenie_kV', ''),
+                'god_chislo': s.get('god_chislo', ''),
+                'god_vvoda_syroj': s.get('god_vvoda', ''),
+                'centr_pitaniya': s.get('centr_pitaniya', ''),
+                'fajl': s.get('fajl', ''), 'stranica': s.get('stranica', ''),
+                'nomer_v_tablice': s.get('nomer_v_tablice', ''),
+                'istochnik': 'СиПР СО ЕЭС 2025-2030, таблица «Перечень планируемых '
+                             'к вводу потребителей»',
+                'istochnikov': 1})
+    return n
+
+
+def cmd_sipr_csv(argv):
+    """Пересобрать CSV из сохранённого состояния sipr_stroki (без разбора PDF заново)."""
+    p = put_sost('sipr_stroki')
+    if not os.path.exists(p):
+        print('нет %s — сначала sipr_stroki' % p)
+        return
+    vse = json.load(open(p, encoding='utf-8'))['stroki']
+    kuda = os.path.join(KATALOG_SOST, 'SIPR-ZAYAVITELI-STROKI.csv')
+    n = perepisat_csv(vse, kuda)
+    s_m = sum(1 for s in vse if s.get('uvelichenie_MVt_chislo') not in ('', None))
+    s_g = sum(1 for s in vse if s.get('god_chislo'))
+    c = sum(1 for s in vse if (s.get('zayavitel') or '').strip(' –—-')
+            and CENTROBEZHNYY.search((s.get('proekt') or '') + ' ' + (s.get('zayavitel') or '')))
+    print('строк в CSV: %d (из %d снятых); с мощностью %d; с годом %d; '
+          'с признаком центробежного %d' % (n, len(vse), s_m, s_g, c))
+    print('файл: %s' % kuda)
+
+
 def cmd_sipr_stroki(argv):
     """Переснять СиПР ПОСТРОЧНО: строка = заявитель в регионе, с мощностью и годом ввода."""
     predel = int(next((a.split('=')[1] for a in argv if a.startswith('--regionov=')), '99'))
@@ -1274,34 +1341,9 @@ def cmd_sipr_stroki(argv):
             json.dump({'stroki': vse, 'bez_tablicy': bez_tablicy}, f, ensure_ascii=False)
     # CSV для добора ИНН на сервере: одна строка = один заявитель в одном регионе.
     # Одинаковые имена в разных регионах НЕ склеиваем: это разные площадки.
-    import csv as _csv
-    polya = ['naimenovanie', 'region', 'proekt', 'ranee_MVt_chislo', 'uvelichenie_MVt_chislo',
-             'moshchnost_somnitelna', 'zayavitel_somnitelen',
-             'napryazhenie_kV', 'god_chislo', 'god_vvoda_syroj',
-             'centr_pitaniya', 'fajl', 'stranica', 'nomer_v_tablice', 'istochnik', 'istochnikov']
     put_csv = os.path.join(KATALOG_SOST, 'SIPR-ZAYAVITELI-STROKI.csv')
-    with open(put_csv, 'w', encoding='utf-8-sig', newline='') as f:
-        w = _csv.DictWriter(f, fieldnames=polya, delimiter=';', extrasaction='ignore')
-        w.writeheader()
-        for s in vse:
-            if not (s.get('zayavitel') or '').strip():
-                continue
-            w.writerow({'naimenovanie': s['zayavitel'], 'region': s['region'],
-                        'proekt': s.get('proekt', ''),
-                        'ranee_MVt_chislo': s.get('ranee_MVt_chislo', ''),
-                        'uvelichenie_MVt_chislo': s.get('uvelichenie_MVt_chislo', ''),
-                        'moshchnost_somnitelna': s.get('moshchnost_somnitelna', ''),
-                        'zayavitel_somnitelen': s.get('zayavitel_somnitelen', ''),
-                        'napryazhenie_kV': s.get('napryazhenie_kV', ''),
-                        'god_chislo': s.get('god_chislo', ''),
-                        'god_vvoda_syroj': s.get('god_vvoda', ''),
-                        'centr_pitaniya': s.get('centr_pitaniya', ''),
-                        'fajl': s.get('fajl', ''), 'stranica': s.get('stranica', ''),
-                        'nomer_v_tablice': s.get('nomer_v_tablice', ''),
-                        'istochnik': 'СиПР СО ЕЭС 2025-2030, таблица «Перечень планируемых '
-                                     'к вводу потребителей»',
-                        'istochnikov': 1})
-    print('CSV: %s' % put_csv)
+    n_csv = perepisat_csv(vse, put_csv)
+    print('CSV: %s (строк %d)' % (put_csv, n_csv))
     # контроль: выдуманного заявителя быть не должно
     vydumannyh = sum(1 for s in vse if VYDUMANNOE in (s.get('zayavitel') or '').lower())
     print('ИТОГ sipr_stroki: строк %d; регионов с таблицей %d; без таблицы %d;'
@@ -1541,6 +1583,7 @@ def cmd_svod(argv):
 KOMANDY = {'dostup': cmd_dostup, 'obhod': cmd_obhod, 'fajly': cmd_fajly,
            'drsk': cmd_drsk, 'drsk_reestr': cmd_drsk_reestr, 'lk': cmd_lk,
            'sipr': cmd_sipr, 'sipr_stroki': cmd_sipr_stroki,
+           'sipr_csv': cmd_sipr_csv,
            'kontrol': cmd_kontrol, 'svod': cmd_svod}
 
 if __name__ == '__main__':
