@@ -31,8 +31,11 @@ import os
 import re
 
 KAT = os.path.dirname(os.path.abspath(__file__))
-VHOD = os.path.join(KAT, 'EGRZ-NASHA-TEMA.jsonl')
-VYHOD = os.path.join(KAT, 'EGRZ-NASHA-TEMA-2.jsonl')
+# Пути можно передать аргументами: классификатор один на всю тему, и портфельная выгрузка
+# обязана разбираться ТЕМИ ЖЕ правилами, иначе числа двух файлов несравнимы.
+import sys  # noqa: E402
+VHOD = sys.argv[1] if len(sys.argv) > 1 else os.path.join(KAT, 'EGRZ-NASHA-TEMA.jsonl')
+VYHOD = sys.argv[2] if len(sys.argv) > 2 else os.path.join(KAT, 'EGRZ-NASHA-TEMA-2.jsonl')
 
 SLOVO = r'(?:компрессорн|кислородн|азотн|воздуходувн)'
 # в именах подстанций и линий встречаются ещё «Аммиачная» и «Дожимная»
