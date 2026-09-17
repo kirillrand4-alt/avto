@@ -210,9 +210,12 @@ def main():
         imya = (s.get('naimenovanie') or '').strip()
         region = (s.get('region') or '').strip()
         zap = dict(s)
+        # ВСЕ добавляемые поля заводим сразу: имена колонок CSV берутся из ПЕРВОЙ строки,
+        # и поле, появившееся только в середине, просто не попало бы в файл — молча, без
+        # ошибки. Так уже терялись данные при записи через DictWriter с extrasaction='ignore'.
         zap.update({'inn': '', 'ogrn': '', 'status_egryul': '', 'adres_egryul': '',
-                    'rukovoditel': '', 'kandidatov': 0, 'kandidaty_inn': '',
-                    'razreshenie': '', 'novoe_dlya_bazy': ''})
+                    'rukovoditel': '', 'kandidatov': 0, 'kandidatov_po_imeni': 0,
+                    'kandidaty_inn': '', 'razreshenie': '', 'novoe_dlya_bazy': ''})
         if len(imya) < 3:
             zap['razreshenie'] = 'имя пустое'
             out.append(zap)
