@@ -97,7 +97,7 @@ ORG = [
     dict(k='krasnodar',   dom='gazpromgk.ru',        region='Краснодарский край',
          imya='АО «Газпром газораспределение Краснодар»',
          zerna=['газораспределение', 'газпром']),
-    dict(k='samara',      dom='svgc.ru',             region='Самарская обл.',
+    dict(k='samara',      dom='svgk.ru',             region='Самарская обл.',
          imya='ООО «Газпром газораспределение Самара» (СВГК)',
          zerna=['газораспределение', 'газпром', 'свгк', 'средневолжск']),
     dict(k='kazan',       dom='kazan-tr.gazprom.ru', region='Татарстан',
@@ -109,7 +109,7 @@ ORG = [
     dict(k='nn2',         dom='ngaz.ru',             region='Нижегородская обл.',
          imya='ПАО «Газпром газораспределение Нижний Новгород»',
          zerna=['газораспределение', 'газпром', 'нижегородоблгаз']),
-    dict(k='ufa',         dom='gasufa.ru',           region='Башкортостан',
+    dict(k='ufa',         dom='bashgaz.ru',          region='Башкортостан',
          imya='ПАО «Газпром газораспределение Уфа»',
          zerna=['газораспределение', 'газпром']),
     dict(k='gazeks',      dom='gazeks.com',          region='Свердловская обл.',
@@ -150,8 +150,9 @@ ZAPASNYE = {
     'krasnodar': ['gazpromgk.ru', 'www.gazpromgk.ru'],
     'rostov': ['rostovoblgaz.ru', 'www.rostovoblgaz.ru', 'gazprom-rostov.ru'],
     'mosoblgaz': ['mosoblgaz.ru', 'www.mosoblgaz.ru'],
-    'samara': ['svgc.ru', 'www.svgc.ru', 'samaragaz.ru'],
     'mosgaz': ['mosgaz.ru', 'www.mosgaz.ru'],
+    'samara': ['svgk.ru', 'www.svgk.ru', 'svgc.ru'],
+    'ufa': ['bashgaz.ru', 'www.bashgaz.ru'],
 }
 
 # ---------------------------------------------------------------------------
@@ -177,6 +178,15 @@ def vzyat(url, timeout=60, predel=40_000_000, redirect=True):
             pass
         return e.code, telo, (e.headers.get('Location') or url) if e.headers else url
     except Exception as e:  # noqa: BLE001
+        # Российский корневой сертификат (НУЦ Минцифры) не лежит в нашем хранилище,
+        # поэтому часть сайтов ГРО даёт CERTIFICATE_VERIFY_FAILED. Это ОТВЕТ хоста,
+        # а не отсутствие хоста. Проверку TLS не отключаем - пробуем тот же адрес
+        # по http, и в отчёте такой случай помечается отдельно.
+        if 'CERTIFICATE_VERIFY_FAILED' in str(e) and url.startswith('https://'):
+            k, t, u = vzyat('http://' + url[8:], timeout=timeout, predel=predel,
+                            redirect=redirect)
+            if k:
+                return k, t, u
         return 0, ('%s: %s' % (type(e).__name__, e)).encode(), url
 
 
@@ -300,13 +310,22 @@ def listy_xlsx(telo):
         for i, m in enumerate(re.finditer(r'<sheet\b[^>]*name="([^"]*)"', wb)):
             podpisi[i] = m.group(1)
     rezult = []
+    poteri = [0]
     listy = sorted(n for n in imena if re.match(r'xl/worksheets/sheet\d+\.xml$', n))
     for i, imya in enumerate(listy):
         x = z.read(imya).decode('utf-8', 'replace')
         stroki = []
         for rm in re.findall(r'<row[^>]*>(.*?)</row>', x, re.S):
             yach = {}
-            for cm in re.finditer(r'<c\b([^>]*)(?:/>|>(.*?)</c>)', rm, re.S):
+            # ЯМА, из-за которой прибор врал НУЛЁМ. Было: `<c\b([^>]*)(?:/>|>(.*?)</c>)`.
+            # На пустой ячейке `<c r="B11" s="67"/>` жадное `[^>]*` съедало и слэш,
+            # ветка `/>` не срабатывала, и вторая ветка `>(.*?)</c>` глотала ВСЁ до
+            # следующего `</c>` - то есть пачку ячеек целиком. В строке из 167 ячеек
+            # разбиралось 30, колонки съезжали, шапка исчезала, и лист честно
+            # показывал «колонки ИНН нет вовсе» при живой шапке в файле.
+            # Лечится одним знаком: ленивое `[^>]*?`.
+            yacheek_v_syrye = rm.count('<c ')
+            for cm in re.finditer(r'<c\b([^>]*?)(?:/>|>(.*?)</c>)', rm, re.S):
                 atr, telo_y = cm.group(1), cm.group(2) or ''
                 rm2 = re.search(r'r="([A-Z]+)\d*"', atr)
                 nom = _kolonka_v_nomer(rm2.group(1)) if rm2 else len(yach)
@@ -320,8 +339,15 @@ def listy_xlsx(telo):
                     if tip == 's' and zn.isdigit() and int(zn) < len(obshchie):
                         zn = obshchie[int(zn)]
                 yach[nom] = zn
+            # КОНТРОЛЬ ПРИБОРА: разобранных ячеек должно быть столько же, сколько
+            # их в сыром XML. Расхождение печатается, а не проглатывается.
+            if yacheek_v_syrye and len(yach) < yacheek_v_syrye:
+                poteri[0] += yacheek_v_syrye - len(yach)
             stroki.append([yach.get(j, '') for j in range(max(yach) + 1)] if yach else [])
         rezult.append((podpisi.get(i, imya), stroki))
+    if poteri[0]:
+        print('   !! ПРИБОР ПОТЕРЯЛ %d ячеек при разборе xlsx - разбору не верить'
+              % poteri[0])
     return rezult
 
 
@@ -578,6 +604,36 @@ def shapka(stroki, glubina=12):
     return luchshaya if ball > 0 else -1
 
 
+def vse_zagolovki(stroki, predel=40):
+    """ВСЕ текстовые ячейки листа, без привязки к номеру строки.
+
+    Зачем отдельно от шапки: шапка в формах раскрытия почти всегда разнесена на
+    3-6 объединённых строк, и «строка с колонками» не существует как одна строка.
+    Утверждение «колонки ИНН нет ВОВСЕ» доказывается только просмотром всех
+    текстовых ячеек листа, а не первой подходящей строки.
+    """
+    vidno, out = set(), []
+    for r in stroki:
+        for v in r:
+            s = re.sub(r'\s+', ' ', str(v)).strip()
+            if len(s) < 3 or re.fullmatch(r'[\d.,%\s*x-]*', s):
+                continue
+            n = s.lower()
+            if n in vidno:
+                continue
+            vidno.add(n)
+            out.append(s)
+            if len(out) >= 4000:
+                return out
+    return out
+
+
+def gde_slovo(zagolovki, slova, predel=6):
+    """Какие текстовые ячейки листа содержат искомые слова. Пусто = колонки нет."""
+    nash = [z for z in zagolovki if any(s in z.lower() for s in slova)]
+    return nash[:predel], len(nash)
+
+
 def razobrat_tablicu(imya_lista, stroki, zerna):
     """Числа и признаки по одному листу."""
     n_shapki = shapka(stroki)
@@ -646,8 +702,21 @@ def razobrat_tablicu(imya_lista, stroki, zerna):
                         re.fullmatch(r'4\d{4}(\.0)?', v):
                     dat += 1
                     break
+    # Главное доказательство нуля: поиск слова по ВСЕМ текстовым ячейкам листа.
+    zag = vse_zagolovki(stroki)
+    v_inn, n_inn = gde_slovo(zag, INN_KOL)
+    v_naim, n_naim = gde_slovo(zag, NAZV_KOL)
+    v_adr, n_adr = gde_slovo(zag, ADRES_KOL)
+    v_ob, n_ob = gde_slovo(zag, OBEM_KOL)
     return dict(list=imya_lista, strok_vsego=len(stroki), strok_dannyh=len(dannye),
                 n_shapki=n_shapki, kolonki=kolonki,
+                tekstovyh_yacheek=len(zag),
+                pervye_stroki=[' ¦ '.join(str(v)[:24] for v in r)[:230]
+                               for r in stroki[:10]],
+                yacheyki_inn=v_inn, yacheyki_inn_vsego=n_inn,
+                yacheyki_naim=v_naim, yacheyki_naim_vsego=n_naim,
+                yacheyki_adres=v_adr, yacheyki_adres_vsego=n_adr,
+                yacheyki_obem=v_ob, yacheyki_obem_vsego=n_ob,
                 est_kol_inn=bool(i_inn), est_kol_naim=bool(i_nazv),
                 est_kol_adres=bool(i_adr), est_kol_obem=bool(i_ob),
                 est_kol_data=bool(i_dat),
@@ -816,6 +885,40 @@ def rezhim_razdely(argv):
     return 0
 
 
+def rezhim_kontrol(argv):
+    """ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ: доказать, что определитель срабатывает, когда
+    заявитель В ВЫГРУЗКЕ ЕСТЬ.
+
+    Отрицательный контроль («щварцкопфер» даёт 0, выдуманный файл даёт не-200)
+    ловит только прибор, который видит лишнее. Он НЕ ловит прибор, который слеп:
+    сломанный разбор xlsx у меня давал «колонки ИНН нет вовсе» и на форме ГРО,
+    и на любом файле вообще. Поэтому нужен вход, где ответ заведомо НЕ ноль.
+
+    Годный вход - выгрузка ЕГРЗ (`KOMPRESSORNYE-STANCII-EGRZ.xlsx` на дропе):
+    там ИНН застройщика стоит отдельной колонкой у 465 записей из 495.
+    Если на этом входе определитель даёт 0 - верить его нулям по газу нельзя.
+
+        python3 seo-texts/tp_gaz.py kontrol <путь к xlsx или csv> [ожидаемый минимум ИНН]
+    """
+    if not argv:
+        print('нужен путь к файлу-эталону (выгрузка ЕГРЗ)')
+        return 1
+    put = argv[0]
+    porog = int(argv[1]) if len(argv) > 1 else 1
+    with open(put, 'rb') as f:
+        telo = f.read()
+    print('эталон: %s, %d байт' % (os.path.basename(put), len(telo)))
+    vsego_inn = 0
+    for r in razobrat_fayl(put, telo, ['щварцкопфер-такой-компании-нет']):
+        pechat_lista(r, '  ')
+        vsego_inn = max(vsego_inn, r.get('inn_po_kolonke', 0), r.get('inn_gde_ugodno', 0))
+    print('--- ИТОГ ПОЛОЖИТЕЛЬНОГО КОНТРОЛЯ: строк с ИНН найдено %d, порог %d -> %s'
+          % (vsego_inn, porog,
+             'ПРИБОР ВИДИТ ЗАЯВИТЕЛЯ' if vsego_inn >= porog else
+             'ПРИБОР СЛЕП, его нулям по газу верить НЕЛЬЗЯ'))
+    return 0 if vsego_inn >= porog else 1
+
+
 def rezhim_slit(argv):
     """Влить состояние, снятое на другом слое (скачано с дропа), в своё."""
     st = chitat()
@@ -906,6 +1009,48 @@ def rezhim_stranica(argv):
             vidno.add(a)
             print('  %-58s | %s' % (urllib.parse.unquote(a)[-58:], p[:100]))
     print('--- ИТОГ: файлов %d, тематических ссылок %d' % (len(fayly), len(vidno)))
+    # --razobrat=N: тут же скачать и разобрать N самых тематических файлов
+    skolko = 0
+    zerna = ['газпром', 'газораспределение', 'мособлгаз', 'мосгаз', 'газэкс']
+    otbor = None
+    for a in argv[1:]:
+        if a.startswith('--razobrat='):
+            skolko = int(a.split('=', 1)[1])
+        if a.startswith('--org='):
+            zerna = PO_KLYUCHU[a.split('=', 1)[1]]['zerna']
+        if a.startswith('--otbor='):
+            otbor = a.split('=', 1)[1].lower()
+    if not skolko:
+        return 0
+    if otbor:
+        # --otbor применяется ко ВСЕМ файлам страницы, а не только к «тематическим»:
+        # имя «Prilozhenie-4-Forma-6-avgust.xlsx» не содержит ни одного слова из
+        # INTERES, то есть тематический отбор его молча выбрасывал.
+        sp = [(1, a, p) for a, p in fayly
+              if otbor in urllib.parse.unquote(a).lower() or otbor in p.lower()]
+    else:
+        sp = interesnye({a: p for a, p in fayly})
+    print('\n=== РАЗБОР %d файлов из %d тематических' % (min(skolko, len(sp)), len(sp)))
+    sobrano = {}
+    imya_drop = ''
+    tiho = '--tiho' in argv
+    for a in argv[1:]:
+        if a.startswith('--vyhod='):
+            imya_drop = a.split('=', 1)[1]
+    for ball, a, podpis in sp[:skolko]:
+        kod, telo, kon = vzyat(a, timeout=180, predel=25_000_000)
+        print('-- %s | %s' % (podpis[:60] or '—', urllib.parse.unquote(a)[-55:]))
+        print('   код=%s байт=%d' % (kod, len(telo)))
+        if kod != 200 or len(telo) < 64:
+            continue
+        listy = razobrat_fayl(kon, telo, zerna)
+        sobrano[a] = dict(kod=kod, bayt=len(telo), podpis=podpis, listy=listy)
+        if not tiho:
+            for x in listy:
+                pechat_lista(x, '   ')
+    if imya_drop:
+        print('--- на дроп %s: %s' % (imya_drop, na_drop(imya_drop, sobrano)))
+    print('--- ИТОГ разбора: файлов %d' % len(sobrano))
     return 0
 
 
@@ -930,17 +1075,18 @@ def pechat_lista(r, otstup='  '):
     if r.get('oshibka'):
         print(otstup + 'лист %s: %s' % (r.get('list'), r['oshibka']))
         return
-    print(otstup + 'лист «%s»: строк всего %d, строк данных %d, шапка в строке %d'
-          % (r['list'], r['strok_vsego'], r['strok_dannyh'], r['n_shapki']))
-    if r['kolonki']:
-        print(otstup + 'КОЛОНКИ ДОСЛОВНО (%d): %s'
-              % (len(r['kolonki']), ' ¦ '.join(k[:60] for k in r['kolonki'] if k)))
-    print(otstup + 'колонка ИНН: %s%s | наименование: %s%s | адрес: %s | объём: %s%s | дата: %s'
-          % (r['est_kol_inn'], (' ' + str(r['imena_inn'])) if r['imena_inn'] else '',
-             r['est_kol_naim'], (' ' + str(r['imena_naim'][:2])) if r['imena_naim'] else '',
-             r['est_kol_adres'],
-             r['est_kol_obem'], (' ' + str(r['imena_obem'][:2])) if r['imena_obem'] else '',
-             r['est_kol_data']))
+    print(otstup + 'лист «%s»: строк всего %d, строк данных %d, текстовых ячеек %d'
+          % (r['list'], r['strok_vsego'], r['strok_dannyh'], r.get('tekstovyh_yacheek', 0)))
+    for s in r.get('pervye_stroki', [])[:8]:
+        if s.strip(' ¦'):
+            print(otstup + '  > ' + s)
+    for metka, klyuch in (('ИНН/ОГРН', 'inn'), ('НАИМЕНОВАНИЕ/ЗАЯВИТЕЛЬ', 'naim'),
+                          ('АДРЕС/ОБЪЕКТ', 'adres'), ('ОБЪЁМ/МОЩНОСТЬ', 'obem')):
+        vsego = r.get('yacheyki_%s_vsego' % klyuch, 0)
+        obr = r.get('yacheyki_%s' % klyuch, [])
+        print(otstup + '  %-23s ячеек с этим словом на листе: %d%s'
+              % (metka, vsego, ('  ->  ' + ' / '.join(x[:52] for x in obr)) if obr else
+                 '   <- КОЛОНКИ НЕТ ВОВСЕ'))
     print(otstup + 'ИНН по колонке: %d | ИНН где угодно (с контрольной суммой): %d | '
                    'строк со своей компанией: %d | строк с ЧУЖИМ юрлицом: %d | с датой: %d'
           % (r['inn_po_kolonke'], r['inn_gde_ugodno'], r['strok_so_svoey_kompaniey'],
@@ -1039,6 +1185,8 @@ def main():
         return rezhim_slit(a)
     if r == 'stranica':
         return rezhim_stranica(a)
+    if r == 'kontrol':
+        return rezhim_kontrol(a)
     print('неизвестный режим: %s' % r)
     return 1
 

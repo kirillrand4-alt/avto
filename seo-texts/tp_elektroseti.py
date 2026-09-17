@@ -79,7 +79,7 @@ ORGANIZACII = [
     ('rosseti-yug', 'Россети Юг', 'https://rosseti-yug.ru', [
         '/informaciya/', '/tehnologicheskoe-prisoedinenie/', '/']),
     ('rosseti-sk', 'Россети Северный Кавказ', 'https://rossetisk.ru', [
-        '/raskrytie-informacii/', '/tehprisoedinenie/', '/']),
+        '/raskritie-informatsii/', '/customer/technical_connection/', '/customer/']),
     ('rosseti-ural', 'Россети Урал', 'https://rosseti-ural.ru', [
         '/disclosure/', '/clients/tp/', '/']),
     ('rosseti-sib', 'Россети Сибирь', 'https://rosseti-sib.ru', [
@@ -97,8 +97,18 @@ ORGANIZACII = [
         '/disclosure/', '/clients/', '/']),
     ('rosseti-tomsk', 'Россети Томск', 'https://rosseti-tomsk.ru', [
         '/disclosure/', '/tp/', '/']),
+    # Пути НЕ угаданы, а сняты с самой страницы раскрытия: 30 пронумерованных разделов
+    # ПП 24. Нас интересуют 16 (наличие техвозможности и поданные заявки), 25 (лица,
+    # намеревающиеся перераспределить мощность — та самая Форма 15 с именами),
+    # 28 (этапы обработки заявок), 13/14 (перспективная нагрузка центров питания).
     ('rosseti-sz', 'Россети Северо-Запад', 'https://rosseti-sz.ru', [
-        '/disclosure/', '/clients/', '/']),
+        '/infodisclosure/2standartdisclosure/',
+        '/infodisclosure/2standartdisclosure/16nalichiedostupa/',
+        '/infodisclosure/2standartdisclosure/25faces/',
+        '/infodisclosure/2standartdisclosure/28etaps/',
+        '/infodisclosure/2standartdisclosure/19dogovori/',
+        '/infodisclosure/2standartdisclosure/13infofact35-150/',
+        '/infodisclosure/2standartdisclosure/14infonagruz35/']),
     ('drsk', 'ДРСК (Дальневосточная РСК)', 'https://www.drsk.ru', [
         '/informacziya/', '/tehprisoedinenie/', '/']),
     ('drsk-utp', 'ДРСК — портал ТП utp.drsk.ru', 'https://utp.drsk.ru', [
@@ -181,9 +191,23 @@ def _ctx():
     return c
 
 
+def normalizovat(url):
+    """Проценты в путь и пробелы прочь. Ссылка на реестр ДРСК содержит кириллицу и ПРОБЕЛЫ
+    («/file/566/Реестр заявок на подключение ... .xlsx»), и urllib на такой ссылке падает
+    с InvalidURL «URL can't contain control characters» — то есть файл выглядел как
+    недоступный, хотя запрос до сервера просто не уходил."""
+    c = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit((
+        c.scheme, c.netloc.encode('idna').decode('ascii') if any(ord(x) > 127 for x in c.netloc)
+        else c.netloc,
+        urllib.parse.quote(c.path, safe="/%:@!$&'()*+,;=~-._"),
+        urllib.parse.quote(c.query, safe="=&%:@/?!$'()*+,;~-._"), c.fragment))
+
+
 def dostat(url, timeout=40, maks=None):
     """Вернуть (код, байты, итоговый_url, ошибка). Код ответа — это ОТВЕТ: 403/451 значит,
     что хост ответил, и это не то же самое, что «не ответил вовсе»."""
+    url = normalizovat(url)
     req = urllib.request.Request(url, headers={
         'User-Agent': UA,
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -351,8 +375,20 @@ def zagolovok(rows):
 
 
 def inn_kandidaty(vse_tekst):
-    """10/12-значные числа, не входящие в более длинное число. Возврат: список строк."""
-    return INN_RE.findall(vse_tekst)
+    """10/12-значные числа, не входящие в более длинное число и не являющиеся ХВОСТОМ ДРОБИ.
+
+    Замер, из-за которого добавлена вторая проверка: в Форме 14 «резервируемая максимальная
+    мощность» стоят значения вида 834.3420000000001 — хвост двоичного округления. Наивная
+    регулярка выдёргивала оттуда 10 цифр и отчитывалась «ИНН найден 1». Ровно та же ошибка
+    («ИНН 348») уже ловилась другим агентом на стоимостях. Поэтому совпадение, слева от
+    которого стоит точка или запятая (то есть мы внутри дробной части), — не ИНН."""
+    out = []
+    for m in INN_RE.finditer(vse_tekst):
+        i = m.start()
+        if i > 0 and vse_tekst[i - 1] in '.,':
+            continue
+        out.append(m.group(1))
+    return out
 
 
 def drop_polozhit(imya, b):
@@ -530,6 +566,20 @@ VHOD = re.compile(r'раскрыти|стандарт\s+раскрыт|техн�
                   re.I)
 
 
+def sohranit_obhod(itog):
+    p = put_sost('obhod')
+    staroe = {}
+    if os.path.exists(p):
+        try:
+            staroe = json.load(open(p, encoding='utf-8'))
+        except Exception:  # noqa: BLE001
+            staroe = {}
+    staroe.update(itog)
+    os.makedirs(KATALOG_SOST, exist_ok=True)
+    with open(p, 'w', encoding='utf-8') as f:
+        json.dump(staroe, f, ensure_ascii=False, indent=1)
+
+
 def cmd_obhod(argv):
     """Обойти сайт организации вширь и собрать ссылки на формы и файлы.
 
@@ -576,7 +626,11 @@ def cmd_obhod(argv):
                         if not any(f['url'] == su for f in zap['fajly']):
                             zap['fajly'].append({'url': su, 'tekst': st[:220], 'so': u})
                     continue
-                if urllib.parse.urlparse(su).netloc != dom:
+                # Поддомены СВОЕГО домена — тоже свои: у Россети Северо-Запад весь раздел
+                # «Потребителям» живёт на clients.rosseti-sz.ru, и строгое равенство
+                # netloc отрезало его целиком.
+                nl = urllib.parse.urlparse(su).netloc
+                if nl != dom and not (nl.endswith('.' + dom) or dom.endswith('.' + nl)):
                     continue
                 if INTERES.search(st) and len(st) > 6:
                     if not any(c['url'] == su for c in zap['kandidaty']):
@@ -588,18 +642,13 @@ def cmd_obhod(argv):
             kod_org, len(zap['stranicy']), sum(1 for s in zap['stranicy'] if s['kod'] == 200),
             len(zap['kandidaty']), len(zap['fajly'])))
         sys.stdout.flush()
-    p = put_sost('obhod')
-    staroe = {}
-    if os.path.exists(p):
-        try:
-            staroe = json.load(open(p, encoding='utf-8'))
-        except Exception:  # noqa: BLE001
-            staroe = {}
-    staroe.update(itog)
-    with open(p, 'w', encoding='utf-8') as f:
-        json.dump(staroe, f, ensure_ascii=False, indent=1)
+        # Сохраняем ПОСЛЕ КАЖДОЙ организации. Первая версия писала состояние только в самом
+        # конце: прогон на восьми сайтах упёрся в таймаут и потерял всё сделанное — час
+        # обхода превратился в пустой файл.
+        sohranit_obhod(itog)
+    sohranit_obhod(itog)
     print('ИТОГ obhod: организаций %d, файлов всего %d -> %s'
-          % (len(itog), sum(len(v['fajly']) for v in itog.values()), p))
+          % (len(itog), sum(len(v['fajly']) for v in itog.values()), put_sost('obhod')))
 
 
 def cmd_fajly(argv):
@@ -747,6 +796,148 @@ def cmd_drsk(argv):
           % (len(out['stranicy']), len(out['skripty']), len(probovali), put_sost('drsk')))
 
 
+def cmd_drsk_reestr(argv):
+    """Скачать и разобрать сам файл «Реестр заявок на подключение ...» с портала ДРСК.
+
+    Это единственный найденный на 17.09.2026 файл, который НАЗЫВАЕТСЯ реестром заявок, а не
+    сводкой количеств. Разбираем его полностью: строки, ВСЕ имена колонок, ИНН, наименования.
+    Сырой файл кладём на дроп, чтобы его можно было перепроверить с другого слоя."""
+    baza = 'https://utp.drsk.ru'
+    najdeno = {}
+    for i in list(range(1, 16)) + ['']:
+        u = baza + '/tpr_reestr' + ('/%d' % i if i != '' else '')
+        k, d, fin, e = dostat(u, timeout=40, maks=4000000)
+        if k != 200:
+            continue
+        h = tekst(d)
+        for su, st in ssylki(h, fin):
+            if FAJL.search(su) and re.search(r'реестр', st + ' ' + urllib.parse.unquote(su), re.I):
+                najdeno.setdefault(su, st)
+    print('файлов-реестров найдено: %d' % len(najdeno))
+    itog = []
+    for su, st in najdeno.items():
+        k, b, _, e = dostat(su, timeout=180)
+        print('== %s\n   kod=%s байт=%d %s' % (urllib.parse.unquote(su)[-110:], k, len(b), e))
+        if k != 200 or not b:
+            itog.append({'url': su, 'kod': k, 'oshibka': e})
+            continue
+        imya = 'tpseti_drsk_' + re.sub(r'\W+', '_', urllib.parse.unquote(su).split('/')[-1])[:70] + '.xlsx'
+        r = razbor_fajla(su, b)
+        r['tekst'] = st
+        r['na_drop'] = drop_polozhit(imya, b)
+        itog.append(r)
+        print('   тип=%s строк=%s ИНН-кандидатов=%s уник=%s ООО/АО=%s контроль_выдуманное=%s'
+              % (r.get('tip'), r.get('strok'), r.get('inn_kandidatov'), r.get('inn_unikalnyh'),
+                 r.get('ooo_vhozhdeniy'), r.get('kontrol_vydumannoe')))
+        print('   на дроп: %s' % r['na_drop'])
+        for g in (r.get('kolonki') or [])[:4]:
+            print('   лист %r строк=%d ВСЕ КОЛОНКИ:' % (g['list'], g['strok']))
+            for c in g['kolonki']:
+                print('      - %s' % c[:130])
+        print('   примеры ИНН: %s' % (r.get('inn_primery'),))
+    with open(put_sost('drsk_reestr'), 'w', encoding='utf-8') as f:
+        json.dump(itog, f, ensure_ascii=False, indent=1)
+    print('ИТОГ drsk_reestr: файлов %d -> %s' % (len(itog), put_sost('drsk_reestr')))
+
+
+# --- СиПР: обосновывающие материалы Системного оператора -----------------------------
+# ГЛАВНАЯ НАХОДКА. Сетевые организации по ПП 24 раскрывают заявки БЕЗ имён (см. отчёт).
+# Но те же самые заявки, поимённо, публикует СО ЕЭС в обосновывающих материалах к СиПР —
+# по файлу на субъект РФ, с таблицей, у которой колонки дословно:
+#   «Наименование заявителя | Ранее присоединенная мощность, МВт |
+#    Увеличение/ввод новой мощности, МВт | Напряжение, кВ | Год ввода | Центр питания»
+# То есть предприятие + сколько мощности просит + к какому году. Это и есть ранний след.
+SIPR_SPISOK = 'https://www.so-ups.ru/future-planning/sipr-ees/'
+ZAYAVITEL_ZAG = re.compile(r'Наименовани[ея]\s+заявител', re.I)
+YURLICO = re.compile(
+    r'(?:ООО|ОАО|ПАО|ЗАО|АО|ФГУП|ГУП|МУП|НАО|АНО|ФКП|ФГБУ|ИП)\s*[«"]\s*([^»"\n]{2,80})\s*[»"]')
+# Стоп-лист: сама сетевая организация и Системный оператор печатаются в каждой строке —
+# тот самый случай, когда «юрлиц 3396» оказались одной компанией. Их считаем отдельно.
+SVOI_IMENA = re.compile(r'россети|мрск|со\s*ЕЭС|системный оператор|фск|энерго$|электросет', re.I)
+
+
+def cmd_sipr(argv):
+    """Замерить, сколько ПОИМЕННЫХ заявителей на ТП лежит в обосновывающих материалах СиПР."""
+    predel = int(next((a.split('=')[1] for a in argv if a.startswith('--regionov=')), '86'))
+    k, d, fin, e = dostat(SIPR_SPISOK, timeout=60, maks=4000000)
+    print('страница СиПР: kod=%s байт=%d %s' % (k, len(d), e))
+    h = tekst(d)
+    # ССЫЛКИ ЗДЕСЬ ОТНОСИТЕЛЬНЫЕ БЕЗ ВЕДУЩЕГО СЛЭША: href="fileadmin/files/...pdf" на
+    # странице /future-planning/sipr-ees/. Обычный urljoin приклеивает их к каталогу
+    # страницы и даёт /future-planning/sipr-ees/fileadmin/... — то есть 404 на ВСЕХ 86
+    # регионах подряд. Ровный ряд 404 это отказ прибора, а не отсутствие файлов, поэтому
+    # такие адреса склеиваем ещё и с корнем сайта и берём тот вариант, который ответил.
+    koren = '%s://%s/' % (urllib.parse.urlsplit(fin).scheme, urllib.parse.urlsplit(fin).netloc)
+    pdfy = []
+    for syr, podpis in SSYLKA.findall(h):
+        if not syr.lower().endswith('.pdf') or 'public_discussion' not in syr:
+            continue
+        st = ochistit(podpis)
+        varianty = [urllib.parse.urljoin(fin, syr)]
+        if not syr.startswith(('/', 'http')):
+            varianty.append(urllib.parse.urljoin(koren, syr))
+        pdfy.append((varianty, st))
+    # проверяем, какой вариант отвечает, на первом же файле
+    if pdfy:
+        rab = None
+        for v in pdfy[0][0]:
+            kk, _, _, _ = dostat(v, timeout=60, maks=2000)
+            print('  проба варианта адреса: %s -> %s' % (v[:110], kk))
+            if kk == 200:
+                rab = pdfy[0][0].index(v)
+                break
+        if rab is None:
+            print('НИ ОДИН вариант адреса не ответил 200 — дальше мерить нечего')
+            return
+        pdfy = [(v[rab] if len(v) > rab else v[0], st) for v, st in pdfy]
+    # берём самый свежий каталог периода
+    katalogi = {}
+    for su, st in pdfy:
+        katalogi.setdefault(su.rsplit('/', 2)[-2], []).append((su, st))
+    # Самый свежий период — по числу в имени каталога ('2025-30_final'), а не по алфавиту:
+    # алфавит поставил последним каталог 'final' (период 2023-2028), то есть замер молча
+    # уехал бы на два года назад.
+    svezhiy = sorted(katalogi, key=lambda x: (re.sub(r'\D', '', x) or '0'))[-1]
+    spisok = katalogi[svezhiy]
+    print('каталогов периодов: %s; выбран %r, в нём pdf: %d'
+          % (sorted(katalogi), svezhiy, len(spisok)))
+    itog = []
+    vse_imena = set()
+    for su, st in spisok[:predel]:
+        k, b, _, e = dostat(su, timeout=240)
+        if k != 200 or not b:
+            itog.append({'region': st, 'url': su, 'kod': k, 'oshibka': e})
+            print('  %-40s kod=%s %s' % (st[:40], k, e[:60]))
+            continue
+        t = tekst_pdf(b) or ''
+        zag = len(ZAYAVITEL_ZAG.findall(t))
+        imena = set()
+        for m in ZAYAVITEL_ZAG.finditer(t):
+            for nm in YURLICO.findall(t[m.start():m.start() + 8000]):
+                nm = re.sub(r'\s+', ' ', nm).strip()
+                if nm and not SVOI_IMENA.search(nm):
+                    imena.add(nm)
+        vse = {re.sub(r'\s+', ' ', x).strip() for x in YURLICO.findall(t)}
+        zap = {'region': st, 'url': su, 'kod': k, 'bajt': len(b), 'znakov': len(t),
+               'zagolovkov_zayavitel': zag, 'imen_u_zagolovka': len(imena),
+               'imen_vsego_v_fajle': len(vse), 'primery': sorted(imena)[:10],
+               'kontrol_vydumannoe': t.lower().count(VYDUMANNOE)}
+        itog.append(zap)
+        vse_imena |= imena
+        print('  %-40s заголовков «Наименование заявителя»=%-3d имён рядом=%-4d всего юрлиц=%-4d контроль=%d'
+              % (st[:40], zag, len(imena), len(vse), zap['kontrol_vydumannoe']))
+        sys.stdout.flush()
+        with open(put_sost('sipr'), 'w', encoding='utf-8') as f:
+            json.dump({'regiony': itog, 'imena': sorted(vse_imena)}, f,
+                      ensure_ascii=False, indent=1)
+    s_formoy = [z for z in itog if z.get('zagolovkov_zayavitel')]
+    print('ИТОГ sipr: регионов разобрано %d; с таблицей «Наименование заявителя» %d;'
+          ' УНИКАЛЬНЫХ заявителей всего %d; контроль (выдуманное слово, должно быть 0): %d'
+          % (len(itog), len(s_formoy), len(vse_imena),
+             sum(z.get('kontrol_vydumannoe') or 0 for z in itog)))
+    print('файл: %s' % put_sost('sipr'))
+
+
 def cmd_lk(argv):
     """Порталы ТП и личные кабинеты: есть ли ПУБЛИЧНАЯ проверка статуса заявки без входа."""
     out = []
@@ -815,7 +1006,8 @@ def cmd_svod(argv):
 
 
 KOMANDY = {'dostup': cmd_dostup, 'obhod': cmd_obhod, 'fajly': cmd_fajly,
-           'drsk': cmd_drsk, 'lk': cmd_lk, 'svod': cmd_svod}
+           'drsk': cmd_drsk, 'drsk_reestr': cmd_drsk_reestr, 'lk': cmd_lk,
+           'sipr': cmd_sipr, 'svod': cmd_svod}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in KOMANDY:

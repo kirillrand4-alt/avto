@@ -135,8 +135,30 @@ ZAPAS = [
     ('Водоканал Воронежа (РВК)', 'Воронежская', 'https://voronezh.rosvodokanal.ru/'),
 ]
 
+# Второй заход по градостроительным системам: адреса, найденные после того как
+# первые имена не отозвались, плюс надзорные органы, которые ведут реестры
+# разрешений на строительство.
+GISOGD2 = [
+    ('ГИСОГД РФ / Стройкомплекс', 'РФ', 'https://gisogd.gov.ru/'),
+    ('РГИС Подмосковья', 'Подмосковье', 'https://rgis.mosreg.ru/v3/'),
+    ('ИСОГД МО (вход)', 'Подмосковье', 'https://isogd.mosreg.ru/'),
+    ('ИПП Татарстана (ГИСОГД)', 'Татарстан',
+     'https://ipp.tatarstan.ru/gosudarstvennaya-informatsionnaya-sistema.htm'),
+    ('Госстройнадзор Татарстана', 'Татарстан', 'https://gsn.tatarstan.ru/'),
+    ('Минстрой Свердловской обл.', 'Свердловская', 'https://minstroy.midural.ru/'),
+    ('Госстройнадзор Свердловской', 'Свердловская', 'https://nadzor.midural.ru/'),
+    ('Минград Нижегородской обл.', 'Нижегородская', 'https://mingrad.government-nnov.ru/'),
+    ('Госстройнадзор Краснодарского кр.', 'Краснодарский', 'https://gkn.krasnodar.ru/'),
+    ('Минстрой Ростовской обл.', 'Ростовская', 'https://minstroy.donland.ru/'),
+    ('Госкомитет РБ по жилнадзору', 'Башкортостан', 'https://gilnadzor.bashkortostan.ru/'),
+    ('Мосгосстройнадзор', 'Москва', 'https://www.mos.ru/stroinadzor/'),
+    ('Открытые данные Москвы', 'Москва', 'https://data.mos.ru/'),
+    ('ЕИСЖС наш.дом.рф', 'РФ', 'https://наш.дом.рф/'),
+    ('ЕИСЖС каталог новостроек', 'РФ', 'https://наш.дом.рф/сервисы/каталог-новостроек/'),
+]
+
 GRUPPY = {'voda': VODA, 'teplo': TEPLO, 'gisogd': GISOGD, 'kontrol': KONTROL,
-          'zapas': ZAPAS}
+          'zapas': ZAPAS, 'gisogd2': GISOGD2}
 GRUPPY['vse'] = VODA + TEPLO + GISOGD + KONTROL
 
 # Слова-маркеры. Разделены по смыслу: что ищем и что это доказывает.
@@ -160,15 +182,27 @@ def _ctx():
 
 
 def idna(url):
-    """Кириллический хост -> punycode. Без этого urllib падает на 'latin-1 codec'
-    и это выглядит как «хост не ответил», хотя запроса не было вовсе."""
+    """Привести адрес к тому, что понимает urllib: хост в punycode, путь и запрос
+    в процентной кодировке.
+
+    ЗДЕСЬ БЫЛА ВТОРАЯ ПОЛОМКА ПРИБОРА. Прежняя версия кодировала путь только у
+    кириллических ХОСТОВ. У обычного хоста с кириллическим ИМЕНЕМ ФАЙЛА
+    (а так выложены почти все формы раскрытия) urllib падал на
+    «URL can't contain control characters» или «'ascii' codec can't encode»,
+    и функция get() возвращала код 0. Шестнадцать файлов подряд получили «код 0»,
+    что читается как «хост не ответил», хотя ЗАПРОСА НЕ БЫЛО ВОВСЕ.
+    """
     try:
-        p = urllib.parse.urlsplit(url)
-        if p.hostname and any(ord(c) > 127 for c in p.hostname):
-            host = p.hostname.encode('idna').decode()
-            netloc = host + (f':{p.port}' if p.port else '')
-            path = urllib.parse.quote(p.path, safe='/%')
-            url = urllib.parse.urlunsplit((p.scheme, netloc, path, p.query, p.fragment))
+        p = urllib.parse.urlsplit(url.strip())
+        host = p.hostname or ''
+        if any(ord(c) > 127 for c in host):
+            host = host.encode('idna').decode()
+        netloc = host + (f':{p.port}' if p.port else '')
+        if p.username:
+            netloc = f'{p.username}@{netloc}'
+        path = urllib.parse.quote(p.path, safe="/%:@!$&'()*+,;=~")
+        query = urllib.parse.quote(p.query, safe="/%:@!$&'()*+,;=?~")
+        url = urllib.parse.urlunsplit((p.scheme, netloc, path, query, ''))
     except Exception:  # noqa: BLE001
         pass
     return url
@@ -425,6 +459,176 @@ def cmd_karta(gruppa, ot=0, do=999):
                                              'техусл', 'podkl', 'подключ', 'invest'])][:4000])
 
 
+def cmd_bundle(url, limit=8):
+    """Портал на JS и в HTML пусто -> адрес API лежит в его же бандле.
+
+    Забираем <script src>, качаем скрипты и вынимаем из них пути вида /api/...
+    Контроль: выдуманная основа обязана дать 0 совпадений.
+    """
+    k, b, h, fin = get(url, timeout=30, limit=4_000_000)
+    print(f'страница код={k} байт={len(b)}')
+    if k != 200:
+        return
+    html = dekod(b, h)
+    skripty = [urllib.parse.urljoin(fin, m) for m in
+               re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', html, re.I)]
+    vnutri = re.findall(r'["\'](/[a-z0-9_\-/]*(?:api|service|rest|odata|search)[a-z0-9_\-/]*)["\']',
+                        html, re.I)
+    print(f'скриптов на странице {len(skripty)}, путей прямо в HTML {len(set(vnutri))}')
+    puti = set(vnutri)
+    for su in skripty[:limit]:
+        k2, b2, h2, _ = get(su, timeout=30, limit=12_000_000)
+        if k2 != 200:
+            print(f'  скрипт код={k2} {su[:90]}')
+            continue
+        t = b2.decode('utf-8', 'replace')
+        n = re.findall(r'["\'](https?://[a-z0-9.\-]+/[^"\' ]{0,80}|/[a-z0-9_\-/]{2,60}'
+                       r'(?:api|service|rest|odata|search|layers|permit|razresh)[a-z0-9_\-/]*)["\']',
+                       t, re.I)
+        nn = {x for x in n if len(x) > 4}
+        puti |= nn
+        print(f'  скрипт {len(b2):8} байт путей={len(nn):4} {su[-60:]}')
+    kontrol = [x for x in puti if 'shvarckopfer' in x.lower()]
+    inter = sorted({x for x in puti if any(w in x.lower() for w in
+                                           ['api', 'odata', 'rest', 'search', 'razresh',
+                                            'permit', 'object', 'registry', 'reestr'])})
+    print(f'ВСЕГО путей {len(puti)}, интересных {len(inter)}, контроль(выдуманное)={len(kontrol)}')
+    for x in inter[:45]:
+        print('   ', x[:120])
+
+
+def cmd_api(url, prom=''):
+    """Дёрнуть JSON-эндпойнт и НАПЕЧАТАТЬ его ключи: сколько записей и какие поля."""
+    k, b, h, fin = get(url, timeout=60, limit=25_000_000,
+                       headers={'Accept': 'application/json'})
+    ct = (h.get('Content-Type') or h.get('content-type') or '')[:40]
+    print(f'код={k} байт={len(b)} тип={ct} {fin[:110]}')
+    if k == 0 or not b:
+        print(b[:200].decode('utf-8', 'replace'))
+        return
+    try:
+        d = json.loads(b.decode('utf-8', 'replace'))
+    except Exception as e:  # noqa: BLE001
+        print('не JSON:', e, '|', b[:200].decode('utf-8', 'replace'))
+        return
+    def opis(x, pref='', gl=0):
+        if gl > 2:
+            return
+        if isinstance(x, dict):
+            print(f'{pref}объект, ключей {len(x)}: {list(x)[:22]}')
+            for k2 in list(x)[:6]:
+                if isinstance(x[k2], (dict, list)):
+                    opis(x[k2], pref + f'  [{k2}] ', gl + 1)
+        elif isinstance(x, list):
+            print(f'{pref}список, элементов {len(x)}')
+            if x:
+                opis(x[0], pref + '  [0] ', gl + 1)
+        else:
+            print(f'{pref}{type(x).__name__} = {str(x)[:80]}')
+    opis(d)
+    nz = b.decode('utf-8', 'replace').lower()
+    print('слова-заявитель:', [w for w in ZAYAV_SLOVA if w in nz],
+          '| контроль:', [w for w in ZAYAV_KONTROL if w in nz])
+
+
+EISZHS = [
+    # ЕИСЖС наш.дом.рф: каталог новостроек. Открытый API портала, адреса взяты
+    # из его же фронта. Вопрос к нему тот же: есть ли застройщик и ИНН.
+    'https://наш.дом.рф/сервисы/api/kn/object?offset=0&limit=5&sortField=obj_publ_dt'
+    '&sortType=desc&objStatus=0',
+    'https://наш.дом.рф/сервисы/api/kn/top-regions',
+    'https://наш.дом.рф/сервисы/api/kn/developer?offset=0&limit=5&sortField=devShortNm'
+    '&sortType=asc&objStatus=0',
+]
+
+
+def razvedka_gisogd():
+    """Один заход по градостроительным системам: код, бандл, открытый API."""
+    print('### 1. КОДЫ ОТВЕТА')
+    cmd_probe('gisogd2')
+    print('\n### 2. ЧТО В БАНДЛАХ ПОРТАЛОВ')
+    for u in ['https://gisogd.gov.ru/', 'https://gisogd.nso.ru/',
+              'https://rgis.mosreg.ru/v3/']:
+        print('--- ' + u)
+        try:
+            cmd_bundle(u, 6)
+        except Exception as e:  # noqa: BLE001
+            print('  сбой:', type(e).__name__, e)
+    print('\n### 3. ОТКРЫТЫЙ API ЕИСЖС наш.дом.рф')
+    for u in EISZHS:
+        print('--- ' + u[:100])
+        try:
+            cmd_api(u)
+        except Exception as e:  # noqa: BLE001
+            print('  сбой:', type(e).__name__, e)
+    print('\n### 4. КОНТРОЛЬ: заведомо негодный API')
+    cmd_api('https://наш.дом.рф/сервисы/api/kn/shvarckopfer?limit=5')
+
+
+def cmd_tarif_spb(stranic=60):
+    """Реестр актов органа тарифного регулирования (Комитет по тарифам СПб).
+
+    Зачем он в этом участке: индивидуальная плата за подключение к воде/теплу
+    устанавливается ПОД КОНКРЕТНЫЙ ОБЪЕКТ, и тогда в заголовке акта может стоять
+    заявитель. Меряем: сколько актов всего, сколько про подключение, сколько
+    «в индивидуальном порядке», и named ли в них юрлицо-заявитель.
+    """
+    vse = {}
+    for n in range(1, stranic + 1):
+        k, b, h, f = get(f'https://tarifspb.ru/documents/acts/?&page={n}',
+                         timeout=25, limit=3_000_000)
+        if k != 200:
+            print(f'стр {n} код={k}')
+            break
+        t = dekod(b, h)
+        d = [(u, tt) for u, tt in sobrat_ssylki(t, f) if re.search(r'/acts/\d+/', u)]
+        novyh = sum(1 for u, _ in d if u not in vse)
+        vse.update(dict(d))
+        if n % 10 == 0 or novyh == 0:
+            print(f'стр {n}: документов на странице {len(d)}, новых {novyh}, всего {len(vse)}')
+        if novyh == 0:
+            break
+    nz = {u: re.sub(r'\s+', ' ', t) for u, t in vse.items()}
+    def sch(w):
+        return sum(1 for t in nz.values() if w in t.lower())
+    print(f'ВСЕГО актов собрано: {len(nz)}')
+    for w in ['плат', 'подключ', 'индивидуальн', 'водоснабж', 'теплоснабж',
+              'общества с ограниченной', 'акционерного общества']:
+        print(f'   «{w}»: {sch(w)}')
+    print(f'   КОНТРОЛЬ «щварцкопфер»: {sch("щварцкопфер")}')
+    ind = [t for t in nz.values() if 'индивидуальн' in t.lower()]
+    for t in ind[:10]:
+        print('   ИНД:', t[:190])
+    put_json('3s_tp_tarifspb_akty.json', [{'url': u, 'text': t} for u, t in nz.items()])
+
+
+def cmd_samoprover():
+    """Самопроверка прибора. Отрицательный контроль показывает, что прибор не
+    выдумывает; ПОЛОЖИТЕЛЬНЫЙ показывает, что он вообще срабатывает. Без второго
+    ноль по всем сайтам неотличим от сломанного поиска.
+    """
+    obrazec = ('<html><head><title>Раскрытие</title></head><body>'
+               '<h1>Реестр выданных технических условий за 2026 год</h1>'
+               '<a href="/files/реестр выданных ТУ 2026.xlsx">Реестр выданных ТУ</a>'
+               '<a href="/files/obrazec zayavki.doc">Образец заявки на ТУ</a>'
+               '<p>Журнал учета заявлений о подключении</p></body></html>')
+    nizh = obrazec.lower()
+    nash = [x for x in SLOVA_TU if x in nizh]
+    lozh = [x for x in SLOVA_KONTROL if x in nizh]
+    print(f'ПОЛОЖИТЕЛЬНЫЙ контроль слов: найдено {len(nash)} из {len(SLOVA_TU)} -> {nash}')
+    print(f'ОТРИЦАТЕЛЬНЫЙ контроль слов: найдено {len(lozh)} (должно быть 0)')
+    ss = sobrat_ssylki(obrazec, 'https://primer.ru/raskrytie/')
+    print(f'ссылок разобрано: {len(ss)} (ожидалось 2)')
+    for u, t in ss:
+        print(f'   вес={ves_ssylki(t, u)} {t!r} {u}')
+    print(f'вес пустышки: {ves_ssylki("Новости компании", "https://primer.ru/news/")} (ожидалось 0)')
+    kod, tel, _, _ = get('https://primer-shvarckopfer-0000.ru/')
+    print(f'заведомо мёртвый хост -> код {kod} (ожидалось 0)')
+    print('idna:', idna('https://a.ru/папка/файл 1.xlsx'))
+    ok = (len(nash) >= 3 and not lozh and len(ss) == 2 and kod == 0)
+    print('ИТОГ САМОПРОВЕРКИ:', 'прибор исправен' if ok else 'ПРИБОР НЕИСПРАВЕН')
+
+
 def put_json(imya, dan):
     p = os.path.join(OPS, imya)
     try:
@@ -488,6 +692,98 @@ def opisat(p):
         print('  текст/HTML, первые 300:', re.sub(r'\s+', ' ', txt[:300]))
 
 
+ZAYAV_SLOVA = ['заявител', 'застройщик', 'наименование юридического',
+               'наименование заявителя', 'наименование организации', 'инн',
+               'объект капитального', 'наименование объекта', 'адрес объекта',
+               'правообладател', 'фио', 'ф.и.о', 'контрагент', 'абонент']
+ZAYAV_KONTROL = ['щварцкопфер', 'зюзюблик']
+
+
+def shapka_fajla(b, imya):
+    """Вернуть (тип, число_записей, список_колонок, сырой_текст_для_поиска)."""
+    n = imya.lower()
+    if b[:2] == b'PK' and (n.endswith(('.xlsx', '.xlsm')) or True):
+        try:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(b), read_only=True, data_only=True)
+            kol, zap, syr = [], 0, []
+            for ws in wb.worksheets:
+                zap += max(0, (ws.max_row or 0))
+                for i, row in enumerate(ws.iter_rows(max_row=14, values_only=True)):
+                    vals = [('' if c is None else str(c)) for c in row]
+                    syr += vals
+                    if sum(1 for v in vals if v.strip()) >= 2 and len(kol) < 40:
+                        kol.append(f'[{ws.title[:12]} r{i}] ' +
+                                   ' | '.join(v[:34] for v in vals if v.strip())[:300])
+            return 'xlsx', zap, kol, ' '.join(syr)
+        except Exception as e:  # noqa: BLE001
+            return 'xlsx-сбой:' + type(e).__name__, 0, [], ''
+    if b[:4] == b'%PDF':
+        try:
+            import fitz
+            d = fitz.open(stream=b, filetype='pdf')
+            t = '\n'.join(d[i].get_text() for i in range(min(6, d.page_count)))
+            return 'pdf', d.page_count, [re.sub(r'\s+', ' ', x)[:160]
+                                         for x in t.split('\n') if x.strip()][:25], t
+        except Exception as e:  # noqa: BLE001
+            return 'pdf-сбой:' + type(e).__name__, 0, [], ''
+    if b[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1':
+        t = b.decode('cp1251', 'ignore')
+        return 'doc/xls-ole', 0, [], t
+    t = b.decode('utf-8', 'replace')
+    if '<' in t[:200]:
+        t2 = re.sub(r'<[^>]+>', ' ', t)
+        return 'html', t.lower().count('<tr'), [re.sub(r'\s+', ' ', t2)[:200]], t2
+    return 'txt', t.count(chr(10)), [t[:200]], t
+
+
+def cmd_razbor(imya_json, limit=14, tolko=''):
+    """Скачать найденные файлы и НАПЕЧАТАТЬ КОЛОНКИ. Ключевой вопрос — есть ли
+    в шапке заявитель/застройщик/ИНН, или там только числа сетевой организации."""
+    put = imya_json if os.path.isabs(imya_json) else os.path.join(OPS, imya_json)
+    dan = json.load(open(put, encoding='utf-8'))
+    kand = []
+    for o in dan:
+        for f in (o.get('fajly') or []) + (o.get('fajly_raskr') or []):
+            s_ = (f.get('text', '') + ' ' + f['url']).lower()
+            v = 0
+            if any(w in s_ for w in ['реестр', 'журнал', 'перечень', 'форма', 'свод',
+                                     'информац', 'сведени']):
+                v += 2
+            if any(w in s_ for w in ['заявк', 'заявлен', 'подключ', 'присоедин']):
+                v += 2
+            if any(w in s_ for w in ['резерв', 'мощност', 'пропускн']):
+                v += 2
+            if s_.split('?')[0].endswith(('.xlsx', '.xls', '.csv', '.ods')):
+                v += 3
+            if 'образец' in s_ or 'бланк' in s_ or 'пример' in s_ or 'типов' in s_:
+                v -= 3
+            if tolko and tolko.lower() not in o['org'].lower():
+                continue
+            kand.append((v, o['org'], f.get('text', '')[:44], f['url']))
+    kand.sort(key=lambda x: -x[0])
+    vidno, n = set(), 0
+    for v, org, text, u in kand:
+        if u in vidno or n >= limit:
+            continue
+        vidno.add(u)
+        n += 1
+        k, b, h, fin = get(u, timeout=60, limit=25_000_000)
+        if k != 200 or not b:
+            print(f'в{v} {org[:20]:20} код={k} {text[:30]:30} {u[:56]} '
+                  f'|{b[:70].decode("utf-8", "replace")}|')
+            continue
+        tip, zap, kol, syr = shapka_fajla(b, urllib.parse.unquote(u))
+        nz = syr.lower()
+        est = [w for w in ZAYAV_SLOVA if w in nz]
+        kontr = [w for w in ZAYAV_KONTROL if w in nz]
+        print(f'в{v} {org[:18]:18} {tip:10} байт={len(b):8} записей={zap:5} '
+              f'заявитель-слова={est} контроль={kontr} :: {text[:34]}')
+        for c in kol[:5]:
+            print('      ' + c[:150])
+    print(f'ИТОГ razbor {imya_json}: кандидатов {len(kand)}, разобрано {n}')
+
+
 def cmd_cols(p):
     if not os.path.isabs(p):
         p = os.path.join(OPS, p)
@@ -513,6 +809,18 @@ if __name__ == '__main__':
                   int(a[2]) if len(a) > 2 else 0, int(a[3]) if len(a) > 3 else 999)
     elif a[0] == 'fetch':
         cmd_fetch(a[1], a[2] if len(a) > 2 else None)
+    elif a[0] == 'samoprover':
+        cmd_samoprover()
+    elif a[0] == 'tarifspb':
+        cmd_tarif_spb(int(a[1]) if len(a) > 1 else 60)
+    elif a[0] == 'gisogd':
+        razvedka_gisogd()
+    elif a[0] == 'bundle':
+        cmd_bundle(a[1], int(a[2]) if len(a) > 2 else 8)
+    elif a[0] == 'api':
+        cmd_api(a[1])
+    elif a[0] == 'razbor':
+        cmd_razbor(a[1], int(a[2]) if len(a) > 2 else 14, a[3] if len(a) > 3 else '')
     elif a[0] == 'cols':
         cmd_cols(a[1])
     else:

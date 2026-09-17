@@ -574,6 +574,62 @@ def blok_chastota():
             skazat('    проба %d: не поднялось: %s' % (i + 1, repr(ex)[:60]))
 
 
+def blok_adresa():
+    """Замер 17.09 показал раскол по АДРЕСАМ: 104.21.64.2 - 10 обрывов из 10, а
+    172.67.173.181 - 10 ответов из 10, при одном и том же SNI, ключе и заголовках.
+    Здесь выясняем природу раскола: режут ли АДРЕС или режут ИМЯ (SNI).
+    Если бы резали имя, второй адрес рвался бы тоже; если режут адрес - SNI не при чём.
+    """
+    skazat('\n### РАСКОЛ ПО АДРЕСАМ: что именно режут - адрес или имя (SNI)')
+    try:
+        ai = socket.getaddrinfo(HOST, 443, socket.AF_INET, socket.SOCK_STREAM)
+        ips = sorted({a[4][0] for a in ai})
+    except Exception as ex:  # noqa: BLE001
+        skazat('  dns сдох: %r' % (ex,))
+        return
+    for ip in ips:
+        for sni in (HOST, 'www.cloudflare.com', 'example.com'):
+            sch = {}
+            for _ in range(5):
+                m, _rip, _t = _odna_svyaz(ip=ip, host=sni, timeout=15, delat_get=False)
+                sch[m] = sch.get(m, 0) + 1
+                time.sleep(0.2)
+            skazat('  адрес %-16s SNI %-20s %s' % (ip, sni,
+                                                   json.dumps(sch, ensure_ascii=False)))
+    skazat('  (SSL:* или код = рукопожатие состоялось; RESET = оборвали на рукопожатии)')
+
+    skazat('\n  Порт 80 (без TLS) на те же адреса - режут ли вообще трафик к адресу:')
+    for ip in ips:
+        try:
+            s = socket.create_connection((ip, 80), timeout=12)
+            s.sendall(b'GET / HTTP/1.1\r\nHost: router.cheap\r\nUser-Agent: curl/8.5.0\r\n'
+                      b'Connection: close\r\n\r\n')
+            d = s.recv(64)
+            skazat('  %-16s :80 -> %s' % (ip, d.decode('latin1').split('\r\n')[0][:40]))
+            s.close()
+        except Exception as ex:  # noqa: BLE001
+            skazat('  %-16s :80 -> %s' % (ip, repr(ex)[:70]))
+
+    skazat('\n  ПОРЯДОК getaddrinfo за 20 запросов подряд (от него зависит, куда пойдёт клиент):')
+    poryadok = {}
+    for _ in range(20):
+        try:
+            ai = socket.getaddrinfo(HOST, 443, socket.AF_INET, socket.SOCK_STREAM)
+            pervy = ai[0][4][0]
+            poryadok[pervy] = poryadok.get(pervy, 0) + 1
+        except Exception:  # noqa: BLE001
+            poryadok['ошибка'] = poryadok.get('ошибка', 0) + 1
+        time.sleep(0.2)
+    skazat('    первым адресом отдавался: %s' % json.dumps(poryadok, ensure_ascii=False))
+
+    skazat('\n  ПАДАЕТ ЛИ НАШ КЛИЕНТ, если адрес принудительно плохой (проверка вывода):')
+    ploho = [ip for ip in ips if ip.startswith('104.')]
+    if ploho:
+        for i in range(3):
+            m, _rip, t = _odna_svyaz(ip=ploho[0], timeout=15)
+            skazat('    %s попытка %d: %s за %.2f с' % (ploho[0], i + 1, m, t))
+
+
 def blok_nagruzka():
     """Доля сбоя на РЕАЛЬНОМ вызове модели (то, чем живёт сбор новостей)."""
     kl = os.environ.get('PROVIDER_API_KEY') or ''
@@ -628,7 +684,7 @@ def blok_klient():
 BLOKI = {'env': blok_env, 'dns': blok_dns, 'tcp': blok_tcp, 'tls': blok_tls,
          'http': blok_http, 'api': blok_api, 'ua': blok_ua, 'kontrol': blok_kontrol,
          'curl': blok_curl, 'proxy': blok_proxy, 'klient': blok_klient,
-         'chastota': blok_chastota, 'nagruzka': blok_nagruzka}
+         'chastota': blok_chastota, 'nagruzka': blok_nagruzka, 'adresa': blok_adresa}
 
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if a in BLOKI]
