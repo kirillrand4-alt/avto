@@ -238,8 +238,68 @@ def zamer_do():
     print('  NULL: %d из %d  <- капекс и пустой контроль НЕОТЛИЧИМЫ' % (nul, len(KONTROL)))
 
 
+def dokazat():
+    """Доказать, что лекарство ОБХОДИТ мёртвый адрес, а не просто везёт с порядком DNS.
+
+    В прошлом прогоне лекарство дало 5 ответов из 5, но DNS в ту минуту сам отдавал живой
+    адрес первым - то есть перебор ни разу не понадобился, и «обходит» было бы словом на
+    веру. Здесь порядок адресов принудительно ставится мёртвым вперёд.
+    """
+    print('\n### ДОКАЗАТЕЛЬСТВО: мёртвый адрес ставим ПЕРВЫМ принудительно')
+    kluch = sekret('PROVIDER_API_KEY')
+    nastoyashchiy = socket.getaddrinfo
+    ai = [x for x in nastoyashchiy(HOST, 443, socket.AF_INET, socket.SOCK_STREAM)]
+    ips = sorted({x[4][0] for x in ai})
+    mertvyy = [ip for ip in ips if ip.startswith('104.')]
+    if not mertvyy:
+        print('  адреса 104.* сейчас нет в выдаче DNS, доказывать не на чем: %s' % ips)
+        return
+    poryadok = sorted(ai, key=lambda x: 0 if x[4][0].startswith('104.') else 1)
+    print('  порядок для пробы: %s' % [x[4][0] for x in poryadok])
+
+    def podmena(*a, **k):
+        return poryadok
+
+    print('  -- как ходит ШТАТНЫЙ create_connection (то, что внутри urllib) --')
+    for i in range(2):
+        t0 = time.time()
+        try:
+            socket.getaddrinfo = podmena
+            s = socket.create_connection((HOST, 443), timeout=20)
+            ip = s.getpeername()[0]
+            s = ssl.create_default_context().wrap_socket(s, server_hostname=HOST)
+            kod = zapros(s, kluch=kluch)
+            s.close()
+            print('     попытка %d: %s через %s за %.1f с' % (i + 1, kod, ip,
+                                                              time.time() - t0))
+        except Exception as ex:  # noqa: BLE001
+            print('     попытка %d: СБОЙ за %.1f с: %s: %s'
+                  % (i + 1, time.time() - t0, type(ex).__name__, str(ex)[:90]))
+        finally:
+            socket.getaddrinfo = nastoyashchiy
+
+    print('  -- как ходит ЛЕКАРСТВО (перебор с проверкой рукопожатием) --')
+    for i in range(2):
+        t0 = time.time()
+        try:
+            socket.getaddrinfo = podmena
+            s, ip, besy = soedinit_umno(timeout=12)
+            socket.getaddrinfo = nastoyashchiy
+            kod = zapros(s, kluch=kluch)
+            s.close()
+            print('     попытка %d: %s через %s за %.1f с | пропущено мёртвых: %s'
+                  % (i + 1, kod, ip, time.time() - t0, besy or 'ни одного'))
+        except Exception as ex:  # noqa: BLE001
+            print('     попытка %d: СБОЙ за %.1f с: %s' % (i + 1, time.time() - t0,
+                                                           str(ex)[:110]))
+        finally:
+            socket.getaddrinfo = nastoyashchiy
+
+
 if __name__ == '__main__':
     bloki = sys.argv[1:] or ['proksi', 'lekarstvo', 'mesta', 'do']
+    if 'dokazat' in bloki:
+        dokazat()
     if 'proksi' in bloki:
         cherez_proksi()
     if 'lekarstvo' in bloki:

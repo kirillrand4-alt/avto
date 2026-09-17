@@ -109,7 +109,7 @@ ORG = [
     dict(k='nn2',         dom='ngaz.ru',             region='Нижегородская обл.',
          imya='ПАО «Газпром газораспределение Нижний Новгород»',
          zerna=['газораспределение', 'газпром', 'нижегородоблгаз']),
-    dict(k='ufa',         dom='bashgaz.ru',          region='Башкортостан',
+    dict(k='ufa',         dom='www.bashgaz.ru',      region='Башкортостан',
          imya='ПАО «Газпром газораспределение Уфа»',
          zerna=['газораспределение', 'газпром']),
     dict(k='gazeks',      dom='gazeks.com',          region='Свердловская обл.',
@@ -825,6 +825,16 @@ def razobrat_fayl(url, telo, zerna):
             return out or [dict(list='архив', oshibka='в архиве нет таблиц: %s'
                                 % ', '.join(imena[:6]))]
     if nizh.endswith(('.xlsx', '.xlsm', '.ods')) or telo[:2] == b'PK':
+        # ТЯЖЁЛЫЕ ФАЙЛЫ. Построчный разбор регулярками на файле 3,06 МБ
+        # (P4_F6_fact_0926.xlsx, 5 187 значений) не закончился за 15 минут и был
+        # убит по таймауту - дважды, и оба раза это выглядело как «файл не
+        # разобрался». Для таких берём таблицу значений: она отвечает на главный
+        # вопрос (назван ли потребитель) за секунды, а число СТРОК при этом
+        # честно неизвестно и помечается нулём.
+        if len(telo) > 1_200_000:
+            r = _iz_tablicy_znacheniy(telo, zerna)
+            if r:
+                return [r]
         try:
             listy = listy_xlsx(telo)
         except Exception as e:  # noqa: BLE001
@@ -848,6 +858,26 @@ def razobrat_fayl(url, telo, zerna):
     else:
         return [dict(list='не таблица', oshibka='тип не распознан, %d байт' % len(telo))]
     return [razobrat_tablicu(im, st, zerna) for im, st in listy]
+
+
+def _iz_tablicy_znacheniy(telo, zerna):
+    """Быстрый разбор тяжёлого xlsx: только xl/sharedStrings.xml."""
+    try:
+        z = zipfile.ZipFile(io.BytesIO(telo))
+        if 'xl/sharedStrings.xml' not in z.namelist():
+            return None
+        x = z.read('xl/sharedStrings.xml').decode('utf-8', 'replace')
+    except Exception:  # noqa: BLE001
+        return None
+    si = [re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', m)).strip()
+          for m in re.findall(r'<si>(.*?)</si>', x, re.S)]
+    if not si:
+        return None
+    r = razobrat_tablicu('таблица значений (быстрый путь, строки не считались)',
+                         [[s] for s in si], zerna)
+    r['strok_vsego'] = 0
+    r['bystryy_put'] = True
+    return r
 
 
 def _iz_teksta(metka, txt, zerna):
@@ -1226,6 +1256,112 @@ def rezhim_stranica(argv):
     return 0
 
 
+RE_DOSTUP = re.compile(
+    r'налич\w*\s*\(?отсутств|техническ\w*\s+возможност\w*\s+доступ|'
+    r'prilozhenie[-_ ]*4|приложение\s*[№ ]*4|p4[_-]?f[67]|форма\s*6[._ ]*приложение\s*4',
+    re.I)
+
+
+def rezhim_dostup(argv):
+    """Прицельно по ОДНОЙ форме - приложение 4, форма 6/7 «о наличии (отсутствии)
+    технической возможности доступа». Это единственная из обязательных форм ГРО,
+    где стоит НАИМЕНОВАНИЕ ПОТРЕБИТЕЛЯ. Режим находит её у каждой организации и
+    читает быстрым путём.
+    """
+    st = chitat()
+    klyuchi = [a for a in argv if a in PO_KLYUCHU] or sorted(st.get('razdely', {}))
+    nashli = 0
+    for k in klyuchi:
+        r = st.get('razdely', {}).get(k)
+        if not r:
+            continue
+        kand = [(svezhest(a), a, p) for a, p in r['fayly'].items()
+                if RE_DOSTUP.search(urllib.parse.unquote(a) + ' ' + p)
+                and a.lower().split('?')[0].endswith(('.xlsx', '.xls', '.pdf', '.ods'))]
+        if not kand:
+            print('%-11s %-22s форма приложение 4 не найдена среди %d файлов'
+                  % (k, r['dom'], len(r['fayly'])))
+            continue
+        kand.sort(reverse=True)
+        _, a, p = kand[0]
+        kod, telo, kon = vzyat(a, timeout=240, predel=60_000_000)
+        print('%-11s %-22s %s' % (k, r['dom'], urllib.parse.unquote(a).split('/')[-1][:46]))
+        print('            код=%s байт=%d | «%s»' % (kod, len(telo), p[:70]))
+        if kod != 200 or len(telo) < 64:
+            continue
+        si = []
+        if telo[:2] == b'PK':
+            try:
+                z = zipfile.ZipFile(io.BytesIO(telo))
+                if 'xl/sharedStrings.xml' in z.namelist():
+                    x = z.read('xl/sharedStrings.xml').decode('utf-8', 'replace')
+                    si = [re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', m)).strip()
+                          for m in re.findall(r'<si>(.*?)</si>', x, re.S)]
+            except Exception:  # noqa: BLE001
+                si = []
+        if not si:
+            listy = razobrat_fayl(kon, telo, PO_KLYUCHU[k]['zerna'])
+            for l in listy:
+                if l.get('nechitaem'):
+                    print('            НЕ ПРОЧИТАН - ноль прибора, не формы')
+                    continue
+                print('            строк %d | ячеек «наименование»: %s | юрлиц %d'
+                      % (l.get('strok_dannyh', 0),
+                         '; '.join(x[:40] for x in (l.get('yacheyki_naim') or [])[:2])
+                         or 'НЕТ', l.get('strok_s_chuzhim_yurlicom', 0)))
+                if l.get('strok_s_chuzhim_yurlicom', 0) >= 5:
+                    nashli += 1
+            continue
+        imya = [s for s in si if 'наименование' in s.lower()][:2]
+        yur = [s for s in si if FORMY.search(s)]
+        print('            значений %d | шапка: %s | юрлиц %d | пример: %s'
+              % (len(si), '; '.join(x[:40] for x in imya) or 'НЕТ', len(yur),
+                 (yur[0][:46] if yur else '-')))
+        if len(yur) >= 5:
+            nashli += 1
+    print('--- ИТОГ: организаций, где форма приложения 4 называет потребителя: %d' % nashli)
+    return 0
+
+
+def rezhim_slova(argv):
+    """Быстрый путь для ТЯЖЁЛЫХ xlsx: только таблица строк (sharedStrings).
+
+    ПОЧЕМУ ОН НУЖЕН. Построчный разбор регулярками не справился с файлом
+    `P4_F6_fact_0926.xlsx` (3,06 МБ): 15 минут и ни строки вывода, процесс убит
+    по таймауту. Это ограничение прибора, а не отсутствие данных, и молчать о нём
+    нельзя. Но на вопрос «назван ли заявитель» отвечает уже одна таблица строк:
+    все имена потребителей лежат в ней, и читается она за секунды.
+    """
+    url = argv[0]
+    kod, telo, kon = vzyat(url, timeout=300, predel=60_000_000)
+    print('файл: код=%s байт=%d' % (kod, len(telo)))
+    if kod != 200 or telo[:2] != b'PK':
+        print('не xlsx или не открылся')
+        return 1
+    z = zipfile.ZipFile(io.BytesIO(telo))
+    if 'xl/sharedStrings.xml' not in z.namelist():
+        print('sharedStrings нет - значения хранятся в ячейках, быстрый путь не годится')
+        return 1
+    x = z.read('xl/sharedStrings.xml').decode('utf-8', 'replace')
+    si = [re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', m)).strip()
+          for m in re.findall(r'<si>(.*?)</si>', x, re.S)]
+    print('строк в таблице значений: %d' % len(si))
+    for metka, slova in (('ИНН/ОГРН', INN_KOL), ('НАИМЕНОВАНИЕ/ЗАЯВИТЕЛЬ', NAZV_KOL),
+                         ('АДРЕС/ОБЪЕКТ', ADRES_KOL), ('ОБЪЁМ/МОЩНОСТЬ', OBEM_KOL)):
+        est = [s for s in si if any(w in s.lower() for w in slova)][:5]
+        print('  %-23s %s' % (metka, ' / '.join(e[:52] for e in est) or
+                              '<- слова нет ни в одной строке'))
+    yur = [s for s in si if FORMY.search(s)]
+    inn = [s for s in si if kontrolnaya_inn(s.strip())]
+    print('  строк-юрлиц: %d | строк-ИНН (с контрольной суммой): %d' % (len(yur), len(inn)))
+    for s in yur[:8]:
+        print('    юрлицо: %s' % s[:80])
+    print('  КОНТРОЛЬ «%s»: %d (обязан быть 0)'
+          % (KONTROL_SLOVO, sum(1 for s in si if KONTROL_SLOVO in s.lower())))
+    print('--- ИТОГ: значений %d, из них юрлиц %d' % (len(si), len(yur)))
+    return 0
+
+
 def rezhim_syroy(argv):
     """Сырой показ файла: N первых строк ДОСЛОВНО и все колонки шапки.
 
@@ -1452,6 +1588,10 @@ def main():
         return rezhim_slit(a)
     if r == 'stranica':
         return rezhim_stranica(a)
+    if r == 'dostup':
+        return rezhim_dostup(a)
+    if r == 'slova':
+        return rezhim_slova(a)
     if r == 'syroy':
         return rezhim_syroy(a)
     if r == 'kontrol':
