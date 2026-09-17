@@ -123,16 +123,32 @@ def обновить():
                 правки.append((з['inn'], з['url'], м))
     if not правки:
         return {'правок': 0}
+    # У signals стоит UNIQUE(inn, source, what). Если новый текст совпал с уже
+    # существующей строкой — значит это ДУБЛЬ того же события в лучшей редакции:
+    # обновлять нечего, а старую строку можно чистить. Ловим построчно, иначе
+    # одна коллизия роняет весь проход (так и случилось 17.09).
     c = sqlite3.connect(БАЗА, timeout=120)
     c.execute('pragma busy_timeout=120000')
     n = 0
+    дубли = []
     for inn, url, м in правки:
         поля = ', '.join('%s=?' % k for k in м)
-        n += c.execute('update signals set %s where inn=? and source_url=?' % поля,
-                       tuple(м.values()) + (inn, url)).rowcount
+        try:
+            n += c.execute('update signals set %s where inn=? and source_url=?' % поля,
+                           tuple(м.values()) + (inn, url)).rowcount
+        except sqlite3.IntegrityError:
+            дубли.append({'inn': inn, 'url': url, 'what': м.get('what', '')[:150]})
     c.commit()
     c.close()
-    return {'правок': len(правки), 'обновлено_строк': n}
+    if дубли:
+        with io.open(os.path.join(DIR, 'dobor_slabyh.dubli.jsonl'), 'w',
+                     encoding='utf-8') as f:
+            for д in дубли:
+                f.write(json.dumps(д, ensure_ascii=False) + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+    return {'правок': len(правки), 'обновлено_строк': n,
+            'дублей_обнаружено': len(дубли)}
 
 
 def main():
