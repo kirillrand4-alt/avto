@@ -98,6 +98,35 @@ def drop_polozhit(imya, b):
         return r.status
 
 
+def region_klyuch(s):
+    """Сравнимый корень названия региона: «Челябинская область» -> «челябинск».
+
+    Зачем так. Первая версия дописывала регион ПРЯМО В ЗАПРОС («Магнитогорский
+    металлургический комбинат Челябинская область») — и справочник вернул НОЛЬ карточек
+    даже на ММК. Положительный контроль это поймал сразу: отрицательный контроль дал 0
+    (как и должен), а положительный тоже 0 — то есть запрос был сломан, и без второго
+    контроля прогон выглядел бы как «в России нет таких предприятий». Теперь регион не
+    подмешивается в строку поиска, а служит ФИЛЬТРОМ по адресу найденной карточки.
+    """
+    s = (s or '').lower()
+    s = re.sub(r'\b(область|обл\.?|край|республика|респ\.?|автономн\w*|округ|город|г\.)\b', ' ', s)
+    s = re.sub(r'[^а-яё]+', ' ', s).strip()
+    slova = [re.sub(r'(ая|ий|ой|ья|ое)$', '', w) for w in s.split() if len(w) > 3]
+    return ' '.join(slova)
+
+
+def region_sovpal(region_sipr, karta):
+    """Совпал ли регион карточки ЕГРЮЛ с регионом из СиПР."""
+    a = (karta.get('data', {}).get('address') or {}).get('data') or {}
+    kus = ' '.join(str(a.get(k) or '') for k in
+                   ('region_with_type', 'region', 'city_with_type', 'area_with_type'))
+    k1 = region_klyuch(region_sipr)
+    k2 = region_klyuch(kus)
+    if not k1 or not k2:
+        return False
+    return any(w and w in k2 for w in k1.split())
+
+
 CHISTKA = re.compile(r'[«»"\'\u00ab\u00bb]')
 
 
@@ -122,13 +151,21 @@ def main():
     if len(k) != 0:
         sys.exit('КОНТРОЛЬ ПРОВАЛЕН: справочник отдаёт карточки на выдуманное имя — '
                  'всем остальным ответам этого прогона верить нельзя')
-    # и положительный контроль: заведомо существующее предприятие обязано найтись
-    p = sprosit('Магнитогорский металлургический комбинат Челябинская область')
-    inn_mmk = p[0]['data'].get('inn') if p and not isinstance(p, dict) else None
-    print('КОНТРОЛЬ положительный: ММК -> карточек %d, ИНН первой %s'
-          % (len(p) if not isinstance(p, dict) else -1, inn_mmk))
+    # ПОЛОЖИТЕЛЬНЫЙ контроль: заведомо существующее предприятие обязано найтись, и его
+    # регион обязан пройти наш фильтр. Проверяются ОБА звена — и запрос, и фильтр региона:
+    # сломано может быть любое, а снаружи и то и другое выглядит как «ничего не нашлось».
+    p = sprosit('Магнитогорский металлургический комбинат')
+    if isinstance(p, dict):
+        sys.exit('справочник не ответил на положительный контроль: %s' % p)
+    inn_mmk = p[0]['data'].get('inn') if p else None
+    v_regione = [c for c in p if region_sovpal('Челябинская область', c)]
+    print('КОНТРОЛЬ положительный: ММК -> карточек %d, ИНН первой %s, из них в Челябинской %d'
+          % (len(p), inn_mmk, len(v_regione)))
     if not inn_mmk:
         sys.exit('КОНТРОЛЬ ПРОВАЛЕН: заведомо существующее предприятие не нашлось')
+    if not v_regione:
+        sys.exit('КОНТРОЛЬ ПРОВАЛЕН: фильтр региона не пропускает даже верный регион — '
+                 'он отбросил бы все находки, и ноль означал бы поломку, а не отсутствие')
 
     # --- вход
     syr = drop_vzyat(imya_vhoda).decode('utf-8-sig')
@@ -143,9 +180,12 @@ def main():
             polya = r.fieldnames or []
             print('колонки базы (%d): %s' % (len(polya), polya[:14]))
             p_inn = [c for c in polya if re.fullmatch(r'inn|ИНН', c or '', re.I)]
+            # Имя колонки НЕ угадываем: печатаем и подбираем по факту. В живой базе поле
+            # называется `predpriyatie` (латиницей), и шаблон с кириллическим «предприят»
+            # его не ловил — сверка по имени тихо не срабатывала бы ни разу.
             p_imya = [c for c in polya
-                      if re.search(r'nazvanie|naimenovan|company|organiz|предприят|назван',
-                                   c or '', re.I)]
+                      if re.search(r'predpriyat|nazvanie|naimenovan|company|organiz'
+                                   r'|предприят|назван', c or '', re.I)]
             print('поля базы, принятые за ИНН: %s; за наименование: %s' % (p_inn, p_imya))
             n = 0
             for row in r:
@@ -177,21 +217,28 @@ def main():
             zap['razreshenie'] = 'имя пустое'
             out.append(zap)
             continue
-        kl = (imya, region)
-        if kl in kesh:
-            kand = kesh[kl]
+        # Запрос — ТОЛЬКО именем. Регион дописывать в строку поиска нельзя (см. region_klyuch):
+        # справочник на «имя + регион» отдаёт ноль даже по ММК.
+        if imya in kesh:
+            kand = kesh[imya]
         else:
-            kand = sprosit('%s %s' % (imya, region))
+            kand = sprosit(imya, count=10)
             if isinstance(kand, dict):
                 zap['razreshenie'] = 'справочник не ответил: %s' % kand.get('oshibka', '')
                 out.append(zap)
                 continue
-            kesh[kl] = kand
+            kesh[imya] = kand
             time.sleep(0.05)
         # отсев спутников
         god = [c for c in kand if not SPUTNIK.search(c.get('value') or '')]
-        zap['kandidatov'] = len(god)
+        zap['kandidatov_po_imeni'] = len(god)
+        # РЕГИОН — РАЗЛИЧИТЕЛЬ. Имена в СиПР без ОПФ, одноимённых юрлиц в стране много;
+        # оставляем только те карточки, чей адрес в том же регионе, что и площадка в СиПР.
+        v_reg = [c for c in god if region_sovpal(region, c)]
+        vybor = v_reg if v_reg else []
+        zap['kandidatov'] = len(vybor)
         zap['kandidaty_inn'] = ' | '.join((c['data'].get('inn') or '') for c in god)[:200]
+        god = vybor
         if len(god) == 1:
             d = god[0]['data']
             zap.update({'inn': d.get('inn') or '',
@@ -202,9 +249,14 @@ def main():
                         'razreshenie': 'однозначно'})
             odnozn += 1
         elif len(god) == 0:
-            zap['razreshenie'] = 'не найдено'
+            # Различаем ДВА разных нуля: «по имени вообще ничего нет» и «по имени есть, но
+            # ни одна карточка не в этом регионе». Второе — не отсутствие предприятия, а
+            # отказ от догадки, и кандидаты остаются записанными в kandidaty_inn.
+            zap['razreshenie'] = ('не найдено' if not zap['kandidatov_po_imeni']
+                                  else 'найдено %d, но ни одна не в регионе «%s»'
+                                       % (zap['kandidatov_po_imeni'], region))
         else:
-            zap['razreshenie'] = 'не однозначно (%d карточек)' % len(god)
+            zap['razreshenie'] = 'не однозначно (%d карточек в регионе)' % len(god)
         if zap['inn']:
             zap['novoe_dlya_bazy'] = 'нет' if (zap['inn'] in nashi_inn
                                                or klyuch(imya) in nashi_imena) else 'да'

@@ -1033,20 +1033,36 @@ def cmd_sipr(argv):
 # она говорит, ЧТО строят («Комплекс установки разделения воздуха», «Центр обработки данных»,
 # «Тепличное хозяйство»), а для нашей задачи воздухоразделительная установка — это прямой
 # признак центробежного компрессора.
+# ВСЕ регулярки шапки — регистронезависимые И в двух видах: на случай, когда заголовок набран
+# одной строкой («Наименование заявителя») и когда он разбит переносом («Наименование» +
+# «заявителя»). Регистр стоил дорого: без re.I строка «Наименование заявителя» с заглавной Н
+# не совпадала с шаблоном `наименование\s+заявителя`, якорь колонки не находился, и ВЕСЬ
+# регион молча давал 0 строк. Так потерялся Пермский край — где на самом деле 5 заявителей,
+# включая ПАО «Уралкалий» на +58,5 МВт. Ноль выглядел как «в регионе никого нет».
 ZAG_KOLONOK = [
     ('nomer', re.compile(r'^№$|^п/п$')),
-    ('proekt', re.compile(r'^инвестиционного$|наименование\s+инвестиционного')),
-    ('zayavitel', re.compile(r'^заявителя$|^потребителя$|наименование\s+(?:заявителя|потребителя)')),
-    ('ranee_MVt', re.compile(r'^Ранее присоединенная$|^Ранее присоединённая$')),
-    ('uvelichenie_MVt', re.compile(r'^ввод новой$|^Увеличение/$')),
+    ('proekt', re.compile(r'^инвестиционного$|наименование\s+инвестиционного', re.I)),
+    ('zayavitel', re.compile(r'^заявителя$|^потребителя$'
+                             r'|наименование\s+(?:заявителя|потребителя)', re.I)),
+    ('ranee_MVt', re.compile(r'^ранее\s*присоединенн\w*$|^ранее$|^присоединенная$'
+                             r'|^присоединённая$', re.I)),
+    ('uvelichenie_MVt', re.compile(r'^ввод\s+нов\w+$|^увеличение/?$|^увеличение/\s*$', re.I)),
     # Шапка «Напряжение, кВ» в части файлов разбита на две строки («Напряжение,» и «кВ»),
     # и строгое равенство её не находило: значения напряжения уезжали в графу «Год ввода»,
     # где выглядели как «10 кВ 2024». Поэтому регулярка по началу слова.
-    ('napryazhenie_kV', re.compile(r'^Напряжение,?$|^Напряжение, кВ$')),
-    ('god_vvoda', re.compile(r'^Год ввода$')),
-    ('centr_pitaniya', re.compile(r'^Центр питания$')),
+    ('napryazhenie_kV', re.compile(r'^напряжение,?$|^напряжение,?\s*кВ$', re.I)),
+    ('god_vvoda', re.compile(r'^год\s+ввода$', re.I)),
+    ('centr_pitaniya', re.compile(r'^центр\s+питания$', re.I)),
 ]
+# Обрывки многострочной шапки: по ним определяется НИЖНЯЯ граница заголовка.
+OBLOMOK_SHAPKI = re.compile(
+    r'^(?:наименование|заявителя|потребителя|инвестиционного|проекта|№|п/п|ранее'
+    r'|присоединенн\w*|присоединённ\w*|мощность,?|мощности,?|мвт|квт|кв|ввод\s+нов\w+'
+    r'|увеличение/?|напряжение,?|год\s+ввода|центр\s+питания'
+    r'|наименование\s+заявителя|ранее\s+присоединенная)$', re.I)
 GRUPPA_MVT = re.compile(r'Более\s+\d+\s*МВт')
+# Две пары кавычек в одной ячейке имени — почти всегда две слипшиеся строки таблицы.
+DVA_IMENI = re.compile(r'[«"][^«»"]{2,}[»"].{0,25}[«"][^«»"]{2,}[»"]')
 CHISLO = re.compile(r'(?<!\d)(\d{1,4}(?:[.,]\d+)?)(?!\d)')
 GOD = re.compile(r'(?<!\d)(20\d{2})(?!\d)')
 
@@ -1089,7 +1105,18 @@ def stroki_pdf_tablicy(put, imya_fajla):
             lev = -1e9 if i == 0 else (poryadok[i - 1][1]['c'] + v['c']) / 2
             prav = 1e9 if i == len(poryadok) - 1 else (v['c'] + poryadok[i + 1][1]['c']) / 2
             granicy.append((imya, lev, prav))
-        niz_shapki = min(v['y'] for v in yakorya.values())
+        # НИЗ ШАПКИ — по самому нижнему ОБРЫВКУ заголовка, а не по самому нижнему якорю.
+        # Многострочная шапка («Наименование» / «заявителя», «мощность,» / «МВт») уходит
+        # ниже строки, по которой найден якорь, и первая строка таблицы получала в имя
+        # заявителя хвост шапки: «заявителя ООО «Амурский ГХК»».
+        niz_yakorey = min(v['y'] for v in yakorya.values())
+        # Обрывки считаем ТОЛЬКО в полосе самой шапки (не ниже 45 пунктов под нижним якорем).
+        # Без этой границы под определение попадали одиночные ячейки данных далеко внизу
+        # страницы, низ шапки уезжал к подвалу — и первые строки таблицы вместе с самыми
+        # крупными заявителями («Амурский ГХК», +301 МВт) молча выпадали из выгрузки.
+        oblomki = [c for c in yach
+                   if OBLOMOK_SHAPKI.match(c['t']) and niz_yakorey - 45 <= c['y'] <= niz_yakorey + 45]
+        niz_shapki = min([niz_yakorey] + [c['y'] for c in oblomki])
 
         def kolonka(c):
             seredina = (c['x0'] + c['x1']) / 2
@@ -1106,7 +1133,23 @@ def stroki_pdf_tablicy(put, imya_fajla):
                and c['y'] < niz_shapki
                and (c_nom is None or abs((c['x0'] + c['x1']) / 2 - c_nom) < 25)]
         if not nom:
-            continue
+            # ЗАПАСНОЙ ЯКОРЬ. В части файлов номер строки слипается с названием проекта
+            # («1 ВТРК «Эльбрус»»), и в графе «№» не остаётся ни одной отдельной ячейки.
+            # Тогда за разметку строк берём ту графу, где значение всегда короткое и по
+            # одному на строку: напряжение, ранее присоединённая мощность или год. Без
+            # этого Кабардино-Балкария давала 0 строк при трёх реальных заявителях
+            # (АО «Кавказ.РФ», ООО ПК «Этана», ООО «Эльбрусский горнорудный комбинат»).
+            luchshiy, skolko = None, 0
+            for imya_k in ('napryazhenie_kV', 'ranee_MVt', 'god_vvoda', 'uvelichenie_MVt'):
+                if imya_k not in yakorya:
+                    continue
+                cc = [c for c in yach if kolonka(c) == imya_k and c['y'] < niz_shapki
+                      and re.fullmatch(r'[\d\s,.–—-]{1,12}', c['t'])]
+                if len(cc) > skolko:
+                    luchshiy, skolko = cc, len(cc)
+            if not luchshiy:
+                continue
+            nom = [dict(c, t='') for c in luchshiy]
         nom.sort(key=lambda c: -c['y'])
         # шаг строки — по расстоянию между якорями; им же ограничиваем ПЕРВУЮ строку сверху.
         # Иначе в неё попадают хвосты многострочной шапки («проекта», «мощности, МВт»), и
@@ -1194,6 +1237,9 @@ def cmd_sipr_stroki(argv):
             s['uvelichenie_MVt_chislo'], n_uv = chislo_MVt(s.get('uvelichenie_MVt', ''))
             s['ranee_MVt_chislo'], _ = chislo_MVt(s.get('ranee_MVt', ''))
             s['moshchnost_somnitelna'] = 'да' if n_uv >= 3 else ''
+            # Две кавычки в имени — признак слипшихся строк («ООО «АЭК-Холдинг» АО «КТК-Р»).
+            # Такую строку нельзя выдавать за одного заявителя: это две разные площадки.
+            s['zayavitel_somnitelen'] = 'да' if DVA_IMENI.search(s.get('zayavitel', '')) else ''
             # Если графы «Напряжение» на странице не нашлось, значения напряжения оседают
             # в «Год ввода» («10 кВ 2024»). Вытаскиваем их обратно, а не выбрасываем.
             gv = s.get('god_vvoda', '')
@@ -1230,7 +1276,8 @@ def cmd_sipr_stroki(argv):
     # Одинаковые имена в разных регионах НЕ склеиваем: это разные площадки.
     import csv as _csv
     polya = ['naimenovanie', 'region', 'proekt', 'ranee_MVt_chislo', 'uvelichenie_MVt_chislo',
-             'moshchnost_somnitelna', 'napryazhenie_kV', 'god_chislo', 'god_vvoda_syroj',
+             'moshchnost_somnitelna', 'zayavitel_somnitelen',
+             'napryazhenie_kV', 'god_chislo', 'god_vvoda_syroj',
              'centr_pitaniya', 'fajl', 'stranica', 'nomer_v_tablice', 'istochnik', 'istochnikov']
     put_csv = os.path.join(KATALOG_SOST, 'SIPR-ZAYAVITELI-STROKI.csv')
     with open(put_csv, 'w', encoding='utf-8-sig', newline='') as f:
@@ -1244,6 +1291,7 @@ def cmd_sipr_stroki(argv):
                         'ranee_MVt_chislo': s.get('ranee_MVt_chislo', ''),
                         'uvelichenie_MVt_chislo': s.get('uvelichenie_MVt_chislo', ''),
                         'moshchnost_somnitelna': s.get('moshchnost_somnitelna', ''),
+                        'zayavitel_somnitelen': s.get('zayavitel_somnitelen', ''),
                         'napryazhenie_kV': s.get('napryazhenie_kV', ''),
                         'god_chislo': s.get('god_chislo', ''),
                         'god_vvoda_syroj': s.get('god_vvoda', ''),

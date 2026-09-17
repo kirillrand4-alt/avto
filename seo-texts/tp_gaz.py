@@ -695,14 +695,26 @@ def vse_zagolovki(stroki, predel=40):
                 continue
             vidno.add(n)
             out.append(s)
-            if len(out) >= 4000:
+            # Обрезать перечень нельзя: на нём строится доказательство нуля. Если
+            # смотреть первые 4 000 ячеек из 28 000, «колонки ИНН нет» означает
+            # лишь «нет в первых 4 000» - тот же дефект, что смотреть первые строки.
+            if len(out) >= 400000:
                 return out
     return out
 
 
-def gde_slovo(zagolovki, slova, predel=6):
+# «инн» как подстрока ловится в «фИННов», «ИННолово», «ИННовационное агентство».
+# Колонка ИНН ищется ТОЛЬКО как отдельное слово - иначе ноль превращается в
+# ложную единицу, и доказательство ломается в обе стороны.
+RE_INN_SLOVO = re.compile(r'\b(инн|огрн)\b', re.I)
+
+
+def gde_slovo(zagolovki, slova, predel=6, celikom=False):
     """Какие текстовые ячейки листа содержат искомые слова. Пусто = колонки нет."""
-    nash = [z for z in zagolovki if any(s in z.lower() for s in slova)]
+    if celikom:
+        nash = [z for z in zagolovki if RE_INN_SLOVO.search(z)]
+    else:
+        nash = [z for z in zagolovki if any(s in z.lower() for s in slova)]
     return nash[:predel], len(nash)
 
 
@@ -730,7 +742,7 @@ def razobrat_tablicu(imya_lista, stroki, zerna):
     def kol_indeksy(slova):
         return [i for i, k in enumerate(nizh) if any(s in k for s in slova)]
 
-    i_inn = kol_indeksy(INN_KOL)
+    i_inn = [i for i, k in enumerate(nizh) if RE_INN_SLOVO.search(k)]
     i_nazv = kol_indeksy(NAZV_KOL)
     i_adr = kol_indeksy(ADRES_KOL)
     i_ob = kol_indeksy(OBEM_KOL)
@@ -776,7 +788,7 @@ def razobrat_tablicu(imya_lista, stroki, zerna):
                     break
     # Главное доказательство нуля: поиск слова по ВСЕМ текстовым ячейкам листа.
     zag = vse_zagolovki(stroki)
-    v_inn, n_inn = gde_slovo(zag, INN_KOL)
+    v_inn, n_inn = gde_slovo(zag, INN_KOL, celikom=True)
     v_naim, n_naim = gde_slovo(zag, NAZV_KOL)
     v_adr, n_adr = gde_slovo(zag, ADRES_KOL)
     v_ob, n_ob = gde_slovo(zag, OBEM_KOL)
@@ -901,8 +913,9 @@ def _iz_teksta(metka, txt, zerna):
         # «инн» как подстрока ловится в «длинный», «финн» и подобных: короткие
         # ключи ищем только как отдельное слово, иначе колонка ИНН «находится»
         # там, где её нет.
-        return [s for s in slova
-                if (re.search(r'\b%s' % re.escape(s), n) if len(s) < 5 else s in n)][:6]
+        if slova is INN_KOL:
+            return [s for s in slova if re.search(r'\b%s\b' % s, n)][:6]
+        return [s for s in slova if s in n][:6]
     return dict(list=metka, strok_vsego=0, strok_dannyh=0, n_shapki=-1, kolonki=[],
                 est_kol_inn=bool(naydeno(INN_KOL)), est_kol_naim=bool(naydeno(NAZV_KOL)),
                 est_kol_adres=bool(naydeno(ADRES_KOL)),
@@ -1326,6 +1339,217 @@ def rezhim_dostup(argv):
     return 0
 
 
+SHAPKA_F6 = (
+    ('tochka_vhoda_grs', ('точка входа',)),
+    ('obekt_tochka_vyhoda', ('точка выхода',)),
+    ('naimenovanie_potrebitelya', ('наименование потребителя',)),
+    ('gruppa_gazopotrebleniya', ('группы газопотребл', 'группа газопотребл')),
+    # Падежи у ГРО разные: «в соответствии с поступившими заявками» и «по
+    # поступившим заявкам». Точная форма отбрасывала колонку объёма молча -
+    # в выгрузке оставалось пусто, а выглядело как «в форме объёма нет».
+    ('obem_po_postupivshim_zayavkam', ('поступивш',)),
+    ('obem_po_udovletvorennym', ('удовлетворен', 'удовлетворён')),
+    ('svobodnaya_moshchnost', ('свободная мощность',)),
+)
+
+
+def _period_iz(imya, stroki):
+    """Период формы: из первых строк листа («на Ноябрь 2026 года», «за август 2026г.»),
+    иначе из имени файла."""
+    for r in stroki[:12]:
+        for v in r:
+            m = re.search(r'(?:за|на)\s+([А-Яа-яё]+\s*\d{4})', str(v))
+            if m:
+                return re.sub(r'\s+', ' ', m.group(1)).strip()
+    m = re.search(r'(\d{2})[._-]?(20\d\d)', urllib.parse.unquote(imya))
+    if m:
+        return '%s.%s' % (m.group(1), m.group(2))
+    m = re.search(r'(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|'
+                  r'декабр)\w*[-_ ]*(20\d\d)', urllib.parse.unquote(imya), re.I)
+    return (m.group(0) if m else '')
+
+
+def stroki_formy6(imya_fayla, telo, gro):
+    """Построчная выгрузка приложения 4 формы 6. Возвращает (список строк, отчёт).
+
+    Колонки НЕ угадываются по номеру: ищется ячейка с нужным заголовком и берётся
+    её номер колонки. Если заголовка «Наименование потребителя» на листе нет -
+    возвращается пусто и причина, а не выдуманные столбцы.
+    """
+    listy = listy_xlsx(telo) if telo[:2] == b'PK' else listy_xls(telo)
+    vyhod, otchet = [], []
+    for imya_lista, stroki in listy:
+        karta, n_shapki = {}, -1
+        for i, r in enumerate(stroki[:40]):
+            for j, v in enumerate(r):
+                n = re.sub(r'\s+', ' ', str(v)).strip().lower()
+                if not n:
+                    continue
+                for pole, slova in SHAPKA_F6:
+                    if pole not in karta and any(s in n for s in slova):
+                        karta[pole] = j
+                        n_shapki = max(n_shapki, i)
+        if 'naimenovanie_potrebitelya' not in karta:
+            otchet.append('лист «%s»: заголовка «Наименование потребителя» нет, '
+                          'строк на листе %d' % (imya_lista, len(stroki)))
+            continue
+        period = _period_iz(imya_fayla, stroki)
+        i_pot = karta['naimenovanie_potrebitelya']
+        n = 0
+        for r in stroki[n_shapki + 1:]:
+            if i_pot >= len(r):
+                continue
+            pot = re.sub(r'\s+', ' ', str(r[i_pot])).strip()
+            # строка-нумерация («1 2 3 4 5») и пустые - не данные
+            if not pot or re.fullmatch(r'[\d.,\s-]*', pot):
+                continue
+            z = dict(gro=gro, period=period, fayl=os.path.basename(
+                urllib.parse.unquote(imya_fayla)), list=imya_lista)
+            for pole, _ in SHAPKA_F6:
+                j = karta.get(pole)
+                z[pole] = (re.sub(r'\s+', ' ', str(r[j])).strip()
+                           if j is not None and j < len(r) else '')
+            vyhod.append(z)
+            n += 1
+        otchet.append('лист «%s»: шапка в строке %d, колонки %s, строк данных %d'
+                      % (imya_lista, n_shapki, karta, n))
+    return vyhod, otchet
+
+
+def rezhim_vygruzka(argv):
+    """Построчная выгрузка формы 6 в CSV: одна строка = одна запись формы.
+
+    python3 tp_gaz.py vygruzka <url> <ключ ГРО> [ещё url ключ ...] [--csv=имя.csv] [--drop]
+    """
+    import csv as _csv
+    imya_csv = '3s-tp-gaz-forma6-stroki.csv'
+    na_drop_li = '--drop' in argv
+    pary = []
+    for a in argv:
+        if a.startswith('--csv='):
+            imya_csv = a.split('=', 1)[1]
+        elif a.startswith('--'):
+            continue
+        elif a.startswith('http'):
+            pary.append([a, ''])
+        elif pary and not pary[-1][1]:
+            pary[-1][1] = a
+    put = os.path.join(KATALOG, imya_csv)
+    starye = []
+    if os.path.exists(put):
+        with open(put, encoding='utf-8-sig', newline='') as f:
+            starye = list(_csv.DictReader(f, delimiter=';'))
+    polya = ['gro', 'period', 'tochka_vhoda_grs', 'obekt_tochka_vyhoda',
+             'naimenovanie_potrebitelya', 'gruppa_gazopotrebleniya',
+             'obem_po_postupivshim_zayavkam', 'obem_po_udovletvorennym',
+             'svobodnaya_moshchnost', 'fayl', 'list', 'adres_istochnika']
+    vse = [{k: (s.get(k) or '') for k in polya} for s in starye]
+    bylo = len(vse)
+    for url, gro in pary:
+        kod, telo, kon = vzyat(url, timeout=300, predel=60_000_000)
+        print('== %s | %s' % (gro, urllib.parse.unquote(url).split('/')[-1][:60]))
+        print('   код=%s байт=%d' % (kod, len(telo)))
+        if kod != 200 or len(telo) < 64:
+            continue
+        stroki, otchet = stroki_formy6(url, telo, gro)
+        for s in otchet:
+            print('   ' + s)
+        for s in stroki:
+            s['adres_istochnika'] = url
+            vse.append({k: s.get(k, '') for k in polya})
+        print('   добавлено строк: %d' % len(stroki))
+    with open(put, 'w', encoding='utf-8-sig', newline='') as f:
+        w = _csv.DictWriter(f, fieldnames=polya, delimiter=';')
+        w.writeheader()
+        w.writerows(vse)
+    print('--- ИТОГ: было %d, стало %d строк. %s (%d байт)'
+          % (bylo, len(vse), put, os.path.getsize(put)))
+    po_gro = {}
+    for s in vse:
+        po_gro[s['gro']] = po_gro.get(s['gro'], 0) + 1
+    for k, v in sorted(po_gro.items(), key=lambda x: -x[1]):
+        print('    %-12s %6d' % (k, v))
+    if na_drop_li:
+        url_d, tok = os.environ.get('DROP_URL', ''), os.environ.get('DROP_TOKEN', '')
+        try:
+            rq = urllib.request.Request(url_d.rstrip('/') + '/' + imya_csv, method='PUT',
+                                        data=open(put, 'rb').read())
+            rq.add_header('X-Drop-Token', tok)
+            print('--- на дроп %s: код %s'
+                  % (imya_csv, urllib.request.urlopen(rq, timeout=300).status))
+        except Exception as e:  # noqa: BLE001
+            print('--- на дроп не вышло: %s' % e)
+    return 0
+
+
+def rezhim_citata(argv):
+    """ДОКАЗАТЕЛЬСТВО ЦИТАТОЙ: шапка листа дословно, десять строк данных подряд
+    (не выбирая), и перечень ВСЕХ текстовых ячеек листа для доказательства нуля по ИНН.
+
+    python3 tp_gaz.py citata <url> [--strok=10] [--ot=N] [--yacheek=80]
+    """
+    url = argv[0]
+    skolko, ot, yacheek = 10, 0, 80
+    for a in argv[1:]:
+        if a.startswith('--strok='):
+            skolko = int(a.split('=', 1)[1])
+        if a.startswith('--ot='):
+            ot = int(a.split('=', 1)[1])
+        if a.startswith('--yacheek='):
+            yacheek = int(a.split('=', 1)[1])
+    kod, telo, kon = vzyat(url, timeout=300, predel=60_000_000)
+    print('ФАЙЛ: %s' % urllib.parse.unquote(url))
+    print('код=%s байт=%d' % (kod, len(telo)))
+    if kod != 200:
+        return 1
+    listy = listy_xlsx(telo) if telo[:2] == b'PK' else listy_xls(telo)
+    for imya_lista, stroki in listy:
+        zag = vse_zagolovki(stroki)
+        print('\n=== ЛИСТ «%s»: строк %d, различных текстовых ячеек %d'
+              % (imya_lista, len(stroki), len(zag)))
+        print('--- ШАПКА ДОСЛОВНО (первые %d различных текстовых ячеек листа, '
+              'в порядке появления):' % yacheek)
+        for i, s in enumerate(zag[:yacheek]):
+            print('  %3d. %s' % (i + 1, s[:120]))
+        # шапка формы 6 -> где какая колонка
+        karta, n_shapki = {}, -1
+        for i, r in enumerate(stroki[:40]):
+            for j, v in enumerate(r):
+                n = re.sub(r'\s+', ' ', str(v)).strip().lower()
+                for pole, slova in SHAPKA_F6:
+                    if n and pole not in karta and any(s in n for s in slova):
+                        karta[pole] = j
+                        n_shapki = max(n_shapki, i)
+        print('--- КОЛОНКИ ФОРМЫ 6, найденные по заголовку: %s (шапка в строке %d)'
+              % (karta or 'НЕ НАЙДЕНЫ', n_shapki))
+        nach = n_shapki + 1 + ot
+        print('--- %d СТРОК ДАННЫХ ПОДРЯД, начиная со строки %d листа (не выбирая):'
+              % (skolko, nach))
+        pokazano = 0
+        for i in range(nach, len(stroki)):
+            r = stroki[i]
+            if not any(str(v).strip() for v in r):
+                continue
+            nep = [(j, re.sub(r'\s+', ' ', str(v)).strip())
+                   for j, v in enumerate(r) if str(v).strip()]
+            print('  строка %5d | %s' % (i, ' ¦ '.join('%d:%s' % (j, v[:44])
+                                                       for j, v in nep[:9])))
+            pokazano += 1
+            if pokazano >= skolko:
+                break
+        # ДОКАЗАТЕЛЬСТВО НУЛЯ: ищем по ВСЕМ текстовым ячейкам, а не по первым строкам
+        for metka, slova in (('ИНН/ОГРН', INN_KOL), ('НАИМЕНОВАНИЕ/ЗАЯВИТЕЛЬ', NAZV_KOL)):
+            nash, n = gde_slovo(zag, slova, 8, celikom=(slova is INN_KOL))
+            print('--- ПОИСК «%s» ПО ВСЕМ %d ТЕКСТОВЫМ ЯЧЕЙКАМ ЛИСТА: найдено %d%s'
+                  % (metka, len(zag), n,
+                     ('  ->  ' + ' / '.join(x[:60] for x in nash)) if nash
+                     else '   <- КОЛОНКИ НЕТ ВОВСЕ'))
+        print('--- КОНТРОЛЬ «%s» по тем же %d ячейкам: %d (обязан быть 0)'
+              % (KONTROL_SLOVO, len(zag),
+                 sum(1 for s in zag if KONTROL_SLOVO in s.lower())))
+    return 0
+
+
 def rezhim_slova(argv):
     """Быстрый путь для ТЯЖЁЛЫХ xlsx: только таблица строк (sharedStrings).
 
@@ -1351,7 +1575,8 @@ def rezhim_slova(argv):
     print('строк в таблице значений: %d' % len(si))
     for metka, slova in (('ИНН/ОГРН', INN_KOL), ('НАИМЕНОВАНИЕ/ЗАЯВИТЕЛЬ', NAZV_KOL),
                          ('АДРЕС/ОБЪЕКТ', ADRES_KOL), ('ОБЪЁМ/МОЩНОСТЬ', OBEM_KOL)):
-        est = [s for s in si if any(w in s.lower() for w in slova)][:5]
+        est = ([s for s in si if RE_INN_SLOVO.search(s)][:5] if slova is INN_KOL
+               else [s for s in si if any(w in s.lower() for w in slova)][:5])
         print('  %-23s %s' % (metka, ' / '.join(e[:52] for e in est) or
                               '<- слова нет ни в одной строке'))
     yur = [s for s in si if FORMY.search(s)]
@@ -1591,6 +1816,10 @@ def main():
         return rezhim_slit(a)
     if r == 'stranica':
         return rezhim_stranica(a)
+    if r == 'vygruzka':
+        return rezhim_vygruzka(a)
+    if r == 'citata':
+        return rezhim_citata(a)
     if r == 'dostup':
         return rezhim_dostup(a)
     if r == 'slova':
