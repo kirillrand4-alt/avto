@@ -773,8 +773,49 @@ def cmd_lk(argv):
     print('ИТОГ lk: порталов %d -> %s' % (len(out), put_sost('lk')))
 
 
+def cmd_svod(argv):
+    """Собрать итоговую таблицу «организация → форма → строк → есть ли заявитель».
+
+    Читает состояния ОБОИХ слоёв (в песочнице лежат файлы _pesochnica, снятые с сервера —
+    _server), потому что ни один слой не видит всех организаций: ДРСК отвечает только
+    серверу, а Россети Кубань в тот день отвечала только песочнице."""
+    imena = {k: n for k, n, _, _ in ORGANIZACII}
+    stroki = []
+    for sloy in ('pesochnica', 'server'):
+        p = os.path.join(KATALOG_SOST, 'tp_seti_fajly_%s.json' % sloy)
+        if not os.path.exists(p):
+            continue
+        for kod_org, spisok in json.load(open(p, encoding='utf-8')).items():
+            for r in spisok:
+                if r.get('kod') != 200:
+                    stroki.append({'org': imena.get(kod_org, kod_org), 'sloy': sloy,
+                                   'forma': r.get('tekst', '')[:120], 'kod': r.get('kod'),
+                                   'strok': None, 'zayavitel': 'файл не отдан'})
+                    continue
+                kol = ' | '.join(c for g in (r.get('kolonki') or []) for c in g.get('kolonki', []))
+                stroki.append({
+                    'org': imena.get(kod_org, kod_org), 'sloy': sloy,
+                    'forma': r.get('tekst', '')[:120], 'tip': r.get('tip'),
+                    'strok': r.get('strok'), 'inn_kand': r.get('inn_kandidatov'),
+                    'imya_zayavitel': r.get('imya_zayavitel'),
+                    'imya_inn': r.get('imya_inn'), 'imya_adres': r.get('imya_adres'),
+                    'imya_moschnost': r.get('imya_moschnost'), 'imya_data': r.get('imya_data'),
+                    'kontrol': r.get('kontrol_vydumannoe'),
+                    'kolonki': kol[:600], 'url': r.get('url')})
+    p = os.path.join(KATALOG_SOST, 'tp_seti_svod.json')
+    with open(p, 'w', encoding='utf-8') as f:
+        json.dump(stroki, f, ensure_ascii=False, indent=1)
+    print('строк свода: %d -> %s' % (len(stroki), p))
+    s_zayav = [s for s in stroki if s.get('imya_zayavitel')]
+    s_inn = [s for s in stroki if s.get('imya_inn')]
+    plohoy = [s for s in stroki if s.get('kontrol') not in (0, None)]
+    print('форм всего %d; с именем заявителя в колонках %d; с ИНН в колонках %d'
+          % (len(stroki), len(s_zayav), len(s_inn)))
+    print('КОНТРОЛЬ: форм, где выдуманное слово нашлось (должно быть 0): %d' % len(plohoy))
+
+
 KOMANDY = {'dostup': cmd_dostup, 'obhod': cmd_obhod, 'fajly': cmd_fajly,
-           'drsk': cmd_drsk, 'lk': cmd_lk}
+           'drsk': cmd_drsk, 'lk': cmd_lk, 'svod': cmd_svod}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in KOMANDY:
