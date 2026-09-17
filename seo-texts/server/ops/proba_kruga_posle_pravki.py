@@ -25,8 +25,7 @@ print("до круга:  последняя запись %s, строк %d" % (�
 
 цикл = build_probe_sync(store, build_addr_probe(store, cfg).probe_, cfg)
 т0 = time.time()
-# письма=[] — только приём вердиктов, без чтения очереди
-итог = цикл.забрать([])
+итог = цикл.забрать()   # настоящая очередь
 прошло = time.time() - т0
 
 стало = метка()
@@ -37,10 +36,17 @@ for к in sorted(итог):
     print("   %-28s %s" % (к, str(итог[к])[:90]))
 print("")
 with store._lock:
-    n = store._conn.execute(
-        "SELECT COUNT(*) FROM addr_probe "
-        " WHERE ts >= datetime('now','-3 minutes')").fetchone()[0]
+    # сравнение через datetime: у SQLite 'now' пробел, у нас T
+    from datetime import datetime as _dt, timezone as _tz
+    порог = _dt.now(_tz.utc).timestamp() - 8 * 60
+    n = 0
+    for (ts,) in store._conn.execute("SELECT ts FROM addr_probe"):
+        try:
+            if _dt.fromisoformat(str(ts)).timestamp() >= порог:
+                n += 1
+        except Exception:                                       # noqa: BLE001
+            pass
 print("=" * 74)
 print("=== КРУГ НА ПОЧИНЕННОМ КОДЕ ===")
 print("   занял: %.1f с (было 70 с)" % прошло)
-print("   строк переписано за последние 3 минуты: %d (было 29957)" % n)
+print("   строк переписано за последние 8 минут: %d (было 29957)" % n)
