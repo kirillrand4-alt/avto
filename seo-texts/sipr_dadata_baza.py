@@ -137,6 +137,55 @@ def klyuch(s):
     return re.sub(r'\s+', ' ', s).strip().lower()
 
 
+IMYA_V_KAVYCHKAH = re.compile(r'(?:ООО|ОАО|ПАО|ЗАО|АО|НАО|ФГУП|ГУП|МУП|АНО|ФКП|ФГБУ)?\s*'
+                              r'[«"]([^«»"]{2,80})[»"]')
+
+
+def pochistit_imya(s):
+    """Привести имя из PDF к виду, пригодному для запроса в справочник.
+
+    Три поправки, каждая по конкретному провалу пробного прогона на 20 строках:
+      * ПЕРЕНОС ПО СЛОГАМ. В PDF «Промышлен- ный комплекс «Этана»» разорвано дефисом с
+        пробелом. Справочник такого слова не знает. Склеиваем «X- Y» обратно в «XY», но
+        только когда справа строчная буква: «КТК-Р» и «АЭК-Холдинг» — настоящие дефисы.
+      * ВЕДУЩИЕ ПРОЧЕРКИ. Ячейка часто начинается с «– » (прочерк соседней графы).
+      * ДВА ИМЕНИ В ОДНОЙ ЯЧЕЙКЕ. «ООО «АЭК- Холдинг» АО «КТК-Р» Филиал ФКП…» — это
+        слипшиеся строки таблицы. Спрашиваем по ПЕРВОМУ имени в кавычках, а не по всей
+        каше: иначе справочник не находит ничего и строка выглядит как несуществующее
+        предприятие.
+    Возвращает (имя_для_запроса, было_ли_имя_составным).
+    """
+    s = (s or '').strip()
+    s = re.sub(r'^[\s–—-]+', '', s)
+    s = re.sub(r'(\w)-\s+([а-яё])', r'\1\2', s)
+    s = re.sub(r'\s+', ' ', s).strip()
+    imena = IMYA_V_KAVYCHKAH.findall(s)
+    if len(imena) >= 2:
+        m = IMYA_V_KAVYCHKAH.search(s)
+        return (m.group(0).strip() if m else imena[0]), True
+    return s, False
+
+
+def tochnoe_sovpadenie(imya, kandidaty):
+    """Кандидаты, у которых короткое имя из ЕГРЮЛ совпадает с запросом ЗНАК В ЗНАК
+    (после снятия кавычек и ОПФ). Нужно, чтобы развести однофамильцев: по «Северсталь»
+    справочник отдаёт три карточки в одном регионе, и только у одной имя ровно такое."""
+    k = klyuch(imya)
+    if not k:
+        return []
+    out = []
+    for c in kandidaty:
+        d = c.get('data') or {}
+        for pole in ((d.get('name') or {}).get('short_with_opf'),
+                     (d.get('name') or {}).get('short'),
+                     (d.get('name') or {}).get('full'),
+                     c.get('value')):
+            if pole and klyuch(pole) == k:
+                out.append(c)
+                break
+    return out
+
+
 def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
@@ -222,26 +271,42 @@ def main():
             continue
         # Запрос — ТОЛЬКО именем. Регион дописывать в строку поиска нельзя (см. region_klyuch):
         # справочник на «имя + регион» отдаёт ноль даже по ММК.
-        if imya in kesh:
-            kand = kesh[imya]
+        imya_zapros, sostavnoe = pochistit_imya(imya)
+        zap['imya_dlya_zaprosa'] = imya_zapros
+        zap['imya_sostavnoe'] = 'да' if sostavnoe else ''
+        if imya_zapros in kesh:
+            kand = kesh[imya_zapros]
         else:
-            kand = sprosit(imya, count=10)
+            kand = sprosit(imya_zapros, count=10)
             if isinstance(kand, dict):
                 zap['razreshenie'] = 'справочник не ответил: %s' % kand.get('oshibka', '')
                 out.append(zap)
                 continue
-            kesh[imya] = kand
+            kesh[imya_zapros] = kand
             time.sleep(0.05)
         # отсев спутников
         god = [c for c in kand if not SPUTNIK.search(c.get('value') or '')]
         zap['kandidatov_po_imeni'] = len(god)
+        zap['kandidaty_inn'] = ' | '.join((c['data'].get('inn') or '') for c in god)[:200]
         # РЕГИОН — РАЗЛИЧИТЕЛЬ. Имена в СиПР без ОПФ, одноимённых юрлиц в стране много;
         # оставляем только те карточки, чей адрес в том же регионе, что и площадка в СиПР.
         v_reg = [c for c in god if region_sovpal(region, c)]
-        vybor = v_reg if v_reg else []
-        zap['kandidatov'] = len(vybor)
-        zap['kandidaty_inn'] = ' | '.join((c['data'].get('inn') or '') for c in god)[:200]
-        god = vybor
+        tochnye_v_reg = tochnoe_sovpadenie(imya_zapros, v_reg)
+        tochnye_vse = tochnoe_sovpadenie(imya_zapros, god)
+        if len(v_reg) == 1:
+            god, pometka = v_reg, 'однозначно'
+        elif len(tochnye_v_reg) == 1:
+            # В регионе несколько, но имя знак в знак совпадает ровно с одним — берём его.
+            god, pometka = tochnye_v_reg, 'однозначно по точному имени в регионе'
+        elif not v_reg and len(tochnye_vse) == 1:
+            # Ни одной карточки в регионе площадки — но имя совпадает ровно с одной
+            # компанией в стране. Это обычный случай федерального заказчика: ОАО «РЖД»
+            # строит в Амурской области, а зарегистрировано в Москве. Отбрасывать такую
+            # находку значит терять самых крупных заявителей; принимаем, но помечаем.
+            god, pometka = tochnye_vse, 'однозначно по точному имени, регистрация в другом регионе'
+        else:
+            god, pometka = v_reg, 'однозначно'
+        zap['kandidatov'] = len(god)
         if len(god) == 1:
             d = god[0]['data']
             zap.update({'inn': d.get('inn') or '',
@@ -249,7 +314,7 @@ def main():
                         'status_egryul': ((d.get('state') or {}).get('status') or ''),
                         'adres_egryul': ((d.get('address') or {}).get('value') or '')[:200],
                         'rukovoditel': ((d.get('management') or {}).get('name') or ''),
-                        'razreshenie': 'однозначно'})
+                        'razreshenie': pometka})
             odnozn += 1
         elif len(god) == 0:
             # Различаем ДВА разных нуля: «по имени вообще ничего нет» и «по имени есть, но
@@ -294,6 +359,8 @@ def main():
     print('из них с мощностью: %d' % s_moshch)
     print('из них с годом ввода: %d' % s_god)
     print('ИНН найден ОДНОЗНАЧНО: %d' % odnozn)
+    from collections import Counter as _C
+    print('   из них по видам: %s' % sorted(_C(z['razreshenie'] for z in out if z['inn']).items()))
     print('не однозначно: %d' % sum(1 for z in out if z['razreshenie'].startswith('не однозначно')))
     print('не найдено: %d' % sum(1 for z in out if z['razreshenie'] == 'не найдено'))
     print('НОВЫХ для базы (по ИНН, из однозначных): %d' % nov)
