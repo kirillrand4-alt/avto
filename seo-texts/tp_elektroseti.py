@@ -452,13 +452,13 @@ def drop_polozhit(imya, b):
     tok = os.environ.get('DROP_TOKEN')
     if not url or not tok:
         return 'нет DROP_URL/DROP_TOKEN в окружении слоя %s' % SLOY
-    granica = '----tpseti%d' % int(time.time())
-    telo = (('--%s\r\nContent-Disposition: form-data; name="file"; filename="%s"\r\n'
-             'Content-Type: application/octet-stream\r\n\r\n' % (granica, imya)).encode()
-            + b + ('\r\n--%s--\r\n' % granica).encode())
-    req = urllib.request.Request(url.rstrip('/') + '/upload', data=telo, headers={
-        'X-Drop-Token': tok, 'User-Agent': UA,
-        'Content-Type': 'multipart/form-data; boundary=%s' % granica})
+    # Дроп принимает ФАЙЛ ЦЕЛИКОМ методом PUT на /<имя>, а не multipart POST на /upload.
+    # Первая версия слала multipart — дроп отвечал 200, и файл ложился под именем «upload»,
+    # затирая предыдущий. Ошибка выглядела как успех: код 200, имя в ответе наше.
+    req = urllib.request.Request(url.rstrip('/') + '/' + urllib.parse.quote(imya), data=b,
+                                 method='PUT',
+                                 headers={'X-Drop-Token': tok, 'User-Agent': UA,
+                                          'Content-Type': 'application/octet-stream'})
     try:
         r = urllib.request.urlopen(req, timeout=180, context=_ctx())
         return 'дроп %s: %s' % (r.status, imya)
@@ -1021,6 +1021,249 @@ def cmd_sipr(argv):
     print('файл: %s' % put_sost('sipr'))
 
 
+# --- СиПР ПОСТРОЧНО ------------------------------------------------------------------
+# Первая выгрузка отдала только СПИСОК ИМЁН, и это потеряло главное: «Увеличение/ввод новой
+# мощности, МВт» и «Год ввода», то есть масштаб и дату. Список имён — это не событие.
+# Здесь таблица снимается ПО КООРДИНАТАМ: pdfminer при обычном extract_text отдаёт ячейки
+# колонка-за-колонкой (сначала все имена, потом все мощности, потом все годы), и склеить их
+# обратно по порядку нельзя — порядок теряется. Поэтому берём layout: у каждой строки текста
+# известны x и y, колонки задаются по x заголовков, строки — по y номера в графе «№ п/п».
+#
+# Колонка «Наименование инвестиционного проекта» забирается тоже, хотя её не просили: именно
+# она говорит, ЧТО строят («Комплекс установки разделения воздуха», «Центр обработки данных»,
+# «Тепличное хозяйство»), а для нашей задачи воздухоразделительная установка — это прямой
+# признак центробежного компрессора.
+ZAG_KOLONOK = [
+    ('nomer', re.compile(r'^№$|^п/п$')),
+    ('proekt', re.compile(r'^инвестиционного$|наименование\s+инвестиционного')),
+    ('zayavitel', re.compile(r'^заявителя$|^потребителя$|наименование\s+(?:заявителя|потребителя)')),
+    ('ranee_MVt', re.compile(r'^Ранее присоединенная$|^Ранее присоединённая$')),
+    ('uvelichenie_MVt', re.compile(r'^ввод новой$|^Увеличение/$')),
+    # Шапка «Напряжение, кВ» в части файлов разбита на две строки («Напряжение,» и «кВ»),
+    # и строгое равенство её не находило: значения напряжения уезжали в графу «Год ввода»,
+    # где выглядели как «10 кВ 2024». Поэтому регулярка по началу слова.
+    ('napryazhenie_kV', re.compile(r'^Напряжение,?$|^Напряжение, кВ$')),
+    ('god_vvoda', re.compile(r'^Год ввода$')),
+    ('centr_pitaniya', re.compile(r'^Центр питания$')),
+]
+GRUPPA_MVT = re.compile(r'Более\s+\d+\s*МВт')
+CHISLO = re.compile(r'(?<!\d)(\d{1,4}(?:[.,]\d+)?)(?!\d)')
+GOD = re.compile(r'(?<!\d)(20\d{2})(?!\d)')
+
+
+def stroki_pdf_tablicy(put, imya_fajla):
+    """Снять таблицу «Перечень планируемых к вводу потребителей» построчно."""
+    try:
+        from pdfminer.high_level import extract_pages
+        from pdfminer.layout import LTTextContainer, LAParams
+    except Exception:  # noqa: BLE001
+        return None
+    la = LAParams(line_margin=0.3, char_margin=1.5)
+    out = []
+    for nomer_str, page in enumerate(extract_pages(put, laparams=la), start=1):
+        yach = []
+        for el in page:
+            if not isinstance(el, LTTextContainer):
+                continue
+            for ln in el:
+                t = re.sub(r'\s+', ' ', ln.get_text()).strip()
+                if t:
+                    yach.append({'x0': ln.x0, 'x1': ln.x1, 'y': ln.y0, 'yv': ln.y1, 't': t})
+        if not yach:
+            continue
+        # заголовки этой страницы
+        yakorya = {}
+        for c in yach:
+            for imya, rg in ZAG_KOLONOK:
+                if imya in yakorya:
+                    continue
+                if rg.search(c['t']):
+                    yakorya[imya] = {'c': (c['x0'] + c['x1']) / 2, 'y': c['y']}
+        # таблица считается найденной, только если есть И заявитель, И мощность, И год
+        if not all(k in yakorya for k in ('zayavitel', 'uvelichenie_MVt', 'god_vvoda')):
+            continue
+        poryadok = sorted(yakorya.items(), key=lambda kv: kv[1]['c'])
+        # границы колонок — середины между центрами соседних заголовков
+        granicy = []
+        for i, (imya, v) in enumerate(poryadok):
+            lev = -1e9 if i == 0 else (poryadok[i - 1][1]['c'] + v['c']) / 2
+            prav = 1e9 if i == len(poryadok) - 1 else (v['c'] + poryadok[i + 1][1]['c']) / 2
+            granicy.append((imya, lev, prav))
+        niz_shapki = min(v['y'] for v in yakorya.values())
+
+        def kolonka(c):
+            seredina = (c['x0'] + c['x1']) / 2
+            for imya, lev, prav in granicy:
+                if lev <= seredina < prav:
+                    return imya
+            return None
+
+        # ЯКОРЯ СТРОК: целое число в графе «№ п/п», ниже шапки. Требование по x обязательно:
+        # без него якорями становились колонцифры на левом поле страницы (x≈34..47 против
+        # x≈60..77 у графы «№»), и на страницу добавлялось по две-три пустые строки-призрака.
+        c_nom = yakorya.get('nomer', {}).get('c')
+        nom = [c for c in yach if kolonka(c) == 'nomer' and re.fullmatch(r'\d{1,3}', c['t'])
+               and c['y'] < niz_shapki
+               and (c_nom is None or abs((c['x0'] + c['x1']) / 2 - c_nom) < 25)]
+        if not nom:
+            continue
+        nom.sort(key=lambda c: -c['y'])
+        # шаг строки — по расстоянию между якорями; им же ограничиваем ПЕРВУЮ строку сверху.
+        # Иначе в неё попадают хвосты многострочной шапки («проекта», «мощности, МВт»), и
+        # первая строка каждой таблицы выглядит как «заявитель: заявителя ПАО «ММК»».
+        shag = abs(nom[0]['y'] - nom[1]['y']) if len(nom) > 1 else 30
+        for i, a in enumerate(nom):
+            verh = min(niz_shapki, a['y'] + shag / 2) if i == 0 else (nom[i - 1]['y'] + a['y']) / 2
+            niz = (a['y'] + nom[i + 1]['y']) / 2 if i + 1 < len(nom) else a['y'] - shag / 2
+            # Все ожидаемые графы заводим заранее пустыми: на части страниц шапка набрана
+            # иначе и якорь колонки не находится. Отсутствие графы на странице — это факт
+            # («её тут нет»), а не повод уронить разбор всего региона на KeyError.
+            zap = {'stranica': nomer_str, 'nomer_v_tablice': a['t'], 'fajl': imya_fajla,
+                   'grafy_najdeny': sorted(yakorya)}
+            for imya, _ in ZAG_KOLONOK:
+                if imya != 'nomer':
+                    zap[imya] = ''
+            for imya, _, _ in granicy:
+                if imya == 'nomer':
+                    continue
+                svoi = [c for c in yach if niz < c['y'] <= verh and kolonka(c) == imya]
+                svoi.sort(key=lambda c: -c['y'])
+                zap[imya] = ' '.join(c['t'] for c in svoi).strip()
+            out.append(zap)
+    return out
+
+
+def chislo_MVt(s):
+    """Вытащить мощность в МВт из ячейки. Возвращает (значение, сколько чисел было в ячейке).
+
+    Групповая подпись «Более 50 МВт» — это шапка блока, а не значение строки, и её надо
+    снять, иначе у каждой первой строки блока мощность окажется равной порогу блока.
+
+    Второе число (сколько чисел найдено) — НЕ украшение. Если в ячейке их больше двух, это
+    почти всегда значит, что якорь соседней строки не нашёлся и две строки слиплись; тогда
+    любое выбранное значение может принадлежать не этому заявителю. Такие строки помечаются,
+    а не выдаются за точные: «увелич=27 24,5» — это две разные площадки, а не одна на 27 МВт.
+    Этапы одного объекта («I этап: 0,4, II этап 38,6») — законный случай двух чисел, поэтому
+    порог тревоги стоит на трёх и больше."""
+    s = GRUPPA_MVT.sub(' ', s or '')
+    ch = CHISLO.findall(s)
+    if not ch:
+        return '', 0
+    try:
+        return max(float(x.replace(',', '.')) for x in ch), len(ch)
+    except ValueError:
+        return '', len(ch)
+
+
+def cmd_sipr_stroki(argv):
+    """Переснять СиПР ПОСТРОЧНО: строка = заявитель в регионе, с мощностью и годом ввода."""
+    predel = int(next((a.split('=')[1] for a in argv if a.startswith('--regionov=')), '99'))
+    k, d, fin, e = dostat(SIPR_SPISOK, timeout=60, maks=4000000)
+    print('страница СиПР: kod=%s байт=%d %s' % (k, len(d), e))
+    h = tekst(d)
+    koren = '%s://%s/' % (urllib.parse.urlsplit(fin).scheme, urllib.parse.urlsplit(fin).netloc)
+    pdfy = []
+    for syr, podpis in SSYLKA.findall(h):
+        if not syr.lower().endswith('.pdf') or 'public_discussion' not in syr:
+            continue
+        if '2025-30_final' not in syr:
+            continue
+        pdfy.append((urllib.parse.urljoin(koren, syr), ochistit(podpis)))
+    print('pdf свежего периода: %d' % len(pdfy))
+    kesh = os.path.join(KATALOG_SOST, 'sipr_pdf')
+    os.makedirs(kesh, exist_ok=True)
+    vse = []
+    bez_tablicy = []
+    for su, region in pdfy[:predel]:
+        if 'Сводные' in region:
+            continue
+        put = os.path.join(kesh, re.sub(r'\W+', '_', su.split('/')[-1]))
+        if not os.path.exists(put) or os.path.getsize(put) < 1000:
+            kk, b, _, ee = dostat(su, timeout=300)
+            if kk != 200 or not b:
+                print('  %-38s НЕ ОТДАН kod=%s %s' % (region[:38], kk, ee[:50]))
+                bez_tablicy.append({'region': region, 'kod': kk, 'oshibka': ee})
+                continue
+            open(put, 'wb').write(b)
+        stroki = stroki_pdf_tablicy(put, su.split('/')[-1])
+        if stroki is None:
+            print('нет pdfminer на слое %s — мерить нечем' % SLOY)
+            return
+        for s in stroki:
+            s['region'] = region
+            s['uvelichenie_MVt_chislo'], n_uv = chislo_MVt(s.get('uvelichenie_MVt', ''))
+            s['ranee_MVt_chislo'], _ = chislo_MVt(s.get('ranee_MVt', ''))
+            s['moshchnost_somnitelna'] = 'да' if n_uv >= 3 else ''
+            # Если графы «Напряжение» на странице не нашлось, значения напряжения оседают
+            # в «Год ввода» («10 кВ 2024»). Вытаскиваем их обратно, а не выбрасываем.
+            gv = s.get('god_vvoda', '')
+            if not s.get('napryazhenie_kV'):
+                kv = re.findall(r'\d{1,3}(?:[,.]\d)?\s*кВ', gv)
+                if kv:
+                    s['napryazhenie_kV'] = ' '.join(kv)
+                    s['napryazhenie_iz_grafy_goda'] = 'да'
+            gody = GOD.findall(gv)
+            s['god_chislo'] = max(gody) if gody else ''
+        vse += stroki
+        s_moshch = sum(1 for s in stroki if s['uvelichenie_MVt_chislo'] != '')
+        s_god = sum(1 for s in stroki if s['god_chislo'])
+        # СКОЛЬКО СТРОК МЫ НЕ ВЗЯЛИ. В графе «№ п/п» у части строк вместо числа стоит прочерк
+        # или номер слипается с соседней ячейкой, и якорь не находится. Считаем недобор прямо:
+        # на каждой странице должно быть столько строк, сколько наибольший номер в её таблице.
+        po_stranicam = {}
+        for s in stroki:
+            if s['nomer_v_tablice'].isdigit():
+                po_stranicam.setdefault(s['stranica'], []).append(int(s['nomer_v_tablice']))
+        ozhidalos = sum(max(v) - min(v) + 1 for v in po_stranicam.values() if v)
+        nedobor = max(0, ozhidalos - len(stroki))
+        if nedobor:
+            bez_tablicy.append({'region': region, 'kod': 200,
+                                'oshibka': 'недобор строк: взято %d из ~%d' % (len(stroki), ozhidalos)})
+        print('  %-38s строк=%-4d (недобор ~%d) с мощностью=%-4d с годом=%-4d'
+              % (region[:38], len(stroki), nedobor, s_moshch, s_god))
+        if not stroki:
+            bez_tablicy.append({'region': region, 'kod': 200, 'oshibka': 'таблица не найдена'})
+        sys.stdout.flush()
+        with open(put_sost('sipr_stroki'), 'w', encoding='utf-8') as f:
+            json.dump({'stroki': vse, 'bez_tablicy': bez_tablicy}, f, ensure_ascii=False)
+    # CSV для добора ИНН на сервере: одна строка = один заявитель в одном регионе.
+    # Одинаковые имена в разных регионах НЕ склеиваем: это разные площадки.
+    import csv as _csv
+    polya = ['naimenovanie', 'region', 'proekt', 'ranee_MVt_chislo', 'uvelichenie_MVt_chislo',
+             'moshchnost_somnitelna', 'napryazhenie_kV', 'god_chislo', 'god_vvoda_syroj',
+             'centr_pitaniya', 'fajl', 'stranica', 'nomer_v_tablice', 'istochnik', 'istochnikov']
+    put_csv = os.path.join(KATALOG_SOST, 'SIPR-ZAYAVITELI-STROKI.csv')
+    with open(put_csv, 'w', encoding='utf-8-sig', newline='') as f:
+        w = _csv.DictWriter(f, fieldnames=polya, delimiter=';', extrasaction='ignore')
+        w.writeheader()
+        for s in vse:
+            if not (s.get('zayavitel') or '').strip():
+                continue
+            w.writerow({'naimenovanie': s['zayavitel'], 'region': s['region'],
+                        'proekt': s.get('proekt', ''),
+                        'ranee_MVt_chislo': s.get('ranee_MVt_chislo', ''),
+                        'uvelichenie_MVt_chislo': s.get('uvelichenie_MVt_chislo', ''),
+                        'moshchnost_somnitelna': s.get('moshchnost_somnitelna', ''),
+                        'napryazhenie_kV': s.get('napryazhenie_kV', ''),
+                        'god_chislo': s.get('god_chislo', ''),
+                        'god_vvoda_syroj': s.get('god_vvoda', ''),
+                        'centr_pitaniya': s.get('centr_pitaniya', ''),
+                        'fajl': s.get('fajl', ''), 'stranica': s.get('stranica', ''),
+                        'nomer_v_tablice': s.get('nomer_v_tablice', ''),
+                        'istochnik': 'СиПР СО ЕЭС 2025-2030, таблица «Перечень планируемых '
+                                     'к вводу потребителей»',
+                        'istochnikov': 1})
+    print('CSV: %s' % put_csv)
+    # контроль: выдуманного заявителя быть не должно
+    vydumannyh = sum(1 for s in vse if VYDUMANNOE in (s.get('zayavitel') or '').lower())
+    print('ИТОГ sipr_stroki: строк %d; регионов с таблицей %d; без таблицы %d;'
+          ' с мощностью %d; с годом ввода %d; КОНТРОЛЬ (выдуманное имя, должно быть 0): %d'
+          % (len(vse), len({s['region'] for s in vse}), len(bez_tablicy),
+             sum(1 for s in vse if s['uvelichenie_MVt_chislo'] != ''),
+             sum(1 for s in vse if s['god_chislo']), vydumannyh))
+    print('файл: %s' % put_sost('sipr_stroki'))
+
+
 def cmd_lk(argv):
     """Порталы ТП и личные кабинеты: есть ли ПУБЛИЧНАЯ проверка статуса заявки без входа."""
     out = []
@@ -1249,7 +1492,8 @@ def cmd_svod(argv):
 
 KOMANDY = {'dostup': cmd_dostup, 'obhod': cmd_obhod, 'fajly': cmd_fajly,
            'drsk': cmd_drsk, 'drsk_reestr': cmd_drsk_reestr, 'lk': cmd_lk,
-           'sipr': cmd_sipr, 'kontrol': cmd_kontrol, 'svod': cmd_svod}
+           'sipr': cmd_sipr, 'sipr_stroki': cmd_sipr_stroki,
+           'kontrol': cmd_kontrol, 'svod': cmd_svod}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in KOMANDY:

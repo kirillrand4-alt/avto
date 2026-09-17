@@ -1058,12 +1058,15 @@ def rezhim_kontrol(argv):
     with open(put, 'rb') as f:
         telo = f.read()
     print('эталон: %s, %d байт' % (os.path.basename(put), len(telo)))
-    vsego_inn = 0
+    vsego_inn, luchshiy = 0, ''
     for r in razobrat_fayl(put, telo, ['щварцкопфер-такой-компании-нет']):
         pechat_lista(r, '  ')
-        vsego_inn = max(vsego_inn, r.get('inn_po_kolonke', 0), r.get('inn_gde_ugodno', 0))
-    print('--- ИТОГ ПОЛОЖИТЕЛЬНОГО КОНТРОЛЯ: строк с ИНН найдено %d, порог %d -> %s'
-          % (vsego_inn, porog,
+        n = max(r.get('inn_po_kolonke', 0), r.get('inn_gde_ugodno', 0))
+        if n > vsego_inn:
+            vsego_inn, luchshiy = n, str(r.get('list'))
+    print('--- ИТОГ ПОЛОЖИТЕЛЬНОГО КОНТРОЛЯ: строк с ИНН найдено %d (лучший лист «%s»), '
+          'порог %d -> %s'
+          % (vsego_inn, luchshiy, porog,
              'ПРИБОР ВИДИТ ЗАЯВИТЕЛЯ' if vsego_inn >= porog else
              'ПРИБОР СЛЕП, его нулям по газу верить НЕЛЬЗЯ'))
     return 0 if vsego_inn >= porog else 1
