@@ -116,12 +116,29 @@ def byline_block(payload):
 
 
 def env():
+    """Креды: сперва файл `.env` рядом, поверх него — переменные окружения.
+
+    Раньше строка `open(.env)` стояла без всякой защиты, и в песочнице, где `.env` нет,
+    модуль падал с FileNotFoundError на ИМПОРТЕ пути к провайдеру. Свой ключ в окружении
+    при этом был. Из-за этого сессии обходили штатный клиент и звали шлюз самодельным
+    urllib — без его ретраев, без разбора битого стрима и без правила про stop_reason.
+    Ключи по-прежнему НЕ хранятся в репозитории: читаются из `.env` или из окружения.
+    """
     vals = {}
-    for line in open(os.path.join(DIR, '.env')):
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
+    put = os.path.join(DIR, '.env')
+    if os.path.exists(put):
+        for line in open(put):
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                vals[k] = v
+    for k in ('PROVIDER_API_KEY', 'PROVIDER_BASE_URL'):
+        v = os.environ.get(k)
+        if v:
             vals[k] = v
+    vals.setdefault('PROVIDER_BASE_URL', 'https://router.cheap')
+    if not vals.get('PROVIDER_API_KEY'):
+        raise RuntimeError('PROVIDER_API_KEY не найден ни в seo-texts/.env, ни в окружении')
     return vals
 
 

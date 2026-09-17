@@ -51,7 +51,13 @@ import urllib.parse
 import urllib.request
 import zipfile
 
-VYDUMANNOE = 'щварцкопфер'          # контрольное слово: обязано давать 0
+# Контрольное слово: обязано давать 0 в любом чужом файле. Взято НЕ «щварцкопфер», хотя
+# именно его использует наш клиент ЕГРЗ: в выгрузке KOMPRESSORNYE-STANCII-EGRZ.xlsx это
+# слово встречается один раз — на листе «Как читать», где описан сам контроль. То есть на
+# нашем же положительном контроле счётчик честно показал 1, и это была не поломка фильтра,
+# а совпадение с нашей документацией. Чтобы контроль не спорил сам с собой, слово здесь
+# своё и больше нигде в репозитории не встречается.
+VYDUMANNOE = 'нипрятозаумень'
 NET_PUTI = '/zzz-nesushchestvuyushchiy-put-shvarckopfer'   # контрольный путь: обязан давать не-200
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 
@@ -286,8 +292,40 @@ def kommentarii(html):
 # ---------------------------------------------------------------- разбор файлов
 INN_RE = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')
 IMENA_INN = re.compile(r'\bинн\b|налогоплательщик', re.I)
-IMENA_ZAYAV = re.compile(r'заявител|наименован|контрагент|потребител|абонент|Ф\.?И\.?О|фио'
-                         r'|организац|юридическ.{0,4}\s*лиц|клиент', re.I)
+# КТО ТАКОЙ «ЗАЯВИТЕЛЬ» В ИМЕНИ КОЛОНКИ. Первая версия искала слово «наименован» и из-за
+# этого считала заявителем «Наименование филиала» и «Наименование центра питания», то есть
+# отчитывалась «имя заявителя есть» на формах, где названа САМА сетевая организация — ровно
+# та ловушка, на которой уже погорел замер «юрлиц 3396». И одновременно она НЕ знала слова
+# «Застройщик», поэтому на нашей же выгрузке ЕГРЗ, где застройщик назван у 465 записей из
+# 495, отвечала «заявителя нет». Оба промаха поймал положительный контроль (команда
+# kontrol), и оба лечатся здесь: сначала смотрим, похоже ли имя колонки на КОНТРАГЕНТА,
+# потом вычёркиваем имена, которые заведомо описывают саму сетевую организацию или объект.
+IMENA_ZAYAV = re.compile(
+    # «потребител» само по себе НЕ годится: колонка «Категория присоединения потребителей
+    # услуг по передаче электрической энергии в разбивке по мощности» — это показатель
+    # качества, а не контрагент, и она давала ложное «имя заявителя есть» у Иркутской
+    # электросетевой сразу на десятке файлов. Годится только «наименование потребителя».
+    r'заявител|контрагент|наименовани\w*\s+потребител|абонент|Ф\.?И\.?О\b|\bфио\b'
+    r'|застройщик|проектировщик'
+    r'|заказчик|собственник|владелец|юридическ\w*\s*лиц|физическ\w*\s*лиц|клиент'
+    r'|наименован\w*\s+(?:организац|компан|предприят|общества|юридическ|заявител|лица)'
+    r'|лицо,?\s+намеревающ|наименование$|наименование\b(?!\s*(?:филиал|сетев|центр|проект|мероприят|общества|объект|услуг|документ|показател))',
+    re.I)
+# Заголовок ГРАФЫ, называющей контрагента, — для плоского текста (pdf).
+ZAGOLOVOK_GRAFY = re.compile(
+    r'наименовани[ея]\s+заявител|наименовани[ея]\s+(?:юридического\s+лица|организации|предприятия)'
+    r'|ф\.?\s*и\.?\s*о\.?\s+заявител|заявитель\s*\(наименование|застройщик'
+    r'|лицо,?\s+намеревающ|наименовани[ея]\s+потребител|наименовани[ея]\s+контрагент', re.I)
+NE_KONTRAGENT = re.compile(
+    r'филиал|сетев\w*\s+организац|наименование\s+общества|центр\w*\s+питания|подстанц'
+    r'|наименование\s+проект|наименование\s+мероприят|наименование\s+объект|балансов'
+    r'|наименование\s+услуг|наименование\s+показател|наименование\s+документ'
+    r'|категори\w*\s+присоединен|показател|в\s+разбивке'
+    # «Наименование и описание объекта инфраструктуры, к которому запрашивается доступ» —
+    # это описание ЛИНИИ, а не контрагент. Исключение по «наименование объект» его не ловило,
+    # потому что между словами стоит «и описание», и колонка попадала в выборку значений
+    # заявителя: 12 046 «значений» вместо 6 031, половина из них — описания опор ВЛ.
+    r'|описани\w*\s+объект|объект\w*\s+инфраструктур', re.I)
 IMENA_ADRES = re.compile(r'адрес|местополож|кадастр|расположен|населённ|населенн|участок', re.I)
 IMENA_MOSCH = re.compile(r'мощност|кВт|кВА|MW', re.I)
 IMENA_DATA = re.compile(r'дата|срок|период|год\b', re.I)
@@ -518,14 +556,43 @@ def razbor_fajla(url, b, svoi=()):
 
     # контроль: выдуманное слово обязано дать 0
     it['kontrol_vydumannoe'] = vse.lower().count(VYDUMANNOE)
-    # признаки — и по именам колонок, и по содержимому
-    imena_vse = ' | '.join(c for gr in (it['kolonki'] or []) for c in gr.get('kolonki', [])) \
-        if it['kolonki'] else vse[:20000]
-    it['imya_inn'] = bool(IMENA_INN.search(imena_vse))
-    it['imya_zayavitel'] = bool(IMENA_ZAYAV.search(imena_vse))
-    it['imya_adres'] = bool(IMENA_ADRES.search(imena_vse))
-    it['imya_moschnost'] = bool(IMENA_MOSCH.search(imena_vse))
-    it['imya_data'] = bool(IMENA_DATA.search(imena_vse))
+    # Признаки считаем ПО КАЖДОЙ КОЛОНКЕ ОТДЕЛЬНО, а не по склейке всех имён в одну строку:
+    # на склейке «Наименование филиала | Запрашиваемая мощность» вычёркивание не работает,
+    # потому что исключающее слово и подходящее слово оказываются в одном тексте.
+    kolonki = [c for gr in (it['kolonki'] or []) for c in gr.get('kolonki', [])]
+    if kolonki:
+        zayav = [c for c in kolonki if IMENA_ZAYAV.search(c) and not NE_KONTRAGENT.search(c)]
+        it['imya_inn'] = any(IMENA_INN.search(c) for c in kolonki)
+        it['imya_zayavitel'] = bool(zayav)
+        it['kolonki_zayavitelya'] = zayav[:6]
+        it['imya_adres'] = any(IMENA_ADRES.search(c) for c in kolonki)
+        it['imya_moschnost'] = any(IMENA_MOSCH.search(c) for c in kolonki)
+        it['imya_data'] = any(IMENA_DATA.search(c) for c in kolonki)
+    else:
+        # У pdf колонок как таковых нет — pdfminer отдаёт текст. Здесь НЕЛЬЗЯ искать просто
+        # слово «заявитель»: оно стоит в любом пояснительном абзаце («заявки заявителей»),
+        # и реестр Россети Кубань из-за этого помечался как «имя заявителя есть», хотя имён
+        # в нём нет ни одного. Поэтому для плоского текста ищем именно ЗАГОЛОВОК ГРАФЫ.
+        golova = re.sub(r'\s+', ' ', vse[:60000])
+        it['imya_inn'] = bool(IMENA_INN.search(golova))
+        it['imya_zayavitel'] = bool(ZAGOLOVOK_GRAFY.search(golova))
+        it['imya_adres'] = bool(IMENA_ADRES.search(golova))
+        it['imya_moschnost'] = bool(IMENA_MOSCH.search(golova))
+        it['imya_data'] = bool(IMENA_DATA.search(golova))
+        it['zagolovok_grafy_naydeno'] = [re.sub(r'\s+', ' ', m.group(0))[:80]
+                                         for m in ZAGOLOVOK_GRAFY.finditer(golova)][:5]
+    # Сколько разных юрлиц реально названо в файле и не одно ли это имя на все строки:
+    # «ПАО "Россети Кубань"» напечатано 4550 раз, и без этого счёта оно выглядит как
+    # 4550 найденных предприятий.
+    # Пробелы схлопываем ВКЛЮЧАЯ ПЕРЕВОДЫ СТРОК: pdfminer рвёт «ПАО "Россети \n Кубань"»
+    # пополам, и счётчик, нормализующий только пробелы и табы, насчитывал 0 юрлиц в файле,
+    # где имя сетевой компании напечатано 4550 раз.
+    uL = re.findall(r'(?:ООО|ОАО|ПАО|ЗАО|АО|ФГУП|ГУП|МУП)\s*[«"][^»"]{2,70}[»"]',
+                    re.sub(r'\s+', ' ', vse))
+    imena_ur = [re.sub(r'\s+', ' ', x).strip() for x in uL]
+    it['yurlic_upominaniy'] = len(imena_ur)
+    it['yurlic_unikalnyh'] = len(set(imena_ur))
+    it['yurlic_primery'] = sorted(set(imena_ur))[:5]
     kand = inn_kandidaty(vse)
     it['inn_kandidatov'] = len(kand)
     it['inn_unikalnyh'] = len(set(kand))
@@ -964,6 +1031,138 @@ def cmd_lk(argv):
     print('ИТОГ lk: порталов %d -> %s' % (len(out), put_sost('lk')))
 
 
+def cmd_kontrol(argv):
+    """ПОЛОЖИТЕЛЬНЫЙ контроль определителя колонок: сработает ли он там, где заявитель ЕСТЬ.
+
+    Зачем. «Ноль ИНН» на два десятка сайтов неотличим от сломанного определителя, пока не
+    показано, что на заведомо ИМЕНОВАННОМ файле тот же самый код отвечает «да». Поэтому
+    прогоняем razbor_fajla() по входам с известным ответом:
+      1. синтетический xlsx, который мы собрали сами: колонки «ИНН», «Наименование
+         заявителя», «Адрес», «Мощность, кВт», «Дата» и три строки с настоящими ИНН.
+         Ожидание: все пять признаков True, ИНН-кандидатов 3.
+      2. наша выгрузка ЕГРЗ (KOMPRESSORNYE-STANCII-EGRZ.xlsx): там ИНН застройщика стоит
+         у подавляющего большинства записей. Ожидание: imya_inn=True и сотни ИНН.
+      3. синтетический ОТРИЦАТЕЛЬНЫЙ вход: тот же файл без имён и ИНН, только номера и
+         мощности. Ожидание: все признаки False, ИНН 0 — иначе определитель «находит»
+         заявителя везде, и его «да» ничего не стоит.
+    Путь к ЕГРЗ можно передать аргументом; по умолчанию ищем в KATALOG_SOST."""
+    def sobrat_xlsx(zagolovki, stroki):
+        """Собрать минимальный xlsx в памяти (без сторонних библиотек)."""
+        def ryad(nomer, yach):
+            c = ''.join('<c r="%s%d" t="inlineStr"><is><t>%s</t></is></c>'
+                        % (chr(65 + j), nomer, str(v).replace('&', '&amp;').replace('<', '&lt;'))
+                        for j, v in enumerate(yach))
+            return '<row r="%d">%s</row>' % (nomer, c)
+        telo = ryad(1, zagolovki) + ''.join(ryad(i + 2, r) for i, r in enumerate(stroki))
+        buf = io.BytesIO()
+        z = zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED)
+        z.writestr('[Content_Types].xml',
+                   '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+                   '<Default Extension="xml" ContentType="application/xml"/>'
+                   '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+                   '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>')
+        z.writestr('_rels/.rels',
+                   '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                   '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')
+        z.writestr('xl/workbook.xml',
+                   '<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+                   'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                   '<sheets><sheet name="проба" sheetId="1" r:id="rId1"/></sheets></workbook>')
+        z.writestr('xl/_rels/workbook.xml.rels',
+                   '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                   '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>')
+        z.writestr('xl/worksheets/sheet1.xml',
+                   '<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+                   '<sheetData>%s</sheetData></worksheet>' % telo)
+        z.close()
+        return buf.getvalue()
+
+    itog = []
+
+    def proverit(imya, b, zhdem_zayavitel, zhdem_inn, zhdem_inn_ne_menee):
+        r = razbor_fajla(imya, b)
+        vyvod = {'proba': imya, 'strok': r.get('strok'), 'tip': r.get('tip'),
+                 'imya_zayavitel': r.get('imya_zayavitel'), 'imya_inn': r.get('imya_inn'),
+                 'imya_adres': r.get('imya_adres'), 'imya_moschnost': r.get('imya_moschnost'),
+                 'imya_data': r.get('imya_data'), 'inn_kandidatov': r.get('inn_kandidatov'),
+                 'kontrol_vydumannoe': r.get('kontrol_vydumannoe')}
+        sошlos = (vyvod['imya_zayavitel'] is zhdem_zayavitel
+                  and vyvod['imya_inn'] is zhdem_inn
+                  and (vyvod['inn_kandidatov'] or 0) >= zhdem_inn_ne_menee
+                  and vyvod['kontrol_vydumannoe'] == 0)
+        vyvod['ozhidalos'] = {'заявитель': zhdem_zayavitel, 'ИНН': zhdem_inn,
+                              'ИНН не менее': zhdem_inn_ne_menee}
+        vyvod['sovpalo'] = sошlos
+        itog.append(vyvod)
+        print('%-46s заявитель=%-5s ИНН=%-5s адрес=%-5s мощн=%-5s дата=%-5s ИНН-канд=%-5s -> %s'
+              % (imya[:46], vyvod['imya_zayavitel'], vyvod['imya_inn'], vyvod['imya_adres'],
+                 vyvod['imya_moschnost'], vyvod['imya_data'], vyvod['inn_kandidatov'],
+                 'СОШЛОСЬ' if sошlos else 'НЕ СОШЛОСЬ'))
+        return sошlos
+
+    # 1. положительный синтетический
+    polozh = sobrat_xlsx(
+        ['№ п/п', 'ИНН', 'Наименование заявителя', 'Адрес объекта', 'Мощность, кВт', 'Дата заявки'],
+        [['1', '7707083893', 'ООО «Пробное предприятие»', 'г. Москва, ул. Пробная, 1', '250', '01.02.2026'],
+         ['2', '7736050003', 'АО «Второе пробное»', 'г. Тверь, пр. Пробный, 2', '1200', '03.02.2026'],
+         ['3', '5036065113', 'ПАО «Третье пробное»', 'г. Уфа, ш. Пробное, 3', '4000', '05.02.2026']])
+    proverit('СИНТЕТИКА положительная (заявитель и ИНН есть)', polozh, True, True, 3)
+    # 2. отрицательный синтетический — ровно та форма, что у сетевых организаций
+    otric = sobrat_xlsx(
+        ['№ п/п', 'Номер договора', 'Запрашиваемая мощность, кВт', 'Стоимость без НДС'],
+        [['1', '11103-21-00614368-1', '250', '834.3420000000001'],
+         ['2', '10101-21-00616662-1', '1200', '427.03533333333343']])
+    proverit('СИНТЕТИКА отрицательная (ни имени, ни ИНН)', otric, False, False, 0)
+    # 3. наша выгрузка ЕГРЗ: заявитель там заведомо назван
+    put_egrz = next((a for a in argv if a.lower().endswith(('.xlsx', '.xls'))), None)
+    if not put_egrz:
+        for kandidat in ('KOMPRESSORNYE-STANCII-EGRZ.xlsx',):
+            p = os.path.join(KATALOG_SOST, kandidat)
+            if os.path.exists(p):
+                put_egrz = p
+                break
+    if put_egrz and os.path.exists(put_egrz):
+        proverit('ЕГРЗ %s' % os.path.basename(put_egrz), open(put_egrz, 'rb').read(), True, True, 100)
+    else:
+        print('ЕГРЗ-файл не найден — положительный контроль на реальных данных НЕ проведён')
+        itog.append({'proba': 'ЕГРЗ', 'sovpalo': None, 'zamechanie': 'файл не найден'})
+    # 4. разбор ИМЁН КОЛОНОК поштучно — на реальных заголовках, встреченных в этом замере.
+    # Здесь важны обе ошибки: пропустить настоящего контрагента и принять за контрагента
+    # саму сетевую организацию или показатель качества.
+    obrazcy = [
+        ('Наименование заявителя', True),
+        ('Наименование потребителя', True),
+        ('Застройщик', True),
+        ('Наименование юридического лица (индивидуального предпринимателя', True),
+        ('Лицо, намеревающееся осуществить перераспределение максимальной мощности', True),
+        ('Наименование филиала', False),
+        ('Наименование Общества', False),
+        ('Наименование центра питания', False),
+        ('Точка присоединения (Центр питания)', False),
+        ('Категория присоединения потребителей услуг по передаче электрической энергии'
+         ' в разбивке по мощности', False),
+        ('Установленная мощность', False),
+        ('Запрашиваемая максимальная мощность (без учета ранее присоединенной), кВт', False),
+    ]
+    rashod = []
+    for imya_k, zhdem in obrazcy:
+        got = bool(IMENA_ZAYAV.search(imya_k)) and not bool(NE_KONTRAGENT.search(imya_k))
+        if got != zhdem:
+            rashod.append((imya_k, zhdem, got))
+    print('разбор имён колонок: образцов %d, расхождений %d' % (len(obrazcy), len(rashod)))
+    for imya_k, zhdem, got in rashod:
+        print('   СБОЙ: ожидали %s, получили %s — %s' % (zhdem, got, imya_k[:90]))
+    itog.append({'proba': 'имена колонок', 'obrazcov': len(obrazcy),
+                 'rashozhdeniy': len(rashod), 'sovpalo': not rashod})
+    with open(put_sost('kontrol'), 'w', encoding='utf-8') as f:
+        json.dump(itog, f, ensure_ascii=False, indent=1)
+    ne = [x for x in itog if x.get('sovpalo') is False]
+    print('ИТОГ kontrol: проб %d, не сошлось %d. %s'
+          % (len(itog), len(ne),
+             'Определитель рабочий: на именованных файлах он отвечает ДА, на безымянных НЕТ.'
+             if not ne else 'ОПРЕДЕЛИТЕЛЬ НЕИСПРАВЕН — числам этого прогона верить нельзя.'))
+
+
 def cmd_svod(argv):
     """Собрать итоговую таблицу «организация → форма → строк → есть ли заявитель».
 
@@ -1003,11 +1202,25 @@ def cmd_svod(argv):
     print('форм всего %d; с именем заявителя в колонках %d; с ИНН в колонках %d'
           % (len(stroki), len(s_zayav), len(s_inn)))
     print('КОНТРОЛЬ: форм, где выдуманное слово нашлось (должно быть 0): %d' % len(plohoy))
+    print('--- ВСЕ находки (колонка заявителя или ИНН) ---')
+    for s in s_zayav + [x for x in s_inn if x not in s_zayav]:
+        print('%-26s %-70s строк=%-7s ИНН-канд=%s' % (s['org'][:26], s['forma'][:70],
+                                                      s.get('strok'), s.get('inn_kand')))
+        print('    колонки: %s' % (s.get('kolonki') or '')[:400])
+    ne_otdano = [s for s in stroki if s.get('zayavitel') == 'файл не отдан']
+    # Итог печатаем ПОСЛЕДНИМ: вывод серверного задания возвращается ХВОСТОМ, и headline,
+    # напечатанный до длинного списка, до нас просто не доезжает.
+    print('--- ИТОГ svod (слой %s) ---' % SLOY)
+    print('форм разобрано: %d' % len(stroki))
+    print('с колонкой имени заявителя: %d' % len(s_zayav))
+    print('с колонкой ИНН: %d' % len(s_inn))
+    print('файлов, которые хост не отдал: %d' % len(ne_otdano))
+    print('КОНТРОЛЬ, форм с выдуманным словом (должно быть 0): %d' % len(plohoy))
 
 
 KOMANDY = {'dostup': cmd_dostup, 'obhod': cmd_obhod, 'fajly': cmd_fajly,
            'drsk': cmd_drsk, 'drsk_reestr': cmd_drsk_reestr, 'lk': cmd_lk,
-           'sipr': cmd_sipr, 'svod': cmd_svod}
+           'sipr': cmd_sipr, 'kontrol': cmd_kontrol, 'svod': cmd_svod}
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in KOMANDY:

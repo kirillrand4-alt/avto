@@ -164,6 +164,14 @@ def vzyat(url, timeout=60, predel=40_000_000, redirect=True):
     """Возвращает (kod, telo, konechnyy_url). kod=0 значит «не ответил вовсе»."""
     klass = urllib.request.HTTPRedirectHandler if redirect else _BezRedirekta
     op = urllib.request.build_opener(klass)
+    # Адреса с кириллицей и пробелами в пути: urllib отказывается их открывать
+    # («URL can't contain control characters»), и это выглядело как код 0, то есть
+    # как «хост не ответил». Кодируем путь сами.
+    r_ = urllib.parse.urlsplit(url)
+    if any(ord(c) > 127 or c == ' ' for c in r_.path + r_.query):
+        url = urllib.parse.urlunsplit((
+            r_.scheme, r_.netloc, urllib.parse.quote(r_.path, safe='/%'),
+            urllib.parse.quote(r_.query, safe='=&%'), r_.fragment))
     try:
         req = urllib.request.Request(url, headers={
             'User-Agent': UA, 'Accept': '*/*',
@@ -343,7 +351,12 @@ def listy_xlsx(telo):
             # их в сыром XML. Расхождение печатается, а не проглатывается.
             if yacheek_v_syrye and len(yach) < yacheek_v_syrye:
                 poteri[0] += yacheek_v_syrye - len(yach)
-            stroki.append([yach.get(j, '') for j in range(max(yach) + 1)] if yach else [])
+            # Ширину строки режем: одна случайная ячейка в колонке XFD превращает
+            # каждую строку в список на 16 384 пустышки, и разбор трёхмегабайтного
+            # файла перестаёт заканчиваться вовсе - прибор висит, а выглядит это
+            # как «файл не открылся».
+            stroki.append([yach.get(j, '') for j in range(min(max(yach), 600) + 1)]
+                          if yach else [])
         rezult.append((podpisi.get(i, imya), stroki))
     if poteri[0]:
         print('   !! ПРИБОР ПОТЕРЯЛ %d ячеек при разборе xlsx - разбору не верить'
@@ -478,8 +491,17 @@ def listy_xls(telo):
         i = sled
     if not yach:
         return [(listy_gr[0] if listy_gr else 'лист', [])]
-    maxr = max(r for r, _ in yach)
-    maxc = max(c for _, c in yach)
+    # ЗАЩИТА ОТ ТИХОЙ СМЕРТИ. На архиве 2014 года разбор .xls убил процесс без
+    # единого сообщения: битая запись дала номер строки 65535 и номер колонки 255,
+    # а разворачивание такой сетки - это 16,7 млн ячеек и OOM. Процесс просто
+    # исчезал, а лог обрывался на середине - то есть выглядело как «файл не
+    # разобрался», хотя на самом деле умер прибор. Режем сетку и говорим об этом.
+    maxr = min(max(r for r, _ in yach), 200000)
+    maxc = min(max(c for _, c in yach), 512)
+    if (maxr + 1) * (maxc + 1) > 4_000_000:
+        maxr = min(maxr, 4_000_000 // (maxc + 1))
+        print('   !! сетка .xls обрезана до %dx%d - файл заявляет больше'
+              % (maxr + 1, maxc + 1))
     stroki = [[yach.get((r, c), '') for c in range(maxc + 1)] for r in range(maxr + 1)]
     imya = ' + '.join(listy_gr) if listy_gr else 'лист'
     return [(imya, stroki)]
@@ -537,23 +559,73 @@ def listy_csv(telo):
 
 
 def tekst_pdf(telo):
-    """Текст из pdf без сторонних библиотек. Возвращает (tekst, n_potokov)."""
-    kuski, n = [], 0
+    """Текст из pdf без сторонних библиотек. Возвращает (tekst, n_potokov).
+
+    ПОЧЕМУ ЗДЕСЬ БОЛЬШЕ КОДА, ЧЕМ КАЖЕТСЯ НУЖНО. Формы ГРО в pdf почти всегда
+    набраны встроенным шрифтом с кодировкой Identity-H: на месте букв стоят
+    номера глиф, и наивный сбор строк «(...)» даёт мусор или пусто. Прошлая
+    сессия на этом и остановилась («текст в CID-кодировке, без pdf-библиотек
+    не читается»). Но рядом в самом файле лежит таблица перевода ToUnicode
+    (`beginbfchar` / `beginbfrange`), и её достаточно: читаем её и переводим
+    коды сами. Если после перевода русских слов всё равно нет - честно
+    возвращаем пусто, и лист помечается «не прочитан», а не «ноль».
+    """
+    potoki = []
     for m in re.finditer(rb'stream\r?\n', telo):
         nach = m.end()
         kon = telo.find(b'endstream', nach)
         if kon < 0:
             continue
-        syr = telo[nach:kon]
         try:
-            raspak = zlib.decompress(syr)
+            potoki.append(zlib.decompress(telo[nach:kon]))
         except Exception:  # noqa: BLE001
             continue
-        n += 1
-        t = raspak.decode('latin-1', 'replace')
+    karta = {}
+    for d in potoki:
+        if b'beginbfchar' not in d and b'beginbfrange' not in d:
+            continue
+        t = d.decode('latin-1', 'replace')
+        for blok in re.findall(r'beginbfchar(.*?)endbfchar', t, re.S):
+            for src, dst in re.findall(r'<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>', blok):
+                karta[int(src, 16)] = _iz_utf16(dst)
+        for blok in re.findall(r'beginbfrange(.*?)endbfrange', t, re.S):
+            for a, b, c in re.findall(
+                    r'<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>', blok):
+                nach_k, kon_k, nach_u = int(a, 16), int(b, 16), int(c, 16)
+                for i in range(min(kon_k - nach_k + 1, 65536)):
+                    karta[nach_k + i] = chr(nach_u + i)
+    kuski = []
+    for d in potoki:
+        t = d.decode('latin-1', 'replace')
+        if 'Tj' not in t and 'TJ' not in t:
+            continue
+        if karta:
+            # Читаем ПО ОПЕРАТОРАМ показа текста: внутри одного [ ... ] TJ куски
+            # склеиваются без пробела, между операторами ставится пробел. Иначе
+            # каждая глифа становится отдельным «словом» и текст выглядит как
+            # «Т о ч к а в х о д а».
+            for om in re.finditer(r'\[(.*?)\]\s*TJ|<([0-9A-Fa-f\s]+)>\s*Tj', t, re.S):
+                syr = om.group(1) or om.group(2) or ''
+                slovo = []
+                for hm in re.finditer(r'<([0-9A-Fa-f\s]+)>', syr):
+                    h = re.sub(r'\s', '', hm.group(1))
+                    slovo.append(''.join(karta.get(int(h[i:i + 4], 16), '')
+                                         for i in range(0, len(h) - 3, 4)))
+                if slovo:
+                    kuski.append(''.join(slovo))
+            continue
         for tm in re.finditer(r'\((?:\\.|[^()\\])*\)', t):
-            kuski.append(tm.group(0)[1:-1])
-    return ' '.join(kuski), n
+            s = tm.group(0)[1:-1]
+            kuski.append(s)
+    txt = re.sub(r'\s+', ' ', ' '.join(kuski))
+    return txt, len(potoki)
+
+
+def _iz_utf16(h):
+    try:
+        return bytes.fromhex(h).decode('utf-16-be', 'ignore')
+    except Exception:  # noqa: BLE001
+        return ''
 
 
 def tekst_docx(telo):
@@ -708,9 +780,13 @@ def razobrat_tablicu(imya_lista, stroki, zerna):
     v_naim, n_naim = gde_slovo(zag, NAZV_KOL)
     v_adr, n_adr = gde_slovo(zag, ADRES_KOL)
     v_ob, n_ob = gde_slovo(zag, OBEM_KOL)
+    # Лист с тысячами строк и НУЛЁМ текстовых ячеек - это не форма без шапки,
+    # это провал разбора (так себя ведёт старый BIFF5 и битый архив). Такой ноль
+    # принадлежит прибору, и выдавать его за ноль формы нельзя.
+    nechitaem = len(stroki) > 0 and len(zag) == 0
     return dict(list=imya_lista, strok_vsego=len(stroki), strok_dannyh=len(dannye),
-                n_shapki=n_shapki, kolonki=kolonki,
-                tekstovyh_yacheek=len(zag),
+                n_shapki=n_shapki, kolonki=kolonki, nechitaem=nechitaem,
+                znakov=0, tekstovyh_yacheek=len(zag),
                 pervye_stroki=[' ¦ '.join(str(v)[:24] for v in r)[:230]
                                for r in stroki[:10]],
                 yacheyki_inn=v_inn, yacheyki_inn_vsego=n_inn,
@@ -733,6 +809,21 @@ def razobrat_tablicu(imya_lista, stroki, zerna):
 def razobrat_fayl(url, telo, zerna):
     """Разбор одного скачанного файла -> список результатов по листам."""
     nizh = url.lower().split('?')[0]
+    # .zip с таблицами внутри: часть ГРО выкладывает формы архивом. Без этого
+    # разбор архива давал «тип не распознан», то есть ещё один тихий ноль.
+    if telo[:2] == b'PK' and not nizh.endswith(('.xlsx', '.xlsm', '.ods', '.docx')):
+        try:
+            z = zipfile.ZipFile(io.BytesIO(telo))
+            imena = z.namelist()
+        except Exception:  # noqa: BLE001
+            imena = []
+        if imena and not any(n.startswith('xl/') or n.startswith('word/') for n in imena):
+            out = []
+            for n in imena[:12]:
+                if n.lower().endswith(('.xls', '.xlsx', '.csv', '.pdf', '.doc', '.docx')):
+                    out += razobrat_fayl(n, z.read(n), zerna)
+            return out or [dict(list='архив', oshibka='в архиве нет таблиц: %s'
+                                % ', '.join(imena[:6]))]
     if nizh.endswith(('.xlsx', '.xlsm', '.ods')) or telo[:2] == b'PK':
         try:
             listy = listy_xlsx(telo)
@@ -760,15 +851,43 @@ def razobrat_fayl(url, telo, zerna):
 
 
 def _iz_teksta(metka, txt, zerna):
-    """Для pdf/doc: колонок нет, считаем признаки по тексту."""
+    """Для pdf/doc: колонок нет, считаем признаки по тексту.
+
+    ЧЕСТНОСТЬ ПРО PDF. Шрифты в формах ГРО почти всегда в CID-кодировке, и без
+    pdf-библиотеки текст из них не достаётся. Тогда все счётчики честно дают 0 -
+    и этот ноль означает «прибор не прочитал», а НЕ «колонки нет». Поэтому, если
+    осмысленного текста не извлеклось, лист помечается `nechitaem` и в сводку
+    идёт как «не прочитан», а не как доказанный ноль.
+    """
     inn = [s for s in re.findall(r'\b\d{10}\b|\b\d{12}\b', txt) if kontrolnaya_inn(s)]
     yur = FORMY.findall(txt)
     n = txt.lower()
     chuzhie = len(re.findall(r'(?:ООО|ЗАО|ОАО|ИП)\s*[«"][^»"]{2,60}[»"]', txt))
     svoi = sum(n.count(z) for z in zerna)
+    # Шапку в pdf колонками не достать, но её НАЗВАНИЯ в тексте есть. Ищем их
+    # прямо в тексте, иначе pdf-форма с колонкой «Наименование потребителя»
+    # молча числилась бы «заявитель не назван» - ещё один ложный ноль.
+    def naydeno(slova):
+        # «инн» как подстрока ловится в «длинный», «финн» и подобных: короткие
+        # ключи ищем только как отдельное слово, иначе колонка ИНН «находится»
+        # там, где её нет.
+        return [s for s in slova
+                if (re.search(r'\b%s' % re.escape(s), n) if len(s) < 5 else s in n)][:6]
     return dict(list=metka, strok_vsego=0, strok_dannyh=0, n_shapki=-1, kolonki=[],
-                est_kol_inn=False, est_kol_naim=False, est_kol_adres=False,
-                est_kol_obem=False, est_kol_data=False,
+                est_kol_inn=bool(naydeno(INN_KOL)), est_kol_naim=bool(naydeno(NAZV_KOL)),
+                est_kol_adres=bool(naydeno(ADRES_KOL)),
+                est_kol_obem=bool(naydeno(OBEM_KOL)), est_kol_data=False,
+                tekstovyh_yacheek=0,
+                yacheyki_inn=naydeno(INN_KOL), yacheyki_inn_vsego=len(naydeno(INN_KOL)),
+                yacheyki_naim=[z for z in
+                               re.findall(r'[А-ЯЁ][^.;|]{0,40}(?:потребител|заявител|'
+                                          r'абонент|застройщик)[а-яё]*', txt)][:6]
+                or naydeno(NAZV_KOL),
+                yacheyki_naim_vsego=len(naydeno(NAZV_KOL)),
+                yacheyki_adres=naydeno(ADRES_KOL),
+                yacheyki_adres_vsego=len(naydeno(ADRES_KOL)),
+                yacheyki_obem=naydeno(OBEM_KOL),
+                yacheyki_obem_vsego=len(naydeno(OBEM_KOL)),
                 imena_inn=[], imena_naim=[], imena_obem=[],
                 inn_po_kolonke=0, inn_gde_ugodno=len(set(inn)),
                 strok_so_svoey_kompaniey=svoi, strok_s_chuzhim_yurlicom=chuzhie,
@@ -776,7 +895,8 @@ def _iz_teksta(metka, txt, zerna):
                                           txt)[:4],
                 strok_s_datoy=len(re.findall(r'\d{2}[./]\d{2}[./]\d{4}', txt)),
                 kontrol_slovo=n.count(KONTROL_SLOVO), znakov=len(txt),
-                yurlic_upominaniy=len(yur))
+                yurlic_upominaniy=len(yur),
+                nechitaem=len(re.findall(r'[а-яА-Я]{4,}', txt)) < 20)
 
 
 # ---------------------------------------------------------------------------
@@ -947,14 +1067,66 @@ INTERES = ('заявк', 'zayav', 'реестр', 'reestr', 'журнал', 'д�
            'юридическ', 'потребител', 'техническ услов', 'ту ')
 
 
-def interesnye(fayly, predel=None):
+# Веса отбора. Пустой БЛАНК заявки и ЗАПОЛНЕННЫЙ реестр заявок называются почти
+# одинаково, и без штрафов наверх лезут типовые формы, в которых данных нет по
+# определению. Поэтому: сильный плюс за имя обязательной формы раскрытия,
+# сильный минус за слова пустого бланка.
+VES_PLYUS = {'реестр': 6, 'reestr': 6, 'журнал': 6, 'перечень заключ': 6,
+             'заявок': 5, 'zayavok': 5, 'о регистрации и ходе': 6,
+             'приложение': 3, 'prilozhenie': 3, 'форма': 2, 'forma': 2,
+             'свободн': 4, 'пропускн': 3, 'мощност': 2, 'грс': 2,
+             'план-график': 4, 'догазифик': 1, 'заявк': 2, 'zayav': 2,
+             'подключ': 1, 'присоедин': 1, 'потребител': 1, 'юридическ': 2}
+VES_MINUS = {'типовая': 8, 'типовой': 8, 'бланк': 8, 'образец': 8, 'форма заявки': 8,
+             'форма договора': 8, 'правила': 5, 'регламент': 5, 'постановлени': 6,
+             'приказ фас': 4, 'инструкц': 5, 'памятка': 5, 'политика': 6,
+             'согласие': 6, 'уведомлени': 3, 'vdgo': 4, 'вдго': 4, 'узел': 6,
+             'tipovaya': 8, 'tipovoy': 8, 'rules': 5, 'заявление': 4}
+
+
+def podpis_formy(a, podpis):
+    """Отпечаток формы: подпись без месяцев, годов и номеров - «П6Ф2 08-2026 ...»
+    и «П6Ф2 07-2026 ...» это ОДНА форма за разные месяцы, и разбирать надо свежую,
+    иначе 100 копий одного отчёта съедают весь бюджет разбора."""
+    s = (podpis or urllib.parse.unquote(a).split('/')[-1]).lower()
+    s = re.sub(r'\d', '', s)
+    s = re.sub(r'(январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|'
+               r'ноябр|декабр)\w*', '', s)
+    s = re.sub(r'[^а-яa-z]+', ' ', s).strip()
+    return s[:70]
+
+
+def svezhest(a):
+    """Ключ свежести по году-месяцу в адресе. Нет даты - считаем самым старым."""
+    m = re.search(r'/(20\d\d)/(\d{1,2})/', a) or re.search(r'(20\d\d)[-_/](\d{2})', a)
+    if m:
+        return '%s%02d' % (m.group(1), int(m.group(2)))
+    m = re.search(r'(\d{2})[._-](20\d\d)', urllib.parse.unquote(a))
+    if m:
+        return '%s%02d' % (m.group(2), int(m.group(1)))
+    return '000000'
+
+
+def interesnye(fayly, predel=None, na_formu=1):
     out = []
     for a, podpis in fayly.items():
         klyuch = (urllib.parse.unquote(a) + ' ' + podpis).lower()
-        ball = sum(1 for s in INTERES if s in klyuch)
-        if ball:
+        ball = sum(v for s, v in VES_PLYUS.items() if s in klyuch)
+        ball -= sum(v for s, v in VES_MINUS.items() if s in klyuch)
+        # ПП 872 требует ТАБЛИЦУ, а не текст: rtf/doc почти всегда пустой бланк
+        if a.lower().split('?')[0].endswith(('.xlsx', '.xls', '.xlsm', '.csv', '.ods')):
+            ball += 4
+        if ball > 0:
             out.append((ball, a, podpis))
-    out.sort(key=lambda x: -x[0])
+    if na_formu:
+        po_forme = {}
+        for ball, a, podpis in out:
+            po_forme.setdefault(podpis_formy(a, podpis), []).append((ball, a, podpis))
+        out = []
+        for gr in po_forme.values():
+            gr.sort(key=lambda x: (svezhest(x[1]), x[0]), reverse=True)
+            out += gr[:na_formu]
+    out.sort(key=lambda x: (-x[0], -int(svezhest(x[1])), x[1]))
     return out[:predel] if predel else out
 
 
@@ -1054,6 +1226,36 @@ def rezhim_stranica(argv):
     return 0
 
 
+def rezhim_syroy(argv):
+    """Сырой показ файла: N первых строк ДОСЛОВНО и все колонки шапки.
+
+    Нужен, когда сводка показала «заявитель назван» - прежде чем радоваться,
+    строки надо увидеть глазами, а не поверить счётчику.
+    """
+    url = argv[0]
+    skolko = 18
+    for a in argv[1:]:
+        if a.startswith('--strok='):
+            skolko = int(a.split('=', 1)[1])
+    kod, telo, kon = vzyat(url, timeout=300, predel=60_000_000)
+    print('файл: код=%s байт=%d' % (kod, len(telo)))
+    if kod != 200:
+        return 1
+    nizh = kon.lower().split('?')[0]
+    listy = (listy_xls(telo) if (nizh.endswith('.xls') and telo[:2] != b'PK')
+             else listy_xlsx(telo))
+    for imya, stroki in listy:
+        print('=== лист «%s»: строк %d' % (imya, len(stroki)))
+        for i, r in enumerate(stroki[:skolko]):
+            nep = [(j, str(v)) for j, v in enumerate(r) if str(v).strip()]
+            print(' %3d |%s' % (i, ' ¦ '.join('%d:%s' % (j, v[:40]) for j, v in nep[:14])))
+        print(' ... середина листа:')
+        for i in range(len(stroki) // 2, min(len(stroki) // 2 + 4, len(stroki))):
+            nep = [(j, str(v)) for j, v in enumerate(stroki[i]) if str(v).strip()]
+            print(' %3d |%s' % (i, ' ¦ '.join('%d:%s' % (j, v[:40]) for j, v in nep[:14])))
+    return 0
+
+
 def rezhim_fayl(argv):
     """Разбор одного файла по адресу."""
     url = argv[0]
@@ -1074,6 +1276,11 @@ def rezhim_fayl(argv):
 def pechat_lista(r, otstup='  '):
     if r.get('oshibka'):
         print(otstup + 'лист %s: %s' % (r.get('list'), r['oshibka']))
+        return
+    if r.get('nechitaem'):
+        print(otstup + 'лист «%s»: ФАЙЛ НЕ ПРОЧИТАН (текста извлечено %d знаков, '
+                       'русских слов < 20). Это ноль ПРИБОРА, а не ноль формы.'
+              % (r['list'], r.get('znakov', 0)))
         return
     print(otstup + 'лист «%s»: строк всего %d, строк данных %d, текстовых ячеек %d'
           % (r['list'], r['strok_vsego'], r['strok_dannyh'], r.get('tekstovyh_yacheek', 0)))
@@ -1118,7 +1325,10 @@ def rezhim_razbor(argv):
         print('\n=== %s (%s): разбираю %d файлов' % (k, r['dom'], len(sp)))
         st['razbor'].setdefault(k, {})
         for ball, a, podpis in sp:
-            if a in st['razbor'][k]:
+            # --zanovo: перемерить уже разобранное. Нужно после КАЖДОЙ починки
+            # прибора: числа, снятые сломанным разбором, недействительны, а тихо
+            # пропущенный файл выглядит как подтверждённый.
+            if a in st['razbor'][k] and '--zanovo' not in argv:
                 continue
             kod, telo, kon = vzyat(a, timeout=180, predel=25_000_000)
             print('-- %s | %s' % (podpis[:80] or os.path.basename(a)[:80], a[-60:]))
@@ -1136,30 +1346,87 @@ def rezhim_razbor(argv):
     return 0
 
 
+KOL_ZAYAVITEL = ('наименование потребителя', 'наименование заявителя',
+                 'наименование абонента', 'наименование организации',
+                 'наименование юридического', 'заявитель', 'потребитель',
+                 'застройщик', 'абонент', 'контрагент')
+
+
+def nazvan_li_zayavitel(l):
+    """Назван ли заявитель ПОИМЁННО. Два условия вместе, а не любое из двух.
+
+    Одной колонки мало: «Категория заявителей» тоже содержит слово «заявител»,
+    но за ней стоит «Физическое лицо / Юридическое лицо», а не имя. И одних
+    юрлиц в строках мало: сама газовая компания печатается в каждой строке.
+    Поэтому: нужна колонка ИМЕНИ (не «категория») И не меньше 5 строк с чужим
+    юрлицом.
+    """
+    zag = [z.lower() for z in (l.get('yacheyki_naim') or [])]
+    est_imya = any(any(s in z for s in KOL_ZAYAVITEL) and 'категор' not in z
+                   for z in zag)
+    chuzhih = l.get('strok_s_chuzhim_yurlicom', 0)
+    return bool(est_imya and chuzhih >= 5), est_imya, chuzhih
+
+
 def rezhim_svodka(argv):
     st = chitat()
-    print('%-11s %-34s %6s %6s %5s %5s %5s %5s' %
-          ('орг', 'форма (подпись/файл)', 'строк', 'данных', 'ИНН', 'наим', 'объём', 'дата'))
-    itogo = dict(fayl=0, s_inn=0, s_naim=0, strok=0)
+    import csv as _csv
+    put = os.path.join(KATALOG, 'tp-gaz-svodka.csv')
+    f = open(put, 'w', encoding='utf-8-sig', newline='')
+    w = _csv.writer(f, delimiter=';')
+    w.writerow(['organizaciya', 'dom', 'forma', 'adres_fayla', 'list', 'strok_vsego',
+                'strok_dannyh', 'kolonka_imeni_zayavitelya', 'strok_s_chuzhim_yurlicom',
+                'inn_po_kolonke', 'yacheek_so_slovom_INN', 'est_obem', 'strok_s_datoy',
+                'zayavitel_nazvan'])
+    print('%-11s %-40s %7s %7s %4s %6s %5s %5s  %s' %
+          ('орг', 'форма', 'строк', 'данных', 'ИНН', 'юрлиц', 'объём', 'дата', 'ЗАЯВИТЕЛЬ'))
+    itogo = dict(list=0, strok=0, s_imenem=0, s_inn=0, nechitaem=0)
+    nashli = []
     for k, fayly in sorted(st.get('razbor', {}).items()):
-        for a, v in fayly.items():
+        dom = (st.get('razdely', {}).get(k) or {}).get('dom', '')
+        for a, v in sorted(fayly.items()):
             for l in v.get('listy', []):
                 if l.get('oshibka'):
                     continue
-                itogo['fayl'] += 1
+                if l.get('nechitaem'):
+                    itogo['nechitaem'] += 1
+                    print('%-11s %-40s   НЕ ПРОЧИТАН (ноль прибора, не формы)'
+                          % (k, (v.get('podpis') or os.path.basename(a))[:40]))
+                    continue
+                nazvan, est_imya, chuzhih = nazvan_li_zayavitel(l)
+                itogo['list'] += 1
                 itogo['strok'] += l.get('strok_dannyh', 0)
+                if nazvan:
+                    itogo['s_imenem'] += 1
+                    nashli.append((k, v.get('podpis') or os.path.basename(a), a,
+                                   l.get('strok_dannyh', 0), chuzhih))
                 if l.get('inn_po_kolonke'):
                     itogo['s_inn'] += 1
-                if l.get('strok_s_chuzhim_yurlicom'):
-                    itogo['s_naim'] += 1
-                print('%-11s %-34s %6d %6d %5d %5d %5s %5d'
-                      % (k, (v.get('podpis') or os.path.basename(a))[:34],
-                         l.get('strok_vsego', 0), l.get('strok_dannyh', 0),
-                         l.get('inn_po_kolonke', 0), l.get('strok_s_chuzhim_yurlicom', 0),
-                         l.get('est_kol_obem'), l.get('strok_s_datoy', 0)))
-    print('--- ИТОГ: листов %d, строк данных %d, листов с ИНН заявителя %d, '
-          'листов с чужим юрлицом %d' % (itogo['fayl'], itogo['strok'],
-                                         itogo['s_inn'], itogo['s_naim']))
+                podpis = (v.get('podpis') or os.path.basename(a))[:40]
+                print('%-11s %-40s %7d %7d %4d %6d %5s %5d  %s'
+                      % (k, podpis, l.get('strok_vsego', 0), l.get('strok_dannyh', 0),
+                         l.get('inn_po_kolonke', 0), chuzhih,
+                         'да' if l.get('est_kol_obem') or l.get('yacheyki_obem') else 'нет',
+                         l.get('strok_s_datoy', 0),
+                         'НАЗВАН' if nazvan else ('колонка есть, строк мало'
+                                                  if est_imya else 'нет')))
+                w.writerow([k, dom, v.get('podpis', ''), a, l.get('list'),
+                            l.get('strok_vsego', 0), l.get('strok_dannyh', 0),
+                            '; '.join(l.get('yacheyki_naim') or []),
+                            chuzhih, l.get('inn_po_kolonke', 0),
+                            l.get('yacheyki_inn_vsego', 0),
+                            l.get('yacheyki_obem_vsego', 0), l.get('strok_s_datoy', 0),
+                            'да' if nazvan else 'нет'])
+    f.close()
+    print('\n=== ФОРМЫ, ГДЕ ЗАЯВИТЕЛЬ НАЗВАН ПОИМЁННО (%d):' % len(nashli))
+    for k, podpis, a, strok, chuzhih in sorted(nashli, key=lambda x: -x[4]):
+        print('  %-11s строк %6d, юрлиц %6d | %s' % (k, strok, chuzhih, podpis[:70]))
+        print('      %s' % a)
+    print('\n--- ИТОГ: листов разобрано %d, строк данных %d, листов с ИМЕНЕМ заявителя %d, '
+          'листов с ИНН заявителя %d, не прочитано %d'
+          % (itogo['list'], itogo['strok'], itogo['s_imenem'], itogo['s_inn'],
+             itogo['nechitaem']))
+    print('--- таблица: %s (%d байт)' % (put, os.path.getsize(put)))
     return 0
 
 
@@ -1185,6 +1452,8 @@ def main():
         return rezhim_slit(a)
     if r == 'stranica':
         return rezhim_stranica(a)
+    if r == 'syroy':
+        return rezhim_syroy(a)
     if r == 'kontrol':
         return rezhim_kontrol(a)
     print('неизвестный режим: %s' % r)

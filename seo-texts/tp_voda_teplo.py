@@ -629,6 +629,208 @@ def cmd_samoprover():
     print('ИТОГ САМОПРОВЕРКИ:', 'прибор исправен' if ok else 'ПРИБОР НЕИСПРАВЕН')
 
 
+EGRZ_FAJL = os.path.join(
+    '/tmp/claude-0/-home-user-avto/66783df1-79e2-513f-8bfb-9c49a1f69007/scratchpad',
+    'KOMPRESSORNYE-EGRZ.jsonl')
+
+
+def est_zayavitel(shapka_slova, telo=''):
+    """ОДИН определитель заявителя на все источники. Вход — имена колонок (и при
+    желании тело). Выход — какие признаки заявителя найдены."""
+    n = (' '.join(shapka_slova) + ' ' + telo).lower()
+    return [w for w in ZAYAV_SLOVA if w in n]
+
+
+def cmd_kontrol_zayavitelya(put=None):
+    """Два контроля ОДНИМ определителем.
+
+    ПОЛОЖИТЕЛЬНЫЙ: выгрузка ЕГРЗ, где застройщик и его ИНН заведомо есть.
+    ОТРИЦАТЕЛЬНЫЙ: шапка формы раскрытия по ПП 6/570 (количества заявок и
+    мощность), где заявителя заведомо нет.
+    Без первого ноль на порталах неотличим от сломанного определителя.
+    """
+    put = put or EGRZ_FAJL
+    zapisi = []
+    with open(put, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                zapisi.append(json.loads(line))
+    kl = sorted({k for z in zapisi for k in z})
+    nash = est_zayavitel(kl)
+    imya_ok = sum(1 for z in zapisi if (z.get('zastroyshchik') or '').strip())
+    inn_syroj = sum(1 for z in zapisi if str(z.get('zastroyshchik_inn') or '').strip())
+    inn_god = sum(1 for z in zapisi
+                  if re.fullmatch(r'\d{10}|\d{12}', str(z.get('zastroyshchik_inn') or '').strip()))
+    # ловушка из чужого опыта: ИНН, ставший хвостом float
+    inn_float = sum(1 for z in zapisi if '.' in str(z.get('zastroyshchik_inn') or ''))
+    adres = sum(1 for z in zapisi if (z.get('adres_obekta') or '').strip())
+    data = sum(1 for z in zapisi if (z.get('data') or '').strip())
+    # не является ли «застройщик» одним и тем же лицом во всех строках
+    raznyh = len({(z.get('zastroyshchik') or '').strip().lower() for z in zapisi} - {''})
+    print('=== ПОЛОЖИТЕЛЬНЫЙ КОНТРОЛЬ: выгрузка ЕГРЗ')
+    print(f'  записей {len(zapisi)}, колонок {len(kl)}')
+    print(f'  колонки: {kl}')
+    print(f'  определитель заявителя нашёл: {nash}')
+    print(f'  наименование застройщика непусто: {imya_ok}  РАЗНЫХ имён: {raznyh}')
+    print(f'  ИНН непуст: {inn_syroj}, из них годных (10/12 цифр): {inn_god}, '
+          f'с точкой (хвост float): {inn_float}')
+    print(f'  адрес объекта: {adres}, дата: {data}')
+    print('=== ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ: шапка формы раскрытия ПП 6 / ПП 570')
+    forma = ['Количество поданных заявок на подключение',
+             'Количество исполненных заявок на подключение',
+             'Количество заявок с отказом в подключении',
+             'Резерв мощности системы теплоснабжения, Гкал/ч',
+             'Наименование регулируемой организации', 'Отчётный период']
+    n2 = est_zayavitel(forma)
+    print(f'  колонки: {forma}')
+    print(f'  определитель заявителя нашёл: {n2}')
+    print('=== ИТОГ')
+    ok = bool(nash) and imya_ok > 400 and inn_god > 400 and raznyh > 100
+    print('определитель заявителя ' + ('РАБОТАЕТ' if ok else 'НЕ ДОКАЗАН') +
+          f'; на заведомо негодной шапке он даёт {len(n2)} признак(ов) '
+          f'({"наименование организации" if n2 else "ничего"}) — '
+          'и это ровно та ловушка, о которой предупреждали: «наименование юрлица» '
+          'в форме раскрытия это САМА сетевая компания, одна и та же в каждой строке.')
+
+
+BRAUZER = {
+    'User-Agent': UA,
+    'Accept': 'application/json, text/plain, */*',
+    'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
+    'Referer': 'https://xn--80az8a.xn--d1aqf.xn--p1ai/',
+    'Origin': 'https://xn--80az8a.xn--d1aqf.xn--p1ai',
+    'X-Requested-With': 'XMLHttpRequest',
+    'Sec-Fetch-Site': 'same-origin', 'Sec-Fetch-Mode': 'cors', 'Sec-Fetch-Dest': 'empty',
+}
+
+
+def razvedka_gisogd2():
+    """Второй заход: три конкретных вопроса, у каждого свой контроль."""
+    print('### A. Стройкомплекс.РФ (gisogd.gov.ru) — что на странице и в бандле')
+    for popytka in (1, 2):
+        k, b, h, f = get('https://gisogd.gov.ru/', timeout=60, limit=6_000_000)
+        print(f'  попытка {popytka}: код={k} байт={len(b)}')
+        if k == 200 and len(b) > 1000:
+            html = dekod(b, h)
+            nizh = html.lower()
+            for w in ['разрешени на строительств', 'разрешение на строительство', 'застройщик',
+                      'реестр', 'поиск', 'ввод в эксплуатац', 'открытые данные', 'щварцкопфер']:
+                print(f'    «{w}»: {nizh.count(w)}')
+            ss = sobrat_ssylki(html, f)
+            print(f'    ссылок {len(ss)}')
+            for u, t in ss:
+                if any(w in (t + u).lower() for w in ['разреш', 'razresh', 'реестр', 'reestr',
+                                                      'открыт', 'opendata', 'api', 'поиск']):
+                    print(f'      -> {t[:46]:46} {u[:90]}')
+            try:
+                cmd_bundle('https://gisogd.gov.ru/', 6)
+            except Exception as e:  # noqa: BLE001
+                print('    бандл сбой:', type(e).__name__)
+            break
+    print('\n### B. ЕИСЖС наш.дом.рф с браузерными заголовками')
+    proby = [
+        ('главная портала', 'https://наш.дом.рф/', {}),
+        ('каталог новостроек (HTML)', 'https://наш.дом.рф/сервисы/каталог-новостроек/', {}),
+        ('api объектов', 'https://наш.дом.рф/сервисы/api/kn/object?offset=0&limit=5'
+         '&sortField=obj_publ_dt&sortType=desc&objStatus=0', BRAUZER),
+        ('api застройщиков', 'https://наш.дом.рф/сервисы/api/kn/developer?offset=0&limit=5'
+         '&sortField=devShortNm&sortType=asc&objStatus=0', BRAUZER),
+        ('КОНТРОЛЬ выдуманный путь', 'https://наш.дом.рф/сервисы/api/kn/shvarckopfer', BRAUZER),
+    ]
+    for imya, u, hh in proby:
+        k, b, h, f = get(u, timeout=45, limit=8_000_000, headers=hh or None)
+        ct = (h.get('Content-Type') or h.get('content-type') or '')[:30]
+        waf = b'<!-- waf -->' in b[:400]
+        print(f'  {imya[:28]:28} код={k:4} байт={len(b):7} тип={ct:28} waf={waf}')
+        if k == 200 and b[:1] in (b'{', b'['):
+            try:
+                d = json.loads(b.decode('utf-8', 'replace'))
+                print('    ключи:', list(d)[:14] if isinstance(d, dict) else f'список {len(d)}')
+                nz = b.decode('utf-8', 'replace').lower()
+                print('    заявитель-слова:', [w for w in ZAYAV_SLOVA if w in nz][:8])
+            except Exception as e:  # noqa: BLE001
+                print('    не JSON:', type(e).__name__)
+    print('\n### C. Открытые данные Москвы: есть ли набор про разрешения на строительство')
+    for imya, u in [
+        ('поиск «разрешение на строительство»',
+         'https://data.mos.ru/opendata?search=%D1%80%D0%B0%D0%B7%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5%20%D0%BD%D0%B0%20%D1%81%D1%82%D1%80%D0%BE%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D1%81%D1%82%D0%B2%D0%BE'),
+        ('КОНТРОЛЬ поиск «щварцкопфер»',
+         'https://data.mos.ru/opendata?search=%D1%89%D0%B2%D0%B0%D1%80%D1%86%D0%BA%D0%BE%D0%BF%D1%84%D0%B5%D1%80'),
+    ]:
+        k, b, h, f = get(u, timeout=45, limit=6_000_000)
+        t = dekod(b, h) if k == 200 else ''
+        print(f'  {imya[:40]:40} код={k} байт={len(b)} '
+              f'«разрешен»={t.lower().count("разрешен")} «набор»={t.lower().count("набор")}')
+
+
+GISOGD3 = [
+    ('РИСОГД Пермского края', 'Пермский', 'https://isogd.permkrai.ru/'),
+    ('ИСОГД Курганской обл.', 'Курганская', 'https://isogd.gov45.ru/'),
+    ('Стройкомплекс.РФ', 'РФ', 'https://xn--e1ahdbdflckekkc.xn--p1ai/'),
+    ('ГИСОГД Пермского края (публ.)', 'Пермский', 'https://isogd.permkrai.ru/publicservices/'),
+    ('ИСОГД Курганской (публ. сервисы)', 'Курганская', 'https://isogd.gov45.ru/publicservices/'),
+    ('КОНТРОЛЬ несуществующий ИСОГД', '-', 'https://isogd-shvarckopfer-999.ru/'),
+]
+
+
+def razvedka_gisogd3():
+    """Третий заход: публичные градостроительные порталы, где по описанию
+    производителя есть СЕРВИС РАЗРЕШЕНИЙ НА СТРОИТЕЛЬСТВО со связанным застройщиком.
+    Проверяем, виден ли застройщик БЕЗ входа.
+    """
+    for name, reg, url in GISOGD3:
+        k, b, h, f = get(url, timeout=45, limit=6_000_000)
+        if k != 200 or not b:
+            print(f'{name[:34]:34} код={k:4} байт={len(b)} {b[:60].decode("utf-8", "replace")}')
+            continue
+        t = dekod(b, h)
+        nizh = t.lower()
+        slova = {w: nizh.count(w) for w in
+                 ['разрешени на строительство', 'разрешение на строительство', 'застройщик',
+                  'ввод в эксплуатац', 'реестр', 'авторизац', 'войти', 'есиа', 'щварцкопфер']
+                 if nizh.count(w)}
+        print(f'{name[:34]:34} код=200 байт={len(b):7} титул={titul(t)[:40]:40} {slova}')
+        ss = sobrat_ssylki(t, f)
+        interes = [(u, x) for u, x in ss
+                   if any(w in (x + u).lower() for w in
+                          ['разреш', 'razresh', 'permit', 'реестр', 'reestr', 'сервис',
+                           'service', 'поиск', 'search', 'публичн', 'public', 'данн'])]
+        print(f'   ссылок {len(ss)}, интересных {len(interes)}')
+        for u, x in interes[:10]:
+            print(f'      -> {x[:42]:42} {u[:86]}')
+        # один шаг вглубь по самой похожей ссылке
+        for u, x in interes[:3]:
+            k2, b2, h2, f2 = get(u, timeout=40, limit=6_000_000)
+            if k2 != 200:
+                print(f'      вглубь код={k2} {u[:70]}')
+                continue
+            t2 = dekod(b2, h2).lower()
+            print(f'      вглубь 200 байт={len(b2):7} застройщик={t2.count("застройщик")} '
+                  f'разрешен={t2.count("разрешен")} инн={t2.count("инн")} '
+                  f'контроль={t2.count("щварцкопфер")} {u[:60]}')
+    print('\n### Стройкомплекс.РФ (gisogd.gov.ru) с коротким чтением')
+    for lim in (150_000, 400_000):
+        k, b, h, f = get('https://gisogd.gov.ru/', timeout=90, limit=lim)
+        print(f'  предел чтения {lim}: код={k} байт={len(b)}')
+        if k == 200 and len(b) > 2000:
+            t = dekod(b, h).lower()
+            print('   ', {w: t.count(w) for w in
+                          ['разрешени', 'застройщик', 'реестр', 'витрин', 'открытые данные',
+                           'щварцкопфер'] if t.count(w)})
+            break
+    print('\n### Открытые данные Москвы: сам API, а не страница поиска')
+    for imya, u in [
+        ('apidata без ключа', 'https://apidata.mos.ru/v1/datasets?$top=3'),
+        ('apidata счёт наборов', 'https://apidata.mos.ru/v1/datasets/count'),
+        ('КОНТРОЛЬ выдуманный путь', 'https://apidata.mos.ru/v1/shvarckopfer'),
+    ]:
+        k, b, h, f = get(u, timeout=45, limit=2_000_000,
+                         headers={'Accept': 'application/json'})
+        print(f'  {imya[:26]:26} код={k:4} байт={len(b):7} '
+              f'тело={b[:90].decode("utf-8", "replace")!r}')
+
+
 def put_json(imya, dan):
     p = os.path.join(OPS, imya)
     try:
@@ -692,10 +894,17 @@ def opisat(p):
         print('  текст/HTML, первые 300:', re.sub(r'\s+', ' ', txt[:300]))
 
 
+# Слова, по которым узнаём ЗАЯВИТЕЛЯ в шапке. Латиница здесь не для красоты:
+# положительный контроль на выгрузке ЕГРЗ ПРОВАЛИЛСЯ именно потому, что там
+# колонки транслитом (`zastroyshchik`, `zastroyshchik_inn`), а список был только
+# кириллический. То есть определитель молча не видел бы заявителя в любой
+# выгрузке с латинскими именами полей.
 ZAYAV_SLOVA = ['заявител', 'застройщик', 'наименование юридического',
                'наименование заявителя', 'наименование организации', 'инн',
                'объект капитального', 'наименование объекта', 'адрес объекта',
-               'правообладател', 'фио', 'ф.и.о', 'контрагент', 'абонент']
+               'правообладател', 'фио', 'ф.и.о', 'контрагент', 'абонент',
+               'zayavitel', 'zastroyshchik', 'zastroishchik', 'inn', 'obekt',
+               'adres', 'kontragent', 'abonent', 'developer', 'applicant']
 ZAYAV_KONTROL = ['щварцкопфер', 'зюзюблик']
 
 
@@ -708,7 +917,21 @@ def shapka_fajla(b, imya):
             wb = openpyxl.load_workbook(io.BytesIO(b), read_only=True, data_only=True)
             kol, zap, syr = [], 0, []
             for ws in wb.worksheets:
-                zap += max(0, (ws.max_row or 0))
+                # ЗДЕСЬ БЫЛА ЧЕТВЁРТАЯ ПОЛОМКА ПРИБОРА. Считалось ws.max_row —
+                # ОБЪЯВЛЕННЫЙ размер листа. Файл «Форма 22» ГУП ТЭК СПб получил
+                # «записей 1 048 638», потому что один лист объявляет предел Excel
+                # (1 048 576), а непустых строк в книге РЕАЛЬНО 70. Крупное число
+                # оказалось свойством прибора, а не источника.
+                n = 0
+                try:
+                    for row in ws.iter_rows(values_only=True):
+                        if any(c not in (None, '') for c in row):
+                            n += 1
+                        if n > 20000:
+                            break
+                except Exception:  # noqa: BLE001
+                    n = 0
+                zap += n
                 for i, row in enumerate(ws.iter_rows(max_row=14, values_only=True)):
                     vals = [('' if c is None else str(c)) for c in row]
                     syr += vals
@@ -753,6 +976,8 @@ def cmd_razbor(imya_json, limit=14, tolko=''):
             if any(w in s_ for w in ['заявк', 'заявлен', 'подключ', 'присоедин']):
                 v += 2
             if any(w in s_ for w in ['резерв', 'мощност', 'пропускн']):
+                v += 2
+            if any(w in s_ for w in ['инвестицион', 'адресн', 'мероприят']):
                 v += 2
             if s_.split('?')[0].endswith(('.xlsx', '.xls', '.csv', '.ods')):
                 v += 3
@@ -809,10 +1034,16 @@ if __name__ == '__main__':
                   int(a[2]) if len(a) > 2 else 0, int(a[3]) if len(a) > 3 else 999)
     elif a[0] == 'fetch':
         cmd_fetch(a[1], a[2] if len(a) > 2 else None)
+    elif a[0] == 'kontrol':
+        cmd_kontrol_zayavitelya(a[1] if len(a) > 1 else None)
     elif a[0] == 'samoprover':
         cmd_samoprover()
     elif a[0] == 'tarifspb':
         cmd_tarif_spb(int(a[1]) if len(a) > 1 else 60)
+    elif a[0] == 'gisogd3':
+        razvedka_gisogd3()
+    elif a[0] == 'gisogd2':
+        razvedka_gisogd2()
     elif a[0] == 'gisogd':
         razvedka_gisogd()
     elif a[0] == 'bundle':
