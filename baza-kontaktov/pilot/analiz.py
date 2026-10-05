@@ -256,7 +256,8 @@ def otchet():
         alive = bool(s.get('http_status')) and s['http_status'] < 400
         segs = sorted(c['segments'])
         best = max((s.get('scores') or {}).get(x, -99) for x in segs) if alive else None
-        prof = alive and not s.get('is_parked') and best is not None and best >= O.POROG
+        tip = O.tip_sayta(s.get('title') or (c['titles'][0] if c['titles'] else ''), d) if alive else ''
+        prof = alive and not s.get('is_parked') and best is not None and best >= O.POROG and not tip
         ids = (s.get('inn') or []) + (s.get('unp') or [])
         # редирект на другой домен: сверяем и исходный, и конечный
         fd = s.get('final_domain') or d
@@ -267,7 +268,7 @@ def otchet():
                      'subsegments': '|'.join(sorted(c['subsegments_full'])), 'regions': '|'.join(sorted(c['regions'])),
                      'queries_count': len(c['queries']), 'best_pos': c['best_pos'], 'profile_score': best,
                      'inn': '|'.join(s.get('inn') or []), 'unp': '|'.join(s.get('unp') or []),
-                     'status': st, 'in_cand_site': int(d in kc or fd in kc), 'title': s.get('title') or (c['titles'][0] if c['titles'] else ''),
+                     'tip': tip, 'status': st, 'in_cand_site': int(d in kc or fd in kc), 'title': s.get('title') or (c['titles'][0] if c['titles'] else ''),
                      'post_hits': '|'.join(sorted(c['post_hits']))})
         if prof:
             for seg in segs:

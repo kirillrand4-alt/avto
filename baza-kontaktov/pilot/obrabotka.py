@@ -242,6 +242,29 @@ def is_parked(status, html_text, visible_text):
     return len((visible_text or '').strip()) < 150
 
 
+# Тип сайта по title+домену. Ручная проверка пилота (05.10): балл профиля не отличает
+# компанию от площадки, производителя оборудования, розницы и СМИ — их режем отдельно.
+TIP_SAYTA = [
+    ('oborudovanie', r'оборудовани|станк|фотосепаратор|сушильн|линии? для|машиностро|строительство элеватор|'
+                     r'монтаж|machinery|equipment|упаковк'),
+    ('roznica', r'интернет[- ]магазин|магазин|корзин|с доставкой|доставка (на дом|продуктов)|для дачи|дачник|'
+                r'в пвз|здоров\w* питани'),
+    ('media', r'новост|аналитик|портал|каталог|справочник|биржа|сервис по|исследован|журнал|news|форум|'
+              r'community|ассоциаци|союз\b|выставк'),
+    ('logistika', r'логисти|транспортн|экспедир|таможен|под ключ|сопровожден|консалт'),
+]
+_TIP_RX = [(k, re.compile(rx, re.I)) for k, rx in TIP_SAYTA]
+
+
+def tip_sayta(title, domain):
+    """'' — похоже на сайт компании; иначе oborudovanie / roznica / media / logistika."""
+    s = f'{title or ""} {domain_unicode(domain or "")}'
+    for k, rx in _TIP_RX:
+        if rx.search(s):
+            return k
+    return ''
+
+
 # --- ИНН / УНП --------------------------------------------------------------------------
 
 def inn_ok(s):
@@ -397,6 +420,8 @@ def _test():
     c, f, d = aggregate(rows, {}, {})
     assert 'portal.ru' not in c and d['portal.ru'] == 'portal' and d['vk.com'] == 'stop:socset'
     assert len(c) == 1
+    assert tip_sayta('NUT MACHINERY - Оборудование для переработки орехов', 'nut-machinery.ru') == 'oborudovanie'
+    assert tip_sayta('ООО ХПП «Зарница» город Рубцовск', 'hppzarnica.ru') == ''
     print('ok: все проверки пройдены')
 
 
