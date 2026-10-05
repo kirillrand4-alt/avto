@@ -220,7 +220,7 @@ def proverit(cand):
     return rec
 
 
-def proverka(budget=1500):
+def proverka(budget=6000):
     cands, _, _ = kandidaty()
     done = set()
     if os.path.exists(SAYTY):
