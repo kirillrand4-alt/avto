@@ -5,8 +5,8 @@
 Параметры — по публичной документации XMLRiver (xmlriver.com/apiydoc, /apidoc):
   Яндекс: /search_yandex/xml  query, lr, groupby=10, page с 0, domain=ru|by, device=desktop
   Google: /search/xml         query, country, page с 1; с сентября 2025 отдаёт ровно 10 на страницу
-Перед массовым прогоном сверить с рабочим кодом сервера (news_scan.col_xmlriver,
-enrich_contacts.find_site_via_xmlriver) и пробой: --proba.
+Рабочий код сервера (serp_fetch.py, news_scan.col_xmlriver) гео не передаёт; lr и
+country=2643 проверены пробой 05.10 (proba.py): выдача региональная.
 
 Строго ОДИН поток: лимит каналов аккаунта общий с другими сессиями.
 Результат — BAZA-PILOT-SERP.jsonl (fsync после каждого запроса, продолжение по qid+engine+page).
@@ -34,6 +34,7 @@ GOOGLE_COUNTRY = {'ru': 2643, 'by': 2112}
 def _url(engine, q, row, page):
     user, key = os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')
     p = {'user': user, 'key': key, 'query': q, 'device': 'desktop'}
+    # проба 05.10: groupby>10 игнорируется (10 на запрос), 0,025 ₽/запрос, ошибки не списываются
     if engine == 'yandex':
         p.update(lr=row['lr'], groupby=10, page=page, domain=('by' if row['country'] == 'by' else 'ru'))
         return 'http://xmlriver.com/search_yandex/xml?' + urllib.parse.urlencode(p)
@@ -95,11 +96,16 @@ def main():
                 rec = {'qid': row['qid'], 'engine': eng, 'page': pg, 'query': row['query'],
                        'segment': row['segment'], 'subsegment': row['subsegment'],
                        'region': row['region'], 'ts': int(time.time())}
-                try:
-                    body = fetch(_url(eng, row['query_full'], row, pg))
-                    docs, err = parse(body)
-                except Exception as e:  # noqa: BLE001
-                    docs, err = [], str(e)[:200]
+                for att in range(5):
+                    try:
+                        body = fetch(_url(eng, row['query_full'], row, pg))
+                        docs, err = parse(body)
+                    except Exception as e:  # noqa: BLE001
+                        docs, err = [], str(e)[:200]
+                    # «Выполните перезапрос» / нет свободных каналов — транзиент, не списывается
+                    if not (err and re.search(r'перезапрос|свободных каналов|free channel', err, re.I)):
+                        break
+                    time.sleep(3 + 3 * att)
                 stat['zaprosov'] += 1
                 rec['error'] = err
                 rec['docs'] = [{'pos': pg * 10 + i + 1, 'url': u, 'title': t, 'snippet': s[:300]}
@@ -109,7 +115,7 @@ def main():
                 f.write(json.dumps(rec, ensure_ascii=False) + '\n')
                 f.flush()
                 os.fsync(f.fileno())
-                if err or len(docs) < 10:
+                if err or len(docs) < 8:
                     stat['pusto'] += not docs
                     break  # дальше страниц нет или канал ругается
     f.close()
