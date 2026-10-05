@@ -39,13 +39,26 @@ import sys
 BAZA = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser('~/park-snimok.db')
 VYHOD = sys.argv[2] if len(sys.argv) > 2 else 'PARK-MEYER-BAZA-2S.csv'
 
+# ШИРОКИЙ КОД ЧИТАЕМ ТОЛЬКО КАК ОСНОВНОЙ, УЗКИЙ — ИЗ ЛЮБЫХ. Поймано глазами на выборке
+# из девяти строк: в «пищевые» и «экспортёры» заехали НПЗ, Мосводоканал, Газпром трансгаз,
+# Златмаш и детский лагерь. Причина измерена: у 147 предприятий в базе больше ДВАДЦАТИ
+# кодов ОКВЭД, и раздел 10 целиком или «46.3 оптовая торговля» есть почти у каждого
+# крупного — как побочный вид деятельности. Мосводоканал: основной 36.00.1 (водоснабжение),
+# Мечел-Энерго: 35.14 (электроэнергия) — в сегмент они попали ИСКЛЮЧИТЕЛЬНО по
+# дополнительным кодам.
+#   'osnovnoy' — код засчитывается, только если он ОСНОВНОЙ вид деятельности
+#   'lyuboy'   — достаточно любого из кодов: код узкий и сам по себе отрасль называет
 SEGMENTY = [
-    ('экспортёры', ['46.21', '46.17', '46.3', '46.11', '52.29'], 'добор: признак ВЭД/опта'),
-    ('семеноводы', ['01.64', '01.11', '01.13.52', '01.25.2'], 'коды заказчика'),
-    ('пищевые', ['10'], 'коды заказчика: весь раздел 10'),
-    ('элеваторы', ['52.10.3', '01.63', '10.61'], 'коды заказчика'),
-    ('орехи', ['10.39.2', '01.25.3'], 'коды заказчика'),
-    ('ягоды', ['01.25.1', '10.32', '10.39.2'], 'коды заказчика'),
+    ('экспортёры', [('46.21', 'lyuboy'), ('46.17', 'osnovnoy'), ('46.3', 'osnovnoy'),
+                    ('46.11', 'osnovnoy'), ('52.29', 'osnovnoy')], 'добор: признак ВЭД/опта'),
+    ('семеноводы', [('01.64', 'lyuboy'), ('01.11', 'osnovnoy'), ('01.13.52', 'lyuboy'),
+                    ('01.25.2', 'lyuboy')], 'коды заказчика'),
+    ('пищевые', [('10', 'osnovnoy')], 'коды заказчика: весь раздел 10, только основной'),
+    ('элеваторы', [('52.10.3', 'lyuboy'), ('01.63', 'lyuboy'), ('10.61', 'lyuboy')],
+     'коды заказчика'),
+    ('орехи', [('10.39.2', 'lyuboy'), ('01.25.3', 'lyuboy')], 'коды заказчика'),
+    ('ягоды', [('01.25.1', 'lyuboy'), ('10.32', 'lyuboy'), ('10.39.2', 'lyuboy')],
+     'коды заказчика'),
 ]
 
 # Приоритет ролей — дословно по заданию. Меньше число = выше в выдаче.
@@ -87,13 +100,32 @@ def main():
         if r['okved_vse']:
             okv_vse[r['inn']] = str(r['okved_vse'])[:500]
 
-    def podhodit(kod, pref):
-        return any(kod == p or kod.startswith(p + '.') for p in pref)
+    def sovpalo(kod, p):
+        return kod == p or kod.startswith(p + '.')
+
+    # основной ОКВЭД: из predpriyatie.okved, иначе из finansy.okved
+    osnovnoy = {}
+    for r in c.execute("select inn, okved from predpriyatie where okved not in ('', null)"):
+        if r['okved']:
+            osnovnoy[r['inn']] = str(r['okved']).split()[0]
+    for r in c.execute('select inn, okved from finansy'):
+        if r['okved'] and r['inn'] not in osnovnoy:
+            osnovnoy[r['inn']] = str(r['okved']).split()[0]
 
     segment = collections.defaultdict(list)
     for inn, kody in okv.items():
-        for imya, pref, _ in SEGMENTY:
-            if any(podhodit(k, pref) for k in kody if k):
+        osn = osnovnoy.get(inn, '')
+        for imya, pravila, _ in SEGMENTY:
+            podoshlo = False
+            for p, kak in pravila:
+                if kak == 'osnovnoy':
+                    if osn and sovpalo(osn, p):
+                        podoshlo = True
+                elif any(sovpalo(k, p) for k in kody if k):
+                    podoshlo = True
+                if podoshlo:
+                    break
+            if podoshlo:
                 segment[inn].append(imya)
     celi = set(segment)
     if not celi:
