@@ -9,12 +9,19 @@ if sys.argv[1] == 'serp':
     cmd = [PY, '-u', os.path.join(D, 'sbor_serp.py'), '--pages', sys.argv[2]]
 elif sys.argv[1] == 'analiz':
     cmd = [PY, '-u', os.path.join(D, 'analiz.py')] + sys.argv[2:]
+elif sys.argv[1] == 'stop':
+    cmd = None
+    r = subprocess.run(['powershell', '-NoProfile', '-Command',
+                        "Get-CimInstance Win32_Process | ? { $_.CommandLine -like '*baza_pilot*sbor_serp*' } | "
+                        "% { Stop-Process -Id $_.ProcessId -Force; $_.ProcessId }"],
+                       capture_output=True, text=True, timeout=120)
+    o['stopped'] = r.stdout.split()
 else:
     cmd = None
 if cmd:
     log = open(os.path.join(D, 'pusk-%s-%s.log' % (sys.argv[1], time.strftime('%H%M'))), 'wb')
     p = subprocess.Popen(cmd, cwd=D, creationflags=0x08 | 0x200, stdin=subprocess.DEVNULL,
-                         stdout=log, stderr=subprocess.STDOUT, close_fds=False)
+                         stdout=log, stderr=subprocess.STDOUT, close_fds=True)  # иначе задание раннера ждёт дочерний процесс
     o['pid'] = p.pid
     time.sleep(60)
 for f in ('BAZA-PILOT-SERP.jsonl', 'sayty.jsonl'):

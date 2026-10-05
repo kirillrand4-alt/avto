@@ -8,7 +8,7 @@
 Рабочий код сервера (serp_fetch.py, news_scan.col_xmlriver) гео не передаёт; lr и
 country=2643 проверены пробой 05.10 (proba.py): выдача региональная.
 
-Строго ОДИН поток: лимит каналов аккаунта общий с другими сессиями.
+Одно задание за раз, внутри 3 потока (как serp_fetch.py): лимит каналов аккаунта общий.
 Результат — BAZA-PILOT-SERP.jsonl (fsync после каждого запроса, продолжение по qid+engine+page).
 
     python sbor_serp.py --proba            # 5 запросов на поисковик, 1 страница
@@ -22,12 +22,15 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+import threading
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.environ.get('BP_OUT', r'C:\sender\_ops\baza_pilot')
 SERP = os.path.join(OUT_DIR, 'BAZA-PILOT-SERP.jsonl')
 # ПРОВЕРИТЬ по справочнику стран XMLRiver (country — числовой id Google Ads geo).
+THREADS = int(os.environ.get('BP_THREADS', 3))
 GOOGLE_COUNTRY = {'ru': 2643, 'by': 2112}
 
 
@@ -86,38 +89,49 @@ def main():
                 done.add((j['qid'], j['engine'], j['page']))
             except Exception:  # noqa: BLE001
                 pass
-    stat = {'zaprosov': 0, 'oshibok': 0, 'docs': 0, 'pusto': 0, 't0': time.time()}
+    stat = {'zaprosov': 0, 'oshibok': 0, 'docs': 0, 'pusto': 0, 'povtorov': 0, 't0': time.time()}
     f = open(SERP, 'a', encoding='utf-8')
-    for row in rows:
-        for eng in engines:
-            for pg in range(pages):
-                if (row['qid'], eng, pg) in done:
-                    continue
-                rec = {'qid': row['qid'], 'engine': eng, 'page': pg, 'query': row['query'],
-                       'segment': row['segment'], 'subsegment': row['subsegment'],
-                       'region': row['region'], 'ts': int(time.time())}
-                for att in range(5):
-                    try:
-                        body = fetch(_url(eng, row['query_full'], row, pg))
-                        docs, err = parse(body)
-                    except Exception as e:  # noqa: BLE001
-                        docs, err = [], str(e)[:200]
-                    # «Выполните перезапрос» / нет свободных каналов — транзиент, не списывается
-                    if not (err and re.search(r'перезапрос|свободных каналов|free channel', err, re.I)):
-                        break
-                    time.sleep(3 + 3 * att)
+    lock = threading.Lock()
+
+    def unit(row, eng):
+        for pg in range(pages):
+            if (row['qid'], eng, pg) in done:
+                continue
+            rec = {'qid': row['qid'], 'engine': eng, 'page': pg, 'query': row['query'],
+                   'segment': row['segment'], 'subsegment': row['subsegment'],
+                   'region': row['region'], 'ts': int(time.time())}
+            for att in range(5):
+                try:
+                    body = fetch(_url(eng, row['query_full'], row, pg))
+                    docs, err = parse(body)
+                except Exception as e:  # noqa: BLE001
+                    docs, err = [], str(e)[:200]
+                # «Выполните перезапрос» / нет свободных каналов — транзиент, не списывается
+                if not (err and re.search(r'перезапрос|свободных каналов|free channel', err, re.I)):
+                    break
+                with lock:
+                    stat['povtorov'] += 1
+                time.sleep(2 + 2 * att)
+            rec['error'] = err
+            rec['tries'] = att + 1
+            rec['docs'] = [{'pos': pg * 10 + i + 1, 'url': u, 'title': t, 'snippet': s[:300]}
+                           for i, (u, t, s) in enumerate(docs)]
+            with lock:
                 stat['zaprosov'] += 1
-                rec['error'] = err
-                rec['docs'] = [{'pos': pg * 10 + i + 1, 'url': u, 'title': t, 'snippet': s[:300]}
-                               for i, (u, t, s) in enumerate(docs)]
                 stat['docs'] += len(docs)
                 stat['oshibok'] += bool(err)
+                stat['pusto'] += not docs
                 f.write(json.dumps(rec, ensure_ascii=False) + '\n')
                 f.flush()
                 os.fsync(f.fileno())
-                if err or len(docs) < 8:
-                    stat['pusto'] += not docs
-                    break  # дальше страниц нет или канал ругается
+                if stat['zaprosov'] % 25 == 0:
+                    print(time.strftime('%H:%M:%S'), json.dumps(stat, ensure_ascii=False), flush=True)
+            if err or len(docs) < 8:
+                break  # дальше страниц нет или канал ругается
+
+    # 3 потока, как у серверного serp_fetch.py (WORKERS<=4): лимит каналов аккаунта общий
+    with ThreadPoolExecutor(THREADS) as ex:
+        list(ex.map(lambda a: unit(*a), [(r, e) for r in rows for e in engines]))
     f.close()
     stat['sek'] = round(time.time() - stat.pop('t0'))
     print('===ИТОГ===')

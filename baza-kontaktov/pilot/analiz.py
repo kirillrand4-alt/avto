@@ -63,8 +63,13 @@ def _ingest(val, kind, doms, inns):
                 doms.add(d)
 
 
+_SKIP = {'site_description', 'site_title', 'site_source', 'phones_site', 'dir_inn'}
+
+
 def _kind(col):
     c = col.lower()
+    if c in _SKIP:
+        return None
     if 'inn' in c or 'инн' in c or 'unp' in c:
         return 'inn'
     if 'mail' in c:
@@ -75,7 +80,7 @@ def _kind(col):
 
 
 def etalon():
-    doms, inns, log = set(), set(), []
+    doms, inns, cand, log = set(), set(), set(), []
     for db in DBS:
         if not os.path.exists(db):
             log.append(f'нет {db}')
@@ -97,7 +102,8 @@ def etalon():
             for row in con.execute(q):
                 n += 1
                 for (c, k), v in zip(use.items(), row):
-                    _ingest(v, k, doms, inns)
+                    # cand_site — непроверенные кандидаты старого поиска: отдельно, не «известное»
+                    _ingest(v, k, cand if c == 'cand_site' else doms, inns)
             log.append(f'  строк {n}')
         con.close()
     for p in CSVS:
@@ -114,10 +120,11 @@ def etalon():
                 for c, k in use.items():
                     _ingest(row.get(c), k, doms, inns)
     os.makedirs(OUT, exist_ok=True)
-    json.dump({'domains': sorted(doms), 'inns': sorted(inns)}, open(ETALON, 'w', encoding='utf-8'))
+    json.dump({'domains': sorted(doms), 'inns': sorted(inns), 'cand_domains': sorted(cand - doms)},
+              open(ETALON, 'w', encoding='utf-8'))
     print('===ИТОГ===')
     print('\n'.join(log))
-    print(f'доменов {len(doms)}, ИНН/УНП {len(inns)}')
+    print(f'доменов {len(doms)}, ИНН/УНП {len(inns)}, кандидатов cand_site вне эталона {len(cand - doms)}')
 
 
 # --- выдача → кандидаты -------------------------------------------------------------
@@ -238,7 +245,7 @@ def proverka(budget=1500):
 def otchet():
     cands, funnel, dropped = kandidaty()
     et = json.load(open(ETALON, encoding='utf-8'))
-    kd, ki = set(et['domains']), set(et['inns'])
+    kd, ki, kc = set(et['domains']), set(et['inns']), set(et.get('cand_domains') or [])
     sayty = {}
     for l in open(SAYTY, encoding='utf-8'):
         j = json.loads(l)
@@ -260,13 +267,15 @@ def otchet():
                      'subsegments': '|'.join(sorted(c['subsegments_full'])), 'regions': '|'.join(sorted(c['regions'])),
                      'queries_count': len(c['queries']), 'best_pos': c['best_pos'], 'profile_score': best,
                      'inn': '|'.join(s.get('inn') or []), 'unp': '|'.join(s.get('unp') or []),
-                     'status': st, 'title': s.get('title') or (c['titles'][0] if c['titles'] else ''),
+                     'status': st, 'in_cand_site': int(d in kc or fd in kc), 'title': s.get('title') or (c['titles'][0] if c['titles'] else ''),
                      'post_hits': '|'.join(sorted(c['post_hits']))})
         if prof:
             for seg in segs:
                 for eng in c['engines']:
                     svod['status'][f'{seg}|{eng}'][st] += 1
                 svod['status'][f'{seg}|both'][st] += 1
+                if st.startswith('new') and (d in kc or fd in kc):
+                    svod['status'][f'{seg}|both'][st + '_but_cand_site'] += 1
                 if st == 'new':
                     for q in c['queries']:
                         svod['zaprosy'][q]['new'] += 1
