@@ -1,0 +1,298 @@
+# Стоп-лист доменов: не считаются собственными сайтами компаний.
+# Формат: домен<TAB>тип<TAB>комментарий. Сравнение по суффиксу: запись покрывает домен и все поддомены
+# (pulscen.ru -> voronezh.pulscen.ru; gov.ru -> mcx.gov.ru).
+# Типы: agregator_yul - карточки ЮЛ; marketplace/doska/retail - торговые площадки и сети;
+#   katalog_istochnik - каталоги/выставки/союзы: НЕ сайт компании, но ИСТОЧНИК доменов (парсить отдельно, см. istochniki_domenov.md);
+#   spravochnik/karty/otzyvy/poisk - справочники, карты, отзывы, поисковики; smi/agro_smi - новости;
+#   socset, rabota, wiki, gos, tender, bank.
+# Дополнительно отсекать правилами (не перечислены): *.gov.ru, *.gov.by, *.edu.ru, сайты администраций
+#   (adm*, admin*, *.mo.ru), конструкторы без своего домена НЕ отсекать (tilda.ws, wixsite.com, ucoz.ru, narod.ru -
+#   у мелких хозяйств это и есть собственный сайт, сегмент проверять по тексту).
+# Пометка «не проверено» - домен не открывался при составлении (05.10.2026) или не проверялся.
+# --- агрегаторы юрлиц / проверка контрагентов (РФ)
+rusprofile.ru	agregator_yul	карточки ЮЛ; 403 на массовый обход
+list-org.com	agregator_yul	капча после ~12 запросов
+checko.ru	agregator_yul	403 на массовый обход
+zachestnyibiznes.ru	agregator_yul	
+sbis.ru	agregator_yul	СБИС: карточки контрагентов (sbis.ru/contragents)
+saby.ru	agregator_yul	новый бренд СБИС
+kontur.ru	agregator_yul	Контур.Фокус, focus.kontur.ru
+audit-it.ru	agregator_yul	карточки и отчётность
+synapsenet.ru	agregator_yul	
+vbankcenter.ru	agregator_yul	
+companies.rbc.ru	agregator_yul	раздел РБК с карточками
+spark-interfax.ru	agregator_yul	
+e-ecolog.ru	agregator_yul	
+rusprofile.com	agregator_yul	
+ogrn.site	agregator_yul	
+egrul.org	agregator_yul	
+orginfo.ru	agregator_yul	
+listorg.ru	agregator_yul	
+bfo.nalog.ru	gos	ГИР БО - источник выручки, не сайт компании
+egrul.itsoft.ru	agregator_yul	используем для обогащения по ИНН, не как сайт
+egrul.nalog.ru	gos	
+pb.nalog.ru	gos	прозрачный бизнес
+nalog.gov.ru	gos	
+nalog.ru	gos	
+fedresurs.ru	gos	
+bankrot.fedresurs.ru	gos	
+kad.arbitr.ru	gos	картотека арбитражных дел
+casebook.ru	agregator_yul	
+ofdata.ru	agregator_yul	API данных ЮЛ
+datanewton.ru	agregator_yul	
+excheck.pro	agregator_yul	
+clearspending.ru	agregator_yul	госконтракты
+k-agent.ru	agregator_yul	
+tochka.com	bank	в выдаче по названиям компаний
+moedelo.org	agregator_yul	
+# --- агрегаторы юрлиц (РБ)
+egr.gov.by	gos	ЕГР Беларуси
+nalog.gov.by	gos	
+portal.nalog.gov.by	gos	
+bizinfo.by	agregator_yul	не проверено
+kontragent.by	agregator_yul	не проверено
+# --- маркетплейсы, B2B-площадки, доски объявлений
+avito.ru	doska	
+ozon.ru	marketplace	
+wildberries.ru	marketplace	
+wb.ru	marketplace	
+market.yandex.ru	marketplace	
+megamarket.ru	marketplace	
+sbermegamarket.ru	marketplace	
+aliexpress.ru	marketplace	
+alibaba.com	marketplace	B2B; иногда есть российские поставщики, но это не их сайт
+1688.com	marketplace	
+made-in-china.com	marketplace	
+tradekey.com	marketplace	
+ec21.com	marketplace	
+tradeindia.com	marketplace	
+exportersindia.com	marketplace	
+go4worldbusiness.com	marketplace	
+tiu.ru	marketplace	
+prom.ua	marketplace	
+pulscen.ru	marketplace	Пульс цен; есть поддомены регионов
+satom.ru	marketplace	
+regmarkets.ru	marketplace	
+promportal.su	marketplace	
+flagma.ru	doska	есть поддомены стран
+flagma.by	doska	
+all.biz	marketplace	ru.all.biz, by.all.biz (Cloudflare)
+allbiz.ru	marketplace	
+b2b-center.ru	tender	
+deal.by	marketplace	РБ
+kufar.by	doska	РБ
+onliner.by	marketplace	РБ: каталог + новости
+shop.by	marketplace	РБ
+youla.ru	doska	
+irr.ru	doska	
+farpost.ru	doska	ДВ
+drom.ru	doska	
+moba.ru	doska	
+agroru.com	doska	доска сельхозтехники и продукции
+agrobazar.ru	doska	объявления о продаже продукции
+fermer.ru	doska	форум и объявления фермеров
+grainboard.ru	doska	зерновая доска объявлений (не проверено)
+agrobook.ru	doska	профессиональная сеть фермеров
+foodmarkets.ru	doska	портал оптовиков продуктов
+optlist.ru	doska	
+russianfood.com	wiki	рецепты
+vseinstrumenti.ru	marketplace	
+lavka.yandex.ru	marketplace	
+sbermarket.ru	marketplace	
+kuper.ru	marketplace	
+vkusvill.ru	retail	сеть, не производитель
+perekrestok.ru	retail	
+magnit.ru	retail	
+lenta.com	retail	
+auchan.ru	retail	
+metro-cc.ru	retail	
+utkonos.ru	retail	
+# --- каталоги-источники доменов (в стоп-лист как «не сайт компании», но парсить для списка доменов)
+agroserver.ru	katalog_istochnik	каталог агрокомпаний и доска; JS-капча (captcha_smile) - см. istochniki_domenov.md
+zol.ru	katalog_istochnik	Зерно Он-Лайн: каталог предприятий АПК + новости + доска
+productcenter.ru	katalog_istochnik	Производство России: ~22.9 тыс. производителей, ссылка на сайт через /producers/site/{id}
+produkt.by	katalog_istochnik	РБ: портал пищепрома, каталог компаний со ссылкой на сайт
+export.by	katalog_istochnik	РБ: каталог экспортёров (недоступен из внешней сети при проверке)
+b2b.by	katalog_istochnik	РБ: 403 при проверке
+cci.by	katalog_istochnik	БелТПП: список членов со ссылками на сайты
+grun.ru	katalog_istochnik	Российский зерновой союз: PDF членов, список сертифицированных ХПП
+aemcx.ru	katalog_istochnik	Агроэкспорт: региональные экспортные каталоги (PDF)
+gossortrf.ru	katalog_istochnik	Госсорткомиссия: реестр оригинаторов (XLSX) - названия, без сайтов
+catalog.expocentr.ru	katalog_istochnik	интернет-каталоги выставок Экспоцентра (Продэкспо): поле «Сайт»
+exhibitoronlinemanual.com	katalog_istochnik	каталоги экспонентов ITE (ЮгАгро, WorldFood): поле сайта в карточке
+prod-expo.ru	katalog_istochnik	сайт выставки Продэкспо
+goldenautumn.moscow	katalog_istochnik	«Золотая осень» (официальность сайта не подтверждена)
+agroprodmash-expo.ru	katalog_istochnik	список участников без ссылок; в основном поставщики оборудования
+yugagro.org	katalog_istochnik	ЮгАгро
+agros-expo.com	katalog_istochnik	переименована в AGRAVIA (agravia.org)
+agravia.org	katalog_istochnik	
+rusprodsoyuz.ru	katalog_istochnik	Руспродсоюз: страница участников со ссылками
+souzmoloko.ru	katalog_istochnik	Союзмолоко: члены
+rosselhoscenter.com	gos	Россельхозцентр (ФГБУ), филиалы попадают в выдачу по семенам
+expomap.ru	katalog_istochnik	календарь выставок
+exponet.ru	katalog_istochnik	календарь выставок
+# --- справочники организаций и карты (данные не храним: условия 2ГИС/Яндекс.Карт)
+2gis.ru	karty	условия запрещают хранение данных
+2gis.by	karty	
+2gis.com	karty	
+yandex.ru	poisk	в т.ч. yandex.ru/maps, /profile
+yandex.by	poisk	
+ya.ru	poisk	
+dzen.ru	smi	Дзен - блоги
+google.com	poisk	
+google.ru	poisk	
+maps.google.com	karty	
+bing.com	poisk	
+mail.ru	poisk	
+go.mail.ru	poisk	
+rambler.ru	smi	
+zoon.ru	spravochnik	
+spravker.ru	spravochnik	
+orgpage.ru	spravochnik	
+yell.ru	spravochnik	
+flamp.ru	spravochnik	отзывы 2ГИС
+spr.ru	spravochnik	
+spr.by	spravochnik	РБ
+rusfirms.ru	spravochnik	
+fis.ru	spravochnik	
+kompass.com	spravochnik	
+europages.com	spravochnik	
+yp.ru	spravochnik	
+ru.kompass.com	spravochnik	
+b2bpoisk.ru	spravochnik	не проверено
+yellowpages.ru	spravochnik	
+firmika.ru	spravochnik	
+cataloxy.ru	spravochnik	
+yaplakal.com	smi	
+otzovik.com	otzyvy	
+irecommend.ru	otzyvy	
+pravda-sotrudnikov.ru	otzyvy	
+dreamjob.ru	otzyvy	
+antijob.net	otzyvy	
+relax.by	spravochnik	РБ
+103.by	spravochnik	РБ, медицина
+ypb.by	spravochnik	РБ (не проверено)
+# --- работа
+hh.ru	rabota	
+hh.by	rabota	
+rabota.by	rabota	РБ
+superjob.ru	rabota	
+rabota.ru	rabota	
+zarplata.ru	rabota	
+trudvsem.ru	rabota	гос
+gorodrabot.ru	rabota	
+careerist.ru	rabota	
+praca.by	rabota	РБ
+gsz.gov.by	rabota	РБ, гос
+# --- соцсети, мессенджеры, видео
+vk.com	socset	
+vk.ru	socset	
+ok.ru	socset	
+t.me	socset	
+telegram.me	socset	
+tgstat.ru	socset	
+facebook.com	socset	
+instagram.com	socset	
+twitter.com	socset	
+x.com	socset	
+linkedin.com	socset	
+youtube.com	socset	
+rutube.ru	socset	
+tiktok.com	socset	
+pinterest.com	socset	
+livejournal.com	socset	
+pikabu.ru	socset	
+# --- энциклопедии, справка, вопросы-ответы
+wikipedia.org	wiki	
+wikiwand.com	wiki	
+ruwiki.ru	wiki	
+bigenc.ru	wiki	
+dic.academic.ru	wiki	
+academic.ru	wiki	
+otvet.mail.ru	wiki	
+znanija.com	wiki	
+studfile.net	wiki	
+studopedia.ru	wiki	
+cyberleninka.ru	wiki	научные статьи
+elibrary.ru	wiki	
+consultant.ru	wiki	правовая база
+garant.ru	wiki	
+docs.cntd.ru	wiki	ГОСТы, нормативка
+gostrf.com	wiki	
+# --- государство (правило: любой *.gov.ru, *.gov.by, *.gosuslugi.ru, а также сайты администраций)
+gov.ru	gos	суффикс: mcx.gov.ru, fsvps.gov.ru, rosstat.gov.ru и т.д.
+gov.by	gos	суффикс: mshp.gov.by и т.д.
+gosuslugi.ru	gos	
+government.ru	gos	
+kremlin.ru	gos	
+mcx.gov.ru	gos	Минсельхоз
+fsvps.gov.ru	gos	Россельхознадзор (реестры - см. istochniki_domenov.md)
+vetrf.ru	gos	Меркурий/Аргус/Цербер (argus.vetrf.ru, cerberus.vetrf.ru)
+specagro.ru	gos	Центр Агроаналитики (ФГБУ)
+zakupki.gov.ru	tender	
+bus.gov.ru	gos	
+torgi.gov.ru	tender	
+roseltorg.ru	tender	
+sberbank-ast.ru	tender	
+rts-tender.ru	tender	
+fabrikant.ru	tender	
+tenderpro.ru	tender	
+tenderguru.ru	tender	
+rostender.info	tender	
+bicotender.ru	tender	
+icetrade.by	tender	РБ
+goszakupki.by	tender	РБ
+exportcenter.ru	gos	РЭЦ (сайт не открылся при проверке)
+belta.by	smi	РБ, гос. агентство
+# --- СМИ общие
+rbc.ru	smi	
+kommersant.ru	smi	
+vedomosti.ru	smi	
+tass.ru	smi	
+ria.ru	smi	
+interfax.ru	smi	
+regnum.ru	smi	
+lenta.ru	smi	
+gazeta.ru	smi	
+rg.ru	smi	
+iz.ru	smi	
+aif.ru	smi	
+kp.ru	smi	
+mk.ru	smi	
+fontanka.ru	smi	
+ura.news	smi	
+vc.ru	smi	
+habr.com	smi	
+retail.ru	smi	ритейл-новости
+sostav.ru	smi	
+forbes.ru	smi	
+expert.ru	smi	
+dp.ru	smi	
+zerkalo.io	smi	РБ
+sb.by	smi	РБ
+myfin.by	smi	РБ
+# --- отраслевые агро- и пищевые СМИ (новости о компаниях, не сайты компаний)
+agroinvestor.ru	agro_smi	
+agroxxi.ru	agro_smi	
+agbz.ru	agro_smi	журнал «Агробизнес»
+agro.ru	agro_smi	
+agrovesti.net	agro_smi	
+agrarii.com	agro_smi	
+sfera.fm	agro_smi	портал пищевой промышленности
+oilworld.ru	agro_smi	масложировой рынок; бывают списки компаний - источник названий
+zerno.ru	agro_smi	рынок зерна и муки, новости и цены (не компания)
+fruitnews.ru	agro_smi	рынок ягод и фруктов - источник названий
+dairynews.ru	agro_smi	
+milknews.ru	agro_smi	
+meatinfo.ru	agro_smi	мясной маркетплейс + новости
+agrotimes.net	agro_smi	
+ukragroconsult.com	agro_smi	
+latifundist.com	agro_smi	Украина
+graininfo.ru	agro_smi	не проверено
+agroportal.ru	agro_smi	не проверено
+svinoprom.ru	agro_smi	не проверено
+pticainfo.ru	agro_smi	не проверено
+agrobelarus.by	agro_smi	РБ, агропортал
+belarus-agro.by	agro_smi	РБ (не проверено)
+kombikorma.ru	agro_smi	журнал «Комбикорма» (не открылся)
+new-retail.ru	smi	
