@@ -38,5 +38,11 @@ logs = sorted(x for x in os.listdir(D) if x.startswith('pusk-'))
 if logs:
     o['log'] = logs[-1]
     o['tail'] = open(os.path.join(D, logs[-1]), encoding='utf-8', errors='replace').read()[-600:]
+r = subprocess.run(['powershell', '-NoProfile', '-Command',
+                    "Get-CimInstance Win32_Process | ? { $_.CommandLine -like '*baza_pilot*' -and $_.CommandLine -notlike '*pusk.py*' } | "
+                    "% { '' + $_.ProcessId + ' ' + $_.CreationDate.ToString('HH:mm') + ' ' + $_.CommandLine.Substring([Math]::Max(0,$_.CommandLine.Length-60)) }"],
+                   capture_output=True, text=True, timeout=120)
+o['procs'] = r.stdout.strip().splitlines()
+o['now'] = time.strftime('%H:%M:%S')
 print('===ИТОГ===')
 print(json.dumps(o, ensure_ascii=False, indent=1))
