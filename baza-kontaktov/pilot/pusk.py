@@ -6,7 +6,7 @@ D = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 o = {}
 if sys.argv[1] == 'serp':
-    cmd = [PY, '-u', os.path.join(D, 'sbor_serp.py'), '--pages', sys.argv[2]]
+    cmd = [PY, '-u', os.path.join(D, 'sbor_serp.py'), '--pages', sys.argv[2]] + sys.argv[3:]
 elif sys.argv[1] == 'analiz':
     cmd = [PY, '-u', os.path.join(D, 'analiz.py')] + sys.argv[2:]
 elif sys.argv[1] == 'stop':
@@ -24,12 +24,12 @@ if cmd:
                          stdout=log, stderr=subprocess.STDOUT, close_fds=True)  # иначе задание раннера ждёт дочерний процесс
     o['pid'] = p.pid
     time.sleep(60)
-for f in ('BAZA-PILOT-SERP.jsonl', 'sayty.jsonl'):
+for f in ('BAZA-PILOT-SERP.jsonl', 'sayty.jsonl', 'IDEI-SERP.jsonl'):
     fp = os.path.join(D, f)
     if os.path.exists(fp):
         L = open(fp, encoding='utf-8').readlines()
         o[f] = len(L)
-        if f.startswith('BAZA'):
+        if f.endswith('SERP.jsonl'):
             js = [json.loads(x) for x in L]
             o['errors'] = sum(1 for j in js if j.get('error'))
             o['docs'] = sum(len(j['docs']) for j in js)

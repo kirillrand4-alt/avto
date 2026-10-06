@@ -28,7 +28,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.environ.get('BP_OUT', r'C:\sender\_ops\baza_pilot')
-SERP = os.path.join(OUT_DIR, 'BAZA-PILOT-SERP.jsonl')
+def _arg(name, default):
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
+
+
+SERP = os.path.join(OUT_DIR, _arg('--serp', 'BAZA-PILOT-SERP.jsonl'))
 # ПРОВЕРИТЬ по справочнику стран XMLRiver (country — числовой id Google Ads geo).
 THREADS = int(os.environ.get('BP_THREADS', 3))
 GOOGLE_COUNTRY = {'ru': 2643, 'by': 2112}
@@ -77,7 +81,7 @@ def main():
     proba = '--proba' in sys.argv
     pages = int(sys.argv[sys.argv.index('--pages') + 1]) if '--pages' in sys.argv else (1 if proba else 5)
     engines = ('yandex', 'google')
-    rows = list(csv.DictReader(open(os.path.join(DIR, 'pilot_zaprosy.csv'), encoding='utf-8')))
+    rows = list(csv.DictReader(open(os.path.join(DIR, _arg('--zaprosy', 'pilot_zaprosy.csv')), encoding='utf-8')))
     if proba:
         rows = rows[::max(1, len(rows) // 5)][:5]
     os.makedirs(OUT_DIR, exist_ok=True)
