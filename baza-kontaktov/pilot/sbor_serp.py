@@ -80,14 +80,20 @@ def fetch(url, tries=3):
 def main():
     proba = '--proba' in sys.argv
     pages = int(sys.argv[sys.argv.index('--pages') + 1]) if '--pages' in sys.argv else (1 if proba else 5)
-    engines = ('yandex', 'google')
+    engines = tuple(_arg('--engines', 'yandex,google').split(','))
+    seg_only = _arg('--segment', '')
+    min_bal = float(_arg('--min-balance', '3'))
     rows = list(csv.DictReader(open(os.path.join(DIR, _arg('--zaprosy', 'pilot_zaprosy.csv')), encoding='utf-8')))
+    if seg_only:
+        rows = [r for r in rows if r['segment'] in seg_only.split(',')]
     if proba:
         rows = rows[::max(1, len(rows) // 5)][:5]
     os.makedirs(OUT_DIR, exist_ok=True)
     done = set()
-    if os.path.exists(SERP):
-        for line in open(SERP, encoding='utf-8'):
+    for path in [SERP] + [os.path.join(OUT_DIR, x) for x in _arg('--done-from', '').split(',') if x]:
+        if not os.path.exists(path):
+            continue
+        for line in open(path, encoding='utf-8'):
             try:
                 j = json.loads(line)
                 done.add((j['qid'], j['engine'], j['page']))
@@ -97,8 +103,20 @@ def main():
     f = open(SERP, 'a', encoding='utf-8')
     lock = threading.Lock()
 
+    stop = threading.Event()
+
+    def balance():
+        u, k = os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')
+        try:
+            q = urllib.parse.urlencode({'user': u, 'key': k})
+            return float(urllib.request.urlopen('http://xmlriver.com/api/get_balance/?' + q, timeout=30).read())
+        except Exception:  # noqa: BLE001
+            return None
+
     def unit(row, eng):
         for pg in range(pages):
+            if stop.is_set():
+                return
             if (row['qid'], eng, pg) in done:
                 continue
             rec = {'qid': row['qid'], 'engine': eng, 'page': pg, 'query': row['query'],
@@ -128,6 +146,12 @@ def main():
                 f.write(json.dumps(rec, ensure_ascii=False) + '\n')
                 f.flush()
                 os.fsync(f.fileno())
+                if stat['zaprosov'] % 50 == 0:
+                    b = balance()
+                    stat['balans'] = b
+                    if b is not None and b < min_bal:
+                        stat['ostanov'] = f'баланс {b} < {min_bal}'
+                        stop.set()
                 if stat['zaprosov'] % 25 == 0:
                     print(time.strftime('%H:%M:%S'), json.dumps(stat, ensure_ascii=False), flush=True)
             if err or len(docs) < 8:

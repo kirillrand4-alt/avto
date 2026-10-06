@@ -198,7 +198,7 @@ SLOVAR = {
 }
 _RX = {seg: {k: [re.compile(r'(?<![а-яёa-z])' + p if not p.startswith(r'\b') else p, re.I) for p in v]
              for k, v in d.items()} for seg, d in SLOVAR.items()}
-POROG = 4  # балл профиля для «профильного»; подбирается по ручной проверке (п. 6 отчёта)
+POROG = 2  # калибровка 06.10 (297 сайтов, разметка моделью): порог 2 + tip_sayta — P 0,65, R 0,92; порог 4 — R 0,79
 
 
 def _cnt(rxs, text, cap=3):

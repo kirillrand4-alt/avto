@@ -7,6 +7,8 @@ PY = sys.executable
 o = {}
 if sys.argv[1] == 'serp':
     cmd = [PY, '-u', os.path.join(D, 'sbor_serp.py'), '--pages', sys.argv[2]] + sys.argv[3:]
+elif sys.argv[1] == 'kat':
+    cmd = [PY, '-u', os.path.join(D, 'katalogi.py')] + sys.argv[2:]
 elif sys.argv[1] == 'analiz':
     cmd = [PY, '-u', os.path.join(D, 'analiz.py')] + sys.argv[2:]
 elif sys.argv[1] == 'stop':
@@ -24,17 +26,17 @@ if cmd:
                          stdout=log, stderr=subprocess.STDOUT, close_fds=True)  # иначе задание раннера ждёт дочерний процесс
     o['pid'] = p.pid
     time.sleep(60)
-for f in ('BAZA-PILOT-SERP.jsonl', 'sayty.jsonl', 'IDEI-SERP.jsonl'):
+for f in ('BAZA-PILOT-SERP.jsonl', 'sayty.jsonl', 'IDEI-SERP.jsonl', 'GLUBINA-SERP.jsonl', 'MASSA-SERP.jsonl', 'KATALOGI.jsonl'):
     fp = os.path.join(D, f)
     if os.path.exists(fp):
         L = open(fp, encoding='utf-8').readlines()
         o[f] = len(L)
-        if f.endswith('SERP.jsonl'):
+        if f.endswith('SERP.jsonl') and f != 'BAZA-PILOT-SERP.jsonl':
             js = [json.loads(x) for x in L]
             o['errors'] = sum(1 for j in js if j.get('error'))
             o['docs'] = sum(len(j['docs']) for j in js)
             o['last_err'] = [j['error'][:60] for j in js if j.get('error')][-3:]
-logs = sorted(x for x in os.listdir(D) if x.startswith('pusk-'))
+logs = sorted((x for x in os.listdir(D) if x.startswith('pusk-')), key=lambda x: os.path.getmtime(os.path.join(D, x)))
 if logs:
     o['log'] = logs[-1]
     o['tail'] = open(os.path.join(D, logs[-1]), encoding='utf-8', errors='replace').read()[-600:]

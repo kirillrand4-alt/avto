@@ -1,0 +1,2359 @@
+{
+"souztrade.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "биржа торговая площадка"
+},
+"gp.by": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "региональная газета новостной портал"
+},
+"ng.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "независимая газета новости"
+},
+"23kedr.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "заглушка защита от ботов"
+},
+"agrolib.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "массажные услуги сайт испорчен"
+},
+"zwezda.su": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "пермская региональная газета"
+},
+"techkorm.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "производство кормовых решений комбикормов"
+},
+"pitomnikov.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "каталог справочник питомников растений"
+},
+"cap.ru": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "портал органов власти"
+},
+"spravochnika.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "справочник каталог организаций"
+},
+"sputnik.by": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "новостной портал"
+},
+"dobro.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "нечитаемый контент сайта"
+},
+"aoasp.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "IT-автоматизация бизнес-процессов"
+},
+"om1.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "региональный новостной портал"
+},
+"in-vitro.pl": {
+"i": 4,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "производство саженцев ягодных культур"
+},
+"kubanexport.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "региональный центр поддержки экспорта"
+},
+"cc-customs.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "таможенное оформление и логистика"
+},
+"vim.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "НИИ сельхозмашиностроения"
+},
+"zakroma.pro": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "доска объявлений агропродукции"
+},
+"0pk.me": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "сервис создания форумов"
+},
+"floowie.com": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "платформа цифровых публикаций и журналов"
+},
+"delprof.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "аудит и бизнес-консалтинг для компаний"
+},
+"monavista.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "информационно-аналитический портал новостей"
+},
+"mygeograph.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "образовательный портал уроков географии"
+},
+"sozhnews.by": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "новостной портал региона Гомель"
+},
+"osu.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "государственный университет без производства"
+},
+"yichengnuts.com": {
+"i": 6,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "трейдер",
+"why": "экспорт орехов семян сухофруктов"
+},
+"stavvinprom.com": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "госучреждение виноградарства консультации поддержка"
+},
+"znanierussia.ru": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "общественная просветительская организация лекции"
+},
+"центрконсалт.рф": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "юридическое и финансовое консультирование"
+},
+"businessesforsale.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "биржа готового бизнеса, каталог"
+},
+"trade-overseas.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "трейдинг сельхозпродукции, экспорт зерна"
+},
+"agrosbit.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "агрегатор объявлений, доска продаж"
+},
+"sbbusiness.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "биржа готового бизнеса"
+},
+"ord-gazeta.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "районная газета, СМИ"
+},
+"sadovniki.org": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "услуги садовника, обрезка, уход"
+},
+"mlyn.by": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "новостной портал Беларуси"
+},
+"bfm.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "деловое СМИ, новости"
+},
+"online-cargo.com": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "грузоперевозки из Китая, логистика"
+},
+"vuzdoc.org": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "битый файл, нечитаемый контент"
+},
+"agrovet-export.com": {
+"i": 0,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "производство кормовых добавок"
+},
+"arkhstroyproekt.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "проектирование, не производство"
+},
+"yopt.org": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "каталог поставщиков"
+},
+"flagma.cn": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "доска объявлений"
+},
+"samlib.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "литературный журнал"
+},
+"biotence.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "удобрения, не целевой сегмент"
+},
+"biz360.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "бизнес-журнал"
+},
+"vfermer.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "сми для фермеров"
+},
+"ukr.net": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "новостной портал"
+},
+"monocle.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "экономический журнал"
+},
+"gkrosta.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"exporters",
+"food"
+],
+"type": "переработчик",
+"why": "переработка масличных, производство масел, экспорт"
+},
+"konditer-profi.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "магазин товаров для кондитеров"
+},
+"arctic2035.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "научный журнал об Арктике"
+},
+"spec-kniga.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "библиотека специализированной литературы"
+},
+"kompak18.ru": {
+"i": 4,
+"profile": true,
+"segments": [
+"seeds",
+"food"
+],
+"type": "производитель",
+"why": "семена, натуральные масла и жмых"
+},
+"дарысибири.рф": {
+"i": 5,
+"profile": true,
+"segments": [
+"nuts",
+"berries"
+],
+"type": "трейдер",
+"why": "заготовка грибов, ягод, кедрового ореха"
+},
+"progressfood.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "производство детского питания ФрутоНяня"
+},
+"lignohumate.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "производитель удобрений и стимуляторов"
+},
+"selprom.biz": {
+"i": 8,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "экспорт зерна и бобовых Украина"
+},
+"allbrewery.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "каталог пивоварен России"
+},
+"lgz.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "литературная газета, СМИ"
+},
+"gortop22.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "погрузка и оформление зерна, торговля топливом"
+},
+"sadserwiss.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "услуги посадки садов под ключ"
+},
+"svetich.info": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "аграрный медиахолдинг, новости сельхоза"
+},
+"profinance.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "финансовый портал, форекс и котировки"
+},
+"wiki-prom.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "энциклопедия промышленности, каталог предприятий"
+},
+"semena-sorgo.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "производитель и поставщик семян сорго"
+},
+"1prime.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "агентство экономической информации, новостной портал"
+},
+"gt-ksk.com": {
+"i": 8,
+"profile": true,
+"segments": [
+"elevators"
+],
+"type": "элеватор",
+"why": "глубоководный зерновой терминал, перевалка зерна"
+},
+"amega-gektar.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "клубный проект продажи земельных участков"
+},
+"nedorogo.by": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин товаров для дома садоводов"
+},
+"colaxm.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "производитель пищевого оборудования и модульных цехов"
+},
+"nasledie.by": {
+"i": 2,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "хозяйство",
+"why": "фермерское хозяйство выращивает малину голубику яблоки"
+},
+"amic.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "новостное информационное агентство Барнаула и Алтая"
+},
+"vestikavkaza.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "новостное издание аналитика по Кавказу регионам"
+},
+"full-house.by": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин товаров для дома дачи мастерской"
+},
+"sinyaptica.by": {
+"i": 6,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "хозяйство",
+"why": "крестьянское фермерское хозяйство выращивание голубики саженцев"
+},
+"vestnikapk.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "отраслевой журнал новости АПК без производства"
+},
+"rodniyekraya.com": {
+"i": 8,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "кубанский производитель круп макарон бакалеи фасовка"
+},
+"strategy.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "консалтинговая компания стратегическое консультирование исследования"
+},
+"soyproduct.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "производство тофу и растительных продуктов"
+},
+"niknt.com": {
+"i": 1,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "семеноводство гибридного подсолнечника 25 лет"
+},
+"ушастый-пилот.рф": {
+"i": 2,
+"profile": true,
+"segments": [
+"elevators",
+"food"
+],
+"type": "элеватор",
+"why": "ХПП плюс производство комбикорма"
+},
+"stroyinf.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "орган сертификации и испытательная лаборатория"
+},
+"tolknews.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "новостное издание Барнаула и Алтая"
+},
+"zdorovo-eda.com": {
+"i": 5,
+"profile": true,
+"segments": [
+"food",
+"berries"
+],
+"type": "переработчик",
+"why": "сублимация ягод овощей готовых блюд"
+},
+"мпк-алтай.рф": {
+"i": 6,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "убой и переработка говядины свинины"
+},
+"tdmazurin.ru": {
+"i": 7,
+"profile": true,
+"segments": [
+"food",
+"berries"
+],
+"type": "производитель",
+"why": "крупнейшее производство сублимированных фруктов ягод"
+},
+"pitomnik-rastenij.ru": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "питомник декоративных растений и роз"
+},
+"ozktrading.ru": {
+"i": 9,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "торгово закупочная деятельность экспорт зерна"
+},
+"apkagat.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"food",
+"exporters",
+"elevators"
+],
+"type": "производитель",
+"why": "Производство муки, экспорт, элеваторы"
+},
+"optsbyt.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "Оптовый маркетплейс, торговая площадка"
+},
+"tdp74.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "Оптовая торговля ингредиентами для кондитеров"
+},
+"soz.bio": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "Отраслевой союз, не производитель"
+},
+"fruitsparadise.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "Интернет-магазин доставки фруктов на дом"
+},
+"yantapro.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "Продажа соевых продуктов, поставщик"
+},
+"aprotek.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"food",
+"seeds"
+],
+"type": "производитель",
+"why": "Переработка подсолнечника, селекционно-семеноводческий центр"
+},
+"besaport.com": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "Сайт рецептов домашних заготовок"
+},
+"tkm.by": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "Городской новостной портал, телеканал"
+},
+"berrypresent.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "Продажа клубники в шоколаде, подарки"
+},
+"frostsystems.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "монтаж холодильного оборудования под ключ"
+},
+"fruitinfo.biz": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "доска объявлений, новости рынка овощей"
+},
+"mos-milk.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "официальный поставщик молочной продукции оптом"
+},
+"vrnikc.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "региональный консультационный центр АПК"
+},
+"экобор.рус": {
+"i": 4,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "переработчик",
+"why": "переработка кедрового ореха, производство масла"
+},
+"донскиекрупы.рф": {
+"i": 5,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "производство бакалейных товаров, крупы оптом"
+},
+"kairas.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "производство семян гибридов подсолнечника"
+},
+"liliani.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "производитель агротехники, бункеров-перегрузчиков"
+},
+"agrosoros.com": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "продажа СЗР, семян, микроудобрений"
+},
+"rusagro-prom.ru": {
+"i": 9,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "переработчик",
+"why": "заморозка ягод грибов овощей производство"
+},
+"kustarnik.eu": {
+"i": 0,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "Питомник саженцев ягод InVitro, производство"
+},
+"sadypridonia.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Производство соков прямого отжима, собственные сады"
+},
+"eurosamen.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "Оптовая продажа семян от производителей"
+},
+"domvereskov.ru": {
+"i": 3,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "хозяйство",
+"why": "Ягодное хозяйство, выращивание голубики, продажа саженцев"
+},
+"povar.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "Кулинарный сайт с рецептами"
+},
+"favoritegardenfruits.com": {
+"i": 5,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Производство яблучного сока прямого віджиму власний сад"
+},
+"technikonprom.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "Производитель элеваторного оборудования и зерносушилок"
+},
+"agrorost-rf.ru": {
+"i": 7,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "Производство семян сельскохозяйственных культур"
+},
+"bionagroup.ru": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "Производитель биопрепаратов для растениеводства животноводства"
+},
+"florapower.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "Производитель оборудования для отжима масла"
+},
+"aznut.space": {
+"i": 0,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "трейдер",
+"why": "экспорт фундука и орехов из Азербайджана"
+},
+"malinaplant.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "хозяйство",
+"why": "малиновая плантация, самосбор, продажа саженцев"
+},
+"kubansemagro.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "подработка и дражирование семян как услуга"
+},
+"sib-nut.com": {
+"i": 3,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "переработчик",
+"why": "ядро кедрового ореха собственная переработка"
+},
+"eportel.ru": {
+"i": 4,
+"profile": true,
+"segments": [
+"elevators"
+],
+"type": "элеватор",
+"why": "портовый элеватор перевалка зерна масличных"
+},
+"sibgarden.ru": {
+"i": 5,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "тепличное производство саженцы ягодные культуры"
+},
+"krinichnaya.by": {
+"i": 6,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "производство элитных семян зерновых кукурузы"
+},
+"tagris.org": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "продажа ЗЦМ кормов оборудования чужого"
+},
+"asvacorp.ru": {
+"i": 8,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "переработка льна производство льняного масла"
+},
+"rolnik.group": {
+"i": 9,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "консервный завод овощи фрукты собственное производство"
+},
+"zamorozka54.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "поставки замороженных продуктов, не производитель"
+},
+"aminosib.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "глубокая переработка пшеницы, аминокислоты, глютен"
+},
+"berrrloga.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "торговый дом, байкальские подарки и сувениры"
+},
+"baikpro.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "дилер",
+"why": "интернет-магазин профессиональных семян, перепродажа"
+},
+"prof-semena.ru": {
+"i": 4,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "производитель",
+"why": "производство сублимированных ягод, фруктов, овощей"
+},
+"sublim-rus.ru": {
+"i": 5,
+"profile": true,
+"segments": [
+"elevators"
+],
+"type": "элеватор",
+"why": "элеватор станция Толкай, перевалка зерновых"
+},
+"tradeagrohold.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "телефонный справочник Москвы"
+},
+"infrus.org": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "торговый дом СЗР, удобрения, семена"
+},
+"avers95.ru": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "поставки кормовых добавок, дистрибьютор"
+},
+"agrotrend.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "Новостной портал о сельском хозяйстве"
+},
+"psktom.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "Селекция семян подсолнечника и кукурузы"
+},
+"criotechnika.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "Производитель холодильного оборудования для АПК"
+},
+"semena2000.ru": {
+"i": 3,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "Производитель семян трав и травосмесей"
+},
+"kedr-les.ru": {
+"i": 4,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "производитель",
+"why": "Производитель очищенного кедрового ореха"
+},
+"agropolosa.ru": {
+"i": 5,
+"profile": true,
+"segments": [
+"nuts",
+"berries"
+],
+"type": "хозяйство",
+"why": "Интенсивные сады яблок и фундука"
+},
+"ойлпродукт31.рф": {
+"i": 6,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Производство растительного масла и жмыха"
+},
+"rsholod.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "Производитель холодильного оборудования"
+},
+"arzhanitsa.by": {
+"i": 8,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "переработчик",
+"why": "Переработка клюквы в драже"
+},
+"kzp.ru": {
+"i": 9,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "Закупка и экспорт зерна"
+},
+"elevator2.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"elevators"
+],
+"type": "элеватор",
+"why": "Хранение, сушка, подработка зерна"
+},
+"biohim.com.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Производство премиксов и комбикорма"
+},
+"lubvit.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "Интернет-магазин саженцев"
+},
+"shopseed.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "Интернет-магазин семян"
+},
+"всевплод.рф": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "питомник",
+"why": "Плодопитомник, не профильные культуры"
+},
+"ke-dar.ru": {
+"i": 5,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Производство масел холодного отжима"
+},
+"semencesprograin.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "Селекция и производство семян сои"
+},
+"agrojatva.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "трейдер",
+"why": "Посредник, закупка и перепродажа"
+},
+"altai-grains.ru": {
+"i": 8,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Выращивание и переработка чечевицы"
+},
+"mezaltai.ru": {
+"i": 9,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "Маслоэкстракционный завод"
+},
+"рассадофф.рф": {
+"i": 0,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "питомник рассады клубники и малины"
+},
+"blagodarnensk-elevator.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"elevators"
+],
+"type": "элеватор",
+"why": "приемка сушка хранение перевалка зерна"
+},
+"sibagrogroup.ru": {
+"i": 2,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "свиноводство птицеводство мясопереработка кормопроизводство"
+},
+"yugras.com": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "официальный дистрибьютор семян и пестицидов"
+},
+"ripi-test.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "НИИ потребительских испытаний СМИ"
+},
+"fntp-mcx.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "федеральная научно-техническая программа"
+},
+"sun-agro.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"elevators"
+],
+"type": "элеватор",
+"why": "калибровка очистка шлифовка семян подсолнечника"
+},
+"akulovskoe.ru": {
+"i": 7,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "комбикормовый завод собственное зерно"
+},
+"velesfood.com": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "оптовая торговля продуктами для HoReCa"
+},
+"nsal.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "некоммерческая отраслевая ассоциация"
+},
+"omskiesemena.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "КФХ производит элитные семена зерновых"
+},
+"ivolga-sad.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "Питомник растений интернет-магазин розница"
+},
+"belarusinfo.by": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "Каталог компаний Беларуси справочник"
+},
+"ref-konteyner.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "Продажа рефконтейнеров холодильного оборудования"
+},
+"лидерорех.рф": {
+"i": 4,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "переработчик",
+"why": "Производство переработка кедрового ореха масла"
+},
+"pogrebokpro.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "Интернет-магазин доставка продуктов питания розница"
+},
+"rsc23.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "Россельхозцентр государственное учреждение услуги"
+},
+"kormostandart.ru": {
+"i": 7,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Производство комбикормов премиксов БВМК"
+},
+"belfood.by": {
+"i": 8,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Производство детского питания соков пюре"
+},
+"bmk22.ru": {
+"i": 9,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "Мелькомбинат производство муки переработка пшеницы"
+},
+"manufacturers.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "каталог промышленных предприятий"
+},
+"сибсаднск.рф": {
+"i": 1,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "хозяйство",
+"why": "выращивание ягод и саженцев"
+},
+"nedra-kedra.ru": {
+"i": 2,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "переработчик",
+"why": "производство продуктов из кедрового ореха"
+},
+"parkrasteniy.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин саженцев питомника"
+},
+"skess.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "строительство элеваторов и производство оборудования"
+},
+"blueberrydream.ru": {
+"i": 5,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "хозяйство",
+"why": "собственная плантация голубики"
+},
+"marlog.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "транспортная компания логистика"
+},
+"golubika.by": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "информационный сайт о голубике"
+},
+"masloapk22.ru": {
+"i": 8,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "производство подсолнечного масла"
+},
+"skedra.ru": {
+"i": 9,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "переработчик",
+"why": "производство переработка кедрового ореха"
+},
+"rostovkhp.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"elevators"
+],
+"type": "элеватор",
+"why": "экспортный терминал с элеваторными мощностями"
+},
+"oblepiha22.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "информационный ресурс об облепихе"
+},
+"pzrm31.ru": {
+"i": 2,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "завод растительных масел и жмыхов"
+},
+"agro-res.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "продажа агрохимии семян оборудования"
+},
+"commodity-board.com": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "информационный сервис по сырьевым рынкам"
+},
+"agroexpert.press": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "федеральное издание агроновости"
+},
+"frigo-klubnika.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "питомник рассады клубники фриго"
+},
+"sevalsi.ru": {
+"i": 7,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "селекция семян овощных культур"
+},
+"rossahar.ru": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "некоммерческая организация союз сахаропроизводителей"
+},
+"manul.ru": {
+"i": 9,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "агрофирма семена овощей огурцов"
+},
+"lip-prostor.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "питомник",
+"why": "декоративные растения, ландшафт, не ягоды"
+},
+"print-poisk.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "справочник по полиграфии и упаковке"
+},
+"аграриан.рф": {
+"i": 2,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "семеноводческое предприятие, собственное производство семян подсолнечника"
+},
+"блюкоин.рф": {
+"i": 3,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "производство саженцев голубики, возведение плантаций"
+},
+"frostopt.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "дистрибьютор замороженных продуктов, не производство"
+},
+"agrolimitless.com": {
+"i": 5,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "экспорт зерна масличных бобовых кормов"
+},
+"uralsemena.com": {
+"i": 6,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "производство семян овощных, селекция, семеноводство"
+},
+"kazrm.ru": {
+"i": 7,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "производство растительного масла и жмыха"
+},
+"bsservise.ru": {
+"i": 8,
+"profile": true,
+"segments": [
+"elevators"
+],
+"type": "элеватор",
+"why": "линейный элеватор приёмка хранение отгрузка"
+},
+"ладожские.рф": {
+"i": 9,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "производство семян гибридов кукурузы подсолнечника"
+},
+"sovecon.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "онлайн-издание аналитика и новости"
+},
+"miratorg.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "мясопереработка комбикорма желатин масло"
+},
+"ubl.su": {
+"i": 2,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "производство элитных семян пшеницы"
+},
+"alendom.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин розничная продажа картофеля"
+},
+"вашхлеб.рф": {
+"i": 4,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "хлебопекарное и кондитерское производство"
+},
+"rassadatd.com": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "питомник",
+"why": "питомник рассады декоративных растений"
+},
+"pitomniki.info": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "каталог сайтов питомников растений"
+},
+"nutnat.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "сайт временно недоступен"
+},
+"vitomek.com": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "продажа кормовых добавок премиксов"
+},
+"lkz.by": {
+"i": 9,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "производство консервов соусов соков"
+},
+"utr.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "переработчик",
+"why": "переработка орехов и семян, производство"
+},
+"project2430143.tilda.ws": {
+"i": 1,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "плодово-ягодный питомник, выращивание саженцев"
+},
+"orekhprom.shop": {
+"i": 2,
+"profile": true,
+"segments": [
+"nuts"
+],
+"type": "переработчик",
+"why": "переработчик орехов и сухофруктов"
+},
+"yagody.ru": {
+"i": 3,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "переработчик",
+"why": "переработка диких ягод, производство продуктов"
+},
+"algrain.ru": {
+"i": 4,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "комбикормовый завод, масло, жмых, экструдирование"
+},
+"s2s.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "промышленный маркетплейс, биржа"
+},
+"mzhsr.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "отраслевой союз, информационный ресурс"
+},
+"divsad.by": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин саженцев, розничная торговля"
+},
+"pzk-agro.ru": {
+"i": 8,
+"profile": true,
+"segments": [
+"exporters",
+"elevators"
+],
+"type": "трейдер",
+"why": "закупка, хранение, экспорт зерновых"
+},
+"кубань-гибрид.рф": {
+"i": 9,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "семенной завод, производство гибридов кукурузы"
+},
+"iqf-berry.com": {
+"i": 0,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "переработчик",
+"why": "заморозка и переработка ягод"
+},
+"millermagazine.com": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "отраслевой журнал о зерне"
+},
+"semena-soi.ru": {
+"i": 2,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "семеноводческая компания полного цикла"
+},
+"belogorye-pk.ru": {
+"i": 3,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "кондитерская фабрика"
+},
+"ooopchelka.ru": {
+"i": 4,
+"profile": true,
+"segments": [
+"seeds",
+"berries"
+],
+"type": "производитель",
+"why": "производство семян яблок ягод"
+},
+"pitomnik-rose.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин саженцев роз"
+},
+"posei-don.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "селекционно-семеноводческая компания"
+},
+"nuts24.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин орехов сухофруктов"
+},
+"msso.by": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "интернет-магазин семян и саженцев"
+},
+"orion-food.com": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "оптовик пищевых ингредиентов"
+},
+"german-seed-alliance.ru": {
+"i": 0,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "Дистрибьютор немецких селекционных компаний в России"
+},
+"yagodi.by": {
+"i": 1,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "хозяйство",
+"why": "Фермерское хозяйство, выращивает землянику и малину"
+},
+"granovita.ru": {
+"i": 2,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "Закупка и экспорт зерна и масличных"
+},
+"yagod-market.com": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "Биржа объявлений, информационный портал для рынка"
+},
+"starchmach.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "Поставка оборудования для крахмальных заводов из Китая"
+},
+"1cps.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "ИТ-консалтинг, ГИС и системная интеграция для АПК"
+},
+"krasnoyaruzhskii.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "Сахарный завод, переработка свеклы в сахар"
+},
+"pbc-index.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "Ценовое агентство, публикация индексов и аналитики"
+},
+"fbseeds.ru": {
+"i": 8,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "Семеноводство зерновых, подсолнечника, кукурузы, собственная селекция"
+},
+"garshinka.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "Интернет-магазин садовых растений для частников"
+},
+"boguchar-semena.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "селекционная станция, производство семян масличных"
+},
+"evrooil31.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "завод по производству подсолнечного масла"
+},
+"jivoivibor.ru": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин натуральных продуктов"
+},
+"siborigin.com": {
+"i": 3,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "экспорт зерна и бобовых из России"
+},
+"unline.kz": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин продуктов с доставкой"
+},
+"deltrade.net": {
+"i": 5,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "закупка и экспорт зерновых и масличных"
+},
+"siberianexport.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"exporters",
+"food"
+],
+"type": "хозяйство",
+"why": "выращивание, переработка в крупы и масло"
+},
+"biohimpremix.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "производство премиксов для пищевой промышленности"
+},
+"kfh-derevyanko.com": {
+"i": 8,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "хозяйство",
+"why": "выращивание зерновых и зернобобовых с экспортом"
+},
+"indianspiceshop.com": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "подбор и торговля индийскими продуктами"
+},
+"trendagro.com": {
+"i": 0,
+"profile": true,
+"segments": [
+"seeds",
+"elevators"
+],
+"type": "производитель",
+"why": "семенной завод кукурузы, элеватор"
+},
+"vrn-agro.ru": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "дилер",
+"why": "продажа семян, не производитель"
+},
+"krahmal07.ru": {
+"i": 2,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "крахмальный завод, переработка зерна"
+},
+"poleznovik.ru": {
+"i": 3,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "производитель",
+"why": "сублимация и сушка ягод"
+},
+"spar-online.ru": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "супермаркет SPAR, розничная торговля"
+},
+"7s7.ru": {
+"i": 5,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "оптовая торговля продуктами питания"
+},
+"agromirsemena.ru": {
+"i": 6,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "семеноводческое хозяйство кукурузы и пшеницы"
+},
+"vniimk.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "ВНИИМК научно-исследовательский институт, оригинатор"
+},
+"nutsworld.ru": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин орехов и сухофруктов"
+},
+"lukom.by": {
+"i": 9,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "консервный завод, соки и консервация"
+},
+"bomorec.ru": {
+"i": 0,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "производство элитных семян озимой пшеницы"
+},
+"grodnommp.by": {
+"i": 1,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "холдинг: мясо, молоко, крахмал, мука"
+},
+"proma-oil.ru": {
+"i": 2,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "маслозавод, полный цикл переработки подсолнечника"
+},
+"berrymaster.ru": {
+"i": 3,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "продажа пюре HoReCa, не выращивание"
+},
+"agricomimpex.ru": {
+"i": 4,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "экспорт зерна, масличных, бобовых из России"
+},
+"skice.ru": {
+"i": 5,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "переработчик",
+"why": "производство замороженных ягод и овощей"
+},
+"unipack.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "отраслевой портал упаковки и оборудования"
+},
+"shemz.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "оборудование",
+"why": "производство хлебопекарного и котельного оборудования"
+},
+"grainru.com": {
+"i": 8,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "экспорт чечевицы, нута, масличных, зерна"
+},
+"geliostrade.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "поставщик крахмалов, не производит сам"
+},
+"intellicommodity.com": {
+"i": 0,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "трейдер зерна масличных переработка экспорт"
+},
+"sgt-seed.com": {
+"i": 1,
+"profile": false,
+"segments": [],
+"type": "услуги",
+"why": "услуги по доработке семян элеватор"
+},
+"yagodnoe-podvorie.ru": {
+"i": 2,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "питомник ягодных культур саженцы производство"
+},
+"zavagro.ru": {
+"i": 3,
+"profile": true,
+"segments": [
+"seeds"
+],
+"type": "производитель",
+"why": "семеноводческая полный цикл производства гибридов"
+},
+"soyanews.info": {
+"i": 4,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "новости АПК цены информация"
+},
+"ritz.by": {
+"i": 5,
+"profile": true,
+"segments": [
+"berries"
+],
+"type": "питомник",
+"why": "питомник голубики княженики саженцы производство"
+},
+"agrolad-market.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "другое",
+"why": "маркетплейс биржа объявления трейдеры"
+},
+"amidon.su": {
+"i": 7,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "переработчик",
+"why": "крахмальный завод переработка кукурузы глютен"
+},
+"konservatsiya.ru": {
+"i": 8,
+"profile": false,
+"segments": [],
+"type": "сми_каталог",
+"why": "каталог компаний новости консервного бизнеса"
+},
+"lidea-seeds.ru": {
+"i": 9,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "семена дистрибьюторы продажа чужой селекции"
+},
+"агечжен.рф": {
+"i": 0,
+"profile": true,
+"segments": [
+"exporters",
+"food"
+],
+"type": "производитель",
+"why": "производит масло жмых экспортирует зерно"
+},
+"rus-grain.ru": {
+"i": 1,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "закупка экспорт пшеницы зерновых"
+},
+"ассортивкуса.рф": {
+"i": 2,
+"profile": false,
+"segments": [],
+"type": "розница",
+"why": "интернет-магазин продуктов питания каталог товаров"
+},
+"muka-pshenichnaya.ru": {
+"i": 3,
+"profile": true,
+"segments": [
+"food"
+],
+"type": "производитель",
+"why": "собственное производство муки мукомольная продукция"
+},
+"rto-russia.com": {
+"i": 4,
+"profile": true,
+"segments": [
+"exporters"
+],
+"type": "трейдер",
+"why": "экспорт зерна пшеница кукуруза нут"
+},
+"yagoda-klubnika.by": {
+"i": 5,
+"profile": true,
+"segments": [
+"berries",
+"nuts"
+],
+"type": "питомник",
+"why": "питомник саженцы ягодных орехоплодных культур"
+},
+"sugar-company.ru": {
+"i": 6,
+"profile": false,
+"segments": [],
+"type": "дистрибьютор",
+"why": "оптовые поставки сахара дистрибуция чужой продукции"
+},
+"vniitek.ru": {
+"i": 7,
+"profile": false,
+"segments": [],
+"type": "гос_наука",
+"why": "НИИ лаборатория испытательный центр не производство"
+}
+}
