@@ -15,6 +15,7 @@ import time
 
 from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.styles import Alignment, Font, PatternFill
 
 БАЗА = {'meyer': 'Meyer', 'Meyer': 'Meyer', 'kc': 'Компрессор Центр',
@@ -79,6 +80,8 @@ def лист(wb, имя, поля, строки, ширины):
                     v = int(float(v))
                 except ValueError:
                     pass
+            if isinstance(v, str):
+                v = ILLEGAL_CHARACTERS_RE.sub('', v)  # управляющие символы из текста страниц
             ряд.append(v)
         ws.append(ряд)
     последняя = len(поля)
