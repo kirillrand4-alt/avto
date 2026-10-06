@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(DIR, '..', '..', 'seo-texts', 'server'))
 import run_on_server as R  # noqa: E402
 
 DST = 'C:\\sender\\_ops\\baza_pilot\\'
-FILES = [sys.argv[1], 'obrabotka.py', 'sbor_serp.py', 'analiz.py', 'balans.py', 'pusk.py', 'pilot_zaprosy.csv', 'idei_zaprosy.csv', 'idei_analiz.py', 'massa_zaprosy.csv', 'katalogi.py', 'kalibr_vyborka.json', 'kalibr_teksty.py',
+FILES = [sys.argv[1], 'obrabotka.py', 'sbor_serp.py', 'analiz.py', 'balans.py', 'pusk.py', 'pilot_zaprosy.csv', 'idei_zaprosy.csv', 'idei_analiz.py', 'massa_zaprosy.csv', 'katalogi.py', 'kalibr_vyborka.json', 'kalibr_teksty.py', 'novye_analiz.py',
          '../stop_domeny.txt', '../minus_slova.txt']
 put = []
 for f in FILES:

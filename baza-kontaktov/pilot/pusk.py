@@ -7,6 +7,8 @@ PY = sys.executable
 o = {}
 if sys.argv[1] == 'serp':
     cmd = [PY, '-u', os.path.join(D, 'sbor_serp.py'), '--pages', sys.argv[2]] + sys.argv[3:]
+elif sys.argv[1] == 'novye':
+    cmd = [PY, '-u', os.path.join(D, 'novye_analiz.py')] + sys.argv[2:]
 elif sys.argv[1] == 'kat':
     cmd = [PY, '-u', os.path.join(D, 'katalogi.py')] + sys.argv[2:]
 elif sys.argv[1] == 'analiz':
