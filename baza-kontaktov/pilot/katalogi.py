@@ -58,7 +58,12 @@ def _fix(doc):
     return doc
 
 
+PAUZA = float(os.environ.get('KAT_PAUZA', '0') or 0)
+
+
 def get(u, **kw):
+    if PAUZA:
+        time.sleep(PAUZA)
     for i in range(3):
         st, fin, doc = A.get(u, timeout=30, limit=kw.get('limit', 3_000_000))
         if st and st < 500:
@@ -88,7 +93,7 @@ def expocentr(wyst=171):
         emit({'source': 'expocentr', 'rubric': (city.group(1).strip() if city else ''),
               'name': re.sub(r'<[^>]+>|\s+', ' ', name.group(1)).strip()[:150] if name else '',
               'card': card, 'url': site.group(1) if site else '', 'domain': dom})
-    with ThreadPoolExecutor(4) as ex:
+    with ThreadPoolExecutor(1) as ex:  # 06.10: при 4 потоках сайт перестал отвечать (бан по частоте)
         list(ex.map(one, ids))
     return len(ids)
 
@@ -126,7 +131,7 @@ def productcenter(max_cards=6000):
         ext = ext_links(d, 'productcenter.ru')
         emit({'source': 'productcenter', 'rubric': r.split('catalog-')[1], 'name': '', 'card': card,
               'url': '', 'domain': ext[0] if ext else ''})
-    with ThreadPoolExecutor(4) as ex:
+    with ThreadPoolExecutor(2) as ex:
         list(ex.map(one, cards))
     return len(cards)
 
@@ -218,6 +223,7 @@ SRC = {'rusprod': rusprod, 'grun': grun, 'aemcx': aemcx, 'produkt_by': produkt_b
        'expocentr': expocentr, 'productcenter': productcenter}
 
 if __name__ == '__main__':
+    PAUZA = 1.5
     if os.path.exists(OUT):
         done |= {json.loads(l)['card'] for l in open(OUT, encoding='utf-8')}
     for name in (sys.argv[1:] or list(SRC)):

@@ -15,8 +15,9 @@ elif sys.argv[1] == 'analiz':
     cmd = [PY, '-u', os.path.join(D, 'analiz.py')] + sys.argv[2:]
 elif sys.argv[1] == 'stop':
     cmd = None
+    pat = sys.argv[2] if len(sys.argv) > 2 else 'sbor_serp'
     r = subprocess.run(['powershell', '-NoProfile', '-Command',
-                        "Get-CimInstance Win32_Process | ? { $_.CommandLine -like '*baza_pilot*sbor_serp*' } | "
+                        "Get-CimInstance Win32_Process | ? { $_.CommandLine -like '*baza_pilot*" + pat + "*' } | "
                         "% { Stop-Process -Id $_.ProcessId -Force; $_.ProcessId }"],
                        capture_output=True, text=True, timeout=120)
     o['stopped'] = r.stdout.split()
