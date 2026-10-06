@@ -34,6 +34,10 @@ import verify_company as VC  # noqa: E402
 
 ВХОД = os.path.join(DIR, 'meyer-proverka-vhod.json')
 ВЫХОД = os.path.join(DIR, 'meyer-proverka.jsonl')
+# второй прогон («остальные телефоны», 06.10): свои вход и выход — python meyer_proverka.py <вход> <выход>
+_арг = [a for a in sys.argv[1:] if not a.startswith('--')]
+if len(_арг) >= 2:
+    ВХОД, ВЫХОД = os.path.join(DIR, _арг[0]), os.path.join(DIR, _арг[1])
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
       'Chrome/126.0 Safari/537.36')
 КЭШ_ОБХОДА = r'C:\seostat\drop\pagecache'
