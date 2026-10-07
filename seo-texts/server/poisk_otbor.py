@@ -43,6 +43,10 @@ import enrich_contacts as EC  # noqa: E402
 ВЫХОД = os.path.join(DIR, 'poisk-spisok.json')
 ПОРОГ = 1.5e9
 ЛИМИТ_ПОИСКА_САЙТА = 600
+# 1-й проход (до полуночи): DaData не ждать (лимит суток выбран), checko сверху и не дольше N минут
+НЕ_ЖДАТЬ = os.environ.get('POISK_NE_ZHDAT') == '1'
+CHECKO_МИН = int(os.environ.get('POISK_CHECKO_MINUT', '0') or 0)
+КЭШ_SUGGEST = os.path.join(DIR, 'poisk-suggest.jsonl')
 НА_РЕШЕНИЕ = re.compile(r'^(01\.4|01\.2|10\.|11\.|46\.3|46\.2|70\.10|64\.20)')
 _лок = threading.Lock()
 
@@ -111,7 +115,23 @@ def по_имени_dadata(без_инн, к):
     tok = EC._read_secret('DADATA_TOKEN')
     прямой = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     n = 0
+    кэш = {}
+    if os.path.exists(КЭШ_SUGGEST):
+        for s_ in io.open(КЭШ_SUGGEST, encoding='utf-8', errors='replace'):
+            try:
+                x_ = json.loads(s_)
+                кэш[x_['юр']] = x_
+            except ValueError:
+                pass
     for юр, дом, url, qq in без_инн:
+        if юр in кэш:
+            d = кэш[юр].get('data')
+            if d:
+                x = к.setdefault(d['inn'], {'откуда': [], 'сайты': [], 'запросы': []})
+                x['откуда'].append('сайт %s (юрназвание %s, DaData)' % (дом, юр))
+                x['сайты'].append((30, url))
+                x['запросы'] += [q for q in qq if q not in x['запросы']][:3]
+            continue
         я = re.sub(r'\s+', ' ', re.sub(r'[«»"\'.,]', ' ', юр.split('«', 1)[-1])).strip().lower()
         с = None
         for попытка in range(3):
@@ -124,6 +144,9 @@ def по_имени_dadata(без_инн, к):
                 break
             except urllib.error.HTTPError as e:
                 if e.code in (403, 429):  # суточный лимит: ждать смены суток (полночь МСК) и повторить
+                    if НЕ_ЖДАТЬ:
+                        print('suggest: лимит DaData после %d — добор во 2-м проходе' % n, flush=True)
+                        return
                     день = time.strftime('%Y-%m-%d')
                     print('suggest: лимит DaData после %d, жду смены суток' % n, flush=True)
                     while time.strftime('%Y-%m-%d') == день:
@@ -138,6 +161,12 @@ def по_имени_dadata(без_инн, к):
         n += 1
         годные = [x for x in с if (x.get('data') or {}).get('state', {}).get('status') == 'ACTIVE'
                   and я and я == re.sub(r'\s+', ' ', re.sub(r'[«»"\'.,]', ' ', ((x['data'].get('name') or {}).get('short') or ''))).strip().lower()]
+        with _лок:
+            with io.open(КЭШ_SUGGEST, 'a', encoding='utf-8') as f_:
+                f_.write(json.dumps({'юр': юр, 'data': ({'inn': годные[0]['data']['inn']} if len(годные) == 1 else None)},
+                                    ensure_ascii=False) + '\n')
+                f_.flush()
+                os.fsync(f_.fileno())
         if len(годные) == 1:
             d = годные[0]['data']
             x = к.setdefault(d['inn'], {'откуда': [], 'сайты': [], 'запросы': []})
@@ -243,6 +272,8 @@ def добрать_оквэд(нужно, доход):
 
     def dadata():
         while True:
+            if сост.get('dadata_выкл'):
+                return
             if сост['dadata_стоп_дата'] == time.strftime('%Y-%m-%d'):
                 if гр['верх'] >= гр['низ']:
                     return
@@ -270,6 +301,8 @@ def добрать_оквэд(нужно, доход):
             except urllib.error.HTTPError as e:
                 з.update({'итог': 'ошибка', 'ошибка': 'HTTP %s' % e.code})
                 if e.code in (403, 429):
+                    if НЕ_ЖДАТЬ:
+                        сост['dadata_выкл'] = True
                     сост['dadata_стоп_дата'] = time.strftime('%Y-%m-%d')  # лимит суток; вернуть ИНН нельзя — подберёт checko/повтор
                     with гл:
                         очередь.append(i)
@@ -283,9 +316,13 @@ def добрать_оквэд(нужно, доход):
     прокси = [CP.Прокси(п) for п in json.load(open(os.path.join(DIR, 'checko-proxies.json')))]
     прокси = [п for п in прокси if п.get('https://checko.ru/')[0] == 200]
 
+    t_старт = time.time()
+
     def checko(п):
         while True:
-            i = взять(False)
+            if CHECKO_МИН and time.time() - t_старт > CHECKO_МИН * 60:
+                return
+            i = взять(НЕ_ЖДАТЬ)  # в 1-м проходе DaData нет — checko идёт с самых крупных
             if i is None:
                 return
             з = {'inn': i, 'источник': 'checko'}

@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+import json, subprocess
+cmd = ("Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' -and $_.CommandLine -like '*poisk_konveyer.py*' } | "
+       "ForEach-Object { Stop-Process -Id $_.ProcessId -Force; $_.ProcessId }")
+r = subprocess.run(['powershell', '-NoProfile', '-Command', cmd], capture_output=True, text=True, timeout=120)
+print('===ИТОГ===')
+print(json.dumps({'остановлены_pid': r.stdout.split(), 'err': r.stderr[-300:]}, ensure_ascii=False))
