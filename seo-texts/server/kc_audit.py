@@ -19,13 +19,14 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 DIR = r'C:\sender\server'
+НАБОР = os.environ.get('KC_NABOR', 'kc')  # kc — база КЦ из наших баз; poisk — сбор с нуля поиском
 sys.path.insert(0, DIR)
 sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
 import kc_kontakty as KK  # noqa: E402
 import kc_sayty as KS  # noqa: E402
 
-ВЫХОД = os.path.join(DIR, 'kc-audit.jsonl')
+ВЫХОД = os.path.join(DIR, НАБОР + '-audit.jsonl')
 _лок = threading.Lock()
 ПРОМПТ = (
     'Компания «{имя}» (ИНН {инн}), её сайт {сайт}. На сайте найдены номера; для каждого — фрагмент текста '
@@ -70,9 +71,9 @@ def одна(к, з):
 
 
 def main():
-    сп = json.load(io.open(os.path.join(DIR, 'kc-spisok.json'), encoding='utf-8'))['компании']
+    сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     конт = {}
-    for s in io.open(os.path.join(DIR, 'kc-kontakty.jsonl'), encoding='utf-8', errors='replace'):
+    for s in io.open(os.path.join(DIR, НАБОР + '-kontakty.jsonl'), encoding='utf-8', errors='replace'):
         з = json.loads(s)
         if з.get('итог') == 'ok':
             конт[з['inn']] = з
@@ -82,7 +83,7 @@ def main():
               if i in конт and конт[i].get('сайт') and хост(конт[i]['сайт']) == хост(к['сайт'])]
     with ThreadPoolExecutor(8) as ex:
         list(ex.map(lambda x: одна(*x), задачи))
-    shutil.copyfile(ВЫХОД, r'C:\seostat\drop\drop-storage\kc-audit.jsonl')
+    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-audit.jsonl'))
     сч = {'компаний': len(задачи), 'сайт': {}, 'номера': {}}
     for s in io.open(ВЫХОД, encoding='utf-8'):
         з = json.loads(s)

@@ -26,6 +26,7 @@ import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
 DIR = r'C:\sender\server'
+НАБОР = os.environ.get('KC_NABOR', 'kc')  # kc — база КЦ из наших баз; poisk — сбор с нуля поиском
 sys.path.insert(0, DIR)
 sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
@@ -36,7 +37,7 @@ import cc_checko_proxy as CP  # noqa: E402
 import verify_company as VC  # noqa: E402
 import enrich_contacts as EC  # noqa: E402
 
-ВЫХОД = os.path.join(DIR, 'kc-kontakty.jsonl')
+ВЫХОД = os.path.join(DIR, НАБОР + '-kontakty.jsonl')
 _лок = threading.Lock()
 КЛАССЫ = ('директор', 'технический директор', 'главный инженер', 'главный механик', 'главный энергетик',
           'инженер', 'производство', 'закупки', 'главный технолог', 'технолог', 'качество',
@@ -221,7 +222,7 @@ def одна(к):
 
 
 def main():
-    сп = json.load(io.open(os.path.join(DIR, 'kc-spisok.json'), encoding='utf-8'))['компании']
+    сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     сделано = set()
     if os.path.exists(ВЫХОД):
         for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
@@ -246,7 +247,7 @@ def main():
 
     with ThreadPoolExecutor(6) as ex:
         list(ex.map(один, очередь))
-    shutil.copyfile(ВЫХОД, r'C:\seostat\drop\drop-storage\kc-kontakty.jsonl')
+    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-kontakty.jsonl'))
     print('готово', flush=True)
 
 

@@ -16,24 +16,27 @@ import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
 DIR = r'C:\sender\server'
+НАБОР = os.environ.get('KC_NABOR', 'kc')  # kc — база КЦ из наших баз; poisk — сбор с нуля поиском
 sys.path.insert(0, DIR)
 sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
 import meyer_nalichie as MN  # noqa: E402
 import meyer_proverka as MP  # noqa: E402
 
-ВЫХОД = os.path.join(DIR, 'kc-audit2.jsonl')
+ВЫХОД = os.path.join(DIR, НАБОР + '-audit2.jsonl')
 ОБЩИЕ = {'общество', 'ограниченной', 'ответственностью', 'акционерное', 'открытое', 'закрытое', 'публичное',
          'молочный', 'молочная', 'молочное', 'молочные', 'комбинат', 'завод', 'заводы', 'частная', 'пивоварня',
          'винодельня', 'винодельческое', 'предприятие', 'компания', 'группа', 'холдинг', 'производственная',
          'производственное', 'мясокомбинат', 'птицефабрика', 'агропромышленная', 'фирма', 'торговый', 'продукты',
-         'классических', 'шампанских', 'игристых', 'имени', 'россия', 'русский', 'русская', 'продукт'}
+         'классических', 'шампанских', 'игристых', 'имени', 'россия', 'русский', 'русская', 'продукт',
+         'групп', 'группы', 'молзавод', 'хлебозавод', 'пивзавод', 'маслозавод', 'сырзавод', 'торговый', 'управляющая'}
 ДОП = ('contacts', 'kontakty', 'contact', 'about', 'o-kompanii', 'rekvizity', 'company')
 
 
 def слова(имя):
     т = re.sub(r'[«»"\'()]', ' ', имя or '').lower().replace('ё', 'е')
-    return {w for w in re.findall(r'[а-яa-z][а-яa-z\-]{4,}', т) if w not in ОБЩИЕ}
+    т = т.replace('-', ' ')  # «мильстрим-черноморские» -> два слова
+    return {w for w in re.findall(r'[а-яa-z]{5,}', т) if w not in ОБЩИЕ}
 
 
 def одна(i, к, з):
@@ -60,14 +63,14 @@ def одна(i, к, з):
 
 
 def main():
-    сп = json.load(io.open(os.path.join(DIR, 'kc-spisok.json'), encoding='utf-8'))['компании']
+    сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     конт = {}
-    for s in io.open(os.path.join(DIR, 'kc-kontakty.jsonl'), encoding='utf-8', errors='replace'):
+    for s in io.open(os.path.join(DIR, НАБОР + '-kontakty.jsonl'), encoding='utf-8', errors='replace'):
         з = json.loads(s)
         if з.get('итог') == 'ok':
             конт[з['inn']] = з
     задачи = []
-    for s in io.open(os.path.join(DIR, 'kc-audit.jsonl'), encoding='utf-8'):
+    for s in io.open(os.path.join(DIR, НАБОР + '-audit.jsonl'), encoding='utf-8'):
         a = json.loads(s)
         if a['сайт_чей'].startswith('не подтверждён'):
             задачи.append((a['inn'], сп[a['inn']], конт[a['inn']]))
@@ -78,7 +81,7 @@ def main():
             f.write(json.dumps(r, ensure_ascii=False) + '\n')
         f.flush()
         os.fsync(f.fileno())
-    shutil.copyfile(ВЫХОД, r'C:\seostat\drop\drop-storage\kc-audit2.jsonl')
+    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-audit2.jsonl'))
     print('===ИТОГ===')
     print('\n'.join('%s | %s | %s' % (r['inn'], r['сайт'][:40], r['сайт_чей'][:80]) for r in рез))
 

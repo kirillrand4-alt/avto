@@ -17,6 +17,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 DIR = r'C:\sender\server'
+НАБОР = os.environ.get('KC_NABOR', 'kc')  # kc — база КЦ из наших баз; poisk — сбор с нуля поиском
 sys.path.insert(0, DIR)
 sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
@@ -25,7 +26,7 @@ import enrich_contacts as EC  # noqa: E402
 import meyer_nalichie as MN  # noqa: E402
 import meyer_proverka as MP  # noqa: E402
 
-ВЫХОД = os.path.join(DIR, 'kc-sayty.jsonl')
+ВЫХОД = os.path.join(DIR, НАБОР + '-sayty.jsonl')
 _лок = threading.Lock()
 ОПФ = re.compile(r'^(ООО|АО|ПАО|ЗАО|ОАО|НАО|АПФ|ПК|СПК|КФХ|МУП|ГУП|ФГУП)\s+', re.I)
 
@@ -83,9 +84,9 @@ def одна(к, прежний):
 
 
 def main():
-    сп = json.load(io.open(os.path.join(DIR, 'kc-spisok.json'), encoding='utf-8'))['компании']
+    сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     прежние = {}
-    for s in io.open(os.path.join(DIR, 'kc-kontakty.jsonl'), encoding='utf-8', errors='replace'):
+    for s in io.open(os.path.join(DIR, НАБОР + '-kontakty.jsonl'), encoding='utf-8', errors='replace'):
         try:
             з = json.loads(s)
         except ValueError:
@@ -112,7 +113,7 @@ def main():
     print('без своего сайта', len(очередь), flush=True)
     with ThreadPoolExecutor(6) as ex:
         list(ex.map(lambda к: одна(к, прежние.get(к['inn'])), очередь))
-    shutil.copyfile(ВЫХОД, r'C:\seostat\drop\drop-storage\kc-sayty.jsonl')
+    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-sayty.jsonl'))
     print('готово', flush=True)
 
 
