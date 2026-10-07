@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 r"""База КЦ: основной ОКВЭД для юрлиц с доходом 2025 >= 3 млрд (ФНС revexp), которых нет в наших
-базах (kc-pishch-probel.json, «нет»: 11 209 ИНН). Без этого в отбор не попадают крупные
+базах (kc-pishch-probel-15.json, «нет»: доход от 1,5 млрд). Без этого в отбор не попадают крупные
 мясокомбинаты/молочка/корма/напитки, которых никогда не было в базе обзвона.
 
 Два потока с разных концов списка (по убыванию дохода), пока не встретятся:
@@ -27,7 +27,9 @@ import cc_checko_proxy as CP  # noqa: E402
 import enrich_contacts as EC  # noqa: E402
 
 ВЫХОД = os.path.join(DIR, 'kc-okved-fns.jsonl')
-ЛИМИТ_DADATA = 2000  # 2-й запуск 07.10: 6 500 уже израсходовано, ~1 500 оставляем news-scan
+ЛИМИТ_DADATA = 8500  # за сутки; ~1 500 оставляем news-scan
+# порог 1,5 млрд (владелец 07.10): 07.10 лимит DaData выбран — её потоки ждут обнуления (полночь МСК)
+DADATA_ПОСЛЕ = '2026-10-08 00:05'
 ПОТОКОВ_DADATA = 10
 _лок = threading.Lock()
 
@@ -41,7 +43,7 @@ def записать(з):
 
 
 def main():
-    вход = json.load(io.open(os.path.join(DIR, 'kc-pishch-probel.json'), encoding='utf-8'))['нет']
+    вход = json.load(io.open(os.path.join(DIR, 'kc-pishch-probel-15.json'), encoding='utf-8'))['нет']
     очередь = sorted(вход, key=lambda i: -вход[i])
     сделано = set()
     if os.path.exists(ВЫХОД):
@@ -71,6 +73,10 @@ def main():
     сч = {'dadata': 0, 'checko': 0, 'ошибки': 0}
 
     def поток_dadata():
+        while time.strftime('%Y-%m-%d %H:%M') < DADATA_ПОСЛЕ:
+            if гр['верх'] >= гр['низ']:
+                return
+            time.sleep(60)
         while сч['dadata'] < ЛИМИТ_DADATA and 'стоп_dadata' not in сч:
             i = взять(True)
             if i is None:

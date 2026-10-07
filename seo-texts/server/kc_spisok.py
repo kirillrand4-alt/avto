@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 r"""База КЦ, шаг 2: итоговый список компаний.
 
-  * из нашей базы (kc-pishch-otbor.json) — выручка >= 3 млрд;
-  * из ФНС (kc-okved-fns.jsonl: доход 2025 >= 3 млрд, нет в наших базах) — основной ОКВЭД в сегментах;
+  Владелец 07.10: «только те шаги, что для файлов 1–4; там не было определения компаний из ФНС».
+  * из нашей базы обзвона/enrich (источник файлов 1–3, kc-pishch-otbor.json) — выручка >= 1,5 млрд;
+    компании только из «Парка» (источник файла 5) не берутся;
+  * из таблицы CC (файл 4, cc-fns.json + сайты из таблицы kc-cc-sayty.json);
   * без ликвидированных и без запретов панели (сделка, конкурент, не профиль, не покупатель);
   * для компаний из нашей базы — страницы-источники их контактов (свой домен и площадки закупок),
     чтобы обход сайта и проверка закупок их тоже открыли.
@@ -19,12 +21,13 @@ import sys
 DIR = r'C:\sender\server'
 sys.path.insert(0, DIR)
 os.chdir(DIR)
-from kc_pishch_otbor import СЕГМЕНТЫ, ПОРОГ  # noqa: E402
+from kc_pishch_otbor import СЕГМЕНТЫ  # noqa: E402
 from meyer_baza import коды, попадает_осн, имя_чисто  # noqa: E402
 import meyer_nalichie as MN  # noqa: E402
 
 ДРОП = r'C:\seostat\drop\drop-storage'
 ВЫХОД = os.path.join(DIR, 'kc-spisok.json')
+ПОРОГ = 1.5e9  # владелец 07.10: «сделай от 1,5 млрд» (было 3 млрд)
 ЗАКУПКИ = re.compile(r'zakupki\.gov|tender\.pro|roseltorg|b2b-center|etpgpb|fabrikant|zakupki360|rts-tender|'
                      r'sberbank-ast|tektorg|lot-online|zakazrf|otc\.ru|onlinecontract|bicotender|etp-ets', re.I)
 
@@ -38,35 +41,31 @@ def сегмент(осн, все):
 
 def main():
     база = json.load(io.open(os.path.join(DIR, 'kc-pishch-otbor.json'), encoding='utf-8'))
-    итог, снято = {}, {}
+    сайты_cc = json.load(io.open(os.path.join(ДРОП, 'kc-cc-sayty.json'), encoding='utf-8'))
+    итог, снято, только_парк = {}, {}, 0
     for i, к in база.items():
-        if к['выручка'] >= ПОРОГ:
-            итог[i] = {'inn': i, 'имя': к['имя'], 'регион': к['регион'], 'сайт': (re.split(r'[\s,;|]+', к['сайт'].strip()) or [''])[0],
-                       'осн': к['осн'], 'все': к['все'], 'сегм': к['сегм'], 'выручка': к['выручка'],
-                       'выручка_откуда': к['выручка_откуда'], 'откуда': ', '.join(к['откуда']), 'огрн': ''}
-    фнс = {}
-    for s in io.open(os.path.join(DIR, 'kc-okved-fns.jsonl'), encoding='utf-8', errors='replace'):
-        try:
-            з = json.loads(s)
-        except ValueError:
+        if к['выручка'] < ПОРОГ:
             continue
-        if з.get('итог') == 'ok' and з.get('оквэд'):
-            фнс[з['inn']] = з
-    for i, з in фнс.items():
-        осн = (коды(з['оквэд'])[:1] or [''])[0]
-        все = коды(з['оквэд'], ' '.join(з.get('оквэд_все') or []))
+        if к['откуда'] == ['парк компрессорного оборудования']:
+            только_парк += 1  # источник файла 5, не файлов 1–4 (владелец 07.10)
+            continue
+        сайт = (re.split(r'[\s,;|]+', к['сайт'].strip()) or [''])[0] or сайты_cc.get(i, '')
+        итог[i] = {'inn': i, 'имя': к['имя'], 'регион': к['регион'], 'сайт': сайт,
+                   'осн': к['осн'], 'все': к['все'], 'сегм': к['сегм'], 'выручка': к['выручка'],
+                   'выручка_откуда': к['выручка_откуда'], 'откуда': 'база обзвона/enrich (файлы 1–3)', 'огрн': ''}
+    # таблица CC (файл 4): ОКВЭД (DaData) и доход ФНС из cc-fns.json, сайт — из таблицы
+    for i, ф in json.load(io.open(os.path.join(DIR, 'cc-fns.json'), encoding='utf-8')).items():
+        if i in итог or not ф.get('оквэд_осн') or (ф.get('доход') or 0) < ПОРОГ:
+            continue
+        if re.search(r'LIQUIDAT|BANKRUPT', ф.get('статус') or ''):
+            continue
+        осн = (коды(ф['оквэд_осн'])[:1] or [''])[0]
+        все = коды(ф['оквэд_осн'], ' '.join(ф.get('оквэд_все') or []))
         с = сегмент(осн, все)
-        if not с:
-            continue
-        if re.search(r'LIQUIDAT|BANKRUPT|ликвид', з.get('статус') or '', re.I):
-            снято[i] = 'ликвидирована/банкрот (%s)' % з.get('статус')
-            continue
-        имя = з.get('название') or ''
-        if з['источник'] == 'checko':  # заголовок карточки: «ООО "Х", Город — ИНН …»
-            имя = re.split(r',\s|\s[—-]\s', имя)[0]
-        итог[i] = {'inn': i, 'имя': имя_чисто(имя), 'регион': з.get('регион') or '', 'сайт': з.get('сайт') or '',
-                   'осн': осн, 'все': все, 'сегм': с, 'выручка': з['доход'], 'выручка_откуда': 'ФНС (доход 2025)',
-                   'откуда': 'ФНС: доход 2025 >= 3 млрд (%s)' % з['источник'], 'огрн': з.get('огрн') or ''}
+        if с:
+            итог[i] = {'inn': i, 'имя': имя_чисто(ф.get('название') or ''), 'регион': ф.get('регион') or '',
+                       'сайт': сайты_cc.get(i, ''), 'осн': осн, 'все': все, 'сегм': с, 'выручка': ф['доход'],
+                       'выручка_откуда': 'ФНС (доход 2025)', 'откуда': 'таблица CC (файл 4)', 'огрн': ф.get('огрн') or ''}
     # запреты панели
     c = sqlite3.connect(r'file:C:\sender\sender.db?mode=ro', uri=True, timeout=60)
     т = [r[0] for r in c.execute("select name from sqlite_master where type='table' and name like '%suppress%'")][0]
@@ -104,10 +103,10 @@ def main():
     for к in снятые.values():
         пр[к['причина']] = пр.get(к['причина'], 0) + 1
     print('===ИТОГ===')
-    print(json.dumps({'компаний': len(итог), 'по_сегментам': сч, 'из_нашей_базы': sum(1 for к in итог.values() if not к['откуда'].startswith('ФНС')),
-                      'новых_из_ФНС': sum(1 for к in итог.values() if к['откуда'].startswith('ФНС')),
+    print(json.dumps({'компаний': len(итог), 'по_сегментам': сч, 'из_базы_обзвона': sum(1 for к in итог.values() if к['откуда'].startswith('база')),
+                      'из_таблицы_CC': sum(1 for к in итог.values() if к['откуда'].startswith('таблица')),
                       'с_сайтом': sum(1 for к in итог.values() if к['сайт']), 'снято': пр,
-                      'фнс_оквэд_получен': len(фнс)}, ensure_ascii=False, indent=1))
+                      'только_парк_не_взяты': только_парк}, ensure_ascii=False, indent=1))
 
 
 if __name__ == '__main__':

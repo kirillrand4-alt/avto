@@ -73,7 +73,10 @@ def одна(к, прежний):
             рез = KK.обход(к, сайт)
             з.update(рез)
             з['сайт_чей'] = чей_сайт(к, рез)
-        з['итог'] = 'ok'
+        if not сайт and re.search(r'закончились средства|перезапрос|err', ист or '', re.I):
+            з['итог'] = 'ошибка поиска: ' + (ист or '')[:60]  # повторить после пополнения xmlriver
+        else:
+            з['итог'] = 'ok'
     except Exception as e:  # noqa: BLE001
         з['итог'] = 'сбой: ' + repr(e)[:120]
     записать(з)
@@ -94,7 +97,8 @@ def main():
         for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
             try:
                 з = json.loads(s)
-                if з.get('итог') == 'ok':
+                if з.get('итог') == 'ok' and not re.search(r'закончились средства|перезапрос',
+                                                          (з.get('поиск') or {}).get('источник') or ''):
                     сделано.add(з['inn'])
             except ValueError:
                 pass
