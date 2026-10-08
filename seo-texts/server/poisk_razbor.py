@@ -30,7 +30,10 @@ import meyer_proverka as MP  # noqa: E402
 import cc_obhod as CO  # noqa: E402
 import enrich_contacts as EC  # noqa: E402
 
-ВЫХОД = os.path.join(DIR, 'poisk-razbor.jsonl')
+# POISK_NABOR: poisk — сбор КЦ 07.10; pilot — пилот плана Meyer 08.10 (вход <набор>-serp.jsonl)
+НАБОР = os.environ.get('POISK_NABOR', 'poisk')
+ВЫХОД = os.path.join(DIR, НАБОР + '-razbor.jsonl')
+УНП_RX = re.compile(r'УНП\D{0,6}(\d{9})(?!\d)')
 _лок = threading.Lock()
 НЕ_БРАТЬ = re.compile(r'(^|\.)(yandex\.|ya\.ru|google\.|youtube\.|vk\.(com|ru)|ok\.ru|t\.me|telegram|dzen\.ru|'
                       r'wikipedia|avito|ozon\.|wildberries|market\.yandex|2gis|zoon\.|flamp|otzovik|irecommend|'
@@ -66,7 +69,7 @@ def инн_из(т):
     return out
 
 
-ЮРИМЯ = re.compile(r'(?<![А-ЯЁа-яё])(ООО|АО|ПАО|ЗАО|ОАО|НАО)\s*[«"]\s*([^«»"]{2,60}?)\s*[»"]')
+ЮРИМЯ = re.compile(r'(?<![А-ЯЁа-яё])(ООО|АО|ПАО|ЗАО|ОАО|НАО|ЧУП|ЧПУП|УП|СООО|ИООО|ОДО|КУП|РУП|СПК)\s*[«"]\s*([^«»"]{2,60}?)\s*[»"]')
 ТИПОВЫЕ = ('rekvizity', 'requisites', 'rekvizity-kompanii', 'contacts', 'kontakty', 'about', 'o-kompanii',
            'politika-konfidencialnosti', 'privacy', 'policy', 'privacy-policy')
 
@@ -97,6 +100,7 @@ def сайт(дом, о, база, имена=None):
     корень = '%s://%s/' % (urllib.parse.urlsplit(старт).scheme or 'http', urllib.parse.urlsplit(старт).netloc)
     очередь = [корень] + ([старт] if старт.rstrip('/') != корень.rstrip('/') else [])
     инн, огрн, заг, страниц = collections.Counter(), collections.Counter(), '', 0
+    унп = collections.Counter()
     i = 0
     for п in ТИПОВЫЕ:
         u = корень + п
@@ -113,9 +117,10 @@ def сайт(дом, о, база, имена=None):
         заг = заг or re.sub(r'\s+', ' ', загол or '')[:150]
         т = MP.в_текст(html)
         инн.update(инн_из(т))
+        унп.update(УНП_RX.findall(т))
         for м in ЮРИМЯ.finditer(т):
             юр['%s «%s»' % (м.group(1), м.group(2).strip())] += 1
-        if инн and страниц >= 3:
+        if (инн or унп) and страниц >= 3:
             break
         for м in re.finditer(r'ОГРН\D{0,12}([15]\d{12})(?!\d)', т):
             огрн[м.group(1)] += 1
@@ -132,7 +137,7 @@ def сайт(дом, о, база, имена=None):
             по_имени += sorted(имена[я])
     return {'тип': 'сайт', 'домен': дом, 'url': корень, 'заголовок': заг, 'страниц': страниц,
             'инн': инн.most_common(6), 'огрн': огрн.most_common(3), 'инн_база': из_базы,
-            'юримена': юр.most_common(3), 'инн_по_имени': по_имени[:4]}
+            'юримена': юр.most_common(3), 'инн_по_имени': по_имени[:4], 'унп': унп.most_common(4)}
 
 
 def каталог(u):
@@ -146,12 +151,16 @@ def каталог(u):
         т = MP.в_текст(html)
         з['инн'] = [x for x, _ in инн_из(т).most_common(300)]
         з['огрн'] = list(dict.fromkeys(re.findall(r'ОГРН\D{0,12}([15]\d{12})(?!\d)', т)))[:300]
+        з['унп'] = list(dict.fromkeys(УНП_RX.findall(т)))[:300]
     return з
 
 
 def main():
-    serp = [json.loads(s) for s in io.open(os.path.join(DIR, 'poisk-serp.jsonl'), encoding='utf-8', errors='replace')]
+    serp = [json.loads(s) for s in io.open(os.path.join(DIR, НАБОР + '-serp.jsonl'), encoding='utf-8', errors='replace')]
+    for з in serp:
+        з.setdefault('сегм', з.get('вид', ''))
     регионы_домена = collections.defaultdict(set)
+    запросы_домена = collections.defaultdict(set)
     по_домену, урлы_каталогов = {}, {}
     for з in serp:
         for д in з.get('доки', []):
@@ -159,13 +168,17 @@ def main():
             if not h or НЕ_БРАТЬ.search(h):
                 continue
             регионы_домена[MN.домен(h)].add(з['регион'])
+            запросы_домена[MN.домен(h)].add(з['запрос'])
     for з in serp:
         for д in з.get('доки', []):
             h = хост(д['url'])
             if not h or НЕ_БРАТЬ.search(h):
                 continue
             кор = MN.домен(h)
-            агрегатор = (КАТАЛОГ.search(h) or len(регионы_домена[кор]) >= 6 or not EC._is_own_site('http://' + h))
+            # пилот — всего 3 региона: агрегатор = во всех регионах пилота или в >= 30 разных запросах
+            много = (len(регионы_домена[кор]) >= 6 if НАБОР == 'poisk' else
+                     len(регионы_домена[кор] - {''}) >= 3 or len(запросы_домена[кор]) >= 30)
+            агрегатор = (КАТАЛОГ.search(h) or много or not EC._is_own_site('http://' + h))
             if агрегатор:
                 урлы_каталогов.setdefault(д['url'], []).append((з['сегм'], з['регион'], з['запрос']))
             else:
@@ -215,7 +228,7 @@ def main():
     with ThreadPoolExecutor(24) as ex:
         list(ex.map(шаг_сайт, сайты))
         list(ex.map(шаг_каталог, каталоги))
-    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', 'poisk-razbor.jsonl'))
+    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-razbor.jsonl'))
     print('готово', flush=True)
 
 

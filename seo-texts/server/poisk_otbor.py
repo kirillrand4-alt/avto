@@ -78,7 +78,7 @@ def кандидаты():
             if len(x['запросы']) < 5 and q not in x['запросы']:
                 x['запросы'].append(q)
 
-    for s in io.open(os.path.join(DIR, 'poisk-razbor.jsonl'), encoding='utf-8', errors='replace'):
+    for s in io.open(os.path.join(DIR, os.environ.get('POISK_NABOR', 'poisk') + '-razbor.jsonl'), encoding='utf-8', errors='replace'):
         try:
             з = json.loads(s)
         except ValueError:

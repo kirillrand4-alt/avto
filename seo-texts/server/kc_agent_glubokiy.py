@@ -178,16 +178,19 @@ def проверить(к, итог, открыто):
         u = (н.get('url') or '').strip()
         т = открыто.get(u) or открыто.get(u.rstrip('/')) or открыто.get(u + '/') or ''
         ц = re.sub(r'\D', '', н.get('номер') or '')
-        if len(ц) == 11 and ц[0] in '78':
+        if len(ц) == 11 and ц.startswith('80'):  # Беларусь, внутренний формат 8 0XX …
+            ц = '375' + ц[2:]
+        elif len(ц) == 11 and ц[0] in '78':
             ц = '7' + ц[1:]
         elif len(ц) == 10:
             ц = '7' + ц
+        by = len(ц) == 12 and ц.startswith('375')
         причина = ''
-        if len(ц) != 11:
+        if len(ц) != 11 and not by:
             причина = 'не номер'
         elif not т:
             причина = 'агент не открывал эту страницу'
-        elif not MP.найти(т, ц[-10:]):
+        elif not (MP.найти(т, ц[-9:]) if by else MP.найти(т, ц[-10:])):
             причина = 'номера нет на странице'
         elif ЗАКУПКИ.search(u):
             if к['inn'] not in т:
@@ -222,6 +225,8 @@ def main():
             except (ValueError, KeyError):
                 pass
     задачи = [dict(сп[i], отклонены=v.get('отклонены', '')) for i, v in вход.items() if i in сп and i not in сделано]
+    if os.environ.get('KC_AGENT_LIMIT'):  # пилот 08.10: баланс xmlriver ограничен — сначала крупные
+        задачи = sorted(задачи, key=lambda к: -(к.get('выручка') or 0))[:int(os.environ['KC_AGENT_LIMIT'])]
     print('компаний', len(задачи), flush=True)
     n = [0]
 

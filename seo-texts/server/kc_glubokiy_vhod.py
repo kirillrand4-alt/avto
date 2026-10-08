@@ -20,10 +20,19 @@ for s in io.open(os.path.join(DIR, НАБОР + '-kontakty.jsonl'), encoding='ut
 for s in io.open(os.path.join(DIR, НАБОР + '-sayt-proverka.jsonl'), encoding='utf-8', errors='replace'):
     з = json.loads(s)
     пров[(з['inn'], MN.домен(з.get('сайт') or ''))] = з.get('итог')
+# опровергатели (kc_oproverzhenie, план Meyer п. 3.1): «опровергаю» — сайт не её, даже если ИНН на нём есть
+опров = {}
+if os.path.exists(os.path.join(DIR, НАБОР + '-oprov.jsonl')):
+    for s in io.open(os.path.join(DIR, НАБОР + '-oprov.jsonl'), encoding='utf-8', errors='replace'):
+        з = json.loads(s)
+        опров[(з['inn'], MN.домен(з.get('сайт') or ''))] = з.get('итог')
 вход = {}
 for i, к in сп.items():
     з = конт.get(i) or {}
     сайт = з.get('сайт') or ''
+    if сайт and опров.get((i, MN.домен(сайт))) == 'опровергаю':
+        вход[i] = {'отклонены': MN.домен(сайт) + ' (опровергнут: сайт не её)'}
+        continue
     if сайт and i in (з.get('инн_живой') or []):
         continue
     if сайт and пров.get((i, MN.домен(сайт))) in ('та же', 'группа'):
