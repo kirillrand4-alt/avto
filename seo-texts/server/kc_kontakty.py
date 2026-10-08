@@ -229,10 +229,11 @@ def main():
             try:
                 з = json.loads(s)
                 if з.get('итог') == 'ok':
-                    сделано.add(з['inn'])
+                    сделано.add((з['inn'], MN.домен(з.get('сайт') or '')))
             except ValueError:
                 pass
-    очередь = sorted((к for i, к in сп.items() if i not in сделано), key=lambda к: -к['выручка'])
+    очередь = sorted((к for i, к in сп.items() if (i, MN.домен(к['сайт'] or '')) not in сделано),
+                     key=lambda к: -к['выручка'])  # сменился сайт (08.10: сайты групп) — обойти заново
     ПРОКСИ.extend(п for п in (CP.Прокси(x) for x in json.load(open(os.path.join(DIR, 'checko-proxies.json'))))
                   if п.get('https://checko.ru/')[0] == 200)
     print('компаний', len(сп), 'в очереди', len(очередь), 'прокси', len(ПРОКСИ), flush=True)

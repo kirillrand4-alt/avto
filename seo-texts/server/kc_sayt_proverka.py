@@ -123,13 +123,14 @@ def main():
     if os.path.exists(ВЫХОД):
         for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
             try:
-                сделано.add(json.loads(s)['inn'])
+                x = json.loads(s)
+                сделано.add((x['inn'], MN.домен(x.get('сайт') or '')))
             except (ValueError, KeyError):
                 pass
     задачи = []
     for i, к in сп.items():
         з = конт.get(i) or {}
-        if not з.get('сайт') or i in сделано:
+        if not з.get('сайт') or (i, MN.домен(з['сайт'])) in сделано:
             continue
         if i in (з.get('инн_живой') or []):
             continue  # ИНН компании на сайте — доказано, модель не нужна

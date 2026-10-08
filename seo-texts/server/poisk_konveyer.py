@@ -21,8 +21,9 @@ DIR = r'C:\sender\server'
 # два прохода: 1-й — без DaData (лимит суток выбран), 2-й — после полуночи МСК, с DaData (резюм)
 ПРОХОД1 = {'POISK_NE_ZHDAT': '1', 'POISK_CHECKO_MINUT': '100'}
 # 08.10 04:55: ночью отбор упал (на сервере не было meyer_baza.py) — после полуночи DaData свежая, один полный проход
-ШАГИ = [('poisk_razbor.py', {}, ''), ('poisk_otbor.py', {}, ''), ('kc_kontakty.py', {}, ''),
-        ('kc_audit.py', {}, ''), ('kc_audit2.py', {}, '')]
+# 08.10 утро: сайты групп (несколько ИНН на сайте) + проверка моделью + агенты-исследователи
+ШАГИ = [('poisk_otbor.py', {}, ''), ('kc_kontakty.py', {}, ''), ('kc_audit.py', {}, ''), ('kc_audit2.py', {}, ''),
+        ('kc_sayt_proverka.py', {}, ''), ('kc_glubokiy_vhod.py', {}, ''), ('kc_agent_glubokiy.py', {}, '')]
 
 
 def занят(скрипт):
@@ -91,7 +92,8 @@ def main():
             o['проход1_готов'] = time.strftime('%Y-%m-%d %H:%M')
             статус(o)
     for ф in ('poisk-serp.jsonl', 'poisk-razbor.jsonl', 'poisk-spisok.json', 'poisk-okved.jsonl',
-              'poisk-kontakty.jsonl', 'poisk-audit.jsonl', 'poisk-audit2.jsonl'):
+              'poisk-kontakty.jsonl', 'poisk-audit.jsonl', 'poisk-audit2.jsonl', 'poisk-sayt-proverka.jsonl',
+              'poisk-glubokiy.jsonl'):
         if os.path.exists(os.path.join(DIR, ф)):
             shutil.copyfile(os.path.join(DIR, ф), os.path.join(ДРОП, ф))
     o['конец'] = time.strftime('%Y-%m-%d %H:%M')
