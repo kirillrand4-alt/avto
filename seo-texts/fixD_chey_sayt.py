@@ -59,7 +59,7 @@ def domen(u):
 
 
 def ne_sayt(d):
-    return any(d == x or d.endswith('.' + x) or x in d for x in NE_SAYTY)
+    return any(d == x or d.endswith('.' + x) or (x in d and '.' not in x) for x in NE_SAYTY)
 
 
 def norm(s):
@@ -99,9 +99,9 @@ def stranicy_domena(d):
 
 
 def yadro_nazvaniya(naim):
-    """Отличительная часть юрназвания: в кавычках, без ОПФ."""
-    n = (naim or '').replace('«', '"').replace('»', '"')
-    m = [x.strip() for x in re.findall(r'"+([^"]{2,})"*', n) if x.strip()]
+    """Отличительная часть юрназвания: всё, что в кавычках, без ОПФ."""
+    n = (naim or '').replace('«', '"').replace('»', '"').replace('“', '"').replace('”', '"')
+    m = [x.strip() for x in n.split('"')[1:] if x.strip()]
     core = (' '.join(m) if m else re.sub(r'^(ООО|ОАО|ЗАО|ПАО|АО|ИП|СПК|СППК|СПССПК|СПСК|СППСК|СППЗСК)\s+', '', n)).strip(' "')
     return core
 
@@ -111,13 +111,22 @@ def otlichitelnye(core):
 
 
 def gorod(adres):
-    m = re.search(r'\b(?:г\.|город|пгт\.?|с\.|п\.|пос\.|ст-ца|рп\.?|д\.|х\.)\s*([А-ЯЁ][а-яё-]+(?:\s[А-ЯЁ][а-яё-]+)?)', adres or '')
-    return m.group(1) if m else ''
+    m = re.search(r'\b(?:г\.|город|пгт\.?|с\.|п\.|пос\.|ст-ца|рп\.?|д\.|х\.)\s*([А-ЯЁ][а-яёА-ЯЁ-]+(?:\s[А-ЯЁ][а-яё-]+)?)', adres or '')
+    return m.group(1).strip('-') if m else ''
 
 
 def ulica(adres):
     m = re.search(r'\b(?:ул\.|улица|пр-кт|проспект|пер\.|ш\.|шоссе|пр-д|проезд|б-р|наб\.|тер\.|мкр\.?|пл\.)\s*([А-ЯЁ0-9][А-Яа-яЁё0-9.-]+(?:\s[А-ЯЁ][а-яё-]+)?)', adres or '')
     return m.group(1).strip('.') if m else ''
+
+
+def region_osnova(region):
+    r = norm(region).replace('республика', '').replace('область', '').replace('край', '').replace('автономный округ', '')
+    r = re.sub(r'\s+', ' ', r).strip(' -–')
+    if not r:
+        return ''
+    w = max(r.split(), key=len)
+    return w[:-2] if len(w) > 6 else w
 
 
 INN_RE = re.compile(r'ИНН(?:\s*/\s*КПП)?\s*[:№.]?\s*(\d{10}|\d{12})(?!\d)', re.I)
@@ -202,6 +211,7 @@ def glavnoe():
         adres = c.get('adres') or r.get('adres') or ''
         ruk_fio = r.get('ruk_fio') if r.get('ruk_vid') == 'person' else ''
         core = yadro_nazvaniya(c.get('predpriyatie') or r.get('naim'))
+        region = c.get('region') or ''
         slova = otlichitelnye(core)
         g_ogrn, g_inn, g_naim = gruppa_checko(inn)
         sosedi = chlen_gruppy.get(inn, set()) - {inn}
@@ -250,18 +260,20 @@ def glavnoe():
             gor = gorod(adres)
             nt2 = ' ' + re.sub(r'[^0-9a-zа-я]+', ' ', nt) + ' '
             fraza = ' ' + re.sub(r'[^0-9a-zа-я]+', ' ', norm(core)).strip() + ' '
-            fraza_est = len(fraza.strip()) >= 4 and fraza in nt2
-            ur_tochno = any(re.sub(r'[^0-9a-zа-я]+', ' ', norm(yadro_nazvaniya(u))).strip() == fraza.strip()
-                            for u in UR_NAZV.findall(tekst))
+            otl = [w for w in otlichitelnye(core) if len(w) >= 5]
+            fraza_est = bool(otl) and fraza in nt2
+            ur_tochno = bool(otl) and any(re.sub(r'[^0-9a-zа-я]+', ' ', norm(yadro_nazvaniya(u))).strip() == fraza.strip()
+                                          for u in UR_NAZV.findall(tekst))
             gor_est = bool(gor) and (' ' + re.sub(r'[^0-9a-zа-я]+', ' ', norm(gor)).strip()) in nt2
-            if ur_tochno and len(fraza.strip()) >= 4:
-                dok_myagk.append('юрназвание «%s» с ОПФ на сайте' % core)
-            elif fraza_est and gor_est:
-                dok_myagk.append('название «%s» и город %s на сайте' % (core, gor))
-            elif fraza_est:
-                kosv.append('название «%s» на сайте' % core)
-            elif gor_est:
-                kosv.append('город %s на сайте' % gor)
+            ro = region_osnova(region)
+            reg_est = bool(ro) and ro in nt
+            mesto = ('город %s' % gor) if gor_est else (('регион %s' % region) if reg_est else '')
+            if (ur_tochno or fraza_est) and mesto:
+                dok_myagk.append('%s «%s» и %s на сайте' % ('юрназвание' if ur_tochno else 'название', core, mesto))
+            elif ur_tochno or fraza_est:
+                kosv.append('%s «%s» на сайте (города/региона компании нет)' % ('юрназвание' if ur_tochno else 'название', core))
+            elif mesto:
+                kosv.append('%s на сайте' % mesto)
             chuzhie_inn = sorted(set(x for x in INN_RE.findall(tekst) if x != inn))
             chuzhie_ogrn = sorted(set(x for x in OGRN_RE.findall(tekst) if x != ogrn))
             for x in chuzhie_inn:
@@ -271,8 +283,8 @@ def glavnoe():
                 if x in g_ogrn or x in sosedi_ogrn:
                     dok_gr.append('ОГРН %s юрлица группы на сайте' % x)
             for nm in g_naim:
-                yc = otlichitelnye(yadro_nazvaniya(nm))
-                if yc and all(w in nt for w in yc) and len(''.join(yc)) >= 5:
+                yc = [w for w in otlichitelnye(yadro_nazvaniya(nm)) if len(w) >= 5]
+                if yc and all(w in nt for w in yc):
                     dok_gr.append('название УК/учредителя «%s» на сайте' % yadro_nazvaniya(nm))
             chuzh_inn = [x for x in chuzhie_inn if x not in g_inn and x not in sosedi]
             chuzh_ogrn = [x for x in chuzhie_ogrn if x not in g_ogrn and x not in sosedi_ogrn]
@@ -290,11 +302,11 @@ def glavnoe():
                 proverit = bool(dok_chuzh)
             elif dok_gr:
                 verdikt = 'группа'
-            elif dok_chuzh and not dok_myagk:
+            elif dok_chuzh:
                 verdikt = 'чужой'
+                proverit = bool(dok_myagk)
             elif dok_myagk:
                 verdikt = 'свой'
-                proverit = bool(dok_chuzh)
             else:
                 verdikt = 'не определено'
             rez[d] = {'verdikt': verdikt, 'proverit': proverit, 'svoj': dok_svoj + dok_myagk, 'svoj_tverd': bool(dok_svoj), 'gruppa': sorted(set(dok_gr)), 'chuzhoy': dok_chuzh,

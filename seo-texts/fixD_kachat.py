@@ -56,7 +56,7 @@ def domen(u):
 
 
 def ne_sayt(d):
-    return any(d == x or d.endswith('.' + x) or x in d for x in NE_SAYTY)
+    return any(d == x or d.endswith('.' + x) or (x in d and '.' not in x) for x in NE_SAYTY)
 
 
 def imya(url):
