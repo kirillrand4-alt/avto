@@ -17,6 +17,7 @@
 
     python3 pilot_zadachi.py          # первый прогон (выборка под баланс 95 ₽)
     python3 pilot_zadachi.py полный   # полный тест (после пополнения xmlriver 08.10)
+    python3 pilot_zadachi.py вся meyer7 3 1   # ПОЛНЫЙ ПРОГОН: все регионы, Яндекс 3 стр., Google 1 стр.
 """
 import json
 import os
@@ -65,6 +66,35 @@ def полный():
     y = sum(т['страниц'] for т in задачи)
     g = sum(т['страниц_g'] for т in задачи)
     print(len(задачи), 'Яндекс', y, 'Google', g, '≈ ₽', round((y + g) * 0.025))
+
+
+def вся_страна(набор, стр_я=3, стр_g=1):
+    """Полный прогон (для новой сессии): весь каталог (без рыбы) на 89 регионов РФ + 6 областей РБ и Минск.
+    Шаблоны: Яндекс — стр_я страниц, Google — стр_g; «намерение» и запросы без региона — 1 страница.
+    Выход: <набор>-zadachi.json (положить на дроп)."""
+    sys.path.insert(0, DIR)
+    from poisk_zaprosy import РЕГИОНЫ  # 89 регионов РФ
+    РБ = ['Минская область', 'Брестская область', 'Витебская область', 'Гомельская область', 'Гродненская область',
+          'Могилёвская область', 'Минск']
+    к = [з for з in json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'katalog.json'), encoding='utf-8'))['записи']
+         if з['это_запрос'] and not РЫБА.search(з['запрос'])]
+    задачи = []
+    for з in к:
+        рр = (РБ if з['вид'].startswith('беларусь_') else РЕГИОНЫ + РБ) if з['шаблон'] else ['']
+        один = not з['шаблон'] or з['вид'] == 'шаблоны_намерение_регион'
+        for рег in рр:
+            q = ' '.join(з['запрос'].replace('{регион}', рег).replace('{отрасль}', '').split())
+            задачи.append({'q': q, 'вид': з['вид'], 'рег': рег, 'агентов': len(з['источники']),
+                           'группа': 'РБ' if рег in РБ else ('РФ' if рег else 'без региона'),
+                           'движки': ['yandex', 'google'], 'страниц': 1 if один else стр_я, 'страниц_g': 1 if один else стр_g})
+    # волна 1 — без региона и шаблоны от >=2 агентов; волна 2 — остальное (при обрыве баланса охват лучше)
+    задачи.sort(key=lambda т: (0 if not т['рег'] or т['агентов'] >= 2 else 1, -т['агентов']))
+    п = os.path.join(DIR, набор + '-zadachi.json')
+    with open(п, 'w', encoding='utf-8') as f:
+        json.dump(задачи, f, ensure_ascii=False, separators=(',', ':'))
+    y = sum(т['страниц'] for т in задачи)
+    g = sum(т['страниц_g'] for т in задачи)
+    print(п, len(задачи), 'задач; Яндекс', y, 'Google', g, '≈ ₽', round((y + g) * 0.025))
 
 
 def main():
@@ -118,4 +148,9 @@ def main():
 
 
 if __name__ == '__main__':
-    полный() if 'полный' in sys.argv[1:] else main()
+    if sys.argv[1:2] == ['вся']:  # python3 pilot_zadachi.py вся <набор> [стр_яндекс] [стр_google]
+        вся_страна(sys.argv[2], *(int(x) for x in sys.argv[3:5]))
+    elif 'полный' in sys.argv[1:]:
+        полный()
+    else:
+        main()

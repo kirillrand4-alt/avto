@@ -22,7 +22,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 DIR = r'C:\sender\server'
 ДРОП = r'C:\seostat\drop\drop-storage'
-ВЫХОД = os.path.join(DIR, 'pilot-serp.jsonl')
+НАБОР = os.environ.get('POISK_NABOR', 'pilot')  # для полного прогона — свой набор
+ВЫХОД = os.path.join(DIR, НАБОР + '-serp.jsonl')
 ПОТОКОВ = int(os.environ.get('PILOT_POTOKOV', '10'))
 СТРАНИЦ = 3
 НАСЫЩЕНИЕ = 6
@@ -126,7 +127,7 @@ def одна(з, сделано):
 
 
 def main():
-    задачи = json.load(io.open(os.path.join(ДРОП, 'pilot-zadachi.json'), encoding='utf-8'))
+    задачи = json.load(io.open(os.path.join(ДРОП, НАБОР + '-zadachi.json'), encoding='utf-8'))
     сделано = {}
     if os.path.exists(ВЫХОД):
         for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
@@ -150,11 +151,11 @@ def main():
             print('баланс', б, 'запросов', СЧЁТ['запросов'], flush=True)
         if n[0] % 100 == 0:
             print('%d/%d за %d мин' % (n[0], len(задачи), (time.time() - t0) / 60), flush=True)
-            shutil.copyfile(ВЫХОД, os.path.join(ДРОП, 'pilot-serp.jsonl'))
+            shutil.copyfile(ВЫХОД, os.path.join(ДРОП, НАБОР + '-serp.jsonl'))
 
     with ThreadPoolExecutor(ПОТОКОВ) as ex:
         list(ex.map(шаг, задачи))
-    shutil.copyfile(ВЫХОД, os.path.join(ДРОП, 'pilot-serp.jsonl'))
+    shutil.copyfile(ВЫХОД, os.path.join(ДРОП, НАБОР + '-serp.jsonl'))
     print('готово', json.dumps({'стоп': СТОП['стоп'], 'запросов': СЧЁТ['запросов'], 'баланс': баланс()},
                                ensure_ascii=False), flush=True)
 

@@ -5,7 +5,7 @@
 Листы: «Сводка», «Слабые места плана», «Тест поиска», «Полнота (сверка)», «Компании», «Контакты», «Снято»,
 «Спорные», «Пояснения агентов», «На решение», «Ниже порога».
 
-    python3 pilot_xlsx.py <папка pilot-*.json(l)> <папка файлов Meyer 1–6> <pilot-analiz.json> <slabye.json> <out.xlsx>
+    python3 pilot_xlsx.py <папка pilot-*.json(l)> <папка файлов Meyer 1–6> <pilot-analiz.json> <slabye.json> <out.xlsx> [набор]
 """
 import json
 import os
@@ -108,8 +108,8 @@ def jl(п):
     return out
 
 
-def main(п, п_meyer, п_анализ, п_слабые, п_out):
-    ф = lambda x: os.path.join(п, 'pilot-' + x)  # noqa: E731
+def main(п, п_meyer, п_анализ, п_слабые, п_out, набор='pilot'):
+    ф = lambda x: os.path.join(п, набор + '-' + x)  # noqa: E731
     сп = json.load(open(ф('spisok.json'), encoding='utf-8'))
     комп = сп['компании']
     конт = {i: з for i, з in jl(ф('kontakty.jsonl')).items() if з.get('итог') == 'ok'}
@@ -407,4 +407,4 @@ def main(п, п_meyer, п_анализ, п_слабые, п_out):
 
 
 if __name__ == '__main__':
-    main(*sys.argv[1:6])
+    main(*sys.argv[1:7])
