@@ -14,8 +14,10 @@ import time
 DIR = r'C:\sender\server'
 ДРОП = r'C:\seostat\drop\drop-storage'
 СТАТУС = os.path.join(DIR, 'meyer6-konveyer.json')
-ШАГИ = ['kc_meyer6_spisok.py', 'kc_kontakty.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py', 'kc_glubokiy_vhod.py',
-        'kc_agent_glubokiy.py', 'kc_agent_pereproverka.py']
+ВСЕ_ШАГИ = ['kc_meyer6_spisok.py', 'kc_kontakty.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py', 'kc_glubokiy_vhod.py',
+            'kc_agent_glubokiy.py', 'kc_agent_pereproverka.py']
+# 08.10 10:40 кончился баланс провайдера на шаге проверки сайтов — продолжаем с него (шаги 1–4 готовы)
+ШАГИ = ВСЕ_ШАГИ[4:]
 
 
 def статус(o):
