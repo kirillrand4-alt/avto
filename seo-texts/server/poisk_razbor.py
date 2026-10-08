@@ -56,6 +56,7 @@ _лок = threading.Lock()
                      r'all\.biz|tiu\.ru|satu|orgpage|spravker|selhozproizvoditeli|milknet|meatinfo|exportcenter|'
                      r'clients\.site|b2b|agrobase|agroru|unipack|plastinfo|plastics|rcycle|vtorothodi|vtorbiz)', re.I)
 ЛИМИТ_B2B_ДОМЕН = int(os.environ.get('POISK_LIMIT_B2B', '150'))
+ЛИМИТ_ИНН_ДОМЕН = int(os.environ.get('POISK_LIMIT_INN', '400'))
 ОГРН_RX = re.compile(r'(?<!\d)([15]\d{12})(?!\d)')
 ИНН_URL = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')
 
@@ -157,6 +158,9 @@ def каталог(u):
     путь = urllib.parse.unquote(u)
     з['инн_url'] = [x for x in ИНН_URL.findall(путь) if CO.инн_ок(x)][:3]
     з['огрн_url'] = ОГРН_RX.findall(путь)[:3]
+    if з['инн_url']:  # карточка компании с ИНН в адресе — скачивать незачем (пилот 08.10: скорость)
+        з['страница'] = 'не скачивалась: ИНН в адресе'
+        return з
     ст, html, _ = MN.скачать(u)
     з['страница'] = ст
     if ст == 'ok':
@@ -214,7 +218,10 @@ def main():
             continue
         h = хост(u)
         путь = urllib.parse.unquote(u)
-        if КАТ_ИНН.search(h) or КАТ_BY.search(h) or any(CO.инн_ок(x) for x in ИНН_URL.findall(путь)):
+        if any(CO.инн_ок(x) for x in ИНН_URL.findall(путь)):
+            каталоги.append(u)
+        elif (КАТ_ИНН.search(h) or КАТ_BY.search(h)) and на_домен[MN.домен(h)] < ЛИМИТ_ИНН_ДОМЕН:
+            на_домен[MN.домен(h)] += 1
             каталоги.append(u)
         elif КАТ_B2B.search(h) and на_домен[MN.домен(h)] < ЛИМИТ_B2B_ДОМЕН:
             на_домен[MN.домен(h)] += 1
@@ -250,7 +257,7 @@ def main():
         if n[0] % 200 == 0:
             print('разобрано %d за %d мин' % (n[0], (time.time() - t0) / 60), flush=True)
 
-    with ThreadPoolExecutor(24) as ex:
+    with ThreadPoolExecutor(int(os.environ.get('POISK_RAZBOR_POTOKOV', '40'))) as ex:
         list(ex.map(шаг_сайт, сайты))
         list(ex.map(шаг_каталог, каталоги))
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-razbor.jsonl'))
