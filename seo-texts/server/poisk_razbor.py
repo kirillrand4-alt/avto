@@ -44,6 +44,18 @@ _лок = threading.Lock()
                      r'all\.biz|pulscen|tiu\.ru|satu|b2b|tender|zakupki|clients\.site|exportcenter|agroserver|'
                      r'meatinfo|milkbranch|dairynews|pivo|vinograd|kombikorm|expocentr|prodexpo|agroprodmash|'
                      r'rating|reyting|top100|ratings)', re.I)
+# пилот 08.10: страниц каталогов в выдаче с листанием — 58 тыс. (≈9 ч разбора), большинство — СМИ, госсайты, маркетплейсы.
+# Разбираем только полезные: справочники ИНН, белорусские справочники (УНП), B2B-каталоги (с лимитом на домен) и
+# страницы с ИНН в адресе; остальные — пропуск.
+КАТ_ИНН = re.compile(r'(rusprofile|checko|list-org|zachestnyibiznes|sbis|audit-it|companies\.rbc|testfirm|spark-interfax|'
+                     r'kontur|focus\.|vbankcenter|kartoteka|ofdata|egrul|bo\.nalog|e-ecolog|synapsenet|rusprofile|'
+                     r'checko|innproverka|companium|rbc\.ru/companies|sravni|bankrot)', re.I)
+КАТ_BY = re.compile(r'(belarusinfo\.by|ibiz\.by|b2b\.by|ex\.by|kompass|bizinfo\.by|egr\.gov\.by|kartoteka\.by|'
+                    r'buybelarus|deal\.by|flagma\.by|belpromportal|catalog\.by)', re.I)
+КАТ_B2B = re.compile(r'(agroserver|regtorg|productcenter|pulscen|производитель|xn--|fabricators|promportal|bizorg|zol\.ru|'
+                     r'all\.biz|tiu\.ru|satu|orgpage|spravker|selhozproizvoditeli|milknet|meatinfo|exportcenter|'
+                     r'clients\.site|b2b|agrobase|agroru|unipack|plastinfo|plastics|rcycle|vtorothodi|vtorbiz)', re.I)
+ЛИМИТ_B2B_ДОМЕН = int(os.environ.get('POISK_LIMIT_B2B', '150'))
 ОГРН_RX = re.compile(r'(?<!\d)([15]\d{12})(?!\d)')
 ИНН_URL = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')
 
@@ -196,7 +208,20 @@ def main():
     база = CO.домены_базы()
     имена = индекс_имён()
     сайты = [(h, о) for h, о in по_домену.items() if h not in сделано]
-    каталоги = [u for u in урлы_каталогов if u not in сделано]
+    каталоги, пропуск, на_домен = [], 0, collections.Counter()
+    for u in урлы_каталогов:
+        if u in сделано:
+            continue
+        h = хост(u)
+        путь = urllib.parse.unquote(u)
+        if КАТ_ИНН.search(h) or КАТ_BY.search(h) or any(CO.инн_ок(x) for x in ИНН_URL.findall(путь)):
+            каталоги.append(u)
+        elif КАТ_B2B.search(h) and на_домен[MN.домен(h)] < ЛИМИТ_B2B_ДОМЕН:
+            на_домен[MN.домен(h)] += 1
+            каталоги.append(u)
+        else:
+            пропуск += 1
+    print('страниц каталогов к разбору', len(каталоги), 'пропущено (не справочники)', пропуск, flush=True)
     print('сайтов', len(по_домену), 'каталожных страниц', len(урлы_каталогов), 'в очереди', len(сайты), len(каталоги), flush=True)
     t0 = time.time()
     n = [0]
