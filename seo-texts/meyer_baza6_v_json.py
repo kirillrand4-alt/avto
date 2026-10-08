@@ -124,6 +124,9 @@ for _, c in K.iterrows():
             'ЛПР рабочий с добавочным' if any(lpr(r) and s(r['Добавочный']) for r in ks) else 'ЛПР рабочий'
     elif ks and not n_mob and vyr and vyr >= 1.5e9:
         uroven = 'крупная, только общие номера'
+    elif ks and vyr and vyr >= 1.5e9:
+        # владелец 08.10 («добавь»): крупные без ЛПР, у которых кроме общих есть мобильные
+        uroven = 'крупная, без ЛПР, есть мобильные'
     else:
         continue
     (sliyanie if inn in inn1 else vybor).append((c, ks, uroven))
@@ -146,7 +149,9 @@ def soedinit(a, b):
     roditel[koren(a)] = koren(b)
 
 
-svyaz = collections.defaultdict(set)
+# «Чем связана» – коротко: число общих номеров, а не их список (у MLK Group их 11 подряд)
+obshchih = collections.Counter()
+po_holdingu = set()
 po_nomeru = collections.defaultdict(set)
 for _, r in C.iterrows():
     k10 = cif(r['Мобильный'] if s(r['Мобильный']) else r['Рабочий'])
@@ -156,9 +161,18 @@ for k10, inns in po_nomeru.items():
     if len(inns) > 1:
         inns = sorted(inns)
         for i in inns:
-            svyaz[i].add('общий номер +7 %s %s-%s-%s' % (k10[:3], k10[3:6], k10[6:8], k10[8:]))
+            obshchih[i] += 1
         for i in inns[1:]:
             soedinit(inns[0], i)
+
+
+def svyaz_tekst(inn):
+    chasti = []
+    if obshchih[inn]:
+        chasti.append('общих номеров с группой: %d' % obshchih[inn])
+    if inn in po_holdingu:
+        chasti.append('холдинг по сайту')
+    return ', '.join(chasti)
 
 
 def norm_h(h):
@@ -175,7 +189,7 @@ for _, c in K.iterrows():
         po_h[norm_h(c['Холдинг (агент)'])].append(s(c['ИНН']))
 for h, inns in po_h.items():
     for i in inns:
-        svyaz[i].add('холдинг по сайту')
+        po_holdingu.add(i)
     for i in inns[1:]:
         soedinit(inns[0], i)
 gruppy_vse = collections.defaultdict(list)
@@ -193,7 +207,7 @@ for g, chleny in gruppy_vse.items():
         'nazvanie': imena.most_common(1)[0][0] if imena else '',
         'chleny': [{'inn': s(c['ИНН']), 'nazvanie': s(c['Название']), 'region': s(c['Регион']),
                     'segment': s(c['Сегмент']), 'vyruchka_rub': chislo(c['Выручка, руб']),
-                    'v_vybore': s(c['ИНН']) in vybrannye, 'svyaz': ', '.join(sorted(svyaz[s(c['ИНН'])]))}
+                    'v_vybore': s(c['ИНН']) in vybrannye, 'svyaz': svyaz_tekst(s(c['ИНН']))}
                    for c in sorted(chleny, key=lambda c: -(chislo(c['Выручка, руб']) or 0))]}
 gruppa_inn = {ch['inn']: gid for gid, g in gruppy.items() for ch in g['chleny']}
 print('групп-холдингов с отобранными: %d (%s)' % (len(gruppy), collections.Counter(
@@ -231,8 +245,12 @@ for c, ks, uroven in vybor + sliyanie:
             lpr_kratko += ' (+ ещё %d)' % (len(lprs) - 1)
     else:
         lk = luchshiy
-        lpr_kratko = 'ЛПР не найден, через коммутатор: %s' % ' · '.join(
-            v for v in (s(lk['Роль']) if s(lk['Роль']) != 'без подписи' else 'номер с сайта', nomer(lk)) if v)
+        lpr_kratko = ('ЛПР не найден, через коммутатор: %s' if s(lk['Роль']) in KOMMUTATOR
+                      else 'ЛПР не найден, номер с сайта: %s') % ' · '.join(
+            v for v in (s(lk['Роль']) if s(lk['Роль']) != 'без подписи' else '', nomer(lk)) if v)
+        n_mob_bez = sum(1 for r in ks if s(r['Мобильный']))
+        if n_mob_bez:
+            lpr_kratko += ' (мобильных без ЛПР: %d)' % n_mob_bez
     osn = s(c['Основной ОКВЭД'])
     dop = [v.strip() for v in s(c['Доп. ОКВЭД']).split(',') if v.strip()]
     sayt = s(c['Сайт'])

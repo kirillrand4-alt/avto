@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Заливка «Базы 6» Meyer в панель (вариант А, решение владельца 08.10).
+"""Заливка «Базы 4» Meyer (файл 4, «CC: сайты компаний») – копия загрузчика Базы 6.
+
+Владелец 08.10: «из 2 и 4 базы не взять всё, а взять только полезное». Из файла 4 – 32
+компании с номером ЛПР; 16 компаний, уже стоящих в панели, получают метку и новые номера.
+Плюс люди из листа «Люди» (ФИО на живой странице сайта).
+
+Ниже – описание загрузчика Базы 6, всё в силе.
 
 Что делается:
   1. Снимок назначений и статусов до заливки (для проверки «ничего чужого не тронуто»).
@@ -36,12 +42,12 @@ DATA = os.path.join(KOREN, 'data')
 KAT = os.path.join(DATA, 'meyer_baza1.db')
 SALES = os.path.join(DATA, 'centro_sales_meyer1.db')
 BITRIX = os.path.join(DATA, 'bitrix_kc_inn.json')
-JSON_PUT = r'C:\seostat\drop\drop-storage\meyer-baza6.json'
+JSON_PUT = r'C:\seostat\drop\drop-storage\meyer-baza4.json'
 DROP = r'C:\seostat\drop\drop-storage'
 PORT = 8016
 PUT = '/obzvon-meyer'
 PRODAVCY = ['meyer1', 'meyer2', 'meyer3', 'meyer4']
-METKA_FAJL = os.path.join(KOREN, '_bekap', 'baza6-poslednyaya.txt')
+METKA_FAJL = os.path.join(KOREN, '_bekap', 'baza4-poslednyaya.txt')
 
 POYASA = [
     (2, ('калининград',)), (12, ('камчат', 'чукот')), (11, ('магадан', 'сахалин')),
@@ -117,7 +123,7 @@ if '--postroit' in sys.argv:
     novye = [c for c in d['kompanii'] if not c['sliyanie'] and c['inn'] not in v_kataloge]
     sliyanie = [c for c in d['kompanii'] if c['sliyanie'] or c['inn'] in v_kataloge]
     if any(c['inn'] in snimok['naznacheniya'] for c in novye):
-        raise SystemExit('ОСТАНОВКА: у новых ИНН уже есть назначения – Базу 6 уже заливали?')
+        raise SystemExit('ОСТАНОВКА: у новых ИНН уже есть назначения – Базу 4 уже заливали?')
     bitrix = json.load(io.open(BITRIX, encoding='utf-8'))
 
     def bitrix_pole(c):
@@ -180,8 +186,8 @@ if '--postroit' in sys.argv:
         for z in gotovye:
             a = {'inn': z['inn'], 'username': kuda[z['inn']], 'assignment_score': z['_ball'],
                  'has_phone': z['has_phone'], 'has_purchaser': z['has_purchaser'], 'has_tech': z['has_tech'],
-                 'has_signal': 0, 'assigned_at': seychas, 'source_version': 'meyer-baza6',
-                 'assigned_by': 'База 6: поровну по баллу, холдинг одному продавцу'}
+                 'has_signal': 0, 'assigned_at': seychas, 'source_version': 'meyer-baza4',
+                 'assigned_by': 'База 4: поровну по баллу, холдинг одному продавцу'}
             a = {kk: v for kk, v in a.items() if kk in kol_a}
             s.execute('INSERT INTO company_assignment (%s) VALUES (%s)' % (','.join(a), ','.join('?' * len(a))),
                       list(a.values()))
@@ -269,18 +275,27 @@ if '--postroit' in sys.argv:
                 k.execute('INSERT INTO holding_chlen VALUES (?,?,?,?,?,?,?,?)',
                           (gid, ch['inn'], ch['nazvanie'], ch['region'], ch['segment'], ch['vyruchka_rub'],
                            int(ch['v_vybore']), ch['svyaz']))
-        for kk, v in {'baza6_fajl': d['fajl'], 'baza6_zalito': time.strftime('%Y-%m-%d %H:%M'),
-                      'baza6_kompaniy_novyh': str(len(gotovye)), 'baza6_sliyanie': str(len(sliyanie)),
-                      'baza6_kontaktov': str(n_k + n_sl),
-                      'version': 'meyer-baza1+6-' + time.strftime('%Y%m%d%H%M')}.items():
+        # люди из листа «Люди»: ФИО на живой странице; телефон рядом – из таблицы CC
+        n_l = 0
+        for p in d.get('lyudi', []):
+            if not k.execute('select 1 from person where inn=? and person=?', (p['inn'], p['person'])).fetchone():
+                k.execute('INSERT INTO person (inn, person, position, role, phone, phone_type, source_url, source, '
+                          'is_tech) VALUES (?,?,?,?,?,?,?,?,0)',
+                          (p['inn'], p['person'], p['position'], '', p['phone'], None, p['source_url'], p['source']))
+                n_l += 1
+        print('люди из листа «Люди»: добавлено %d' % n_l)
+        for kk, v in {'baza4_fajl': d['fajl'], 'baza4_zalito': time.strftime('%Y-%m-%d %H:%M'),
+                      'baza4_kompaniy_novyh': str(len(gotovye)), 'baza4_sliyanie': str(len(sliyanie)),
+                      'baza4_kontaktov': str(n_k + n_sl),
+                      'version': 'meyer-baza1+6+4-' + time.strftime('%Y%m%d%H%M')}.items():
             k.execute('INSERT OR REPLACE INTO import_info (key, value) VALUES (?,?)', (kk, v))
         k.commit()
     except Exception:
         k.rollback()
         s.execute('DELETE FROM company_assignment WHERE source_version=? AND inn IN (%s)' % ','.join('?' * len(gotovye)),
-                  ['meyer-baza6'] + [z['inn'] for z in gotovye])
+                  ['meyer-baza4'] + [z['inn'] for z in gotovye])
         s.commit()
-        print('ОШИБКА КАТАЛОГА – каталог откатан, назначения Базы 6 удалены')
+        print('ОШИБКА КАТАЛОГА – каталог откатан, назначения Базы 4 удалены')
         raise
     print('каталог: новых компаний %d, их номеров %d; слияние с Базой 1: %d компаний, новых номеров %d' % (
         len(gotovye), n_k, len(sliyanie), n_sl))
@@ -295,7 +310,7 @@ if '--postroit' in sys.argv:
     vse = sorted(gotovye, key=lambda z: -z['_ball'])
     verh = {z['inn'] for z in vse[:len(vse) // 4]}
     print()
-    print('РАЗДАЧА Базы 6 (поровну по баллу, холдинг – одному):')
+    print('РАЗДАЧА Базы 4 (поровну по баллу, холдинг – одному):')
     for p in PRODAVCY:
         b = [z['_ball'] for z in gotovye if kuda[z['inn']] == p]
         print('   %-18s компаний %3d, средний балл %5.1f, из верхней четверти %2d, ЛПР %3d, через коммутатор %3d' % (
@@ -335,8 +350,8 @@ if '--proverka' in sys.argv:
     snimok = json.load(io.open(os.path.join(BEKAP, 'snimok-do.json'), encoding='utf-8'))
     k = sqlite3.connect('file:%s?mode=ro' % KAT, uri=True)
     s = sqlite3.connect('file:%s?mode=ro' % SALES, uri=True)
-    b6 = {r[0] for r in k.execute("select inn from company where bazy like '%База 6%'")}
-    proverit(b6 == {c['inn'] for c in d['kompanii']}, 'в каталоге с меткой «База 6»: %d = в файле отбора %d' % (len(b6), len(d['kompanii'])))
+    b6 = {r[0] for r in k.execute("select inn from company where bazy like '%База 4%'")}
+    proverit(b6 == {c['inn'] for c in d['kompanii']}, 'в каталоге с меткой «База 4»: %d = в файле отбора %d' % (len(b6), len(d['kompanii'])))
     vse_inn = {r[0] for r in k.execute('select inn from company')}
     naz = {r[0]: r[1] for r in s.execute('select inn, username from company_assignment')}
     proverit(not (vse_inn - set(naz)), 'у каждой компании каталога есть продавец (без продавца: %d)' % len(vse_inn - set(naz)))
@@ -353,9 +368,10 @@ if '--proverka' in sys.argv:
             razn.append((g['nazvanie'] or gid, u))
     proverit(not razn, 'каждый холдинг – у одного продавца (%d групп; разные: %s)' % (len(d['gruppy']), razn))
     po = {}
-    for inn in b6:
-        po[naz.get(inn)] = po.get(naz.get(inn), 0) + 1
-    print('      База 6 по продавцам (вместе со слиянием): %s' % po)
+    for c in d['kompanii']:
+        if not c['sliyanie'] and c['inn'] not in snimok['naznacheniya']:
+            po[naz.get(c['inn'])] = po.get(naz.get(c['inn']), 0) + 1
+    print('      новые Базы 4 по продавцам: %s' % po)
     proverit(max(po.values()) - min(po.values()) <= 6, 'раздача ровная (разница не больше размера холдинга)')
     # добавочный номер
     o, dob = cat._razdelit_dobavochnyy('+7 495 000-00-00 доб. 212')
@@ -374,20 +390,20 @@ if '--proverka' in sys.argv:
         return int(m.group(1)) if m else -1
     obrab = {r[0] for r in s.execute("select inn from company_state where call_result in ('v_rabote','ne_ponravilas','dubl')")}
     with TestClient(vnutr) as kl:
-        n = chislo_strok(kl.get(PUT + '/centro', params={'baza': 'База 6'}).text)
-        proverit(n == len(b6 - obrab), 'фильтр «Источник базы: База 6» в «Всей очереди»: %d (ждём %d)' % (n, len(b6 - obrab)))
+        n = chislo_strok(kl.get(PUT + '/centro', params={'baza': 'База 4'}).text)
+        proverit(n == len(b6 - obrab), 'фильтр «Источник базы: База 4» в «Всей очереди»: %d (ждём %d)' % (n, len(b6 - obrab)))
         n = chislo_strok(kl.get(PUT + '/centro').text)
         proverit(n == len(vse_inn - obrab), '«Вся очередь» у директора: %d (ждём %d)' % (n, len(vse_inn - obrab)))
         t = kl.get(PUT + '/centro').text
-        proverit('База 6' in t, 'в списке видна метка «База 6»')
+        proverit('База 4' in t, 'в списке видна метка «База 4»')
         # карточки: ЛПР с добавочным, коммутатор, холдинг, слияние
         primery = {
-            'добавочный': next(c['inn'] for c in d['kompanii'] if not c['sliyanie'] and any(
-                'доб.' in x['value'] and x['lpr'] for x in d['kontakty'] if x['inn'] == c['inn'])),
-            'коммутатор': next(c['inn'] for c in d['kompanii'] if c['kachestvo_nomera'].startswith('крупная')),
-            'холдинг': next(c['inn'] for c in d['kompanii'] if c['holding_gruppa'] and not c['sliyanie']),
+            'добавочный': next((c['inn'] for c in d['kompanii'] if not c['sliyanie'] and any(
+                'доб.' in x['value'] and x['lpr'] for x in d['kontakty'] if x['inn'] == c['inn'])), None),
+            'новая': next(c['inn'] for c in d['kompanii'] if not c['sliyanie']),
             'слияние': next(c['inn'] for c in d['kompanii'] if c['sliyanie']),
         }
+        primery = {kk: v for kk, v in primery.items() if v}
         for chto, inn in primery.items():
             cs = '&call_status=' + {r[0]: r[1] for r in s.execute('select inn, call_result from company_state')}.get(inn, '') \
                 if inn in obrab else ''
@@ -404,8 +420,10 @@ if '--proverka' in sys.argv:
                 ok = o.status_code == 200 and 'contact-card' in verh
             elif chto == 'холдинг':
                 ok = o.status_code == 200 and 'kholding-section' in t
+            elif chto == 'новая':
+                ok = o.status_code == 200 and 'База 4' in t
             else:
-                ok = o.status_code == 200 and 'База 1' in t and 'База 6' in t
+                ok = o.status_code == 200 and 'База 6' in t and 'База 4' in t
             proverit(bool(ok), 'карточка «%s» (%s): %s' % (chto, inn, o.status_code))
         st = kl.get(PUT + '/centro/stats')
         proverit(st.status_code == 200, 'статистика: %s' % st.status_code)
@@ -419,7 +437,7 @@ if '--proverka' in sys.argv:
     raise SystemExit(0)
 
 # ====================================================================== ОСНОВНОЙ ХОД (системный питон)
-BEKAP = os.path.join(KOREN, '_bekap', time.strftime('baza6-%Y%m%d-%H%M%S'))
+BEKAP = os.path.join(KOREN, '_bekap', time.strftime('baza4-%Y%m%d-%H%M%S'))
 os.makedirs(BEKAP, exist_ok=True)
 sreda = dict(os.environ, PYTHONIOENCODING='utf-8')
 r = subprocess.run([VENV, os.path.abspath(__file__), '--postroit', BEKAP], capture_output=True,
@@ -652,7 +670,7 @@ for l in p.stdout.decode('cp866', 'replace').splitlines():
         subprocess.run(['taskkill', '/PID', l.split()[-1], '/F'], capture_output=True, timeout=60)
 time.sleep(2)
 lg = io.open(os.path.join(KOREN, 'centro2.log'), 'a', encoding='utf-8', errors='replace')
-lg.write('\n===== перезапуск: База 6 %s =====\n' % time.strftime('%Y-%m-%d %H:%M:%S'))
+lg.write('\n===== перезапуск: База 4 %s =====\n' % time.strftime('%Y-%m-%d %H:%M:%S'))
 lg.flush()
 subprocess.Popen([VENV, os.path.join(KOREN, 'zapusk.py')], cwd=KOREN, stdout=lg,
                  stderr=subprocess.STDOUT, creationflags=0x00000008 | 0x00000200,
@@ -669,7 +687,7 @@ r = subprocess.run([VENV, os.path.abspath(__file__), '--proverka', BEKAP], captu
 vyvod = r.stdout.decode('utf-8', 'replace')
 if r.returncode:
     vyvod += '\n--- stderr ---\n' + r.stderr.decode('utf-8', 'replace')[-3000:]
-io.open(os.path.join(DROP, 'centro2-baza6-proverka.txt'), 'w', encoding='utf-8').write(vyvod)
+io.open(os.path.join(DROP, 'centro2-baza4-proverka.txt'), 'w', encoding='utf-8').write(vyvod)
 print()
 print('===== ПРОВЕРКА =====')
 sys.stdout.write(vyvod[-4000:])
