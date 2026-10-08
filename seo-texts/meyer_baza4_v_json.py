@@ -240,7 +240,7 @@ for c, ks, uroven in vybor + sliyanie:
                       'source_url': s(p['Страница-источник']) or None})
 json.dump({'kompanii': kompanii, 'kontakty': kontakty, 'gruppy': gruppy, 'lyudi': lyudi,
            'fajl': '4-CC-sayty-kompaniy-0710_1.xlsx', 'baza': 'База 4',
-           'baza_opisanie': 'сайты компаний: номера на живых страницах сайта (07.10)'},
+           'baza_opisanie': 'Common Crawl'},
           open(VYHOD, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('компаний %d (новых %d, в панели %d), номеров %d (ЛПР %d), людей %d -> %s' % (
     len(kompanii), len(vybor), len(sliyanie), len(kontakty), sum(k['lpr'] for k in kontakty), len(lyudi), VYHOD))

@@ -149,29 +149,46 @@ def soedinit(a, b):
     roditel[koren(a)] = koren(b)
 
 
-# «Чем связана» – коротко: число общих номеров, а не их список (у MLK Group их 11 подряд)
-obshchih = collections.Counter()
+# СВЯЗЬ – ТОЛЬКО НЕЗАВИСИМАЯ. Владелец 08.10 поймал в MLK Group «Молоко Дона» и «Милково»:
+# у них нет своего сайта, агент файла приписал их к холдингу и выдал им номер офиса холдинга,
+# а группа по этому общему номеру «подтверждала» мнение агента сама собой. Теперь:
+#  * общий номер связывает, только если ни у одной из компаний он не взят агентом с сайта
+#    холдинга (источник «сайт холдинга (агент)»);
+#  * название холдинга от агента связывает только компании, которые идут в панель, и
+#    подписано «по данным составителя файла»; компания вне панели, связанная одним мнением
+#    агента, в состав группы не попадает.
+AGENT = 'сайт холдинга (агент)'
+vybrannye = {s(c['ИНН']) for c, _, _ in vybor + sliyanie}
+obshchih = collections.Counter()        # подтверждённые общие номера (на сайтах самих компаний)
+ne_podtv = set()                         # связаны только мнением агента (обе – в панели)
 po_holdingu = set()
-po_nomeru = collections.defaultdict(set)
+po_nomeru = collections.defaultdict(dict)  # номер -> {ИНН: взят ли агентом с сайта холдинга}
 for _, r in C.iterrows():
     k10 = cif(r['Мобильный'] if s(r['Мобильный']) else r['Рабочий'])
     if k10:
-        po_nomeru[k10].add(s(r['ИНН']))
+        inn = s(r['ИНН'])
+        po_nomeru[k10][inn] = po_nomeru[k10].get(inn, True) and s(r['Источник']) == AGENT
 for k10, inns in po_nomeru.items():
-    if len(inns) > 1:
-        inns = sorted(inns)
-        for i in inns:
-            obshchih[i] += 1
-        for i in inns[1:]:
-            soedinit(inns[0], i)
+    spisok = sorted(inns)
+    podtv = set()                        # у кого этот номер – подтверждённая связь (считаем по номерам)
+    for i, a_ in enumerate(spisok):
+        for b_ in spisok[i + 1:]:
+            if not inns[a_] and not inns[b_]:
+                podtv.update((a_, b_))
+                soedinit(a_, b_)
+            elif a_ in vybrannye and b_ in vybrannye:
+                ne_podtv.update((a_, b_))
+                soedinit(a_, b_)
+    for i in podtv:
+        obshchih[i] += 1
 
 
 def svyaz_tekst(inn):
     chasti = []
     if obshchih[inn]:
-        chasti.append('общих номеров с группой: %d' % obshchih[inn])
-    if inn in po_holdingu:
-        chasti.append('холдинг по сайту')
+        chasti.append('общих номеров на сайтах компаний: %d' % obshchih[inn])
+    if inn in po_holdingu or inn in ne_podtv:
+        chasti.append('по данным составителя файла' + ('' if obshchih[inn] else ', не подтверждено'))
     return ', '.join(chasti)
 
 
@@ -188,14 +205,14 @@ for _, c in K.iterrows():
     if norm_h(c['Холдинг (агент)']):
         po_h[norm_h(c['Холдинг (агент)'])].append(s(c['ИНН']))
 for h, inns in po_h.items():
-    for i in inns:
+    v = [i for i in inns if i in vybrannye]
+    for i in v:
         po_holdingu.add(i)
-    for i in inns[1:]:
-        soedinit(inns[0], i)
+    for i in v[1:]:
+        soedinit(v[0], i)
 gruppy_vse = collections.defaultdict(list)
 for _, c in K.iterrows():
     gruppy_vse[koren(s(c['ИНН']))].append(c)
-vybrannye = {s(c['ИНН']) for c, _, _ in vybor + sliyanie}
 gruppy = {}
 for g, chleny in gruppy_vse.items():
     if len(chleny) < 2 or not any(s(c['ИНН']) in vybrannye for c in chleny):
@@ -203,8 +220,12 @@ for g, chleny in gruppy_vse.items():
     imena = collections.Counter(re.sub(r'\s*\(не подтверждено цитатой\)', '', s(c['Холдинг (агент)']))
                                 for c in chleny if s(c['Холдинг (агент)']))
     gid = 'g' + min(s(c['ИНН']) for c in chleny)
+    # без названия от агента – по общему сайту группы («компании сайта mlkgroup.ru»)
+    domeny = {re.sub(r'^www\.', '', re.sub(r'^https?://', '', s(c['Сайт']).lower())).split('/')[0] for c in chleny}
+    nazv = imena.most_common(1)[0][0] if imena else (
+        'общий сайт %s' % next(iter(domeny)) if len(domeny) == 1 and next(iter(domeny)) else '')
     gruppy[gid] = {
-        'nazvanie': imena.most_common(1)[0][0] if imena else '',
+        'nazvanie': nazv,
         'chleny': [{'inn': s(c['ИНН']), 'nazvanie': s(c['Название']), 'region': s(c['Регион']),
                     'segment': s(c['Сегмент']), 'vyruchka_rub': chislo(c['Выручка, руб']),
                     'v_vybore': s(c['ИНН']) in vybrannye, 'svyaz': svyaz_tekst(s(c['ИНН']))}
@@ -269,7 +290,9 @@ for c, ks, uroven in vybor + sliyanie:
         'lpr_mobilnyy': int(any(s(r['Мобильный']) for r in lprs)),
         'lpr_s_fio': sum(1 for r in lprs if s(r['ФИО'])),
         'bitrix_fajl': s(c['Есть контакт в Битрикс']),
-        'holding': (gruppy.get(gruppa_inn.get(inn), {}) or {}).get('nazvanie') or s(c['Холдинг (агент)']),
+        # в шапку карточки – только название от агента и с честной пометкой; группа – в блоке
+        'holding': (re.sub(r'\s*\(не подтверждено цитатой\)', '', s(c['Холдинг (агент)'])) + ' (по данным составителя файла)')
+                   if s(c['Холдинг (агент)']) else '',
         'holding_gruppa': gruppa_inn.get(inn, ''),
         'v_fajlah_meyer': s(c['Есть в файлах Meyer']), 'razdel_kc': s(c['Раздел']),
         'sayt_chey': s(c['Сайт: чей']), 'otkuda_kompaniya': s(c['Откуда компания']),
@@ -299,7 +322,7 @@ for c, ks, uroven in vybor + sliyanie:
         })
 json.dump({'kompanii': kompanii, 'kontakty': kontakty, 'gruppy': gruppy,
            'fajl': '6-meyer-poisk-0810.xlsx', 'baza': 'База 6',
-           'baza_opisanie': 'поиск по сайтам: молоко, сыры, мясо, хлеб, корма (08.10)'},
+           'baza_opisanie': 'поиск агентами по узкому списку отраслей'},
           open(VYHOD, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('компаний %d (из них слияние с Базой 1: %d), контактов %d -> %s' % (
     len(kompanii), sum(k['sliyanie'] for k in kompanii), len(kontakty), VYHOD))
