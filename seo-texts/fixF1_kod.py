@@ -25,6 +25,7 @@
     python3 fixF1_kod.py --lokalno <папка app>      # те же правки в локальную копию кода
 """
 import io
+import json
 import os
 import re
 import shutil
@@ -45,6 +46,8 @@ F_RCS = ('api', 'routes_centro_sales.py')
 F_SP = ('templates', '_ochered_spisok.html')
 F_C = ('templates', 'centro.html')
 F_ST = ('templates', 'centro_stats.html')
+F_WEB = ('web.py',)
+F_CAT = ('services', 'centro_catalog.py')
 
 # ============================================================================ код в конец routes
 RCS_KOD = r'''
@@ -468,7 +471,10 @@ C_CSS_NOVO = '''</style>
   body.v-kartochke #kRezultatu{bottom:104px}
   body.v-kartochke #vidPanel{right:60px;bottom:18px}
   body.v-kartochke{padding-bottom:0}
+  body.v-kartochke #kRezultatu .f1-strelka{text-orientation:upright}
 }
+.svyaz-metka{margin-top:6px;padding:4px 8px;border-radius:5px;background:#eef5ff;border:1px solid #c5dbf5;
+  color:#1d4f8a;font-size:12px;font-weight:600;overflow-wrap:anywhere}
 </style>
 </body>
 </html>'''
@@ -488,6 +494,59 @@ ST_REZ_NOVO = '''  <h3>По результатам звонка</h3>
 ST_BALL_STARO = '''<td>{{ '%.1f'|format(z.assignment_score or 0) }}</td>'''
 ST_BALL_NOVO = ('''<td{% if (z.assignment_score or 0) < 0 %} title="Балл {{ '%.1f'|format(z.assignment_score) }} – только для порядка"{% endif %}>'''
                 '''{% if (z.assignment_score or 0) < 0 %}в конце очереди (пометка){% else %}{{ '%.1f'|format(z.assignment_score or 0) }}{% endif %}</td>''')
+
+# --- координатор (просьба F2): связанное юрлицо, заместитель первого лица, строка ЛПР; стрелка
+C_STR_STARO = "k.type = 'button'; k.id = 'kRezultatu'; k.textContent = 'К результату звонка ↓';"
+C_STR_NOVO = ("k.type = 'button'; k.id = 'kRezultatu'; "
+              "k.innerHTML = 'К результату звонка <span class=\"f1-strelka\">↓</span>';   /* fixF1: стрелка вниз и в ярлыке */")
+C_SV1_STARO = "{% macro source_link(source, url, label='Источник', telefon=False, fragment='', chuzhoy='') %}"
+C_SV1_NOVO = "{% macro source_link(source, url, label='Источник', telefon=False, fragment='', chuzhoy='', svyaz='') %}"
+C_SV2_STARO = "  {% set в = url|vid_istochnika(source, _сайт, chuzhoy) %}"
+C_SV2_NOVO = "  {% set в = url|vid_istochnika(source, _сайт, chuzhoy, svyaz) %}"
+C_SV3_STARO = "{{ (а|vid_istochnika(source, _сайт, chuzhoy)).podpis }}"
+C_SV3_NOVO = "{{ (а|vid_istochnika(source, _сайт, chuzhoy, svyaz)).podpis }}"
+C_SV4_STARO = ("</details>{% endif %}\n"
+               "    {{ source_link(contact.source, contact.source_url, telefon=True, fragment=contact.fragment or '', "
+               "chuzhoy=contact.chuzhoy_istochnik or '') }}\n"
+               "    <div class=\"kontakt-niz\">")
+C_SV4_NOVO = ("</details>{% endif %}\n"
+              "    {{ source_link(contact.source, contact.source_url, telefon=True, fragment=contact.fragment or '', "
+              "chuzhoy=contact.chuzhoy_istochnik or '', svyaz=contact.svyaz_adres or '') }}\n"
+              "    <div class=\"kontakt-niz\">")
+C_SV5_STARO = ("    {% if contact.chuzhoy_istochnik %}<div class=\"chuzhoy-metka\">{{ contact.chuzhoy_istochnik }}</div>{% endif %}")
+C_SV5_NOVO = (C_SV5_STARO + "\n"
+              "    {% if contact.svyaz_adres and not contact.chuzhoy_istochnik %}<div class=\"svyaz-metka\" "
+              "title=\"Номер со страницы другого юрлица по тому же адресу: скорее всего одна группа, "
+              "но номер может принадлежать соседнему юрлицу\">{{ contact.svyaz_adres }}</div>{% endif %}")
+WEB1_STARO = 'def _vid_istochnika(url, source="", sayt="", chuzhoy="") -> dict:'
+WEB1_NOVO = 'def _vid_istochnika(url, source="", sayt="", chuzhoy="", svyaz="") -> dict:'
+WEB2_STARO = ('    if str(chuzhoy or "").strip():\n'
+              '        return {"podpis": "сайт другого юрлица · %s" % pokaz, "vid": "сайт другого юрлица",\n'
+              '                "domen": pokaz, "zametki": zametki}\n')
+WEB2_NOVO = (WEB2_STARO +
+             '    if str(svyaz or "").strip():\n'
+             '        # fixF1 (данные F2: contact.svyaz_adres): страница связанного юрлица по тому же адресу –\n'
+             '        # не «сайт компании», даже если домен совпал с сайтом из карточки\n'
+             '        return {"podpis": "сайт связанного юрлица · %s" % pokaz, "vid": "сайт связанного юрлица",\n'
+             '                "domen": pokaz, "zametki": zametki}\n')
+CAT1_STARO = '    "первое лицо": 1, "техдиректор / главный инженер": 2, "главный механик / энергетик": 3,'
+CAT1_NOVO = ('    "первое лицо": 1, "заместитель первого лица": 1,      # fixF1: тот же уровень, в карточке ниже (_zam)\n'
+             '    "техдиректор / главный инженер": 2, "главный механик / энергетик": 3,')
+CAT2_STARO = ('    ("первое лицо", r"генеральн\\w* директор|гендиректор|\\bгд\\b|исполнительн\\w* директор|управляющ|"\n'
+              '                    r"председател|президент|собственник|владел|учредител|руководств|"\n'
+              '                    r"операционн\\w* директор|телефон директора|"\n'
+              '                    r"^\\W*(?:первый\\s+)?(?:заместитель|зам\\.?)\\s+(?:генерального\\s+)?директора\\W*$|"\n')
+CAT2_NOVO = ('    # fixF1 (данные F2, 08.10): «(первый) заместитель (генерального) директора» – не первое лицо, а\n'
+             '    # его заместитель: уровень тот же (1), в карточке ниже директора (сортировка _zam), балл тот же\n'
+             '    ("заместитель первого лица", r"^\\W*(?:первый\\s+)?(?:заместитель|зам\\.?)\\s+(?:генерального\\s+)?директора\\W*$"),\n'
+             '    ("первое лицо", r"генеральн\\w* директор|гендиректор|\\bгд\\b|исполнительн\\w* директор|управляющ|"\n'
+             '                    r"председател|президент|собственник|владел|учредител|руководств|"\n'
+             '                    r"операционн\\w* директор|телефон директора|"\n')
+E2_STARO = '    if lpr:\n        l0 = lpr[0]\n'
+E2_NOVO = ('    if lpr:\n'
+           '        # fixF1 (как fixF2 у всех 600): строка ЛПР – лучший контакт, по которому дана ступень очереди:\n'
+           '        # ЛПР с ФИО и мобильным → ЛПР с мобильным → первый ЛПР карточки\n'
+           '        l0 = ([x for x in mob if x["person"]] or mob or lpr)[0]\n')
 
 PRAVKI = [
     # (файл, имя, якорь, замена, признак «уже сделано»)
@@ -519,6 +578,18 @@ PRAVKI = [
     (F_ST, 'статистика: подпись порядка очереди', ST_POR_STARO, ST_POR_NOVO, 'наверху – перезвоны, срок которых наступил'),
     (F_ST, 'статистика: пояснение про скрытые', ST_REZ_STARO, ST_REZ_NOVO, 'Скрытые продавцом позже входят в цифры'),
     (F_ST, 'статистика: балл компании с пометкой', ST_BALL_STARO, ST_BALL_NOVO, 'в конце очереди (пометка)'),
+    (F_C, 'карточка: стрелка «↓» в вертикальном ярлыке', C_STR_STARO, C_STR_NOVO, 'class="f1-strelka"'),
+    (F_C, 'карточка: source_link принимает связанное юрлицо', C_SV1_STARO, C_SV1_NOVO, "chuzhoy='', svyaz='') %}"),
+    (F_C, 'карточка: подпись источника (1)', C_SV2_STARO, C_SV2_NOVO, 'url|vid_istochnika(source, _сайт, chuzhoy, svyaz)'),
+    (F_C, 'карточка: подпись источника (2)', C_SV3_STARO, C_SV3_NOVO, '(а|vid_istochnika(source, _сайт, chuzhoy, svyaz)).podpis'),
+    (F_C, 'карточка: связанное юрлицо в подпись источника', C_SV4_STARO, C_SV4_NOVO, "svyaz=contact.svyaz_adres or '')"),
+    (F_C, 'карточка: метка «сайт связанного юрлица»', C_SV5_STARO, C_SV5_NOVO, 'class="svyaz-metka" title'),
+    (F_WEB, 'web: _vid_istochnika(…, svyaz)', WEB1_STARO, WEB1_NOVO, 'chuzhoy="", svyaz="") -> dict:'),
+    (F_WEB, 'web: «сайт связанного юрлица · домен»', WEB2_STARO, WEB2_NOVO, '"podpis": "сайт связанного юрлица · %s"'),
+    (F_CAT, 'каталог: уровень «заместитель первого лица»', CAT1_STARO, CAT1_NOVO, '"заместитель первого лица": 1,'),
+    (F_CAT, 'каталог: правило «заместитель первого лица»', CAT2_STARO, CAT2_NOVO, '("заместитель первого лица", r"'),
+    (F_RCS, 'fixE2: строка ЛПР – ФИО+мобильный → мобильный → первый', E2_STARO, E2_NOVO,
+     'l0 = ([x for x in mob if x["person"]] or mob or lpr)[0]'),
 ]
 PRIZNAK_KODA = 'def _fixF1_schetchiki('
 
@@ -664,6 +735,44 @@ def proverka(test_sales, test_kat):
         ok('id="fixF1-vid"' in t, 'карточка: стили плавающих кнопок fixF1')
         t = poluchit('/centro/stats?user=meyer2', ADMIN).text
         ok('наверху – перезвоны, срок которых наступил' in t, 'статистика: подпись порядка')
+        # --- просьбы F2 через координатора
+        r1 = catalog.rol_kontakta({'position': 'Заместитель генерального директора'})
+        r2 = catalog.rol_kontakta({'position': 'Первый заместитель генерального директора'})
+        r3 = catalog.rol_kontakta({'position': 'Генеральный директор'})
+        ok(r1['vid'] == r2['vid'] == 'заместитель первого лица' and r1['uroven'] == 1 and r3['vid'] == 'первое лицо',
+           'роль: «заместитель (первый) ген. директора» → %s, уровень %s; «Генеральный директор» → %s'
+           % (r1['vid'], r1['uroven'], r3['vid']))
+        for inn in ('4401163232', '7809016381', '2635001184'):
+            t = poluchit('/centro?inn=' + inn, ADMIN).text
+            ok('ЛПР: заместитель первого лица' in t, 'карточка %s: «ЛПР: заместитель первого лица»' % inn)
+        for inn in ('3623007585', '9303024328'):
+            t = poluchit('/centro?inn=' + inn, ADMIN).text
+            n_s, n_m = t.count('сайт связанного юрлица ·'), t.count('class="svyaz-metka"')
+            ok(n_s > 0 and n_m > 0, 'карточка %s: подпись «сайт связанного юрлица · домен» %d, метка %d' % (inn, n_s, n_m))
+    # --- пересчёт флагов ЛПР по новому коду – на КОПИИ, по всем компаниям: что изменится
+    kat = sqlite3.connect(test_kat)
+    kat.row_factory = sqlite3.Row
+    POLYA = ('lpr_kratko', 'lpr_roli', 'lpr_mobilnyy', 'lpr_s_fio', 'has_tech', 'n_tech', 'has_purchaser',
+             'n_purchaser', 'n_phones', 'has_phone')
+    do_k = {r['inn']: {f: r[f] for f in POLYA} for r in kat.execute('SELECT * FROM company')}
+    do_s = {r['inn']: (r['assignment_score'], r['stupen_ocheredi']) for r in b.execute('SELECT * FROM company_assignment')}
+    kat.close()
+    for inn in do_k:
+        rcs._fixE2_pereschet_lpr(inn)
+    kat = sqlite3.connect(test_kat)
+    kat.row_factory = sqlite3.Row
+    po_k = {r['inn']: {f: r[f] for f in POLYA} for r in kat.execute('SELECT * FROM company')}
+    po_s = {r['inn']: (r['assignment_score'], r['stupen_ocheredi']) for r in b.execute('SELECT * FROM company_assignment')}
+    kat.close()
+    izm = {i: {f: [do_k[i][f], po_k[i][f]] for f in POLYA if do_k[i][f] != po_k[i][f]} for i in do_k}
+    izm = {i: v for i, v in izm.items() if v}
+    tolko_roli = all(set(v) == {'lpr_roli'} for v in izm.values())
+    ok(tolko_roli and do_s == po_s, 'пересчёт флагов ЛПР новым кодом (копия, %d компаний): меняется %d, только lpr_roli; '
+       'ступени и баллы те же; строки ЛПР совпали с пересчётом F2' % (len(do_k), len(izm)))
+    for i, v in izm.items():
+        print('      %s: %s' % (i, v))
+    io.open(os.path.join(os.path.dirname(test_sales), 'fixF1-pereschet-plan.json'), 'w', encoding='utf-8').write(
+        json.dumps({'inn': sorted(izm) if tolko_roli else [], 'izm': izm}, ensure_ascii=False))
     print('ПЛОХИХ ПРОВЕРОК: %d' % plohih[0])
     return plohih[0]
 
@@ -706,6 +815,48 @@ BEKAP = os.path.join(KOREN, '_bekap', 'fixF1-kod-' + VREMYA)
 IZMENENY = {}
 
 
+def pereschet(plan_put, bekap):
+    """Боевой каталог: флаги ЛПР компаний из плана (только lpr_roli меняется – проверено на копии)
+    той же функцией панели. Копия каталога до записи – в bekap; журнал «было/стало» – на дроп."""
+    import warnings
+    warnings.filterwarnings('ignore')
+    sys.path.insert(0, KOREN)
+    import zapusk  # noqa: F401
+    import logging
+    logging.disable(logging.CRITICAL)
+    from app.api import routes_centro_sales as rcs
+    from app.services import centro_catalog as catalog
+    plan = json.load(io.open(plan_put, encoding='utf-8'))
+    if not plan.get('inn'):
+        print('пересчёт: менять нечего')
+        return
+    kat = str(catalog.db_path())
+    kopiya(kat, os.path.join(bekap, 'meyer_baza1-do-pereschet.db'))
+    POLYA = 'inn, lpr_kratko, lpr_roli, lpr_mobilnyy, lpr_s_fio, has_tech, has_purchaser, n_phones'
+    zhurnal = []
+    for inn in plan['inn']:
+        k = sqlite3.connect(kat)
+        k.row_factory = sqlite3.Row
+        bylo = dict(k.execute('SELECT %s FROM company WHERE inn=?' % POLYA, (inn,)).fetchone())
+        k.close()
+        itog = rcs._fixE2_pereschet_lpr(inn)
+        k = sqlite3.connect(kat)
+        k.row_factory = sqlite3.Row
+        stalo = dict(k.execute('SELECT %s FROM company WHERE inn=?' % POLYA, (inn,)).fetchone())
+        k.close()
+        zhurnal.append({'inn': inn, 'itog': itog, 'bylo': {f: v for f, v in bylo.items() if stalo.get(f) != v},
+                        'stalo': {f: v for f, v in stalo.items() if bylo.get(f) != v}})
+        print('   пересчёт %s: %s; %s' % (inn, itog, zhurnal[-1]['stalo']))
+    io.open(os.path.join(DROP, 'fixF1-pereschet-zhurnal-%s.json' % time.strftime('%Y%m%d-%H%M%S')), 'w',
+            encoding='utf-8').write(json.dumps(zhurnal, ensure_ascii=False, indent=1))
+
+
+if '--pereschet' in sys.argv:
+    i = sys.argv.index('--pereschet')
+    pereschet(sys.argv[i + 1], sys.argv[i + 2])
+    raise SystemExit(0)
+
+
 def vernut():
     for imya, kuda in IZMENENY.items():
         shutil.copy2(os.path.join(BEKAP, imya), kuda)
@@ -742,7 +893,7 @@ try:
             pass
     io.open(os.path.join(DROP, 'fixF1-kod-proverka-%s.txt' % VREMYA), 'w', encoding='utf-8').write(vyvod)
     uspeh = r.returncode == 0 and 'ПЛОХИХ ПРОВЕРОК: 0' in vyvod
-    if uspeh and 'routes_centro_sales.py' in IZMENENY:
+    if uspeh and any(f.endswith('.py') for f in IZMENENY):
         p = subprocess.run(['netstat', '-ano'], capture_output=True, timeout=90)
         for l in p.stdout.decode('cp866', 'replace').splitlines():
             if (':%d ' % PORT) in l and 'LISTENING' in l.upper():
@@ -765,6 +916,15 @@ try:
                 kod = str(e)[:80]
                 time.sleep(5)
         print('перезапущено, вход: %s' % kod)
+    if uspeh:
+        # флаги ЛПР компаний, у которых новый код меняет роль (заместитель первого лица) – в боевом каталоге
+        plan = os.path.join(BEKAP, 'fixF1-pereschet-plan.json')
+        if os.path.exists(plan):
+            r2 = subprocess.run([VENV, os.path.abspath(__file__), '--pereschet', plan, BEKAP], capture_output=True,
+                                timeout=600, cwd=KOREN, env=sreda)
+            print(r2.stdout.decode('utf-8', 'replace')[-1500:])
+            if r2.returncode:
+                print('--- пересчёт stderr ---\n' + r2.stderr.decode('utf-8', 'replace')[-1500:])
     elif not uspeh:
         vernut()
         print('ПРОВЕРКА НЕ ПРОШЛА – %d своих файлов возвращены из копии, процесс не перезапускался' % len(IZMENENY))
