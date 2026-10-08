@@ -20,9 +20,9 @@ DIR = r'C:\sender\server'
 СТАТУС = os.path.join(DIR, 'poisk-konveyer.json')
 # два прохода: 1-й — без DaData (лимит суток выбран), 2-й — после полуночи МСК, с DaData (резюм)
 ПРОХОД1 = {'POISK_NE_ZHDAT': '1', 'POISK_CHECKO_MINUT': '100'}
-ШАГИ = [('poisk_razbor.py', {}, ''), ('poisk_otbor.py', ПРОХОД1, ''), ('kc_kontakty.py', {}, ''),
-        ('kc_audit.py', {}, ''), ('kc_audit2.py', {}, ''),
-        ('poisk_otbor.py', {}, 'после полуночи'), ('kc_kontakty.py', {}, ''), ('kc_audit.py', {}, ''), ('kc_audit2.py', {}, '')]
+# 08.10 04:55: ночью отбор упал (на сервере не было meyer_baza.py) — после полуночи DaData свежая, один полный проход
+ШАГИ = [('poisk_razbor.py', {}, ''), ('poisk_otbor.py', {}, ''), ('kc_kontakty.py', {}, ''),
+        ('kc_audit.py', {}, ''), ('kc_audit2.py', {}, '')]
 
 
 def занят(скрипт):
@@ -84,7 +84,7 @@ def main():
         o['шаги'][ключ].update({'конец': time.strftime('%Y-%m-%d %H:%M'), 'код': r.returncode,
                                'хвост': io.open(лог, encoding='utf-8', errors='replace').read()[-500:]})
         статус(o)
-        if n == 4:  # конец 1-го прохода — копии на дроп для промежуточного Excel
+        if n == 4 and len(ШАГИ) > 5:  # конец 1-го прохода — копии на дроп для промежуточного Excel
             for ф in ('poisk-spisok.json', 'poisk-kontakty.jsonl', 'poisk-audit.jsonl', 'poisk-audit2.jsonl'):
                 if os.path.exists(os.path.join(DIR, ф)):
                     shutil.copyfile(os.path.join(DIR, ф), os.path.join(ДРОП, ф))

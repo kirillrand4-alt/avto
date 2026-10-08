@@ -441,16 +441,19 @@ def main():
         итог[i] = запись
     # сайт для тех, у кого его нет: поиск xmlriver (проверка «чей сайт» — потом, kc_audit)
     без = sorted((к2 for к2 in итог.values() if not к2['сайт']), key=lambda к2: -к2['выручка'])[:ЛИМИТ_ПОИСКА_САЙТА]
-    for к2 in без:
+    print('поиск сайта для', len(без), flush=True)
+
+    def найти_сайт(к2):  # параллельно: последовательно ~20 с на компанию — часы
         try:
             рег = re.sub(r'\b(обл|область|край|респ|республика|г)\b\.?', ' ', к2['регион']).strip()
             сайт, ист, _ = EC.find_site_via_xmlriver({'name': к2['имя'], 'city': рег})
             if сайт:
                 к2['сайт'], к2['сайт_откуда'] = сайт, 'поиск по названию (%s)' % ист
-            elif 'закончились средства' in (ист or ''):
-                break
         except Exception:  # noqa: BLE001
             pass
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(8) as ex:
+        list(ex.map(найти_сайт, без))
     # страницы-источники наших контактов (свой домен и закупки) — как в kc_spisok
     c = sqlite3.connect(r'file:C:\sender\enrich.db?mode=ro', uri=True, timeout=120)
     c.execute('create temp table t(inn text primary key)')
