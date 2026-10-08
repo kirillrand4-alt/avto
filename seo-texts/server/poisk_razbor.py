@@ -55,8 +55,8 @@ _лок = threading.Lock()
 КАТ_B2B = re.compile(r'(agroserver|regtorg|productcenter|pulscen|производитель|xn--|fabricators|promportal|bizorg|zol\.ru|'
                      r'all\.biz|tiu\.ru|satu|orgpage|spravker|selhozproizvoditeli|milknet|meatinfo|exportcenter|'
                      r'clients\.site|b2b|agrobase|agroru|unipack|plastinfo|plastics|rcycle|vtorothodi|vtorbiz)', re.I)
-ЛИМИТ_B2B_ДОМЕН = int(os.environ.get('POISK_LIMIT_B2B', '150'))
-ЛИМИТ_ИНН_ДОМЕН = int(os.environ.get('POISK_LIMIT_INN', '400'))
+ЛИМИТ_B2B_ДОМЕН = int(os.environ.get('POISK_LIMIT_B2B', '40'))
+ЛИМИТ_ИНН_ДОМЕН = int(os.environ.get('POISK_LIMIT_INN', '60'))
 ОГРН_RX = re.compile(r'(?<!\d)([15]\d{12})(?!\d)')
 ИНН_URL = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')
 
