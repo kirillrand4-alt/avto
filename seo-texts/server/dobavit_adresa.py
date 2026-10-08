@@ -19,7 +19,8 @@ def main(п_in, п_out):
     wb = load_workbook(п_in)
     к = wb['Контакты']
     шк = [c.value for c in к[1]]
-    иИНН, иСс, иРоль, иЛПР = (шк.index(x) for x in ('ИНН', 'Ссылка на источник', 'Роль', 'ЛПР КЦ'))
+    иИНН, иСс, иРоль = (шк.index(x) for x in ('ИНН', 'Ссылка на источник', 'Роль'))
+    иЛПР = шк.index('ЛПР КЦ') if 'ЛПР КЦ' in шк else шк.index('ЛПР Meyer')
     адреса = collections.defaultdict(list)  # ИНН -> [(приоритет, url)]
     for r in к.iter_rows(min_row=2, values_only=True):
         u = (r[иСс] or '').strip()
