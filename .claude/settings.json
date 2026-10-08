@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout origin/claude/detailed-study-7j12hg -- seo-texts/server/*)",
+      "Bash(python seo-texts/server/run_script_on_server.py:*)",
+      "Bash(python3 seo-texts/server/run_script_on_server.py:*)"
+    ]
+  }
+}
