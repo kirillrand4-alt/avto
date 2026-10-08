@@ -13,6 +13,11 @@ for п in ('pilot-serp.jsonl', 'pilot-razbor.jsonl', 'pilot-spisok.json', 'pilot
     ф = os.path.join(DIR, п)
     if os.path.exists(ф):
         o[п] = sum(1 for _ in open(ф, encoding='utf-8', errors='replace'))
+ф = os.path.join(DIR, 'pilot-konveyer.json')
+if os.path.exists(ф):
+    к = json.load(open(ф, encoding='utf-8'))
+    o['конвейер'] = {ш: '%s→%s код %s' % (v.get('старт', ''), v.get('конец', ''), v.get('код', '')) for ш, v in к.get('шаги', {}).items()}
+    o['конвейер_стоп'] = к.get('стоп', '') or к.get('конец', '')
 логи = sorted(glob.glob(os.path.join(DIR, '*pilot*.log')), key=os.path.getmtime)[-3:]
 for л in логи:
     with open(л, encoding='utf-8', errors='replace') as f:

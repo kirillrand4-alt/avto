@@ -302,7 +302,7 @@ def main():
         if n[0] % 20 == 0:
             print('готово %d/%d за %d мин' % (n[0], len(очередь), (time.time() - t0) / 60), flush=True)
 
-    with ThreadPoolExecutor(6) as ex:
+    with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV', '10' if НАБОР == 'pilot' else '6'))) as ex:  # план: 8–10
         list(ex.map(один, очередь))
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-kontakty.jsonl'))
     print('готово', flush=True)
