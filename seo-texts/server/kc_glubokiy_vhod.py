@@ -35,6 +35,8 @@ for i, к in сп.items():
         continue
     if сайт and i in (з.get('инн_живой') or []):
         continue
+    if not i.isdigit() and (сайт or к.get('сайт')):
+        continue  # BY/«САЙТ:» — компания определена своим сайтом
     if сайт and пров.get((i, MN.домен(сайт))) in ('та же', 'группа'):
         continue
     вход[i] = {'отклонены': MN.домен(сайт) if сайт else ''}

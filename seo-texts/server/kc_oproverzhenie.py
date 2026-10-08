@@ -151,7 +151,8 @@ def main():
                 сделано.add((x['inn'], MN.домен(x.get('сайт') or '')))
             except (ValueError, KeyError):
                 pass
-    задачи = [(сп[i], з, random.random() < 0.2) for i, з in конт.items() if i in сп and (i, MN.домен(з['сайт'])) not in сделано]
+    задачи = [(сп[i], з, random.random() < 0.2) for i, з in конт.items() if i in сп and (i, MN.домен(з['сайт'])) not in сделано
+              and not i.startswith('САЙТ:')]  # без ИНН опровергать нечего — компания определена самим сайтом
     print('сайтов на опровержение', len(задачи), flush=True)
     n = [0]
 
