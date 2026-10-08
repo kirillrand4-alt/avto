@@ -47,7 +47,8 @@ def main():
         time.sleep(60)
     o.pop('ждём', None)
     env = dict(os.environ, KC_NABOR=НАБОР, POISK_NABOR=НАБОР, KC_CEL='meyer', POISK_NE_ZHDAT='1',
-               POISK_CHECKO_MINUT='40', KC_AGENT_LIMIT=os.environ.get('KC_AGENT_LIMIT', '60'))
+               POISK_CHECKO_MINUT='40', KC_AGENT_LIMIT=os.environ.get('KC_AGENT_LIMIT', '60'),
+               KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT=os.environ.get('KC_ZAKUPKI_OT', '1e9'))
     for n, шаг in enumerate(ШАГИ):
         ключ = '%d %s' % (n + 1 + С_ШАГА, шаг)
         o['шаги'][ключ] = {'старт': time.strftime('%Y-%m-%d %H:%M')}

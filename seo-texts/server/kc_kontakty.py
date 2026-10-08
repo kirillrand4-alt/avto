@@ -266,11 +266,12 @@ def одна(к):
     try:
         сайт = к['сайт']  # только сайт из нашей базы/таблицы CC, как в файлах 1–4 (без сайта из checko)
         by = not к['inn'].isdigit()  # Беларусь «BY<УНП>» и «САЙТ:<домен>» (ИНН не определён): ни checko, ни ЕИС
-        if len(к.get('все') or []) <= 1 and not by:
-            з['checko'] = checko(к)  # доп. ОКВЭД, как в файле 4
+        if len(к.get('все') or []) <= 1 and not by and not os.environ.get('KC_BEZ_CHECKO'):
+            з['checko'] = checko(к)  # доп. ОКВЭД, как в файле 4 (пилот Meyer: не нужен — ОКВЭД уже в отборе)
         if сайт:
             з.update(обход(к, сайт))
-        з['закупки'] = [] if by else закупки(к)
+        # ЕИС медленный (до минуты на компанию): KC_ZAKUPKI_OT — только от этой выручки (пилот 08.10: 1 млрд)
+        з['закупки'] = [] if by or (к.get('выручка') or 0) < float(os.environ.get('KC_ZAKUPKI_OT', '0')) else закупки(к)
         з['итог'] = 'ok'
     except Exception as e:  # noqa: BLE001
         з['итог'] = 'сбой: ' + repr(e)[:120]
@@ -302,7 +303,7 @@ def main():
         if n[0] % 20 == 0:
             print('готово %d/%d за %d мин' % (n[0], len(очередь), (time.time() - t0) / 60), flush=True)
 
-    with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV', '10' if НАБОР == 'pilot' else '6'))) as ex:  # план: 8–10
+    with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV', '24' if НАБОР == 'pilot' else '6'))) as ex:
         list(ex.map(один, очередь))
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-kontakty.jsonl'))
     print('готово', flush=True)
