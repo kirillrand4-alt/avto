@@ -41,16 +41,34 @@ def вызов(модель, промпт):
     req = urllib.request.Request(base + ('/v1/messages' if anth else '/v1/chat/completions'),
                                  data=json.dumps(тело, ensure_ascii=False).encode('utf-8'), headers=загол, method='POST')
     д = json.loads(urllib.request.urlopen(req, timeout=300).read())
+    u = д.get('usage') or {}
     if anth:
         текст = ''.join(b.get('text', '') for b in д.get('content', []) if b.get('type') == 'text')
-        u = д.get('usage') or {}
-        вх = (u.get('input_tokens') or 0) + (u.get('cache_read_input_tokens') or 0) + (u.get('cache_creation_input_tokens') or 0)
+        # 09.10: шлюз подмешивает к claude-моделям скрытый системный промпт (~6,7 тыс. токенов) — он идёт как
+        # cache_read (дешёвый тариф «Кэш») или как input; считаем раздельно, а итог — по credit_usage шлюза
+        вх = u.get('input_tokens') or 0
+        кэш = (u.get('cache_read_input_tokens') or 0)
+        созд = (u.get('cache_creation_input_tokens') or 0)
         вых = u.get('output_tokens') or 0
     else:
         текст = ((д.get('choices') or [{}])[0].get('message') or {}).get('content') or ''
-        u = д.get('usage') or {}
         вх, вых = u.get('prompt_tokens') or 0, u.get('completion_tokens') or 0
-    return текст, вх, вых, time.time() - t0
+        кэш = ((u.get('prompt_tokens_details') or {}).get('cached_tokens')) or 0
+        вх -= кэш
+        созд = 0
+    return текст, вх, вых, time.time() - t0, кэш, созд, u.get('credit_usage')
+
+
+КЭШ = {'claude-fable-5': 1, 'claude-opus-5-5': 0.2, 'claude-sonnet-4-6': 0.3, 'claude-sonnet-5-5': 0.2, 'claude-haiku-4-5': 0.1}
+
+
+def цена(з):
+    """$ за вызов: credit_usage шлюза, если есть; иначе — тариф (вход / выход / кэш)."""
+    if з.get('кредит'):
+        return float(з['кредит'])
+    цв, цо = ЦЕНЫ.get(з['модель'], (10, 50))
+    return ((з.get('вх') or 0) * цв + (з.get('вых') or 0) * цо + (з.get('кэш') or 0) * КЭШ.get(з['модель'], цв * 0.1)
+            + (з.get('кэш_созд') or 0) * цв * 1.25) / 1e6
 
 
 def main(п, модели=None):
@@ -63,8 +81,7 @@ def main(п, модели=None):
         з = json.loads(s)
         if not з.get('ошибка'):
             сделано.add((з['модель'], з['id']))
-            цв, цо = ЦЕНЫ.get(з['модель'], (10, 50))
-            потрачено[0] += ((з.get('вх') or 0) * цв + (з.get('вых') or 0) * цо) / 1e6
+            потрачено[0] += цена(з)
     работы = [(м, з) for м in модели for з in задачи if (м, з['id']) not in сделано]
     random.shuffle(работы)
     работы.sort(key=lambda x: (0 if x[0] in ПОРЯДОК else 2 if x[0] == 'claude-fable-5' else 1))
@@ -78,14 +95,13 @@ def main(п, модели=None):
         ош = ''
         for попытка in range(4):
             try:
-                текст, вх, вых, сек = вызов(м, з['вход'])
+                текст, вх, вых, сек, кэш, созд, кредит = вызов(м, з['вход'])
                 if not текст.strip():
                     raise RuntimeError('пустой ответ')
-                з2 = {'модель': м, 'id': з['id'], 'тип': з['тип'], 'ответ': текст, 'вх': вх, 'вых': вых, 'сек': round(сек, 1),
-                      'вход_символов': len(з['вход']), 'откуда': 'сессия'}
-                цв, цо = ЦЕНЫ.get(м, (10, 50))
+                з2 = {'модель': м, 'id': з['id'], 'тип': з['тип'], 'ответ': текст, 'вх': вх, 'вых': вых, 'кэш': кэш,
+                      'кэш_созд': созд, 'кредит': кредит, 'сек': round(сек, 1), 'вход_символов': len(з['вход']), 'откуда': 'сессия2'}
                 with _лок:
-                    потрачено[0] += (вх * цв + вых * цо) / 1e6
+                    потрачено[0] += цена(з2)
                 break
             except Exception as e:  # noqa: BLE001
                 ош = str(e)[:200]
