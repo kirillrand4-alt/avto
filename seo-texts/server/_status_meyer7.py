@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Статус тестовой партии Meyer (набор meyer7t): строки журналов, шаги конвейера, хвосты логов набора, живые процессы
+"""Статус полного прогона Meyer (набор meyer7): строки журналов, шаги конвейера, хвосты логов набора, живые процессы
 конвейера (любого набора — чтобы стоп не задел чужое), баланс xmlriver."""
 import glob
 import json
@@ -8,7 +8,7 @@ import subprocess
 import urllib.request
 
 DIR = r'C:\sender\server'
-НАБОР = 'meyer7t'
+НАБОР = 'meyer7'
 o = {}
 for х in ('-serp.jsonl', '-razbor.jsonl', '-spisok.json', '-sayty-dobor.jsonl', '-kontakty.jsonl', '-dop.jsonl',
           '-pasport.jsonl', '-audit.jsonl', '-audit2.jsonl', '-sayt-proverka.jsonl', '-oprov.jsonl', '-glubokiy.jsonl',

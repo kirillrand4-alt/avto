@@ -70,16 +70,27 @@ def main():
     t0 = time.time()
     with ThreadPoolExecutor(8) as ex:
         list(ex.map(найти, без))
-    for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):
-        з = json.loads(s)
-        к = сп['компании'].get(з['inn'])
-        if к is not None and з.get('итог') == 'найден' and not к['сайт']:
-            к['сайт'], к['сайт_откуда'] = з['сайт'], 'поиск по названию (%s)' % з.get('источник', '')
-    shutil.copyfile(СПИСОК, СПИСОК + '.bak-' + time.strftime('%d%m-%H%M'))
-    with io.open(СПИСОК, 'w', encoding='utf-8') as f:
-        json.dump(сп, f, ensure_ascii=False)
-        f.flush()
-        os.fsync(f.fileno())
+    def применить(сп):
+        for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):
+            з = json.loads(s)
+            к = сп['компании'].get(з['inn'])
+            if к is not None and з.get('итог') == 'найден' and not к['сайт']:
+                к['сайт'], к['сайт_откуда'] = з['сайт'], 'поиск по названию (%s)' % з.get('источник', '')
+    if os.environ.get('PILOT_SNIMKI') == '1':
+        # 09.10, волны: отбор мог записать новый снимок списка, пока шли поиски, — перечитываем под замком
+        import zamok
+        with zamok.замок(СПИСОК):
+            сп = zamok.прочитать(СПИСОК)
+            применить(сп)
+            shutil.copyfile(СПИСОК, СПИСОК + '.bak-' + time.strftime('%d%m-%H%M'))
+            zamok.записать_атомарно(СПИСОК, сп)
+    else:
+        применить(сп)
+        shutil.copyfile(СПИСОК, СПИСОК + '.bak-' + time.strftime('%d%m-%H%M'))
+        with io.open(СПИСОК, 'w', encoding='utf-8') as f:
+            json.dump(сп, f, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())
     shutil.copyfile(СПИСОК, os.path.join(r'C:\seostat\drop\drop-storage', os.path.basename(СПИСОК)))
     print('готово', json.dumps({'минут': round((time.time() - t0) / 60), 'стоп': стоп[''],
                                 'без сайта осталось': sum(1 for к in сп['компании'].values() if not к['сайт'])},

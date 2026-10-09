@@ -57,6 +57,48 @@ _лок = threading.Lock()
                      r'clients\.site|b2b|agrobase|agroru|unipack|plastinfo|plastics|rcycle|vtorothodi|vtorbiz)', re.I)
 ЛИМИТ_B2B_ДОМЕН = int(os.environ.get('POISK_LIMIT_B2B', '40'))
 ЛИМИТ_ИНН_ДОМЕН = int(os.environ.get('POISK_LIMIT_INN', '60'))
+# 09.10, проба meyer7t (владелец: «не скачивать домены, которые стабильно отказывают, если отказы даже через браузер»).
+# Проверка _katalogi_brauzer.py: отказывают и обычному браузеру — rbc (401), companium (429+капча), list-org, agroserver,
+# audit-it, testfirm (сброс соединения), zakupki.kontur (403), b2b-postavki (капча), plastinfo (403); открываются, но
+# ИНН/УНП не дают ни разу — orgpage, belarusinfo, flagma, ibiz, bizorg, agroru, b2b.by, e-kontur. checko и b2b.house
+# отдают страницы только браузеру (скрипту 429 / ИНН только после JS) — их страницы разбирает razbor_brauzer.py.
+# Страницы с ИНН в адресе берутся и с этих доменов (не скачиваются). Включается POISK_KAT_STOP=1.
+КАТ_СТОП = re.compile(r'(^|\.)(companies\.rbc\.ru|companium\.ru|list-org\.com|agroserver\.ru|audit-it\.ru|testfirm\.ru|'
+                      r'zakupki\.kontur\.ru|b2b-postavki\.ru|plastinfo\.ru|orgpage\.(ru|by)|belarusinfo\.by|flagma\.by|'
+                      r'ibiz\.by|bizorg\.su|agroru\.com|b2b\.by|e-kontur\.ru)$', re.I)
+КАТ_БРАУЗЕР = re.compile(r'(^|\.)(checko\.ru|b2b\.house)$', re.I)
+СТОП_ВКЛ = os.environ.get('POISK_KAT_STOP') == '1'
+# Свой напор банит сервер (audit-it, testfirm, orgpage отдали часть страниц, через минуту — сброс соединения и браузеру):
+# не больше POISK_KAT_NA_DOMEN одновременных запросов к одному каталогу; POISK_KAT_PREDOHR отказов подряд — страницы
+# домена до конца запуска пропускаются (не пишутся: следующий запуск попробует снова). 0 — выключено.
+НА_ДОМЕН = int(os.environ.get('POISK_KAT_NA_DOMEN', '0'))
+ПРЕДОХР = int(os.environ.get('POISK_KAT_PREDOHR', '0'))
+_сем, _сем_лок = {}, threading.Lock()
+_подряд, _выкл = collections.Counter(), set()
+
+
+def семафор(д):
+    with _сем_лок:
+        if д not in _сем:
+            _сем[д] = threading.BoundedSemaphore(НА_ДОМЕН or 10000)
+        return _сем[д]
+
+
+def по_кругу(урлы):
+    """Страницы каталогов вперемешку по доменам: подряд в очереди не стоят десятки страниц одного каталога
+    (иначе потоки пула ждут его семафор)."""
+    по_дом = collections.OrderedDict()
+    for u in урлы:
+        по_дом.setdefault(MN.домен(хост(u)), []).append(u)
+    out = []
+    while по_дом:
+        for д in list(по_дом):
+            out.append(по_дом[д].pop(0))
+            if not по_дом[д]:
+                del по_дом[д]
+    return out
+
+
 ОГРН_RX = re.compile(r'(?<!\d)([15]\d{12})(?!\d)')
 ИНН_URL = re.compile(r'(?<!\d)(\d{10}|\d{12})(?!\d)')
 
@@ -161,7 +203,24 @@ def каталог(u):
     if з['инн_url']:  # карточка компании с ИНН в адресе — скачивать незачем (пилот 08.10: скорость)
         з['страница'] = 'не скачивалась: ИНН в адресе'
         return з
-    ст, html, _ = MN.скачать(u)
+    if СТОП_ВКЛ and КАТ_СТОП.search(з['домен']):
+        з['страница'] = 'не скачивалась: домен в стоп-листе'
+        return з
+    if СТОП_ВКЛ and КАТ_БРАУЗЕР.search(з['домен']):
+        з['страница'] = 'не скачивалась: только браузер (razbor_brauzer)'
+        return з
+    д = MN.домен(з['домен'])
+    if д in _выкл:
+        return None  # предохранитель: не пишем — следующий запуск попробует снова
+    with семафор(д):
+        ст, html, _ = MN.скачать(u)
+    if ПРЕДОХР:
+        with _сем_лок:
+            _подряд[д] = 0 if ст == 'ok' else _подряд[д] + 1
+            if _подряд[д] >= ПРЕДОХР and д not in _выкл:
+                _выкл.add(д)
+                print('предохранитель: %s — %d отказов подряд (%s), до конца запуска пропускается' % (д, ПРЕДОХР, ст[:40]),
+                      flush=True)
     з['страница'] = ст
     if ст == 'ok':
         т = MP.в_текст(html)
@@ -251,15 +310,32 @@ def main():
             з = каталог(u)
         except Exception as e:  # noqa: BLE001
             з = {'тип': 'каталог', 'url': u, 'ошибка': repr(e)[:100]}
-        з['запросы'] = урлы_каталогов[u][:5]
-        записать(з)
+        if з is not None:
+            з['запросы'] = урлы_каталогов[u][:5]
+            записать(з)
         n[0] += 1
         if n[0] % 200 == 0:
             print('разобрано %d за %d мин' % (n[0], (time.time() - t0) / 60), flush=True)
 
-    with ThreadPoolExecutor(int(os.environ.get('POISK_RAZBOR_POTOKOV', '40'))) as ex:
-        list(ex.map(шаг_сайт, сайты))
-        list(ex.map(шаг_каталог, каталоги))
+    потоков_кат = os.environ.get('POISK_RAZBOR_POTOKOV_KAT')
+    if потоков_кат:
+        # 09.10: сайты и каталоги — два пула одновременно (хвост медленных сайтов больше не держит каталоги),
+        # каталоги — своим числом потоков и вперемешку по доменам
+        print('пулы: сайты %s, каталоги %s, на домен %s, предохранитель %s, стоп-лист %s' % (
+            os.environ.get('POISK_RAZBOR_POTOKOV', '40'), потоков_кат, НА_ДОМЕН or '—', ПРЕДОХР or '—',
+            'да' if СТОП_ВКЛ else 'нет'), flush=True)
+        with ThreadPoolExecutor(int(os.environ.get('POISK_RAZBOR_POTOKOV', '40'))) as ex1, \
+                ThreadPoolExecutor(int(потоков_кат)) as ex2:
+            ф1 = ex1.map(шаг_сайт, сайты)
+            ф2 = ex2.map(шаг_каталог, по_кругу(каталоги))
+            list(ф1)
+            list(ф2)
+        if _выкл:
+            print('выключены предохранителем:', ', '.join(sorted(_выкл)), flush=True)
+    else:
+        with ThreadPoolExecutor(int(os.environ.get('POISK_RAZBOR_POTOKOV', '40'))) as ex:
+            list(ex.map(шаг_сайт, сайты))
+            list(ex.map(шаг_каталог, каталоги))
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-razbor.jsonl'))
     print('готово', flush=True)
 

@@ -38,6 +38,11 @@ import meyer_proverka as MP  # noqa: E402
 ДРОП = r'C:\seostat\drop\drop-storage'
 ВХОД = os.path.join(ДРОП, НАБОР + '-glubokiy-vhod.json')
 ВЫХОД = os.path.join(DIR, НАБОР + '-glubokiy.jsonl')
+# 09.10, волны: проход Luna идёт параллельно Sol и пишет в свой файл (два процесса в один журнал на Windows могут
+# затереть строки друг друга); оркестратор сливает его в общий журнал после обоих проходов. Сделанное — из обоих.
+ОБЩИЙ = ВЫХОД
+if os.environ.get('KC_AGENT_FAYL'):
+    ВЫХОД = os.path.join(DIR, НАБОР + '-' + os.environ['KC_AGENT_FAYL'])
 ЗАКУПКИ = re.compile(r'zakupki\.gov|roseltorg|b2b-center|etpgpb|fabrikant|rts-tender|sberbank-ast|tektorg', re.I)
 ШАГОВ, ПОИСКОВ = 14, 5
 # кого ищем: КЦ — покупатели оборудования; Meyer (файл 6) — ЛПР по списку коллеги для пищевых
@@ -265,16 +270,21 @@ def main():
     вход = json.load(io.open(ВХОД, encoding='utf-8'))  # {инн: {отклонены: ...}}
     сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     сделано = set()
-    if os.path.exists(ВЫХОД):
-        for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
-            try:
-                сделано.add(json.loads(s)['inn'])
-            except (ValueError, KeyError):
-                pass
+    for п in {ВЫХОД, ОБЩИЙ}:
+        if os.path.exists(п):
+            for s in io.open(п, encoding='utf-8', errors='replace'):
+                try:
+                    сделано.add(json.loads(s)['inn'])
+                except (ValueError, KeyError):
+                    pass
     задачи = [dict(сп[i], отклонены=v.get('отклонены', '')) for i, v in вход.items() if i in сп and i not in сделано]
     # 09.10, сравнение моделей: ниже ~120 млн ₽ выручки агенты (обе модели) не находят почти ничего — не тратимся
     if os.environ.get('KC_AGENT_OT'):
         задачи = [к for к in задачи if (к.get('выручка') or 0) >= float(os.environ['KC_AGENT_OT'])]
+    # 09.10, волны: верхняя граница выручки — проход Luna (120–500 млн) идёт параллельно проходу Sol (от 500 млн)
+    # и не берёт компании Sol
+    if os.environ.get('KC_AGENT_DO'):
+        задачи = [к for к in задачи if (к.get('выручка') or 0) < float(os.environ['KC_AGENT_DO'])]
     if os.environ.get('KC_AGENT_LIMIT'):  # пилот 08.10: баланс xmlriver ограничен — сначала крупные
         задачи = sorted(задачи, key=lambda к: -(к.get('выручка') or 0))[:int(os.environ['KC_AGENT_LIMIT'])]
     print('компаний', len(задачи), flush=True)
@@ -292,7 +302,8 @@ def main():
     # 09.10: агент идёт 6–8 мин (страницы, поиск, модель) — на полном прогоне 30–40 потоков
     with ThreadPoolExecutor(int(os.environ.get('KC_AGENT_POTOKOV', '10'))) as ex:
         list(ex.map(шаг, задачи))
-    shutil.copyfile(ВЫХОД, os.path.join(ДРОП, НАБОР + '-glubokiy.jsonl'))
+    if ВЫХОД == ОБЩИЙ and os.path.exists(ВЫХОД):
+        shutil.copyfile(ВЫХОД, os.path.join(ДРОП, НАБОР + '-glubokiy.jsonl'))
     print('готово', flush=True)
 
 
