@@ -31,6 +31,17 @@ DIR = r'C:\sender\server'
 МОДЕЛЬ_ШАГА = {'kc_sayt_proverka.py': 'gpt-6-sol', 'kc_agent_glubokiy.py': 'gpt-6-sol',
                'kc_agent_glubokiy.py:хвост': os.environ.get('AGENT_HVOST_MODEL', 'gpt-6-luna')}
 МОДЕЛЬ_ОСН = os.environ.get('PILOT_MODEL', 'gpt-6-luna')
+# 09.10, проба: паспорт (site_facts -> gen_provider) импортирует anthropic — он есть только в питоне панели (3.11);
+# на 3.12 шаг падал с ModuleNotFoundError
+ПИТОН_ПАНЕЛИ = r'C:\Program Files\Python311\python.exe'
+# 09.10, проба: сайты, найденные агентами и подтверждённые перепроверкой (ИНН/название на странице), — в список, затем
+# обход и проверки по новым сайтам (Конфектум: export31.ru -> confectum.org)
+ПОСЛЕ_АГЕНТОВ = ['pilot_sayty_agentov.py', 'kc_kontakty.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py',
+                 'kc_oproverzhenie.py']
+
+
+def питон(файл):
+    return ПИТОН_ПАНЕЛИ if файл == 'pilot_pasport.py' and os.path.exists(ПИТОН_ПАНЕЛИ) else sys.executable
 ШАГИ = ВСЕ_ШАГИ[С_ШАГА:]
 
 
@@ -100,7 +111,7 @@ def main():
                                                            time.strftime('%d%m-%H%M')))
         for попытка in range(2):
             with open(лог, 'ab') as f:
-                r = subprocess.run([sys.executable, '-u', os.path.join(DIR, файл)], cwd=DIR, env=env_шага,
+                r = subprocess.run([питон(файл), '-u', os.path.join(DIR, файл)], cwd=DIR, env=env_шага,
                                    stdout=f, stderr=subprocess.STDOUT)
             if r.returncode == 0:
                 break
@@ -111,6 +122,16 @@ def main():
             o['стоп'] = 'шаг %s упал — дальше без него нельзя' % шаг
             статус(o)
             return
+    for шаг in ПОСЛЕ_АГЕНТОВ:
+        ключ = 'после агентов %s' % шаг
+        o['шаги'][ключ] = {'старт': time.strftime('%Y-%m-%d %H:%M'), 'модель': МОДЕЛЬ_ШАГА.get(шаг, МОДЕЛЬ_ОСН)}
+        статус(o)
+        лог = os.path.join(DIR, 'konveyer_%s_%s_2_%s.log' % (НАБОР, шаг[:-3], time.strftime('%d%m-%H%M')))
+        with open(лог, 'ab') as f:
+            r = subprocess.run([питон(шаг), '-u', os.path.join(DIR, шаг)], cwd=DIR,
+                               env=dict(env, PROVIDER_MODEL=МОДЕЛЬ_ШАГА.get(шаг, МОДЕЛЬ_ОСН)), stdout=f, stderr=subprocess.STDOUT)
+        o['шаги'][ключ].update({'конец': time.strftime('%Y-%m-%d %H:%M'), 'код': r.returncode})
+        статус(o)
     for ф in (НАБОР + x for x in ('-razbor.jsonl', '-spisok.json', '-reestr.json', '-zenka.json', '-kontakty.jsonl',
                                    '-audit.jsonl', '-audit2.jsonl', '-sayt-proverka.jsonl', '-oprov.jsonl', '-glubokiy.jsonl',
                                    '-glubokiy2.jsonl', '-serp.jsonl', '-dop.jsonl', '-sayty-dobor.jsonl', '-klass.jsonl',
@@ -183,7 +204,7 @@ class Волны:
             self.статус()
             return 'занят'
         файл = шаг.partition(':')[0]
-        cmd = [sys.executable, '-u', os.path.join(DIR, файл)] + метка(шаг).split()
+        cmd = [питон(файл), '-u', os.path.join(DIR, файл)] + метка(шаг).split()
         self.o['шаги'][шаг] = {'старт': time.strftime('%Y-%m-%d %H:%M'), 'модель': МОДЕЛЬ_ШАГА.get(шаг, МОДЕЛЬ_ОСН),
                                'волна': self.o['волна'], 'фоном': фоном}
         self.статус()
@@ -280,6 +301,9 @@ class Волны:
         for ш in ('pilot_dop_proverka.py', 'pilot_pasport.py'):  # догнать компании финального обхода (резюм)
             self.пуск(ш)
         self.пуск('kc_agent_pereproverka.py')
+        self.o['волна'] = 'после агентов'
+        for ш in ПОСЛЕ_АГЕНТОВ:
+            self.пуск(ш)
         return True
 
     def main(self):

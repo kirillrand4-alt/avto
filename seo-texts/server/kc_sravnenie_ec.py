@@ -34,7 +34,13 @@ sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
 НАБОР = os.environ.get('KC_NABOR', 'meyer7t')
 ПАПКА = os.path.join(r'C:\seostat\drop', 'pagecache-sravnenie-' + НАБОР)
-os.environ['PAGECACHE_DIR'] = os.path.join(ПАПКА, 'B')  # до импорта kc_kontakty: КЭШ_СТРАНИЦ читается при импорте
+# фазы: A — обогатитель как есть, B — наш обход, C — наш обход с обогатителем без его модели (KC_EC_BEZ_MODELI);
+# B и C — в разных процессах: папка кэша обхода читается при импорте kc_kontakty
+ФАЗЫ = os.environ.get('KC_SRAV_FAZY', 'A,B').split(',')
+НАША = 'C' if 'C' in ФАЗЫ else 'B'
+if НАША == 'C':
+    os.environ['KC_EC_BEZ_MODELI'] = '1'
+os.environ['PAGECACHE_DIR'] = os.path.join(ПАПКА, НАША)  # до импорта kc_kontakty: КЭШ_СТРАНИЦ читается при импорте
 import kc_kontakty as KK  # noqa: E402
 import enrich_contacts as EC  # noqa: E402
 import meyer_nalichie as MN  # noqa: E402
@@ -153,7 +159,7 @@ def фаза_B(к):
         rb = KK.обход(к, сайт_к(к))
     except Exception as e:  # noqa: BLE001
         rb = {'сбой': repr(e)[:120]}
-    записать({'inn': к['inn'], 'фаза': 'B', 'сайт': сайт_к(к), 'сек': round(time.time() - t), 'r': rb})
+    записать({'inn': к['inn'], 'фаза': НАША, 'сайт': сайт_к(к), 'сек': round(time.time() - t), 'r': rb})
 
 
 def сравнить(з):
@@ -172,7 +178,8 @@ def сравнить(з):
             'нет_у_нас': {'почты': нет_п, 'тел': нет_т, 'фио': нет_ф, 'роли': нет_р}}
 
 
-def итог():
+def итог(наша=None):
+    наша = наша or НАША
     рез = collections.defaultdict(dict)
     for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
         try:
@@ -180,7 +187,7 @@ def итог():
         except ValueError:
             continue
         рез[з['inn']][з['фаза']] = з
-    рез = {i: з for i, з in рез.items() if 'A' in з and 'B' in з}
+    рез = {i: dict(з, B=з[наша]) for i, з in рез.items() if 'A' in з and наша in з}
     сум = collections.Counter()
     разн = []
     for i, з in рез.items():
@@ -194,7 +201,7 @@ def итог():
         сум['B сек'] += з['B'].get('сек') or 0
         if any(с['нет_у_нас'].values()):
             разн.append({'inn': i, 'сайт': з['A']['сайт'], **с['нет_у_нас']})
-    return {'компаний': len(рез), 'сумма': dict(сум), 'где у нас меньше': разн}
+    return {'наша фаза': наша, 'компаний': len(рез), 'сумма': dict(сум), 'где у нас меньше': разн}
 
 
 def main():
@@ -210,7 +217,7 @@ def main():
     компании = выборка(int(os.environ.get('KC_SRAV_N', '30')))
     потоков = int(os.environ.get('KC_SRAV_POTOKOV', '10'))
     # фазы по очереди: папку кэша EC берёт из окружения процесса при вызове — A и B одновременно идти не должны
-    for фаза, f, папка in (('A', фаза_A, 'A'), ('B', фаза_B, 'B')):
+    for фаза, f, папка in [(ф, фаза_A if ф == 'A' else фаза_B, ф) for ф in ФАЗЫ]:
         os.environ['PAGECACHE_DIR'] = os.path.join(ПАПКА, папка)
         очередь = [к for к in компании if (к['inn'], фаза) not in сделано]
         print('фаза', фаза, 'компаний', len(очередь), flush=True)
@@ -223,7 +230,7 @@ def main():
 
         with ThreadPoolExecutor(потоков) as ex:
             list(ex.map(один, очередь))
-    with io.open(os.path.join(DIR, НАБОР + '-sravnenie-ec-itog.json'), 'w', encoding='utf-8') as f:
+    with io.open(os.path.join(DIR, НАБОР + '-sravnenie-ec-itog-%s.json' % НАША), 'w', encoding='utf-8') as f:
         json.dump(итог(), f, ensure_ascii=False, indent=1)
     print('готово', flush=True)
 
@@ -231,6 +238,6 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'itog':
         print('===ИТОГ===')
-        print(json.dumps(итог(), ensure_ascii=False, indent=1)[:9000])
+        print(json.dumps(итог(sys.argv[2] if len(sys.argv) > 2 else None), ensure_ascii=False, indent=1)[:9000])
     else:
         main()

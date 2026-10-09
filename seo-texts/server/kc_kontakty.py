@@ -385,6 +385,12 @@ def _из_кэша(страницы_кэша, сайт, уже, предел=40)
 # (сайт и ИНН проверяют наши шаги). KC_EC=0 — выключить.
 EC_В_ОБХОДЕ = os.environ.get('KC_EC', '1') == '1'
 EC_ТЕМП = (float(os.environ.get('KC_EC_TEMP_OT', '0.5')), float(os.environ.get('KC_EC_TEMP_DO', '1.5')))
+# поиски обогатителя через xmlriver (страница сотрудников site:домен, контакты в справочниках) — ~1,2 запроса на
+# компанию; на полном прогоне (~75 тыс. обходов) это ~2 тыс. ₽ сверх бюджета — только от этой выручки (0 — всем)
+EC_XML_OT = float(os.environ.get('KC_EC_XML_OT', '0'))
+# 1 — обогатитель без своей модели (extract_roles): его страницы, его извлечение regex, контакты размечает наша модель;
+# самый долгий его вызов (~25 тыс. знаков на компанию) не идёт
+EC_БЕЗ_МОДЕЛИ = os.environ.get('KC_EC_BEZ_MODELI') == '1'
 
 
 _ec_готов = []
@@ -396,8 +402,18 @@ def ec_настроить():
     _ec_готов.append(1)
     EC._NO_BROWSER = True
     EC._USE_FALLBACK = False
-    for ф in ('_HH_CHECK', '_ZAKUPKI_CHECK', '_OPO_CHECK', '_SMTP_CHECK', '_DISCOVERY_ONLY', '_SKIP_PROVIDER'):
+    for ф in ('_HH_CHECK', '_ZAKUPKI_CHECK', '_OPO_CHECK', '_SMTP_CHECK', '_DISCOVERY_ONLY'):
         setattr(EC, ф, False)
+    EC._SKIP_PROVIDER = EC_БЕЗ_МОДЕЛИ
+    if EC_XML_OT > 0:
+        _сотр, _справ = EC.find_staff_via_search, EC.find_directory_contacts
+
+        def сотрудники(company, dom):
+            return _сотр(company, dom) if (company.get('выручка') or 0) >= EC_XML_OT else []
+
+        def справочники(company):
+            return _справ(company) if (company.get('выручка') or 0) >= EC_XML_OT else None
+        EC.find_staff_via_search, EC.find_directory_contacts = сотрудники, справочники
     for ф in ('_NO_VK_LOOKUP', '_NO_SITE_CONFIRM', '_NO_REKV_SEARCH'):
         setattr(EC, ф, True)
     # фолбэки его скачивания: прокси с решателем Turnstile и мобильные адреса — выключены (браузер — _NO_BROWSER)
@@ -408,7 +424,14 @@ def ec_настроить():
 def ec_компания(к, сайт):
     return {'inn': к['inn'] if к['inn'].isdigit() else '', 'name': к.get('имя') or '', 'site': сайт,
             'okved': к.get('осн') or '', 'ogrn': к.get('огрн') or '', 'region': к.get('регион') or '',
-            'city': к.get('город') or ''}
+            'city': к.get('город') or '', 'выручка': _число(к.get('выручка'))}
+
+
+def _число(x):
+    try:
+        return float(x or 0)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 # роль серверного обогатителя -> наша «Роль» (план Meyer п. 2.3) и класс — только если наша разметка роль не дала
