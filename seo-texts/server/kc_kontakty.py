@@ -108,19 +108,33 @@ def записать(з):
 МОДЕЛЬ_ЗАПАС = os.environ.get('PROVIDER_FALLBACK_CHEAP', '')
 
 
+# 09.10, полный прогон: 48 потоков обхода одновременно открывали соединения к шлюзу — TLS-рукопожатия рвались
+# (SSLEOFError, «ни один адрес»), успешных вызовов Луны ~7 в минуту, разметка — у 41% номеров с подписью (проба — 92%).
+# Одновременных вызовов модели на процесс — не больше KC_MODEL_PARALLEL; брошенный по сроку вызов держит место до конца
+_МОДЕЛЬ_СЕМ = threading.Semaphore(int(os.environ.get('KC_MODEL_PARALLEL', '12')))
+
+
 def _со_сроком(промпт, модель_, срок):
+    """Вызов модели в потоке: срок молчания считается с момента, когда вызов получил место (очередь к модели — не
+    молчание); места ждём не дольше 15 мин."""
     рез = {}
 
     def f():
         try:
-            рез['out'] = VC._provider_call_stdlib(промпт, model=модель_)
+            with _МОДЕЛЬ_СЕМ:
+                рез['t0'] = time.time()
+                рез['out'] = VC._provider_call_stdlib(промпт, model=модель_)
         except Exception as e:  # noqa: BLE001
             рез['err'] = e
     т = threading.Thread(target=f, daemon=True)
     т.start()
-    т.join(срок)
-    if т.is_alive():
-        raise TimeoutError('модель молчит дольше %d с' % срок)
+    t_старт = time.time()
+    while т.is_alive():
+        т.join(5)
+        if 't0' in рез and т.is_alive() and time.time() - рез['t0'] > срок:
+            raise TimeoutError('модель молчит дольше %d с' % срок)
+        if 't0' not in рез and time.time() - t_старт > 900:
+            raise TimeoutError('очередь к модели дольше 15 мин')
     if 'err' in рез:
         raise рез['err']
     return рез.get('out')

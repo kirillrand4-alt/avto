@@ -73,7 +73,9 @@ def main():
         записать({'inn': к['inn'], 'итог': 'найден' if сайт else 'не найден', 'сайт': сайт or '', 'источник': ист or ''})
 
     t0 = time.time()
-    with ThreadPoolExecutor(8) as ex:
+    # 09.10, полный прогон: 8 потоков вместе с поиском (10) и поисками обогателя в обходе давали xmlriver HTTP 429
+    # (38% запросов поиска за полчаса) — по умолчанию 3
+    with ThreadPoolExecutor(int(os.environ.get('PILOT_SAYTY_POTOKOV', '3'))) as ex:
         list(ex.map(найти, без))
     def применить(сп):
         for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):

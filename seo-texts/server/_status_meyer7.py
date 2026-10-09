@@ -51,7 +51,7 @@ import io, re  # noqa: E401,E402
 ЭТАПЫ = [('poisk', 'Поиск (Яндекс, Google)', '—'), ('poisk_razbor.py', 'Разбор выдачи: сайт → ИНН/УНП', '—'),
          ('razbor_brauzer.py', 'Каталоги через браузер (checko, b2b.house)', '—'),
          ('pilot_otbor.py', 'Отбор: ОКВЭД → сегмент, сверка', 'Luna'), ('pilot_sayty_dobor.py', 'Сайты по названию', '—'),
-         ('kc_kontakty.py', 'Обход сайтов: номера, почты, роли', 'Luna'), ('pilot_dop_proverka.py', 'Доп. ОКВЭД по сайту', 'Luna'),
+         ('kc_kontakty.py', 'Обход сайтов: номера, почты, роли', 'Luna'), ('kc_dorazmetka.py', 'Дозаразметка ролей', 'Luna'), ('pilot_dop_proverka.py', 'Доп. ОКВЭД по сайту', 'Luna'),
          ('pilot_pasport.py', 'Паспорт сайта', 'GPT-5.6 Luna'), ('kc_audit.py', 'Чей номер / почта', 'Luna'),
          ('kc_audit2.py', 'Чей сайт по ИНН', '—'), ('kc_sayt_proverka.py', 'Проверка сайта', 'Sol'),
          ('kc_oproverzhenie.py', 'Опровергатели', 'Luna'), ('kc_glubokiy_vhod.py', 'Вход агентам', '—'),

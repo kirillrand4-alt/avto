@@ -19,7 +19,7 @@ DIR = r'C:\sender\server'
 НАБОР = os.environ.get('POISK_NABOR', 'pilot')  # для полного прогона — свой набор (meyer7 и т.п.)
 СТАТУС = os.path.join(DIR, НАБОР + '-konveyer.json')
 # 09.10: + сайты по названию для компаний из каталогов (после отбора) и проверка доп. ОКВЭД по сайту (после обхода)
-ВСЕ_ШАГИ = ['poisk_razbor.py', 'pilot_otbor.py', 'pilot_sayty_dobor.py', 'kc_kontakty.py', 'pilot_dop_proverka.py',
+ВСЕ_ШАГИ = ['poisk_razbor.py', 'pilot_otbor.py', 'pilot_sayty_dobor.py', 'kc_kontakty.py', 'kc_dorazmetka.py', 'pilot_dop_proverka.py',
             'pilot_pasport.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py', 'kc_oproverzhenie.py', 'kc_glubokiy_vhod.py',
             'kc_agent_glubokiy.py', 'kc_agent_glubokiy.py:хвост', 'kc_agent_pereproverka.py']
 С_ШАГА = int(os.environ.get('PILOT_S_SHAGA', '0'))
@@ -36,8 +36,8 @@ DIR = r'C:\sender\server'
 ПИТОН_ПАНЕЛИ = r'C:\Program Files\Python311\python.exe'
 # 09.10, проба: сайты, найденные агентами и подтверждённые перепроверкой (ИНН/название на странице), — в список, затем
 # обход и проверки по новым сайтам (Конфектум: export31.ru -> confectum.org)
-ПОСЛЕ_АГЕНТОВ = ['pilot_sayty_agentov.py', 'kc_kontakty.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py',
-                 'kc_oproverzhenie.py']
+ПОСЛЕ_АГЕНТОВ = ['pilot_sayty_agentov.py', 'kc_kontakty.py', 'kc_dorazmetka.py', 'kc_audit.py', 'kc_audit2.py',
+                 'kc_sayt_proverka.py', 'kc_oproverzhenie.py']
 
 
 def питон(файл):
@@ -267,6 +267,7 @@ class Волны:
             return
         self.пуск('pilot_sayty_dobor.py', фоном=True)
         self.пуск('kc_kontakty.py')
+        self.пуск('kc_dorazmetka.py')  # 09.10: разметка, сорванная шлюзом, — заново по фрагментам
         for ш in ('pilot_dop_proverka.py', 'pilot_pasport.py'):
             self.пуск(ш, фоном=True)
         for ш in ('kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py', 'kc_oproverzhenie.py', 'kc_glubokiy_vhod.py'):
@@ -286,6 +287,7 @@ class Волны:
                     self.o['стоп'] = 'шаг %s упал — дальше без него нельзя' % ш
                     self.статус()
                     return False
+        self.пуск('kc_dorazmetka.py')
         for ш in ('pilot_dop_proverka.py', 'pilot_pasport.py'):
             self.пуск(ш, фоном=True)
         for ш in ('kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py', 'kc_oproverzhenie.py', 'kc_glubokiy_vhod.py'):

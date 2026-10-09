@@ -60,13 +60,15 @@ def запрос(движок, q, стр):
     with _лок:
         СЧЁТ['запросов'] += 1
     xml, ошибка = '', ''
-    for попытка in range(8):
+    for попытка in range(10):
         try:
             with НП.open(url, timeout=120) as r:
                 xml = r.read(3000000).decode('utf-8', 'replace')
         except Exception as e:  # noqa: BLE001
             ошибка = repr(e)[:80]
-            time.sleep(5)
+            # 09.10, полный прогон: HTTP 429 (слишком часто — поиск вместе с сайтами по названию и обходом) — пауза
+            # с нарастанием, а не 5 с: иначе 38% запросов за полчаса уходили в ошибки
+            time.sleep(min(90, 15 * (попытка + 1)) if '429' in ошибка else 5)
             continue
         ош = re.search(r'<error[^>]*>(.*?)</error>', xml, re.S)
         ошибка = чист(ош.group(1)) if ош else ''
