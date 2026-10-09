@@ -70,6 +70,9 @@ for метка, назв in (('dovodka4', 'Перепрогон 110 (v2: кэш 
         пары = re.findall(r'готово (\d+)/(\d+)', т) or re.findall(r'(\d+)/(\d+)', т)
         м = re.findall(r'в очереди (\d+)', т)
         с, в = (int(пары[-1][0]), int(пары[-1][1])) if пары else (0, int(м[-1]) if м else None)
+        if шаг == 'kc_kontakty.py' and o.get('версия'):  # лог пишет раз в 20 компаний — точнее по записям версии
+            с = sum(1 for x in io.open(os.path.join(DIR, НАБОР + '-kontakty.jsonl'), encoding='utf-8', errors='replace')
+                    if '"версия": "%s"' % o['версия'] in x)
         строка(назв, имя, с, в, 'идёт', мин_с(v.get('старт')), 'с %s' % v.get('старт'))
 
 # 2) сравнение с серверным обогатителем на новых сайтах
