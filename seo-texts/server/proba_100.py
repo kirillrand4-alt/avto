@@ -11,6 +11,7 @@ r"""Тестовая партия: 100 наиболее разных компа�
 """
 import collections
 import random
+import re
 import sys
 
 from openpyxl import Workbook, load_workbook
@@ -31,11 +32,18 @@ def инн(r):
     return str(r.get('ИНН / УНП') or r.get('ИНН') or '')
 
 
+def сегмент(с):
+    """Сегмент без хвостов «— ИНН не определён», «(Беларусь)», «— по сайту…» и номера группы (09.10: у сайтов без ИНН и
+    белорусов сегмент — формулировка модели, и каждая шла отдельным «сегментом»: в выборке было 28 белорусов из 100)."""
+    с = re.split(r' — | \(Беларусь\)', str(с or ''))[0]
+    return re.sub(r'\s*\([^)]*\)\s*$', '', с).strip().lower() or 'не указан'
+
+
 def выбрать(компании, n=100):
     rnd = random.Random(7)
     по_сегм = collections.defaultdict(list)
     for r in компании:
-        по_сегм[str(r.get('Сегмент') or '')].append(r)
+        по_сегм[сегмент(r.get('Сегмент'))].append(r)
     for сп in по_сегм.values():
         rnd.shuffle(сп)
     выбор, регионы = [], collections.Counter()
@@ -85,7 +93,7 @@ def main(п_in, п_out):
     свод = [
         ['Компаний в партии (весь список теста)', len(компании)],
         ['Выбрано для проверки', len(выбор)],
-        ['Сегментов', len({r.get('Сегмент') for r in выбор})],
+        ['Сегментов', len({сегмент(r.get('Сегмент')) for r in выбор})],
         ['Регионов', len({r.get('Регион') for r in выбор})],
         ['Страны', ', '.join('%s %d' % kv for kv in collections.Counter(r.get('Страна') for r in выбор).items())],
         ['С сайтом', доля(lambda r: r.get('Сайт'))],

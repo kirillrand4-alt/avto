@@ -12,7 +12,7 @@ p = subprocess.Popen([python, '-u', os.path.join(DIR, 'kc_kontakty.py'), '--nabo
                      cwd=DIR, creationflags=0x08 | 0x200, stdin=subprocess.DEVNULL,
                      stdout=выход, stderr=subprocess.STDOUT, close_fds=False,
                      env=dict(os.environ, KC_NABOR=НАБОР, POISK_NABOR=НАБОР, KC_CEL='meyer', POISK_NE_ZHDAT='1',
-                              KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT='1e9', KC_POTOKOV=os.environ.get('KC_POTOKOV_PROBA', '64'),
+                              KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT='1e9', KC_POTOKOV=os.environ.get('KC_POTOKOV_PROBA', '24'),
                               PROVIDER_MODEL='gpt-6-luna', PROVIDER_FALLBACK_CHEAP='gpt-6-luna'))
 выход.close()
 time.sleep(40)
