@@ -140,7 +140,9 @@ def checko(к):
                        r'about-us|о-нас|kompaniya|struktur|rukovod|руковод|team|komanda|команд|management|leadership|'
                        r'direkc|дирекц|administr|администрац|menedzhment|менеджмент|sotrudnik|сотрудник|personal|персонал|'
                        r'otdel|отдел|podrazdel|подразделен|zakup|закуп|snab|снабж|tender|тендер|purchas|procure|'
-                       r'kontaktnaya|spravochn|справочн|telefon|телефон', re.I)
+                       r'kontaktnaya|spravochn|справочн|telefon|телефон|'
+                       # 09.10, проба: снабжение часто на «Партнёрам/Поставщикам» (bekovocandy.ru/partners: snab@)
+                       r'partner|партнер|партнёр|postavshik|поставщик|supplier|vendor', re.I)
 ВТОРОЙ_УРОВЕНЬ = re.compile(r'kontakt|contact|о-компании|o-kompanii|about|company|o-nas|kompaniya|struktur|контакт|'
                             r'о-нас', re.I)
 
