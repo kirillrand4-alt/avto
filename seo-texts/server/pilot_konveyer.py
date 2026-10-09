@@ -18,8 +18,10 @@ DIR = r'C:\sender\server'
 ДРОП = r'C:\seostat\drop\drop-storage'
 НАБОР = os.environ.get('POISK_NABOR', 'pilot')  # для полного прогона — свой набор (meyer7 и т.п.)
 СТАТУС = os.path.join(DIR, НАБОР + '-konveyer.json')
-ВСЕ_ШАГИ = ['poisk_razbor.py', 'pilot_otbor.py', 'kc_kontakty.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py',
-            'kc_oproverzhenie.py', 'kc_glubokiy_vhod.py', 'kc_agent_glubokiy.py', 'kc_agent_pereproverka.py']
+# 09.10: + сайты по названию для компаний из каталогов (после отбора) и проверка доп. ОКВЭД по сайту (после обхода)
+ВСЕ_ШАГИ = ['poisk_razbor.py', 'pilot_otbor.py', 'pilot_sayty_dobor.py', 'kc_kontakty.py', 'pilot_dop_proverka.py',
+            'pilot_pasport.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py', 'kc_oproverzhenie.py', 'kc_glubokiy_vhod.py',
+            'kc_agent_glubokiy.py', 'kc_agent_pereproverka.py']
 С_ШАГА = int(os.environ.get('PILOT_S_SHAGA', '0'))
 # модель по шагам (сравнение моделей 09.10, решение владельца «согласен»): GPT-6 Luna — классификация (94% совпадения с
 # эталоном при $0,0002 за вызов), GPT-6 Sol — проверка сайта (лучшая, 96%) и агенты-исследователи (многошаговые)
@@ -68,13 +70,14 @@ def main():
         o['шаги'][ключ].update({'конец': time.strftime('%Y-%m-%d %H:%M'), 'код': r.returncode,
                                'хвост': io.open(лог, encoding='utf-8', errors='replace').read()[-500:]})
         статус(o)
-        if r.returncode != 0 and шаг in ('poisk_razbor.py', 'pilot_otbor.py', 'kc_kontakty.py'):
+        if r.returncode != 0 and шаг in ('poisk_razbor.py', 'pilot_otbor.py', 'pilot_sayty_dobor.py', 'kc_kontakty.py'):
             o['стоп'] = 'шаг %s упал — дальше без него нельзя' % шаг
             статус(o)
             return
     for ф in (НАБОР + x for x in ('-razbor.jsonl', '-spisok.json', '-reestr.json', '-zenka.json', '-kontakty.jsonl',
                                    '-audit.jsonl', '-audit2.jsonl', '-sayt-proverka.jsonl', '-oprov.jsonl', '-glubokiy.jsonl',
-                                   '-glubokiy2.jsonl', '-serp.jsonl')):
+                                   '-glubokiy2.jsonl', '-serp.jsonl', '-dop.jsonl', '-sayty-dobor.jsonl', '-klass.jsonl',
+                                   '-pasport.jsonl')):
         if os.path.exists(os.path.join(DIR, ф)):
             shutil.copyfile(os.path.join(DIR, ф), os.path.join(ДРОП, ф))
     o['конец'] = time.strftime('%Y-%m-%d %H:%M')

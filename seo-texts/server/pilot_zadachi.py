@@ -17,7 +17,8 @@
 
     python3 pilot_zadachi.py          # первый прогон (выборка под баланс 95 ₽)
     python3 pilot_zadachi.py полный   # полный тест (после пополнения xmlriver 08.10)
-    python3 pilot_zadachi.py вся meyer7 3 1   # ПОЛНЫЙ ПРОГОН: все регионы, Яндекс 3 стр., Google 1 стр.
+    python3 pilot_zadachi.py вся meyer7 3 1   # полный каталог на все регионы (дорого: ~680 тыс. запросов)
+    python3 pilot_zadachi.py экономный meyer7 600 200   # ЭКОНОМНЫЙ ПРОГОН (план, п. 3): топ-600 шаблонов по отдаче пилота
 """
 import json
 import os
@@ -97,6 +98,58 @@ def вся_страна(набор, стр_я=3, стр_g=1):
     print(п, len(задачи), 'задач; Яндекс', y, 'Google', g, '≈ ₽', round((y + g) * 0.025))
 
 
+def чистый(q):
+    """У запросов критика бывает обвязка «шаблон: <запрос> | пробел: <пояснение>» — в поиск идёт только <запрос>."""
+    q = re.sub(r'^\s*шаблон:\s*', '', q, flags=re.I)
+    return ' '.join(q.split('|')[0].split())
+
+
+def экономный(набор, шаблонов=600, google_шаблонов=200, google_без_региона=300):
+    """ЭКОНОМНЫЙ ПРОГОН (владелец 09.10: «экономный, с урезанными запросами»). Рейтинг шаблонов — по отдаче в пилоте
+    (meyer-zaprosy/pilot-rang-vse.json: компаний на запрос в 3 регионах пилота, pilot_sim_nasyshchenie.py).
+      * без региона — все запросы каталога, кроме давших 0 компаний в пилоте; Google — топ google_без_региона;
+      * «под регион» — топ `шаблонов` по отдаче × 89 регионов РФ + 7 РБ (беларусь_* — только РБ); Яндекс стр. 1,
+        стр. 2 — если стр. 1 дала >= 2 новых сайтов (правило в pilot_poisk, «страниц»: -1); Google стр. 1 — топ google_шаблонов;
+      * поток «регион × группа» — мягкая остановка в pilot_poisk (20 запросов подряд дали < 3 новых сайтов).
+    Выход: <набор>-zadachi.json."""
+    sys.path.insert(0, DIR)
+    from poisk_zaprosy import РЕГИОНЫ
+    РБ = ['Минская область', 'Брестская область', 'Витебская область', 'Гомельская область', 'Гродненская область',
+          'Могилёвская область', 'Минск']
+    ранг = json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'pilot-rang-vse.json'), encoding='utf-8'))
+    отдача = {r[0]: r[1] / max(1, r[2]) for r in ранг}
+    к = [з for з in json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'katalog.json'), encoding='utf-8'))['записи']
+         if з['это_запрос'] and not РЫБА.search(з['запрос'])]
+
+    def ключ(з):
+        return ' '.join(з['запрос'].lower().split())
+    шабл = sorted((з for з in к if з['шаблон']), key=lambda з: -отдача.get(ключ(з), 0.5))
+    шабл = [з for з in шабл if отдача.get(ключ(з), 0.5) > 0][:шаблонов]
+    без = sorted((з for з in к if not з['шаблон'] and отдача.get(ключ(з), 0.5) > 0), key=lambda з: -отдача.get(ключ(з), 0.5))
+    задачи, видел = [], set()
+
+    def доб(q, з, рег, google, стр, ранг_):
+        q = чистый(q)
+        if not q or q.lower() in видел:
+            return
+        видел.add(q.lower())
+        задачи.append({'q': q, 'вид': з['вид'], 'рег': рег, 'агентов': len(з['источники']), 'группа': 'РБ' if рег in РБ else ('РФ' if рег else 'без региона'),
+                       'поток': (рег or 'без региона') + '|' + з['вид'], 'ранг': ранг_,
+                       'движки': ['yandex', 'google'] if google else ['yandex'], 'страниц': стр, 'страниц_g': 1})
+    for n, з in enumerate(без):
+        доб(з['запрос'].replace('{отрасль}', ''), з, '', n < google_без_региона, 1, n)
+    for n, з in enumerate(шабл):
+        for рег in (РБ if з['вид'].startswith('беларусь_') else РЕГИОНЫ + РБ):
+            доб(з['запрос'].replace('{регион}', рег).replace('{отрасль}', ''), з, рег, n < google_шаблонов, -1, n)
+    задачи.sort(key=lambda т: (т['рег'] != '', т['ранг']))
+    п = os.path.join(DIR, набор + '-zadachi.json')
+    with open(п, 'w', encoding='utf-8') as f:
+        json.dump(задачи, f, ensure_ascii=False, separators=(',', ':'))
+    y = len(задачи)
+    g = sum(1 for т in задачи if 'google' in т['движки'])
+    print(п, y, 'задач; Яндекс стр.1', y, '(+ стр.2 по правилу, ~20%) ; Google', g, '≈ ₽', round((y * 1.2 + g) * 0.025))
+
+
 def main():
     random.seed(8)
     к = [з for з in json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'katalog.json'), encoding='utf-8'))['записи']
@@ -148,7 +201,9 @@ def main():
 
 
 if __name__ == '__main__':
-    if sys.argv[1:2] == ['вся']:  # python3 pilot_zadachi.py вся <набор> [стр_яндекс] [стр_google]
+    if sys.argv[1:2] == ['экономный']:  # python3 pilot_zadachi.py экономный <набор> [шаблонов] [google_шаблонов]
+        экономный(sys.argv[2], *(int(x) for x in sys.argv[3:5]))
+    elif sys.argv[1:2] == ['вся']:  # python3 pilot_zadachi.py вся <набор> [стр_яндекс] [стр_google]
         вся_страна(sys.argv[2], *(int(x) for x in sys.argv[3:5]))
     elif 'полный' in sys.argv[1:]:
         полный()

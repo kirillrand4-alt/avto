@@ -190,6 +190,31 @@ def ссылки_kc(база, html):
     return out
 
 
+# паспорт сайта (site_facts.py) читает страницы из кэша <ИНН>.json.gz — обход кладёт туда скачанное (09.10: без этого
+# у компаний нового сбора паспорт не собирался вовсе)
+КЭШ_СТРАНИЦ = os.environ.get('PAGECACHE_DIR', r'C:\seostat\drop\pagecache')
+
+
+def в_кэш(ключ, сырые):
+    import gzip
+    if not сырые:
+        return
+    try:
+        os.makedirs(КЭШ_СТРАНИЦ, exist_ok=True)
+        п = os.path.join(КЭШ_СТРАНИЦ, '%s.json.gz' % re.sub(r'[^\w.-]', '_', ключ))
+        было = {}
+        if os.path.exists(п):
+            with gzip.open(п, 'rb') as f:
+                было = {x.get('url'): x for x in (json.loads(f.read().decode('utf-8', 'replace')).get('pages') or [])}
+        for u, h in сырые.items():
+            было[u] = {'url': u, 'html': (h or '')[:400000], 'ts': time.strftime('%Y-%m-%dT%H:%M:%S')}
+        with gzip.open(п + '.tmp', 'wb') as f:
+            f.write(json.dumps({'inn': ключ, 'pages': list(было.values())}, ensure_ascii=False).encode('utf-8'))
+        os.replace(п + '.tmp', п)
+    except Exception:  # noqa: BLE001
+        pass  # кэш — не главное: обход не должен падать из-за него
+
+
 def обход(к, сайт):
     старт = сайт if сайт.startswith('http') else 'https://' + сайт
     очередь = [старт] + [u for u in к.get('страницы_базы', []) if u.startswith('http')][:6]
@@ -299,6 +324,7 @@ def обход(к, сайт):
         кусочки.append(re.sub(r'\s+', ' ', т)[:2200])
     опис = модель(ПРОМПТ_ОПИС.format(название=к['имя'], инн=к['inn'], домен=MN.домен(старт), оквэд=к['осн'],
                                      текст='\n---\n'.join(кусочки)[:8000]), False) if кусочки else {}
+    в_кэш(к['inn'], сырые)
     return {'сайт': старт, 'страницы': страницы, 'номера': list(номера.values()), 'инн_живой': инн_живой,
             'описание': опис.get('описание', ''), 'продукция': опис.get('продукция', ''), 'мощности': опис.get('мощности', '')}
 
