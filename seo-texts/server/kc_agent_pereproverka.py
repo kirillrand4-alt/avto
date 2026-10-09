@@ -133,7 +133,7 @@ def main():
             вх[x['inn']] = x
     if os.path.exists(ВЫХОД):
         os.remove(ВЫХОД)
-    with ThreadPoolExecutor(12) as ex:
+    with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV_SHAGA', '12'))) as ex:  # 09.10: на полном прогоне 24
         list(ex.map(lambda x: одна(x, сп[x['inn']]), [x for x in вх.values() if x['inn'] in сп]))
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-glubokiy2.jsonl'))
     рез = [json.loads(s) for s in io.open(ВЫХОД, encoding='utf-8')]

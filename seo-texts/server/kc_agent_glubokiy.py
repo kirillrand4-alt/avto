@@ -239,7 +239,8 @@ def main():
         if n[0] % 10 == 0:
             print('готово %d/%d' % (n[0], len(задачи)), flush=True)
 
-    with ThreadPoolExecutor(10) as ex:
+    # 09.10: агент идёт 6–8 мин (страницы, поиск, модель) — на полном прогоне 30–40 потоков
+    with ThreadPoolExecutor(int(os.environ.get('KC_AGENT_POTOKOV', '10'))) as ex:
         list(ex.map(шаг, задачи))
     shutil.copyfile(ВЫХОД, os.path.join(ДРОП, НАБОР + '-glubokiy.jsonl'))
     print('готово', flush=True)

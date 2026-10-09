@@ -81,7 +81,7 @@ def main():
         os.remove(ВЫХОД)
     задачи = [(к, конт[i]) for i, к in сп.items()
               if i in конт and конт[i].get('сайт') and хост(конт[i]['сайт']) == хост(к['сайт'])]
-    with ThreadPoolExecutor(8) as ex:
+    with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV_SHAGA', '8'))) as ex:  # 09.10: на полном прогоне 24
         list(ex.map(lambda x: одна(*x), задачи))
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-audit.jsonl'))
     сч = {'компаний': len(задачи), 'сайт': {}, 'номера': {}}

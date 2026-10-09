@@ -149,7 +149,7 @@ def main():
         if n[0] % 25 == 0:
             print('проверено %d/%d' % (n[0], len(задачи)), flush=True)
 
-    with ThreadPoolExecutor(10) as ex:
+    with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV_SHAGA', '10'))) as ex:  # 09.10: на полном прогоне 24
         list(ex.map(шаг, задачи))
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-sayt-proverka.jsonl'))
     сч = {}

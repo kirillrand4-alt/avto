@@ -21,11 +21,14 @@ DIR = r'C:\sender\server'
 # 09.10: + сайты по названию для компаний из каталогов (после отбора) и проверка доп. ОКВЭД по сайту (после обхода)
 ВСЕ_ШАГИ = ['poisk_razbor.py', 'pilot_otbor.py', 'pilot_sayty_dobor.py', 'kc_kontakty.py', 'pilot_dop_proverka.py',
             'pilot_pasport.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py', 'kc_oproverzhenie.py', 'kc_glubokiy_vhod.py',
-            'kc_agent_glubokiy.py', 'kc_agent_pereproverka.py']
+            'kc_agent_glubokiy.py', 'kc_agent_glubokiy.py:хвост', 'kc_agent_pereproverka.py']
 С_ШАГА = int(os.environ.get('PILOT_S_SHAGA', '0'))
 # модель по шагам (сравнение моделей 09.10, решение владельца «согласен»): GPT-6 Luna — классификация (94% совпадения с
 # эталоном при $0,0002 за вызов), GPT-6 Sol — проверка сайта (лучшая, 96%) и агенты-исследователи (многошаговые)
-МОДЕЛЬ_ШАГА = {'kc_sayt_proverka.py': 'gpt-6-sol', 'kc_agent_glubokiy.py': 'gpt-6-sol'}
+# агенты в два прохода (владелец 09.10 «давай»): первые KC_AGENT_LIMIT крупных по выручке — Sol, остальные («хвост»;
+# сделанные агент пропускает сам) — AGENT_HVOST_MODEL; «нет» — хвост не запускать
+МОДЕЛЬ_ШАГА = {'kc_sayt_proverka.py': 'gpt-6-sol', 'kc_agent_glubokiy.py': 'gpt-6-sol',
+               'kc_agent_glubokiy.py:хвост': os.environ.get('AGENT_HVOST_MODEL', 'gpt-6-luna')}
 МОДЕЛЬ_ОСН = os.environ.get('PILOT_MODEL', 'gpt-6-luna')
 ШАГИ = ВСЕ_ШАГИ[С_ШАГА:]
 
@@ -45,25 +48,47 @@ def поиск_готов():
     return 'готово' in io.open(логи[-1], encoding='utf-8', errors='replace').read()[-600:]
 
 
+def разбор_жив():
+    """Ранний разбор (_pusk_*_razbor.py) ещё идёт? Два разбора в один файл писать не должны."""
+    r = subprocess.run(['powershell', '-NoProfile', '-Command',
+                        "(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*server\\poisk_razbor.py*' }).Count"],
+                       capture_output=True, text=True, timeout=120)
+    return (r.stdout.strip() or '0') not in ('0', '')
+
+
 def main():
     o = {'начало': time.strftime('%Y-%m-%d %H:%M'), 'шаги': {}}
     while not поиск_готов():
         o['ждём'] = 'поиск ещё идёт ' + time.strftime('%H:%M')
         статус(o)
         time.sleep(60)
+    while разбор_жив():
+        o['ждём'] = 'ранний разбор ещё идёт ' + time.strftime('%H:%M')
+        статус(o)
+        time.sleep(60)
     o.pop('ждём', None)
     env = dict(os.environ, KC_NABOR=НАБОР, POISK_NABOR=НАБОР, KC_CEL='meyer', POISK_NE_ZHDAT='1',
-               POISK_CHECKO_MINUT='40', KC_AGENT_LIMIT=os.environ.get('KC_AGENT_LIMIT', '60'),
-               KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT=os.environ.get('KC_ZAKUPKI_OT', '1e9'))
+               POISK_CHECKO_MINUT='40', KC_AGENT_LIMIT=os.environ.get('KC_AGENT_LIMIT', '1000'),
+               KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT=os.environ.get('KC_ZAKUPKI_OT', '1e9'),
+               KC_POTOKOV_SHAGA=os.environ.get('KC_POTOKOV_SHAGA', '24'), KC_AGENT_POTOKOV=os.environ.get('KC_AGENT_POTOKOV', '30'),
+               PASPORT_POTOKOV=os.environ.get('PASPORT_POTOKOV', '24'),
+               KC_POTOKOV=os.environ.get('KC_POTOKOV', '24'))  # обход: без этого у не-pilot наборов 6 потоков
     for n, шаг in enumerate(ШАГИ):
         ключ = '%d %s' % (n + 1 + С_ШАГА, шаг)
-        o['шаги'][ключ] = {'старт': time.strftime('%Y-%m-%d %H:%M')}
+        модель = МОДЕЛЬ_ШАГА.get(шаг, МОДЕЛЬ_ОСН)
+        if модель == 'нет':
+            continue
+        файл, _, режим = шаг.partition(':')
+        env_шага = dict(env, PROVIDER_MODEL=модель)
+        if режим == 'хвост':
+            env_шага.pop('KC_AGENT_LIMIT', None)  # все оставшиеся
+        o['шаги'][ключ] = {'старт': time.strftime('%Y-%m-%d %H:%M'), 'модель': модель}
         статус(o)
-        лог = os.path.join(DIR, 'konveyer_%s_%s_%s.log' % (НАБОР, шаг[:-3], time.strftime('%d%m-%H%M')))
+        лог = os.path.join(DIR, 'konveyer_%s_%s_%s.log' % (НАБОР, файл[:-3] + ('_' + режим if режим else ''),
+                                                           time.strftime('%d%m-%H%M')))
         for попытка in range(2):
             with open(лог, 'ab') as f:
-                r = subprocess.run([sys.executable, '-u', os.path.join(DIR, шаг)], cwd=DIR,
-                                   env=dict(env, PROVIDER_MODEL=МОДЕЛЬ_ШАГА.get(шаг, МОДЕЛЬ_ОСН)),
+                r = subprocess.run([sys.executable, '-u', os.path.join(DIR, файл)], cwd=DIR, env=env_шага,
                                    stdout=f, stderr=subprocess.STDOUT)
             if r.returncode == 0:
                 break

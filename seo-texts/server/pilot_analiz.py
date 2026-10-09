@@ -8,7 +8,7 @@
   * Яндекс против Google на одних и тех же запросах;
   * сайты против каталогов; Беларусь — белорусские формулировки против российских.
 
-    python3 pilot_analiz.py <папка с pilot-serp.jsonl, pilot-razbor.jsonl, pilot-spisok.json> [out.json]
+    python3 pilot_analiz.py <папка с <набор>-serp.jsonl, -razbor.jsonl, -spisok.json> [out.json] [набор, по умолчанию pilot]
 """
 import collections
 import json
@@ -23,11 +23,11 @@ def хост(u):
     return h[4:] if h.startswith('www.') else h
 
 
-def main(п, out=None):
-    serp = [json.loads(s) for s in open(os.path.join(п, 'pilot-serp.jsonl'), encoding='utf-8', errors='replace')]
+def main(п, out=None, набор='pilot'):
+    serp = [json.loads(s) for s in open(os.path.join(п, набор + '-serp.jsonl'), encoding='utf-8', errors='replace')]
     serp = [з for з in serp if з.get('итог') == 'ok']
     сайт_кл, кат_кл = collections.defaultdict(set), collections.defaultdict(set)
-    for s in open(os.path.join(п, 'pilot-razbor.jsonl'), encoding='utf-8', errors='replace'):
+    for s in open(os.path.join(п, набор + '-razbor.jsonl'), encoding='utf-8', errors='replace'):
         try:
             з = json.loads(s)
         except ValueError:
@@ -39,7 +39,7 @@ def main(п, out=None):
             сайт_кл[з['домен']] |= кл
         else:
             кат_кл[з['url']] |= set(з.get('инн_url') or []) | set(з.get('инн') or [])
-    сп = json.load(open(os.path.join(п, 'pilot-spisok.json'), encoding='utf-8'))
+    сп = json.load(open(os.path.join(п, набор + '-spisok.json'), encoding='utf-8'))
     список = {i for i, к in сп['компании'].items() if not к['откуда'].startswith('реестр')}
     видно = collections.defaultdict(list)  # компания -> [(группа, вид, движок, стр, через, запрос)]
     по_выдаче = []
@@ -128,4 +128,4 @@ def main(п, out=None):
 
 
 if __name__ == '__main__':
-    main(*sys.argv[1:3])
+    main(*sys.argv[1:4])
