@@ -96,8 +96,11 @@ for n, (шаг, имя, модель) in enumerate(ЭТАПЫ):
             прошло = (time.time() - os.path.getctime(лп[-1])) / 60
             if р['сделано']:
                 р['осталось_мин'] = round(прошло * (р['всего'] - р['сделано']) / р['сделано'])
-    elif шаг in по_файлу:
-        v = по_файлу[шаг]
+    elif шаг in по_файлу or (шаг == 'poisk_razbor.py' and лог_шага(шаг)):
+        # разбор мог идти отдельным процессом (_pusk_meyer7t_razbor.py), а не шагом конвейера
+        v = по_файлу.get(шаг) or {'конец': 'да' if 'готово' in лог_шага(шаг)[-200:] else '', 'код': 0,
+                                  'старт': time.strftime('%Y-%m-%d %H:%M', time.localtime(max(
+                                      os.path.getmtime(x) for x in glob.glob(os.path.join(DIR, 'konveyer_%s_poisk_razbor_*.log' % НАБОР))) - 60))}
         if v.get('конец'):
             р['состояние'] = 'готово' if v.get('код') == 0 else 'ошибка'
         else:
