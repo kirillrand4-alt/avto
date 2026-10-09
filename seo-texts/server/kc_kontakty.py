@@ -144,6 +144,37 @@ def checko(к):
                             r'о-нас', re.I)
 
 
+# страницы людей (владелец 09.10: «ещё есть команда, внутри пагинация и карточки сотрудников»): на странице
+# команды/руководства/сотрудников/отделов берём её пагинацию и дочерние страницы (карточки людей)
+ЛЮДИ = re.compile(r'team|komand|команд|rukovod|руковод|sotrudnik|сотрудник|personal|персонал|management|leadership|staff|'
+                  r'struktur|структур|otdel|отдел|direkc|дирекц|administr|администрац|specialist|специалист|people|'
+                  r'kontakt|contact|контакт', re.I)
+ПАГИНАЦИЯ = re.compile(r'[?&](page|PAGEN_\d+|p|pg|start)=\d+|/page/\d+|/stranica-\d+', re.I)
+
+
+def люди_ссылки(база, html):
+    """Пагинация и карточки сотрудников со страницы людей: свой домен, тот же раздел (путь начинается с пути
+    страницы или её родителя) или ссылка пагинации."""
+    путь = urllib.parse.urlsplit(база).path.rstrip('/')
+    родитель = путь.rsplit('/', 1)[0] if путь.count('/') > 1 else путь
+    свой = MN.домен(база)
+    стр, карточки = [], []
+    for м in re.finditer(r'<a\b[^>]*href=["\']([^"\'#]+)["\']', html, re.I):
+        href = м.group(1).strip()
+        if href.startswith(('mailto:', 'tel:', 'javascript:')) or re.search(r'\.(pdf|jpe?g|png|docx?|xlsx?|zip)$', href, re.I):
+            continue
+        u = urllib.parse.urljoin(база, href)
+        if MN.домен(u) != свой or u.rstrip('/') == база.rstrip('/'):
+            continue
+        п = urllib.parse.urlsplit(u).path.rstrip('/')
+        if ПАГИНАЦИЯ.search(u) and (п == путь or п.startswith(путь + '/') or п.startswith(родитель + '/')):
+            if u not in стр:
+                стр.append(u)
+        elif путь and п.startswith(путь + '/') and п != путь and u not in карточки:
+            карточки.append(u)
+    return стр[:10], карточки[:30]
+
+
 def ссылки_kc(база, html):
     out = []
     свой = MN.домен(база)
@@ -164,7 +195,8 @@ def обход(к, сайт):
     очередь = [старт] + [u for u in к.get('страницы_базы', []) if u.startswith('http')][:6]
     тексты, страницы, сырые = {}, [], {}
     i = 0
-    while i < len(очередь) and len(тексты) < 15:
+    люди_доп = 0  # сверх 15 страниц: пагинация и карточки сотрудников, до 40
+    while i < len(очередь) and len(тексты) < 15 + люди_доп:
         u = очередь[i]
         i += 1
         ст, html, _ = MN.скачать(u)
@@ -177,6 +209,12 @@ def обход(к, сайт):
             for л in ссылки_kc(u, html)[:12 if i == 1 else 6]:
                 if л not in очередь:
                     очередь.append(л)
+        if i > 1 and ЛЮДИ.search(urllib.parse.unquote(urllib.parse.urlsplit(u).path)):
+            стр, карточки = люди_ссылки(u, html)
+            for л in стр + карточки:
+                if л not in очередь and люди_доп < 40:
+                    очередь.append(л)
+                    люди_доп += 1
     номера = {}
     for u, т in тексты.items():
         for м in CO.ТЕЛ.finditer(т):
