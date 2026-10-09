@@ -52,10 +52,13 @@ def записать(з):
 
 
 def разбор_идёт():
+    # 09.10: «(...).Count» из Python возвращал пусто при живом процессе — перечисляем PID (только python: командная
+    # строка самого powershell тоже содержит шаблон)
     r = subprocess.run(['powershell', '-NoProfile', '-Command',
-                        "(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*server\\poisk_razbor.py*' }).Count"],
+                        "Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' -and "
+                        "$_.CommandLine -like '*server\\poisk_razbor.py*' } | ForEach-Object { $_.ProcessId }"],
                        capture_output=True, text=True, timeout=120)
-    return (r.stdout.strip() or '0') not in ('0', '')
+    return bool(r.stdout.split())
 
 
 def очередь():

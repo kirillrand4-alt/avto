@@ -49,12 +49,20 @@ def поиск_готов():
     return 'готово' in io.open(логи[-1], encoding='utf-8', errors='replace').read()[-600:]
 
 
+def питон_жив(шаблон):
+    """Есть живой python-процесс с командной строкой по шаблону -like. 09.10: «(...).Count» из Python возвращал пусто
+    при живом процессе (доводка пробы стартовала раньше конца обхода) — перечисляем PID; фильтр по имени python
+    обязателен: командная строка самого powershell тоже содержит шаблон."""
+    r = subprocess.run(['powershell', '-NoProfile', '-Command',
+                        "Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' -and "
+                        "$_.CommandLine -like '%s' } | ForEach-Object { $_.ProcessId }" % шаблон],
+                       capture_output=True, text=True, timeout=120)
+    return bool(r.stdout.split())
+
+
 def разбор_жив():
     """Ранний разбор (_pusk_*_razbor.py) ещё идёт? Два разбора в один файл писать не должны."""
-    r = subprocess.run(['powershell', '-NoProfile', '-Command',
-                        "(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*server\\poisk_razbor.py*' }).Count"],
-                       capture_output=True, text=True, timeout=120)
-    return (r.stdout.strip() or '0') not in ('0', '')
+    return питон_жив('*server\\poisk_razbor.py*')
 
 
 def main():
@@ -133,10 +141,7 @@ def метка(шаг):
 
 def процесс_идёт(шаг):
     """Живой python-процесс этого шага этого набора (метка — последние аргументы командной строки)."""
-    r = subprocess.run(['powershell', '-NoProfile', '-Command',
-                        "(Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' -and "
-                        "$_.CommandLine -like '*%s' }).Count" % метка(шаг)], capture_output=True, text=True, timeout=120)
-    return (r.stdout.strip() or '0') not in ('0', '')
+    return питон_жив('*' + метка(шаг))
 
 
 class Волны:
@@ -302,10 +307,7 @@ class Волны:
 
 def разбор_жив_чужой():
     """Разбор, запущенный не волнами (ранний разбор _pusk_*_razbor.py: в его командной строке нет метки набора)."""
-    r = subprocess.run(['powershell', '-NoProfile', '-Command',
-                        "(Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' -and "
-                        "$_.CommandLine -like '*server\\poisk_razbor.py' }).Count"], capture_output=True, text=True, timeout=120)
-    return (r.stdout.strip() or '0') not in ('0', '')
+    return питон_жив('*server\\poisk_razbor.py')
 
 
 if __name__ == '__main__':
