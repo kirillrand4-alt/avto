@@ -49,6 +49,26 @@ try:
 except Exception:  # noqa: BLE001
     живые = ''
 
+# 0) полный прогон (набор meyer7): полоски шагов — из статус-скрипта набора (_status_meyer7.py пишет meyer7-status.json)
+if os.path.exists(os.path.join(DIR, 'meyer7-serp.jsonl')) or os.path.exists(os.path.join(DIR, 'meyer7-konveyer.json')):
+    import contextlib
+    import runpy
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            runpy.run_path(os.path.join(DIR, '_status_meyer7.py'), run_name='__main__')
+        ст7 = json.load(io.open(os.path.join(ДРОП, 'meyer7-status.json'), encoding='utf-8'))
+        кон7 = ст7.get('конвейер_ждёт') or ''
+        for р in ст7.get('полосы', []):
+            if р['состояние'] == 'ждёт' and not р.get('сделано'):
+                строка('Полный прогон (meyer7)', р['этап'] + (' · ' + р['модель'] if р['модель'] not in ('—', '') else ''))
+                continue
+            строки.append({'ключ': '%02d' % len(строки), 'процесс': 'Полный прогон (meyer7)',
+                           'этап': р['этап'] + (' · ' + р['модель'] if р['модель'] not in ('—', '') else ''),
+                           'сделано': р['сделано'], 'всего': р['всего'], 'процент': р['процент'], 'состояние': р['состояние'],
+                           'осталось_мин': р['осталось_мин'], 'пояснение': ('волна %s' % ст7.get('волна')) if ст7.get('волна') else кон7})
+    except Exception as e:  # noqa: BLE001
+        строка('Полный прогон (meyer7)', 'статус не собран', состояние='ошибка', пояснение=repr(e)[:150])
+
 # 1) перепрогон обхода по 110 (dovodka4)
 ИМЕНА = {'kc_kontakty.py': 'Обход сайтов: номера, почты, роли', 'kc_audit.py': 'Чей номер / почта', 'kc_audit2.py': 'Чей сайт по ИНН',
          'kc_sayt_proverka.py': 'Проверка сайта (Sol)', 'kc_oproverzhenie.py': 'Опровергатели'}
