@@ -73,7 +73,10 @@ def main():
                KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT=os.environ.get('KC_ZAKUPKI_OT', '1e9'),
                KC_POTOKOV_SHAGA=os.environ.get('KC_POTOKOV_SHAGA', '24'), KC_AGENT_POTOKOV=os.environ.get('KC_AGENT_POTOKOV', '30'),
                PASPORT_POTOKOV=os.environ.get('PASPORT_POTOKOV', '24'),
-               KC_POTOKOV=os.environ.get('KC_POTOKOV', '24'))  # обход: без этого у не-pilot наборов 6 потоков
+               KC_POTOKOV=os.environ.get('KC_POTOKOV', '24'),
+               # 09.10, тест паспорта: молчащая Luna в GP.call тихо уходила на Claude Haiku (3 из 40 вызовов) — дороже и
+               # со скрытым довеском шлюза; запасная для дешёвых моделей — GPT-6 Luna (для неё самой — GPT-5.6 Luna)
+               PROVIDER_FALLBACK_CHEAP=os.environ.get('PROVIDER_FALLBACK_CHEAP', 'gpt-6-luna'))  # обход: без этого у не-pilot наборов 6 потоков
     for n, шаг in enumerate(ШАГИ):
         ключ = '%d %s' % (n + 1 + С_ШАГА, шаг)
         модель = МОДЕЛЬ_ШАГА.get(шаг, МОДЕЛЬ_ОСН)

@@ -18,6 +18,7 @@
     python3 pilot_zadachi.py          # первый прогон (выборка под баланс 95 ₽)
     python3 pilot_zadachi.py полный   # полный тест (после пополнения xmlriver 08.10)
     python3 pilot_zadachi.py вся meyer7 3 1   # полный каталог на все регионы (дорого: ~680 тыс. запросов)
+    python3 pilot_zadachi.py проба meyer7t 1500          # ТЕСТОВАЯ ПАРТИЯ: 1 500 случайных задач по всем регионам
     python3 pilot_zadachi.py экономный meyer7 600 200   # ЭКОНОМНЫЙ ПРОГОН (план, п. 3): топ-600 шаблонов по отдаче пилота
 """
 import json
@@ -150,6 +151,34 @@ def экономный(набор, шаблонов=600, google_шаблонов
     print(п, y, 'задач; Яндекс стр.1', y, '(+ стр.2 по правилу, ~20%) ; Google', g, '≈ ₽', round((y * 1.2 + g) * 0.025))
 
 
+def проба(набор, задач=1500):
+    """ТЕСТОВАЯ ПАРТИЯ (владелец 09.10: «первым делом тестовая партия по всем регионам рандомными запросами, вся цепочка,
+    100 наиболее разных компаний — проверка качества итога»). Берёт задачи экономного режима и случайно выбирает
+    `задач` штук по кругу регионов (каждый регион РФ и РБ и «без региона» — поровну), разные виды запросов.
+    Выход: <набор>-zadachi.json."""
+    экономный(набор)
+    п = os.path.join(DIR, набор + '-zadachi.json')
+    все = json.load(open(п, encoding='utf-8'))
+    rnd = random.Random(9)
+    по_рег = {}
+    for т in все:
+        по_рег.setdefault(т['рег'], []).append(т)
+    for сп in по_рег.values():
+        rnd.shuffle(сп)
+    выбор = []
+    while len(выбор) < задач and any(по_рег.values()):
+        for рег in sorted(по_рег):
+            if по_рег[рег] and len(выбор) < задач:
+                выбор.append(по_рег[рег].pop())
+    for т in выбор:
+        т['страниц'] = 1 if т['рег'] else т['страниц']  # в пробе — без листания
+    with open(п, 'w', encoding='utf-8') as f:
+        json.dump(выбор, f, ensure_ascii=False, separators=(',', ':'))
+    g = sum(1 for т in выбор if 'google' in т['движки'])
+    print(п, len(выбор), 'задач, регионов', len({т['рег'] for т in выбор}), 'видов', len({т['вид'] for т in выбор}),
+          '≈ ₽', round((len(выбор) + g) * 0.025))
+
+
 def main():
     random.seed(8)
     к = [з for з in json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'katalog.json'), encoding='utf-8'))['записи']
@@ -201,7 +230,9 @@ def main():
 
 
 if __name__ == '__main__':
-    if sys.argv[1:2] == ['экономный']:  # python3 pilot_zadachi.py экономный <набор> [шаблонов] [google_шаблонов]
+    if sys.argv[1:2] == ['проба']:  # python3 pilot_zadachi.py проба <набор> [задач]
+        проба(sys.argv[2], *(int(x) for x in sys.argv[3:4]))
+    elif sys.argv[1:2] == ['экономный']:  # python3 pilot_zadachi.py экономный <набор> [шаблонов] [google_шаблонов]
         экономный(sys.argv[2], *(int(x) for x in sys.argv[3:5]))
     elif sys.argv[1:2] == ['вся']:  # python3 pilot_zadachi.py вся <набор> [стр_яндекс] [стр_google]
         вся_страна(sys.argv[2], *(int(x) for x in sys.argv[3:5]))
