@@ -19,6 +19,7 @@ import re
 import shutil
 import sys
 import threading
+import time
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -285,12 +286,36 @@ def main():
     # и не берёт компании Sol
     if os.environ.get('KC_AGENT_DO'):
         задачи = [к for к in задачи if (к.get('выручка') or 0) < float(os.environ['KC_AGENT_DO'])]
-    if os.environ.get('KC_AGENT_LIMIT'):  # пилот 08.10: баланс xmlriver ограничен — сначала крупные
-        задачи = sorted(задачи, key=lambda к: -(к.get('выручка') or 0))[:int(os.environ['KC_AGENT_LIMIT'])]
+    # сначала крупные (09.10, полный прогон: бюджет xmlriver 3,3 тыс. ₽ — кончатся деньги, мелкие останутся без агента)
+    задачи = sorted(задачи, key=lambda к: -(к.get('выручка') or 0))
+    if os.environ.get('KC_AGENT_LIMIT'):  # пилот 08.10: баланс xmlriver ограничен
+        задачи = задачи[:int(os.environ['KC_AGENT_LIMIT'])]
     print('компаний', len(задачи), flush=True)
     n = [0]
+    # 09.10: агент без выдачи xmlriver тратит Sol впустую — ниже KC_AGENT_XML_MIN ₽ на балансе новых агентов не начинаем
+    мин_бал = float(os.environ.get('KC_AGENT_XML_MIN', '0'))
+    бал = {'t': 0, 'v': None, 'стоп': ''}
+
+    def баланс_ок():
+        if not мин_бал:
+            return True
+        with _лок:
+            if time.time() - бал['t'] > 120:
+                try:
+                    оп = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+                    бал['v'] = float(оп.open('http://xmlriver.com/api/get_balance/?user=%s&key=%s' % (
+                        os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')), timeout=30).read(100))
+                except Exception:  # noqa: BLE001
+                    pass
+                бал['t'] = time.time()
+            if бал['v'] is not None and бал['v'] < мин_бал and not бал['стоп']:
+                бал['стоп'] = 'баланс xmlriver %.1f ₽ < %.0f ₽ — новых агентов не начинаю' % (бал['v'], мин_бал)
+                print(бал['стоп'], flush=True)
+            return not бал['стоп']
 
     def шаг(к):
+        if not баланс_ок():
+            return
         try:
             одна(к)
         except Exception as e:  # noqa: BLE001
