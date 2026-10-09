@@ -119,7 +119,7 @@ def main(п, модели=None):
             if n[0] % 100 == 0:
                 print(n[0], 'потрачено $%.2f' % потрачено[0], flush=True)
 
-    with ThreadPoolExecutor(10) as ex:
+    with ThreadPoolExecutor(int(os.environ.get('BENCH_POTOKOV', '10'))) as ex:
         list(ex.map(шаг, работы))
     print('готово, потрачено $%.2f' % потрачено[0], flush=True)
 
