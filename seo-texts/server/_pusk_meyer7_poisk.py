@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# Полный прогон Meyer (план Б5): поиск набора meyer7. Резерв xmlriver PILOT_REZERV — по плану 350 ₽.
+# Полный прогон Meyer (план Б5): поиск набора meyer7. Резерв xmlriver PILOT_REZERV — 700 ₽ (09.10: баланс 3,3 тыс. ₽
+# вместо 5 по плану; резерв держит деньги агентов и сайтов по названию, если поиск выйдет дороже оценки ~1,9 тыс.).
 import json, os, subprocess, sys, time
 DIR = r'C:\sender\server'
 НАБОР = 'meyer7'
@@ -11,7 +12,7 @@ p = subprocess.Popen([python, '-u', os.path.join(DIR, 'pilot_poisk.py')],
                      cwd=DIR, creationflags=0x08 | 0x200, stdin=subprocess.DEVNULL,
                      stdout=выход, stderr=subprocess.STDOUT, close_fds=False,
                      env=dict(os.environ, POISK_NABOR=НАБОР, KC_NABOR=НАБОР, POISK_REGIONY_SVERKI='все',
-                              PILOT_REZERV=os.environ.get('PILOT_REZERV', '350')))
+                              PILOT_REZERV=os.environ.get('PILOT_REZERV', '700')))
 выход.close()
 time.sleep(90)
 o = {'pid': p.pid, 'лог': os.path.basename(ЛОГ)}

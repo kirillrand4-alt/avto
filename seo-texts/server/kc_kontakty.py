@@ -794,10 +794,44 @@ def main():
         if n[0] % 20 == 0:
             print('готово %d/%d за %d мин' % (n[0], len(очередь), (time.time() - t0) / 60), flush=True)
 
-    with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV', '24' if НАБОР == 'pilot' else '6'))) as ex:
-        list(ex.map(один, очередь))
+    # 09.10, проба v3: одна компания висела 20+ минут (обогатитель/шлюз) и держала весь шаг, а в волнах — волну.
+    # Потоки-демоны и сторож: компания дольше KC_LIMIT_MIN минут бросается (записи нет — следующий проход возьмёт её
+    # по резюму), шаг завершается; процесс при выходе не ждёт зависшие потоки
+    import queue
+    лимит = float(os.environ.get('KC_LIMIT_MIN', '25')) * 60
+    оч = queue.Queue()
+    for к in очередь:
+        оч.put(к)
+    в_работе = {}
+
+    def рабочий():
+        while True:
+            try:
+                к = оч.get_nowait()
+            except queue.Empty:
+                return
+            в_работе[threading.get_ident()] = (к['inn'], time.time())
+            try:
+                один(к)
+            finally:
+                в_работе.pop(threading.get_ident(), None)
+
+    потоки = [threading.Thread(target=рабочий, daemon=True)
+              for _ in range(int(os.environ.get('KC_POTOKOV', '24' if НАБОР == 'pilot' else '6')))]
+    for т in потоки:
+        т.start()
+    брошены = []
+    while any(т.is_alive() for т in потоки):
+        time.sleep(15)
+        if оч.empty() and в_работе and all(time.time() - t0_ > лимит for _, t0_ in list(в_работе.values())):
+            брошены = [i for i, _ in в_работе.values()]
+            break
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-kontakty.jsonl'))
+    if брошены:
+        print('брошены (дольше %d мин, возьмёт следующий проход): %s' % (лимит / 60, ', '.join(брошены)), flush=True)
     print('готово', flush=True)
+    if брошены:
+        os._exit(0)  # зависшие потоки-демоны не держат процесс
 
 
 if __name__ == '__main__':
