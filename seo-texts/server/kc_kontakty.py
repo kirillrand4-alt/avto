@@ -131,12 +131,40 @@ def checko(к):
     return {'checko': 'ok', 'оквэд_все': CP.окведы(т)[:60], 'сайт': сайт.group(1) if сайт else ''}
 
 
+# какие внутренние страницы обходить (владелец 09.10: «собираем ли контакты со страницы руководства?»):
+# к ссылкам cc_obhod (контакты, о компании, реквизиты, руководство, структура, команда) добавлены дирекция,
+# администрация, менеджмент, сотрудники, отделы, закупки/снабжение/тендеры; ссылки берутся с главной И со второго
+# уровня («О компании», «Контакты» — там часто подменю «Руководство», «Отделы»).
+ССЫЛКА_KC = re.compile(r'kontakt|contact|svyaz|о-компании|o-kompanii|about|rekvizit|реквизит|контакт|company|o-nas|'
+                       r'about-us|о-нас|kompaniya|struktur|rukovod|руковод|team|komanda|команд|management|leadership|'
+                       r'direkc|дирекц|administr|администрац|menedzhment|менеджмент|sotrudnik|сотрудник|personal|персонал|'
+                       r'otdel|отдел|podrazdel|подразделен|zakup|закуп|snab|снабж|tender|тендер|purchas|procure|'
+                       r'kontaktnaya|spravochn|справочн|telefon|телефон', re.I)
+ВТОРОЙ_УРОВЕНЬ = re.compile(r'kontakt|contact|о-компании|o-kompanii|about|company|o-nas|kompaniya|struktur|контакт|'
+                            r'о-нас', re.I)
+
+
+def ссылки_kc(база, html):
+    out = []
+    свой = MN.домен(база)
+    for м in re.finditer(r'<a\b[^>]*href=["\']([^"\'#]+)["\'][^>]*>(.*?)</a>', html, re.I | re.S):
+        href, текст = м.group(1).strip(), re.sub(r'<[^>]+>', ' ', м.group(2))
+        if href.startswith(('mailto:', 'tel:', 'javascript:')) or re.search(r'\.(pdf|jpe?g|png|docx?|xlsx?|zip)$', href, re.I):
+            continue
+        u = urllib.parse.urljoin(база, href)
+        if MN.домен(u) != свой:
+            continue
+        if (ССЫЛКА_KC.search(urllib.parse.unquote(u)) or ССЫЛКА_KC.search(текст)) and u not in out:
+            out.append(u)
+    return out
+
+
 def обход(к, сайт):
     старт = сайт if сайт.startswith('http') else 'https://' + сайт
     очередь = [старт] + [u for u in к.get('страницы_базы', []) if u.startswith('http')][:6]
     тексты, страницы, сырые = {}, [], {}
     i = 0
-    while i < len(очередь) and len(тексты) < 12:
+    while i < len(очередь) and len(тексты) < 15:
         u = очередь[i]
         i += 1
         ст, html, _ = MN.скачать(u)
@@ -145,8 +173,8 @@ def обход(к, сайт):
             continue
         тексты[u] = MP.в_текст(html)
         сырые[u] = html
-        if i == 1:
-            for л in CO.ссылки(u, html)[:8]:
+        if i == 1 or (len(очередь) < 30 and ВТОРОЙ_УРОВЕНЬ.search(urllib.parse.unquote(u))):
+            for л in ссылки_kc(u, html)[:12 if i == 1 else 6]:
                 if л not in очередь:
                     очередь.append(л)
     номера = {}
