@@ -27,6 +27,7 @@ import kc_kontakty as KK  # noqa: E402
 
 НАБОР = os.environ.get('KC_NABOR', 'meyer7t')
 ВХОД = os.path.join(DIR, НАБОР + '-sravnenie-ec.jsonl')
+НАША = os.environ.get('KC_SUDYA_FAZA', 'C')  # наша фаза сравнения (C — режим полного прогона)
 ВЫХОД = os.path.join(DIR, НАБОР + '-sudya-roley.jsonl')
 _лок = threading.Lock()
 ПРОМПТ = (
@@ -64,9 +65,9 @@ def пары():
     доля = float(os.environ.get('KC_SUDYA_SOVP', '0.15'))
     out = []
     for i, ф in фазы.items():
-        if 'A' not in ф or 'B' not in ф:
+        if 'A' not in ф or НАША not in ф:
             continue
-        a, b = ф['A']['r'] or {}, ф['B']['r'] or {}
+        a, b = ф['A']['r'] or {}, ф[НАША]['r'] or {}
         роли_a = {}
         for e in a.get('emails') or []:
             if isinstance(e, dict) and e.get('email'):

@@ -37,8 +37,9 @@ os.chdir(DIR)
 # фазы: A — обогатитель как есть, B — наш обход, C — наш обход с обогатителем без его модели (KC_EC_BEZ_MODELI);
 # B и C — в разных процессах: папка кэша обхода читается при импорте kc_kontakty
 ФАЗЫ = os.environ.get('KC_SRAV_FAZY', 'A,B').split(',')
-НАША = 'C' if 'C' in ФАЗЫ else 'B'
-if НАША == 'C':
+# D и далее — повтор C новой версией обхода (09.10: разбор номеров «8(4152)412-034», «703-35-08/09»)
+НАША = next((ф for ф in ФАЗЫ if ф != 'A'), 'B')
+if НАША != 'B':
     os.environ['KC_EC_BEZ_MODELI'] = '1'
 os.environ['PAGECACHE_DIR'] = os.path.join(ПАПКА, НАША)  # до импорта kc_kontakty: КЭШ_СТРАНИЦ читается при импорте
 import kc_kontakty as KK  # noqa: E402
@@ -79,18 +80,26 @@ def фио_н(x):
 ОБЩИЕ_НАШИ = ('', 'Прочее', 'Общий номер / приёмная')
 
 
+def тел_ec(сырой):
+    """Номер обогатителя -> 10 цифр нашей нормализации ('' — не РФ/РБ). Обогатитель склеивает добавочный с номером
+    («+7 (8652) 50-09-41 доб. 107» -> «…2500941107») и берёт чужие форматы (украинские 0xx) — сравниваем по-нашему."""
+    сырой = re.split(r'(?i)\s*(?:доб|вн|ext|#|/)', str(сырой or ''))[0]
+    н = KK.CO.норм(сырой) or KK.норм_by(сырой)
+    return re.sub(r'\D', '', н)[-10:] if н else ''
+
+
 def свод_ec(r):
     почты = {(e.get('email') or '').lower(): (e.get('role') or '') for e in r.get('emails') or [] if isinstance(e, dict) and e.get('email')}
     тел = {}
     for x in r.get('phone_roles') or []:
-        if isinstance(x, dict) and ц(x.get('phone')):
-            тел[ц(x['phone'])] = x.get('role') or x.get('dept') or ''
+        if isinstance(x, dict) and тел_ec(x.get('phone')):
+            тел[тел_ec(x['phone'])] = x.get('role') or x.get('dept') or ''
     for x in r.get('phones') or []:
-        if isinstance(x, str) and ц(x):
-            тел.setdefault(ц(x), '')
+        if isinstance(x, str) and тел_ec(x):
+            тел.setdefault(тел_ec(x), '')
     for x in r.get('people') or []:
-        if isinstance(x, dict) and ц(x.get('phone')):
-            тел.setdefault(ц(x['phone']), x.get('post') or '')
+        if isinstance(x, dict) and тел_ec(x.get('phone')):
+            тел.setdefault(тел_ec(x['phone']), x.get('post') or '')
     фио = {фио_н(e.get('person')) for e in r.get('emails') or [] if isinstance(e, dict)}
     фио |= {фио_н(x.get('person')) for x in (r.get('phone_roles') or []) + (r.get('people') or []) if isinstance(x, dict)}
     фио.discard('')
@@ -164,7 +173,9 @@ def фаза_B(к):
 
 def сравнить(з):
     a, b = свод_ec(з['A'].get('r') or {}), свод_наш(з['B'].get('r') or {})
-    нет_п = sorted(set(a['почты']) - set(b['почты']))
+    скрытые = {x.get('почта') for x in (з['B'].get('r') or {}).get('почты_исключены') or []}
+    нет_п = sorted(set(a['почты']) - set(b['почты']) - скрытые)
+    скрытые_ec = sorted((set(a['почты']) - set(b['почты'])) & скрытые)
     нет_т = sorted(set(a['тел']) - set(b['тел']))
     нет_ф = sorted(a['фио'] - b['фио'])
     # роль: контакт, у которого у EC роль конкретная, а у нас — пусто/общий/прочее
@@ -175,7 +186,8 @@ def сравнить(з):
                   'ролей': sum(1 for v in list(a['почты'].values()) + list(a['тел'].values()) if v not in ОБЩИЕ_EC)},
             'B': {'почт': len(b['почты']), 'тел': len(b['тел']), 'фио': len(b['фио']),
                   'ролей': sum(1 for v in list(b['почты'].values()) + list(b['тел'].values()) if v not in ОБЩИЕ_НАШИ)},
-            'нет_у_нас': {'почты': нет_п, 'тел': нет_т, 'фио': нет_ф, 'роли': нет_р}}
+            'нет_у_нас': {'почты': нет_п, 'тел': нет_т, 'фио': нет_ф, 'роли': нет_р},
+            'у EC, но скрыты на странице (мы исключили как ловушки)': скрытые_ec}
 
 
 def итог(наша=None):
@@ -197,6 +209,7 @@ def итог(наша=None):
                 сум[сторона + ' ' + k] += v
         for k, v in с['нет_у_нас'].items():
             сум['нет у нас: ' + k] += len(v)
+        сум['у EC, но скрыты на странице (исключены нами)'] += len(с['у EC, но скрыты на странице (мы исключили как ловушки)'])
         сум['A сек'] += з['A'].get('сек') or 0
         сум['B сек'] += з['B'].get('сек') or 0
         if any(с['нет_у_нас'].values()):
