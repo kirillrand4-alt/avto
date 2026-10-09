@@ -5,6 +5,7 @@
 gpt-5.6-luna), а для общих (gpt-6-sol) — разницу с фоном.
 
     python3 _zhurnal_provider.py копить <файл.jsonl> [сек]      # фоновый сбор, без дублей (по request_id)
+    python3 _zhurnal_provider.py раз <файл.jsonl>              # один сбор
     python3 _zhurnal_provider.py итог <файл.jsonl> <с unix-времени> [по unix-время]
 Запуск ИЗ СЕССИИ (ключ в окружении). Ключ не печатается. $1 = 500 000 quota (New API).
 """
@@ -29,7 +30,7 @@ def ключ(x):
     return x.get('request_id') or '%s|%s|%s|%s' % (x['created_at'], x['model_name'], x['quota'], x.get('prompt_tokens'))
 
 
-def копить(путь, пауза=60):
+def копить(путь, пауза=60, раз=False):
     видел = set()
     if os.path.exists(путь):
         for s in open(путь, encoding='utf-8'):
@@ -57,6 +58,8 @@ def копить(путь, пауза=60):
         except Exception as e:  # noqa: BLE001
             with open(путь + '.warn', 'a', encoding='utf-8') as f:
                 f.write('%s %r\n' % (time.strftime('%H:%M:%S'), e))
+        if раз:
+            return
         time.sleep(пауза)
 
 
@@ -75,5 +78,7 @@ def итог(путь, с, по=None):
 if __name__ == '__main__':
     if sys.argv[1] == 'копить':
         копить(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 60)
+    elif sys.argv[1] == 'раз':  # один сбор (для наблюдателя, который сам зовёт его раз в минуту)
+        копить(sys.argv[2], раз=True)
     else:
         итог(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]) if len(sys.argv) > 4 else None)
