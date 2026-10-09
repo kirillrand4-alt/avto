@@ -101,10 +101,37 @@ def записать(з):
             os.fsync(f.fileno())
 
 
+# 09.10, проба: Луна 6.0 отвечала то за 4 с, то за 107 с на один и тот же вызов (очередь у апстрима), а вызов ждёт
+# молчащий поток до 240 с и повторяет 3 раза — разметка одной страницы висела до ~13 мин. Срок на вызов и вторая
+# попытка — на запасной Луне (PROVIDER_FALLBACK_CHEAP; только когда основная — Луна)
+МОДЕЛЬ_СРОК = float(os.environ.get('KC_MODEL_SROK', '120'))
+МОДЕЛЬ_ЗАПАС = os.environ.get('PROVIDER_FALLBACK_CHEAP', '')
+
+
+def _со_сроком(промпт, модель_, срок):
+    рез = {}
+
+    def f():
+        try:
+            рез['out'] = VC._provider_call_stdlib(промпт, model=модель_)
+        except Exception as e:  # noqa: BLE001
+            рез['err'] = e
+    т = threading.Thread(target=f, daemon=True)
+    т.start()
+    т.join(срок)
+    if т.is_alive():
+        raise TimeoutError('модель молчит дольше %d с' % срок)
+    if 'err' in рез:
+        raise рез['err']
+    return рез.get('out')
+
+
 def модель(промпт, json_массив):
+    основная = VC._PROVIDER_MODEL or ''
     for попытка in range(3):
         try:
-            out = VC._provider_call_stdlib(промпт)
+            м = МОДЕЛЬ_ЗАПАС if попытка == 1 and МОДЕЛЬ_ЗАПАС and 'luna' in основная and МОДЕЛЬ_ЗАПАС != основная else None
+            out = _со_сроком(промпт, м, МОДЕЛЬ_СРОК)
             if json_массив:
                 return {int(x.get('n', 0)): x for x in json.loads(re.search(r'\[.*\]', out, re.S).group(0))
                         if isinstance(x, dict)}
