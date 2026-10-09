@@ -224,9 +224,9 @@ def main():
 
     def шаг(x):
         м, з = x
-        if сбои.get(м, 0) >= 6:  # модель не отвечает — не тратить время
+        if сбои.get(м, 0) >= 6:  # модели нет у шлюза (503/404) — не тратить время
             return
-        for попытка in range(2):
+        for попытка in range(5):  # 09.10: связь сервер–шлюз рвётся (WinError 10054) — повторять с паузой
             try:
                 текст, вх, вых, сек = вызов(м, з['вход'])
                 записать({'модель': м, 'id': з['id'], 'тип': з['тип'], 'ответ': текст, 'вх': вх, 'вых': вых,
@@ -234,13 +234,14 @@ def main():
                 return
             except Exception as e:  # noqa: BLE001
                 ош = str(e)[:200]
-                time.sleep(3)
-        with _лок:
-            сбои[м] = сбои.get(м, 0) + 1
+                time.sleep(5 * (попытка + 1))
+        if re.search(r'HTTP (503|404)|model_not_found|No available channel', ош):
+            with _лок:
+                сбои[м] = сбои.get(м, 0) + 1
         записать({'модель': м, 'id': з['id'], 'тип': з['тип'], 'ошибка': ош})
 
     random.shuffle(работы)
-    with ThreadPoolExecutor(12) as ex:
+    with ThreadPoolExecutor(8) as ex:
         list(ex.map(шаг, работы))
     import shutil
     for п in (НАБОР_П, ОТВЕТЫ):
