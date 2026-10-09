@@ -26,11 +26,10 @@ DIR = r'C:\sender\server'
 # модель по шагам (сравнение моделей 09.10, решение владельца «согласен»): GPT-6 Luna — классификация (94% совпадения с
 # эталоном при $0,0002 за вызов), GPT-6 Sol — проверка сайта (лучшая, 96%) и агенты-исследователи (многошаговые)
 # агенты (сравнение Luna/Sol 09.10 на 100 одинаковых компаниях): Sol находит ~в 1,5 раза больше номеров ЛПР и лучше на
-# выручке 0,6–2 млрд; ниже ~120 млн ₽ обе модели не находят почти ничего. Поэтому: агенты — только от KC_AGENT_OT
-# (120 млн), все на Sol (~$0,08 на компанию). Хвост (AGENT_HVOST_MODEL) по умолчанию выключен («нет»): включить —
-# gpt-6-luna, тогда он пройдёт оставшихся (сделанных агент пропускает сам), KC_AGENT_OT для хвоста снимается
+# выручке 0,6–2 млрд; ниже ~120 млн ₽ обе модели не находят почти ничего. Решение владельца 09.10 («средний вариант»):
+# от KC_AGENT_OT (500 млн) — Sol; хвост от KC_AGENT_OT_HVOST (120 млн) до 500 млн — AGENT_HVOST_MODEL (Luna); ниже — нет
 МОДЕЛЬ_ШАГА = {'kc_sayt_proverka.py': 'gpt-6-sol', 'kc_agent_glubokiy.py': 'gpt-6-sol',
-               'kc_agent_glubokiy.py:хвост': os.environ.get('AGENT_HVOST_MODEL', 'нет')}
+               'kc_agent_glubokiy.py:хвост': os.environ.get('AGENT_HVOST_MODEL', 'gpt-6-luna')}
 МОДЕЛЬ_ОСН = os.environ.get('PILOT_MODEL', 'gpt-6-luna')
 ШАГИ = ВСЕ_ШАГИ[С_ШАГА:]
 
@@ -70,7 +69,7 @@ def main():
         time.sleep(60)
     o.pop('ждём', None)
     env = dict(os.environ, KC_NABOR=НАБОР, POISK_NABOR=НАБОР, KC_CEL='meyer', POISK_NE_ZHDAT='1',
-               POISK_CHECKO_MINUT='40', KC_AGENT_OT=os.environ.get('KC_AGENT_OT', '120e6'),
+               POISK_CHECKO_MINUT='40', KC_AGENT_OT=os.environ.get('KC_AGENT_OT', '500e6'),
                KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT=os.environ.get('KC_ZAKUPKI_OT', '1e9'),
                KC_POTOKOV_SHAGA=os.environ.get('KC_POTOKOV_SHAGA', '24'), KC_AGENT_POTOKOV=os.environ.get('KC_AGENT_POTOKOV', '30'),
                PASPORT_POTOKOV=os.environ.get('PASPORT_POTOKOV', '24'),
@@ -83,7 +82,7 @@ def main():
         файл, _, режим = шаг.partition(':')
         env_шага = dict(env, PROVIDER_MODEL=модель)
         if режим == 'хвост':
-            env_шага.pop('KC_AGENT_OT', None)  # все оставшиеся
+            env_шага['KC_AGENT_OT'] = os.environ.get('KC_AGENT_OT_HVOST', '120e6')  # сделанных Sol агент пропустит сам
         o['шаги'][ключ] = {'старт': time.strftime('%Y-%m-%d %H:%M'), 'модель': модель}
         статус(o)
         лог = os.path.join(DIR, 'konveyer_%s_%s_%s.log' % (НАБОР, файл[:-3] + ('_' + режим if режим else ''),
