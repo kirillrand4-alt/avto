@@ -14,6 +14,7 @@ r"""База КЦ, шаг 3: контакты, описание и ОКВЭД п
      компании на странице (компания — заказчик). Плюс карточки-источники из нашей базы.
 Выход (fsync, резюм по ИНН): C:\sender\server\kc-kontakty.jsonl -> копия на дроп.
 """
+import html as _html
 import io
 import json
 import os
@@ -215,6 +216,44 @@ def в_кэш(ключ, сырые):
         pass  # кэш — не главное: обход не должен падать из-за него
 
 
+# 09.10, проба meyer7t (владелец: «почему не всё найдено из контактов? confectum.org/contacts/»): на сайтах-компонентах
+# (Битрикс + Vue/React) контакты отделов лежат JSON-ом в <script> или атрибуте (заголовки \\u-кодом, «phone»,
+# «extensionPhone», «mail») — в_текст вырезает <script>, и номера с почтами отделов терялись. Здесь такие поля
+# превращаются в строки «Коммерческий отдел +7 4722 20-53-15 доб. 125 e-mail: commerce@…» и дописываются к тексту
+# страницы: дальше их разбирает тот же поиск номеров, добавочных, почт и подписей.
+_JSON_ПОЛЯ = re.compile(r'"(title|name|fio|fullName|position|post|job|department|description|phone|phones|tel|telephone|'
+                        r'extensionPhone|ext|extension|additional|mail|email|e_mail)"\s*:\s*"((?:[^"\\]|\\.){1,300})"', re.I)
+
+
+def json_текст(сырое):
+    if not сырое or not re.search(r'"(phone|tel|telephone|mail|email)"\s*:', сырое, re.I):
+        if not сырое or '&quot;phone&quot;' not in сырое and '&quot;mail&quot;' not in сырое:
+            return ''
+    h = _html.unescape(сырое) if '&quot;' in сырое else сырое
+    строки, тек = [], []
+    for м in _JSON_ПОЛЯ.finditer(h):
+        ключ, знач = м.group(1).lower(), м.group(2)
+        try:
+            знач = json.loads('"%s"' % знач)
+        except ValueError:
+            continue
+        знач = re.sub(r'\s+', ' ', _html.unescape(re.sub(r'<[^>]+>', ' ', знач))).strip()
+        if not знач or знач.lower() in ('null', 'none'):
+            continue
+        if ключ in ('title', 'name', 'fio', 'fullname') and тек:
+            строки.append(' '.join(тек))
+            тек = []
+        if ключ in ('extensionphone', 'ext', 'extension', 'additional'):
+            знач = 'доб. ' + знач
+        elif ключ in ('mail', 'email', 'e_mail'):
+            знач = 'e-mail: ' + знач
+        тек.append(знач)
+    if тек:
+        строки.append(' '.join(тек))
+    строки = list(dict.fromkeys(с for с in строки if re.search(r'\d{5}|@', с)))
+    return ('\n[данные страницы]\n' + '\n'.join(строки)) if строки else ''
+
+
 def обход(к, сайт):
     старт = сайт if сайт.startswith('http') else 'https://' + сайт
     очередь = [старт] + [u for u in к.get('страницы_базы', []) if u.startswith('http')][:6]
@@ -228,7 +267,7 @@ def обход(к, сайт):
         страницы.append([u, ст])
         if ст != 'ok':
             continue
-        тексты[u] = MP.в_текст(html)
+        тексты[u] = MP.в_текст(html) + json_текст(html)
         сырые[u] = html
         if i == 1 or (len(очередь) < 30 and ВТОРОЙ_УРОВЕНЬ.search(urllib.parse.unquote(u))):
             for л in ссылки_kc(u, html)[:12 if i == 1 else 6]:
