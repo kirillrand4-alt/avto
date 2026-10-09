@@ -16,6 +16,11 @@ import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
+from pilot_bench_analiz import ЦЕНЫ
+
+ПОТОЛОК = float(os.environ.get('BENCH_POTOLOK', '50'))  # владелец 09.10: «до 50$ сверху ограничение» (весь тест)
+ПОРЯДОК = ['claude-opus-5-5', 'claude-sonnet-4-6', 'gpt-6-sol']  # эталон — первым; Fable — последней (самая дорогая)
+
 МОДЕЛИ = ['claude-opus-5-5', 'claude-fable-5', 'claude-sonnet-4-6', 'claude-sonnet-5-5', 'claude-haiku-4-5', 'gpt-6-sol',
           'gpt-6-luna', 'gpt-5.6-luna', 'deepseek-v4-flash', 'deepseek-v4-pro', 'gemini-3.8-flash', 'glm-5.3-flash',
           'qwen3.8-flash', 'grok-4.7', 'minimax-m3', 'mimo-v2.5-pro', 'kimi-k3']
@@ -53,17 +58,23 @@ def main(п, модели=None):
     задачи = json.load(open(os.path.join(п, 'pilot-bench-nabor.json'), encoding='utf-8'))
     п_отв = os.path.join(п, 'pilot-bench-otvety.jsonl')
     сделано = set()
+    потрачено = [0.0]
     for s in open(п_отв, encoding='utf-8'):
         з = json.loads(s)
         if not з.get('ошибка'):
             сделано.add((з['модель'], з['id']))
+            цв, цо = ЦЕНЫ.get(з['модель'], (10, 50))
+            потрачено[0] += ((з.get('вх') or 0) * цв + (з.get('вых') or 0) * цо) / 1e6
     работы = [(м, з) for м in модели for з in задачи if (м, з['id']) not in сделано]
     random.shuffle(работы)
-    print('вызовов', len(работы), flush=True)
+    работы.sort(key=lambda x: (0 if x[0] in ПОРЯДОК else 2 if x[0] == 'claude-fable-5' else 1))
+    print('вызовов', len(работы), 'уже потрачено $%.2f, потолок $%.0f' % (потрачено[0], ПОТОЛОК), flush=True)
     n = [0]
 
     def шаг(x):
         м, з = x
+        if потрачено[0] >= ПОТОЛОК:
+            return
         ош = ''
         for попытка in range(4):
             try:
@@ -72,6 +83,9 @@ def main(п, модели=None):
                     raise RuntimeError('пустой ответ')
                 з2 = {'модель': м, 'id': з['id'], 'тип': з['тип'], 'ответ': текст, 'вх': вх, 'вых': вых, 'сек': round(сек, 1),
                       'вход_символов': len(з['вход']), 'откуда': 'сессия'}
+                цв, цо = ЦЕНЫ.get(м, (10, 50))
+                with _лок:
+                    потрачено[0] += (вх * цв + вых * цо) / 1e6
                 break
             except Exception as e:  # noqa: BLE001
                 ош = str(e)[:200]
@@ -87,11 +101,11 @@ def main(п, модели=None):
                 os.fsync(f.fileno())
             n[0] += 1
             if n[0] % 100 == 0:
-                print(n[0], flush=True)
+                print(n[0], 'потрачено $%.2f' % потрачено[0], flush=True)
 
     with ThreadPoolExecutor(10) as ex:
         list(ex.map(шаг, работы))
-    print('готово', flush=True)
+    print('готово, потрачено $%.2f' % потрачено[0], flush=True)
 
 
 if __name__ == '__main__':
