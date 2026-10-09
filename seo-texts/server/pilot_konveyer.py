@@ -21,6 +21,10 @@ DIR = r'C:\sender\server'
 ВСЕ_ШАГИ = ['poisk_razbor.py', 'pilot_otbor.py', 'kc_kontakty.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py',
             'kc_oproverzhenie.py', 'kc_glubokiy_vhod.py', 'kc_agent_glubokiy.py', 'kc_agent_pereproverka.py']
 С_ШАГА = int(os.environ.get('PILOT_S_SHAGA', '0'))
+# модель по шагам (сравнение моделей 09.10, решение владельца «согласен»): GPT-6 Luna — классификация (94% совпадения с
+# эталоном при $0,0002 за вызов), GPT-6 Sol — проверка сайта (лучшая, 96%) и агенты-исследователи (многошаговые)
+МОДЕЛЬ_ШАГА = {'kc_sayt_proverka.py': 'gpt-6-sol', 'kc_agent_glubokiy.py': 'gpt-6-sol'}
+МОДЕЛЬ_ОСН = os.environ.get('PILOT_MODEL', 'gpt-6-luna')
 ШАГИ = ВСЕ_ШАГИ[С_ШАГА:]
 
 
@@ -56,7 +60,8 @@ def main():
         лог = os.path.join(DIR, 'konveyer_%s_%s_%s.log' % (НАБОР, шаг[:-3], time.strftime('%d%m-%H%M')))
         for попытка in range(2):
             with open(лог, 'ab') as f:
-                r = subprocess.run([sys.executable, '-u', os.path.join(DIR, шаг)], cwd=DIR, env=env,
+                r = subprocess.run([sys.executable, '-u', os.path.join(DIR, шаг)], cwd=DIR,
+                                   env=dict(env, PROVIDER_MODEL=МОДЕЛЬ_ШАГА.get(шаг, МОДЕЛЬ_ОСН)),
                                    stdout=f, stderr=subprocess.STDOUT)
             if r.returncode == 0:
                 break
