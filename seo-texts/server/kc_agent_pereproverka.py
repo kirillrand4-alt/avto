@@ -30,6 +30,7 @@ os.chdir(DIR)
 НАБОР = os.environ.get('KC_NABOR', 'poisk')
 import meyer_nalichie as MN  # noqa: E402
 import meyer_proverka as MP  # noqa: E402
+import kc_pochty as KP  # noqa: E402  (почты агента)
 import kc_audit2 as A2  # noqa: E402  (слова — отличительные слова названия)
 import kc_sayty as KS  # noqa: E402  (ядра)
 
@@ -54,7 +55,8 @@ def одна(x, к):
         м = re.match(r'ОТКРЫТ (\S+) \[', h)
         if м:
             открытые.append(м.group(1))
-    урлы = list(dict.fromkeys(открытые + [н.get('url') for н in (x.get('номера') or []) + (x.get('снято') or []) if н.get('url')]))
+    урлы = list(dict.fromkeys(открытые + [н.get('url') for н in (x.get('номера') or []) + (x.get('почты') or []) + (x.get('снято') or [])
+                                          if н.get('url')]))
     for сайт in (x.get('сайт_завода'), x.get('сайт_холдинга')):
         if сайт:
             корень = 'https://' + MN.домен(сайт) + '/'
@@ -93,7 +95,7 @@ def одна(x, к):
     if сх and холд:
         годные.add(MN.домен(сх))
     номера, снято = [], []
-    for н in (x.get('номера') or []) + (x.get('снято') or []):
+    for н in (x.get('номера') or []) + [с for с in x.get('снято') or [] if not с.get('почта')]:
         ц = норм_тел(н.get('номер'))
         u = н.get('url') or ''
         т = тексты.get(u, '')
@@ -115,7 +117,30 @@ def одна(x, к):
             снято.append(dict(н2, причина=причина))
         else:
             номера.append(н2)
-    рез['номера'], рез['снято'] = номера, снято
+    почты = []  # 09.10: почты агента — те же правила, что у номеров (своя или публичная почта на подтверждённом сайте)
+    for п in (x.get('почты') or []) + [с for с in x.get('снято') or [] if с.get('почта')]:
+        u, адр = п.get('url') or '', (п.get('почта') or '').lower()
+        т = тексты.get(u, '').lower()
+        причина = ''
+        if not KP.ПОЧТА.fullmatch(адр) or KP.ЛОВУШКИ.search(адр):
+            причина = 'не почта'
+        elif not т:
+            причина = 'страница не открылась при перепроверке'
+        elif адр not in т and адр not in KP._раскрыть(т):
+            причина = 'почты нет на странице'
+        elif ЗАКУПКИ.search(u):
+            if к['inn'] not in т:
+                причина = 'на карточке закупки нет ИНН компании'
+        elif MN.домен(u) not in годные:
+            причина = 'страница не на подтверждённом сайте завода/холдинга (%s)' % MN.домен(u)
+        elif KP.вид(адр, u) not in ('своя', 'публичная'):
+            причина = 'почта чужого домена'
+        п2 = {k: v for k, v in п.items() if k != 'причина'}
+        if причина:
+            снято.append(dict(п2, причина=причина))
+        else:
+            почты.append(п2)
+    рез['номера'], рез['почты'], рез['снято'] = номера, почты, снято
     рез['перепроверено'] = True
     with _лок:
         with io.open(ВЫХОД, 'a', encoding='utf-8') as f:
