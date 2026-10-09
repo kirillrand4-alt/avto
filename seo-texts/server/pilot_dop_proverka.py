@@ -36,9 +36,13 @@ import kc_kontakty as KK  # noqa: E402  (модель)
 
 def main():
     сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
-    конт = {}
+    конт, обойдены = {}, set()
     for s in io.open(os.path.join(DIR, НАБОР + '-kontakty.jsonl'), encoding='utf-8', errors='replace'):
-        з = json.loads(s)
+        try:
+            з = json.loads(s)
+        except ValueError:
+            continue
+        обойдены.add(з.get('inn'))
         if з.get('итог') == 'ok':
             конт[з['inn']] = з
     сделано = set()
@@ -47,7 +51,9 @@ def main():
             сделано.add(json.loads(s)['inn'])
     доп = [к for к in сп.values() if к.get('сегм_как') in ('доп', 'критик+доп') and к['inn'] not in сделано]
     с_опис = [к for к in доп if (конт.get(к['inn']) or {}).get('описание')]
-    без = [к for к in доп if not (конт.get(к['inn']) or {}).get('описание')]
+    # 09.10: «не подтверждено» — только тем, кого обход уже прошёл (без описания с сайта); кого обход ещё не прошёл —
+    # без записи: иначе запуск до конца обхода (волны) навсегда выкидывал бы их в «Не вошли»
+    без = [к for к in доп if к['inn'] in обойдены and not (конт.get(к['inn']) or {}).get('описание')]
     print('по доп. ОКВЭД', len(доп), 'с описанием сайта', len(с_опис), flush=True)
     with io.open(ВЫХОД, 'a', encoding='utf-8') as f:
         for к in без:
