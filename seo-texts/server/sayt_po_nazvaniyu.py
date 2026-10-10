@@ -64,12 +64,19 @@ class _MP:
 
 MN, MP = _MN, _MP
 
-СТОП = re.compile(r'tochka\.com|tenderguru|licexpert|sensus\.kz|plastinfo|agroserver|dataslon|sudact|kommersant|'
-                  r'innproverka|rusprofile|checko|list-org|zachestnyibiznes|audit-it|sbis\.ru|kontur|spark-|tarif|'
-                  r'декларац|perekrestok|wikipedia|youtube|hh\.ru|avito|2gis|zoon|yell\.ru|orgpage|spravker|blizko|'
-                  r'kartaslov|vk\.com|ok\.ru|t\.me|instagram|facebook|ria\.ru|rbc\.ru|tass\.ru|interfax|bel\.ru|'
-                  r'egrul|nalog|gosuslugi|\.gov\.ru|tender|zakupki|b2b-center|fabrikant|rts-tender|sberbank|tbank|'
-                  r'tinkoff|alfabank|vtb\.ru|pulscen|tiu\.ru|satom|flagma|regtorg|moscow-faq|vsetaksi|ivanovo\.ru', re.I)
+# 10.10, ревизия: прежний СТОП искал подстроку — «ok.ru» ловил ryazanskiipesok.ru и polimervostok.ru, «ria.ru» —
+# darydaria.ru, «bel.ru» — volhovamebel.ru, «fabrikant» — fabrikant-kf.ru, «spark-» — spetspark-nn.ru: сайты производителей
+# отклонялись как агрегаторы. Теперь — домен целиком (или его поддомен) либо метка-бренд целиком. Добавлены сервисы
+# проверки контрагентов из финального разбора (kontrchk, finscanner, sledi, skrin, olan, firmalyze, upfox, inn-sider…).
+СТОП = re.compile(
+    r'(^|\.)(tochka\.com|sensus\.kz|sbis\.ru|hh\.ru|yell\.ru|vk\.com|ok\.ru|t\.me|ria\.ru|rbc\.ru|tass\.ru|bel\.ru|'
+    r'vtb\.ru|tiu\.ru|ivanovo\.ru|gov\.ru|[\w-]+\.gov\.ru)$|'
+    r'(^|\.)(tenderguru|licexpert|plastinfo|agroserver|dataslon|sudact|kommersant|innproverka|rusprofile|checko|list-org|'
+    r'zachestnyibiznes|audit-it|kontur|spark-interfax|perekrestok|wikipedia|youtube|avito|2gis|zoon|orgpage|spravker|'
+    r'blizko|kartaslov|instagram|facebook|interfax|egrul|nalog|gosuslugi|zakupki|b2b-center|fabrikant|rts-tender|'
+    r'sberbank-ast|tbank|tinkoff|alfabank|pulscen|satom|flagma|regtorg|moscow-faq|vsetaksi|kontrchk|finscanner|sledi|'
+    r'skrin|kontragent|olan|firmalyze|upfox|inn-sider|bifit|companium|vbankcenter|prokuratura|ofdata|synapsenet|'
+    r'e-ecolog|testfirm|kartoteka|tender\w*|tarif\w*|декларац[\w-]*)\.', re.I)
 ТР = dict(zip('абвгдеёзийклмнопрстуфыэ', ['a', 'b', 'v', 'g', 'd', 'e', 'e', 'z', 'i', 'y', 'k', 'l', 'm', 'n', 'o', 'p',
                                           'r', 's', 't', 'u', 'f', 'y', 'e']))
 ТР.update({'ж': 'zh', 'х': 'h', 'ц': 'c', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ь': '', 'ю': 'yu', 'я': 'ya'})
