@@ -116,6 +116,36 @@ def хост(u):
     return h[4:] if h.startswith('www.') else h
 
 
+# 10.10, ревизия meyer7: домены второго уровня у платформ/региональных зон (spb.ru, narod.ru, tilda.ws…) —
+# у каждого поддомена свой владелец; считать их одним «доменом» = записывать сотни сайтов в агрегатор.
+ПЛАТФОРМЫ = re.compile(r'\.(spb|msk|nov|nnov|ekb|kiev|com|net|org|pp|biz|ru|by|of|edu|narod|ucoz|ucoz\.net|at\.ua|'
+                       r'tilda|turbo|wix|wixsite|webflow|nethouse|umi|ukit|ru\.net|mya5|okis|jimdo|uralweb|'
+                       r'clients|business|site|flagma|satu|deal|tiu|all\.biz|blogspot|livejournal|github)'
+                       r'\.(ru|ws|com|site|by|kz|ua|io|me|net|su|ru\.com|biz)$', re.I)
+
+
+def кор_дом(h):
+    ч = (h or '').split('.')
+    if len(ч) >= 3 and ПЛАТФОРМЫ.search('.' + '.'.join(ч[-2:])):
+        return '.'.join(ч[-3:])
+    return MN.домен(h)
+
+
+# Порог «агрегатор по выдаче»: poisk (КЦ 07.10) — >=6 регионов; пилот (3 региона) — все 3 или >=30 запросов;
+# полные наборы (meyer7: 85+ регионов) — >=15 регионов или >=60 запросов (ревизия: пилотный порог на всей стране
+# отсекал 1–2,5 тыс. сайтов производителей с федеральной выдачей).
+МНОГО_РЕГ = int(os.environ.get('POISK_MNOGO_REG', '15'))
+МНОГО_ЗАПР = int(os.environ.get('POISK_MNOGO_ZAPR', '60'))
+
+
+def много_ли(регионы, запросы):
+    if НАБОР == 'poisk':
+        return len(регионы) >= 6
+    if НАБОР.startswith('pilot'):
+        return len(регионы - {''}) >= 3 or len(запросы) >= 30
+    return len(регионы - {''}) >= МНОГО_РЕГ or len(запросы) >= МНОГО_ЗАПР
+
+
 def инн_из(т):
     out = collections.Counter()
     for м in CO.ИНН_RX.finditer(т):
@@ -242,17 +272,15 @@ def main():
             h = хост(д['url'])
             if not h or НЕ_БРАТЬ.search(h):
                 continue
-            регионы_домена[MN.домен(h)].add(з['регион'])
-            запросы_домена[MN.домен(h)].add(з['запрос'])
+            регионы_домена[кор_дом(h)].add(з['регион'])
+            запросы_домена[кор_дом(h)].add(з['запрос'])
     for з in serp:
         for д in з.get('доки', []):
             h = хост(д['url'])
             if not h or НЕ_БРАТЬ.search(h):
                 continue
-            кор = MN.домен(h)
-            # пилот — всего 3 региона: агрегатор = во всех регионах пилота или в >= 30 разных запросах
-            много = (len(регионы_домена[кор]) >= 6 if НАБОР == 'poisk' else
-                     len(регионы_домена[кор] - {''}) >= 3 or len(запросы_домена[кор]) >= 30)
+            кор = кор_дом(h)
+            много = много_ли(регионы_домена[кор], запросы_домена[кор])
             агрегатор = (КАТАЛОГ.search(h) or много or not EC._is_own_site('http://' + h))
             if агрегатор:
                 урлы_каталогов.setdefault(д['url'], []).append((з['сегм'], з['регион'], з['запрос']))

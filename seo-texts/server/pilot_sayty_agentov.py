@@ -81,6 +81,8 @@ def main():
         print('%s: %s -> %s' % (i, был or '—', стал), flush=True)
     print('готово', json.dumps({'подтверждено агентами': len(найдено), 'сайт заменён': len(замен)}, ensure_ascii=False),
           flush=True)
+    import kc_chuzhie_sayty  # 10.10: прежние сайты и «другая организация» — подходящие Meyer в список «вне списка»
+    kc_chuzhie_sayty.запуск_из_шага()
 
 
 if __name__ == '__main__':

@@ -851,6 +851,16 @@ def одна(к):
     записать(з)
 
 
+
+def приоритет(к):
+    """10.10, ревизия: Беларусь (УНП) и сайты без ИНН — выручка неизвестна, раньше по сортировке уходили в самый хвост
+    и в волне не обходились; считаем их как 100 млн. Компании без сайта — в конец (обходить нечего)."""
+    i = str(к.get('inn') or '')
+    выр = к.get('выручка') or 0
+    if not выр and (i.startswith('BY') or i.startswith('САЙТ:')):
+        выр = 3e7 if к.get('вне_списка') else 1e8  # сайты других организаций (kc_chuzhie_sayty) — после основного списка
+    return (0 if к.get('сайт') else 1, -выр)
+
 def main():
     сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     сделано = set()
@@ -865,7 +875,7 @@ def main():
             except ValueError:
                 pass
     очередь = sorted((к for i, к in сп.items() if (i, MN.домен(к['сайт'] or '')) not in сделано),
-                     key=lambda к: -к['выручка'])  # сменился сайт (08.10: сайты групп) — обойти заново
+                     key=приоритет)  # сменился сайт (08.10: сайты групп) — обойти заново
     ПРОКСИ.extend(п for п in (CP.Прокси(x) for x in json.load(open(os.path.join(DIR, 'checko-proxies.json'))))
                   if п.get('https://checko.ru/')[0] == 200)
     print('компаний', len(сп), 'в очереди', len(очередь), 'прокси', len(ПРОКСИ), flush=True)
