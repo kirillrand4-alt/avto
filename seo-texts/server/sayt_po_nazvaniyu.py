@@ -31,6 +31,21 @@ def _домен(u):
     return u[4:] if u.startswith('www.') else u
 
 
+# 10.10, ревизия: у платформ и региональных зон (x.tilda.ws, zavod.spb.ru, firma.narod.ru) свой владелец у каждого
+# поддомена — «повтор домена» и сравнения по ним считать по полному хосту
+ПЛАТФОРМЫ = re.compile(r'\.(spb|msk|nov|nnov|ekb|kiev|com|net|org|pp|biz|ru|by|of|edu|narod|ucoz|at|'
+                       r'tilda|turbo|wix|wixsite|webflow|nethouse|umi|ukit|mya5|okis|jimdo|uralweb|'
+                       r'clients|business|site|flagma|satu|deal|tiu|blogspot|livejournal|github)'
+                       r'\.(ru|ws|com|site|by|kz|ua|io|me|net|su|biz)$', re.I)
+
+
+def дом_владельца(u):
+    ч = _домен(u).split(':')[0].split('.')
+    if len(ч) >= 3 and ПЛАТФОРМЫ.search('.' + '.'.join(ч[-2:])):
+        return '.'.join(ч[-3:])
+    return '.'.join(ч[-2:]) if len(ч) >= 2 else '.'.join(ч)
+
+
 class _MN:  # meyer_nalichie — лениво (на сервере; локально нужен только домен)
     домен = staticmethod(_домен)
 

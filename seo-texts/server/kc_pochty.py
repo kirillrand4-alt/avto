@@ -18,7 +18,8 @@ import re
     (re.compile(r'(?<=[a-z0-9])\s+(?:dot|точка)\s+(?=[a-z]{2,6}\b)', re.I), '.'),
 ]
 ЛОВУШКИ = re.compile(r'^(noreply|no-reply|donotreply|example|name|user|test|email|mail|yourname|ваш)@|@(example|domain|'
-                     r'site|mysite|email)\.|\.(png|jpe?g|gif|webp|svg|css|js)$|@sentry|@2x\.|wixpress|@u00', re.I)
+                     r'site|mysite|email|company|yoursite|yourdomain|your-domain|yourcompany|test|primer|vashsait)\.|'
+                     r'\.(png|jpe?g|gif|webp|svg|css|js)$|@sentry|@2x\.|wixpress|@u00|\.beget\.tech$|@localhost', re.I)
 ПУБЛИЧНЫЕ = {'yandex.ru', 'ya.ru', 'yandex.by', 'yandex.com', 'mail.ru', 'bk.ru', 'list.ru', 'inbox.ru', 'internet.ru',
              'gmail.com', 'rambler.ru', 'lenta.ru', 'autorambler.ru', 'ro.ru', 'hotmail.com', 'outlook.com',
              'icloud.com', 'yahoo.com', 'tut.by', 'mail.by', 'list.by'}
@@ -159,7 +160,9 @@ def видимость(html):
 
     try:
         п = П()
-        п.feed(html or '')
+        # 10.10, ревизия (bpkom.ru): комментарий, закрытый «--!>», парсер считал незакрытым — видимые почты после
+        # него уходили в «комментарий» и исключались
+        п.feed(re.sub(r'--!\s*>', '-->', html or ''))
         п.close()
     except Exception:  # noqa: BLE001
         pass
