@@ -29,6 +29,11 @@ sys.path.insert(0, DIR)
 sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
 НАБОР = os.environ.get('KC_NABOR', 'poisk')
+# 10.10, проверка гипотезы на финале meyer7: проход Luna (120–500 млн, свой файл) — 45% итогов пустые (150 из 334: агент
+# сдаётся за 5–7 шагов, у 42 ни одной открытой страницы), у Sol — 13%. Хвост тоже на Sol (~$0,07 на компанию);
+# KC_AGENT_HVOST_SOL=0 — как было. Модель задаётся до импорта kc_kontakty (он читает PROVIDER_MODEL).
+if os.environ.get('KC_AGENT_FAYL') and os.environ.get('KC_AGENT_HVOST_SOL', '1') == '1':
+    os.environ['PROVIDER_MODEL'] = 'gpt-6-sol'
 import kc_kontakty as KK  # noqa: E402  (модель, КЛАССЫ)
 import kc_sayty as KS  # noqa: E402  (ядра названия)
 import cc_obhod as CO  # noqa: E402  (ТЕЛ, норм)
@@ -266,6 +271,7 @@ def одна(к):
     итог, открыто, история = агент(к)
     рез = проверить(к, итог, открыто) if итог else {'пояснение': 'агент не дал итог', 'номера': [], 'снято': []}
     рез.update({'inn': к['inn'], 'итог': 'ok', 'страниц_открыто': len(открыто), 'шагов': len(история),
+                'модель': os.environ.get('PROVIDER_MODEL', ''),
                 'журнал': [h[:300] for h in история]})
     записать(рез)
 
@@ -281,6 +287,19 @@ def main():
                     сделано.add(json.loads(s)['inn'])
                 except (ValueError, KeyError):
                     pass
+    # 10.10: пустой итог прохода Luna (ни сайта, ни номеров, ни почт) — переделать на Sol: запись без «модель» = Luna
+    if os.environ.get('KC_AGENT_FAYL') and os.path.exists(ВЫХОД):
+        посл = {}
+        for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
+            try:
+                x = json.loads(s)
+                посл[x['inn']] = x
+            except (ValueError, KeyError):
+                pass
+        повтор = {i for i, x in посл.items() if x.get('итог') == 'ok' and not x.get('модель') and not (
+            x.get('номера') or x.get('почты') or x.get('сайт_завода') or x.get('сайт_холдинга'))}
+        сделано -= повтор
+        print('пустые итоги Luna — заново на Sol:', len(повтор), flush=True)
     задачи = [dict(сп[i], отклонены=v.get('отклонены', '')) for i, v in вход.items() if i in сп and i not in сделано]
     # 09.10, сравнение моделей: ниже ~120 млн ₽ выручки агенты (обе модели) не находят почти ничего — не тратимся
     if os.environ.get('KC_AGENT_OT'):
