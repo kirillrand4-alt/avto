@@ -106,6 +106,10 @@ def записать(з):
 # попытка — на запасной Луне (PROVIDER_FALLBACK_CHEAP; только когда основная — Луна)
 МОДЕЛЬ_СРОК = float(os.environ.get('KC_MODEL_SROK', '120'))
 МОДЕЛЬ_ЗАПАС = os.environ.get('PROVIDER_FALLBACK_CHEAP', '')
+# 10.10, финал meyer7: шлюз часами не отдавал ни gpt-6-luna, ни gpt-5.6-luna (503 «No providers are available»), Sol
+# работал — классификация отбора, разметка ролей и проверки Luna пропадали целиком. Третья попытка — Sol
+# (в ~18 раз дороже Luna 6, но только когда обе Luna упали). KC_MODEL_POSLEDNIY='' — выключить.
+МОДЕЛЬ_ПОСЛЕДНЯЯ = os.environ.get('KC_MODEL_POSLEDNIY', 'gpt-6-sol')
 
 
 # 09.10, полный прогон: 48 потоков обхода одновременно открывали соединения к шлюзу — TLS-рукопожатия рвались
@@ -145,6 +149,8 @@ def модель(промпт, json_массив):
     for попытка in range(3):
         try:
             м = МОДЕЛЬ_ЗАПАС if попытка == 1 and МОДЕЛЬ_ЗАПАС and 'luna' in основная and МОДЕЛЬ_ЗАПАС != основная else None
+            if попытка == 2 and 'luna' in основная and МОДЕЛЬ_ПОСЛЕДНЯЯ:
+                м = МОДЕЛЬ_ПОСЛЕДНЯЯ  # 10.10: шлюз отдал 503 на обе Luna («No providers available») — последний резерв
             out = _со_сроком(промпт, м, МОДЕЛЬ_СРОК)
             if json_массив:
                 return {int(x.get('n', 0)): x for x in json.loads(re.search(r'\[.*\]', out, re.S).group(0))
