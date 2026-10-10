@@ -36,6 +36,39 @@ import meyer_nalichie as MN  # noqa: E402
 import cc_obhod as CO  # noqa: E402  (ТЕЛ, ДОБ, ИНН_RX, ПОДПИСЬ, инн_ок, норм, ссылки)
 import cc_checko_proxy as CP  # noqa: E402
 import verify_company as VC  # noqa: E402
+
+# 11.10, финал meyer7: verify_company при импорте ставит процессу ОДИН случайный socks-прокси из пула (78) глобальным
+# opener; обогатитель ходит через него всегда, наш загрузчик — запасным путём. Доле обхода достался мёртвый прокси —
+# потоки висели в socks без таймаута (52 мин ни одной записи), потом то же у второй доли. Страховки: таймаут по
+# умолчанию на все сокеты процесса и сторож прокси — раз в 3 мин проба через глобальный opener, два провала подряд —
+# другой прокси из пула (KC_STOROZH_PROKSI=0 — выключить).
+import socket as _socket  # noqa: E402
+_socket.setdefaulttimeout(float(os.environ.get('KC_SOCKET_TIMEOUT', '45')))
+
+
+def _сторож_прокси():
+    import random
+    import urllib.request
+    провалов = 0
+    while True:
+        time.sleep(180)
+        try:
+            urllib.request.urlopen(urllib.request.Request('https://ya.ru/', headers={'User-Agent': 'Mozilla/5.0'}),
+                                   timeout=12).read(2000)
+            провалов = 0
+        except Exception:  # noqa: BLE001
+            провалов += 1
+            if провалов >= 2 and getattr(VC, 'PROXY_POOL', None):
+                try:
+                    VC._install_one(random.choice(VC.PROXY_POOL))
+                    print('сторож прокси: прокси не отвечал — взят другой из пула', flush=True)
+                except Exception:  # noqa: BLE001
+                    pass
+                провалов = 0
+
+
+if os.environ.get('KC_STOROZH_PROKSI', '1') == '1' and __name__ == '__main__':
+    threading.Thread(target=_сторож_прокси, daemon=True).start()
 import enrich_contacts as EC  # noqa: E402
 import kc_pochty as KP  # noqa: E402  (почты — план Meyer п. 3.2)
 
