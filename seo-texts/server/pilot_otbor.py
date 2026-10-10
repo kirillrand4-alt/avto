@@ -69,14 +69,8 @@ def записать_список(сп):
     журнал = os.path.join(DIR, НАБОР + '-sayty-dobor.jsonl')
     with zamok.замок(ВЫХОД):
         if os.path.exists(журнал):
-            for s_ in io.open(журнал, encoding='utf-8', errors='replace'):
-                try:
-                    з = json.loads(s_)
-                except ValueError:
-                    continue
-                к_ = сп['компании'].get(з.get('inn'))
-                if к_ is not None and з.get('итог') == 'найден' and not к_.get('сайт'):
-                    к_['сайт'], к_['сайт_откуда'] = з['сайт'], 'поиск по названию (%s)' % з.get('источник', '')
+            import pilot_sayty_dobor as SD  # 10.10: последняя запись по ИНН решает, отклонённые сайты снимаются
+            SD.применить_журнал(сп, журнал)
         zamok.записать_атомарно(ВЫХОД, сп)
 
 
@@ -467,10 +461,13 @@ def main():
             рег = re.sub(r'\b(обл|область|край|респ|республика|г)\b\.?', ' ', x['регион']).strip()
             сайт, ист, _ = EC.find_site_via_xmlriver({'name': x['имя'], 'city': рег})
             if сайт:
-                x['сайт'], x['сайт_откуда'] = сайт, 'поиск по названию (%s)' % ист
+                import sayt_po_nazvaniyu as SN  # 10.10: агрегаторы и чужие сайты не принимаем
+                принят, почему = SN.проверить(x['имя'], x['inn'], сайт)
+                if принят:
+                    x['сайт'], x['сайт_откуда'] = сайт, 'поиск по названию (%s)' % ист
         except Exception:  # noqa: BLE001
             pass
-    with ThreadPoolExecutor(8) as ex:
+    with ThreadPoolExecutor(3) as ex:  # 10.10: 8 потоков вместе с поиском давали xmlriver 429
         list(ex.map(найти, без))
     if СНИМКИ:
         записать_список({'компании': итог, 'снято': снято, 'ниже_порога': ниже, 'на_решение': на_решение,

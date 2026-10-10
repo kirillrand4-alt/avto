@@ -21,7 +21,9 @@ DIR = r'C:\sender\server'
 sys.path.insert(0, DIR)
 sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
-import enrich_contacts as EC  # noqa: E402
+import enrich_contacts as EC
+import meyer_nalichie as MN  # noqa: E402
+import sayt_po_nazvaniyu as SN  # noqa: E402  (проверка найденного сайта)
 
 НАБОР = os.environ.get('POISK_NABOR', 'pilot')
 СПИСОК = os.path.join(DIR, НАБОР + '-spisok.json')
@@ -37,6 +39,28 @@ def записать(з):
             os.fsync(f.fileno())
 
 
+def применить_журнал(сп, журнал):
+    """Журнал сайтов по названию -> список: решает ПОСЛЕДНЯЯ запись по ИНН (10.10: перепроверка дописывает «отклонён»);
+    отклонённый сайт, поставленный этим шагом, снимается."""
+    посл = {}
+    for s_ in io.open(журнал, encoding='utf-8', errors='replace'):
+        try:
+            з = json.loads(s_)
+        except ValueError:
+            continue
+        if з.get('inn'):
+            посл[з['inn']] = з
+    for i, з in посл.items():
+        к = сп['компании'].get(i)
+        if к is None:
+            continue
+        if з.get('итог') == 'найден' and not к.get('сайт'):
+            к['сайт'], к['сайт_откуда'] = з['сайт'], 'поиск по названию (%s)' % з.get('источник', '')
+        elif з.get('итог') == 'отклонён' and str(к.get('сайт_откуда') or '').startswith('поиск по названию') \
+                and MN.домен(к.get('сайт') or '') == MN.домен(з.get('сайт') or ''):
+            к['сайт_был'], к['сайт'], к['сайт_откуда'] = к['сайт'], '', 'поиск по названию: отклонён (%s)' % з.get('почему', '')
+
+
 def main():
     сп = json.load(io.open(СПИСОК, encoding='utf-8'))
     сделано = {}
@@ -44,7 +68,7 @@ def main():
         for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):
             try:
                 з = json.loads(s)
-                if з.get('итог') in ('найден', 'не найден'):
+                if з.get('итог') in ('найден', 'не найден', 'отклонён'):
                     сделано[з['inn']] = з
             except ValueError:
                 pass
@@ -57,6 +81,8 @@ def main():
         без = без[:max(0, потолок - len(сделано))]
     print('без сайта к поиску', len(без), 'уже в журнале', len(сделано), flush=True)
     стоп = {'': ''}
+    найдено_дом = {i: MN.домен(з.get('сайт') or '') for i, з in сделано.items() if з.get('итог') == 'найден'}
+    _лок_д = threading.Lock()
 
     def найти(к):
         if стоп['']:
@@ -70,6 +96,14 @@ def main():
         if 'средств' in (ист or ''):
             стоп[''] = ист
             return
+        if сайт:  # 10.10: агрегаторы, реестры, чужие сайты — не принимаем (sayt_po_nazvaniyu)
+            with _лок_д:
+                чужой = any(д == MN.домен(сайт) and и != к['inn'] for и, д in найдено_дом.items())
+                найдено_дом[к['inn']] = MN.домен(сайт)
+            принят, почему = SN.проверить(к['имя'], к['inn'], сайт, чужой)
+            if not принят:
+                записать({'inn': к['inn'], 'итог': 'отклонён', 'сайт': сайт, 'источник': ист or '', 'почему': почему})
+                return
         записать({'inn': к['inn'], 'итог': 'найден' if сайт else 'не найден', 'сайт': сайт or '', 'источник': ист or ''})
 
     t0 = time.time()
@@ -78,11 +112,7 @@ def main():
     with ThreadPoolExecutor(int(os.environ.get('PILOT_SAYTY_POTOKOV', '3'))) as ex:
         list(ex.map(найти, без))
     def применить(сп):
-        for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):
-            з = json.loads(s)
-            к = сп['компании'].get(з['inn'])
-            if к is not None and з.get('итог') == 'найден' and not к['сайт']:
-                к['сайт'], к['сайт_откуда'] = з['сайт'], 'поиск по названию (%s)' % з.get('источник', '')
+        применить_журнал(сп, ЖУРНАЛ)
     if os.environ.get('PILOT_SNIMKI') == '1':
         # 09.10, волны: отбор мог записать новый снимок списка, пока шли поиски, — перечитываем под замком
         import zamok
