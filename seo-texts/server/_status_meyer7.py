@@ -88,9 +88,30 @@ if os.path.exists(ф):
 кон = json.load(open(ф, encoding='utf-8')) if os.path.exists(ф) else {}
 фон = кон.get('фон') or {}
 лп = sorted(glob.glob(os.path.join(DIR, НАБОР + '_poisk_*.log')), key=os.path.getmtime)
+# 10.10: живые шаги — по метке «--nabor=<набор> --shag=<шаг>» (в т.ч. запущенные вручную); в финале шаг, который ещё не
+# начинался в финале, показывать «ждёт», а не состояние волны 1 (страница показывала «готово»/«ошибка» прошлой волны)
+живые = set(re.findall(r'--nabor=%s --shag=(\S+)' % re.escape(НАБОР), ' '.join(o.get('процессы') or [])))
+финал_идёт = кон.get('волна') in ('финал', 'после агентов')
+
+
+def старт_лога(шаг):
+    файл, _, режим = шаг.partition(':')
+    лл = sorted(glob.glob(os.path.join(DIR, 'konveyer_%s_%s_*.log' % (НАБОР, файл[:-3] + ('_' + режим if режим else '')))),
+                key=os.path.getmtime)
+    return time.strftime('%Y-%m-%d %H:%M', time.localtime(os.path.getctime(лл[-1]))) if лл else ''
+
+
 for n, (шаг, имя, модель) in enumerate(ЭТАПЫ):
     р = {'n': n, 'этап': имя, 'модель': модель, 'сделано': None, 'всего': None, 'процент': 0, 'состояние': 'ждёт',
-         'осталось_мин': None}
+         'осталось_мин': None, 'пояснение': ''}
+    файл_, _, режим_ = шаг.partition(':')
+    живой = (файл_ + ('_hvost' if режим_ else '')) in живые
+    v_ = по_файлу.get(шаг) or {}
+    if шаг != 'poisk' and not живой and финал_идёт and v_ and v_.get('волна') not in ('финал', 'после агентов'):
+        р['пояснение'] = 'в финале ещё не начат; волна %s: %s' % (v_.get('волна', '1'), 'код %s' % v_.get('код', '') if v_.get('конец')
+                                                                 else (фон.get(шаг) or 'шла фоном'))
+        полосы.append(р)
+        continue
     if шаг == 'poisk':
         зд = json.load(open(r'C:\seostat\drop\drop-storage\%s-zadachi.json' % НАБОР, encoding='utf-8'))
         р['всего'] = sum(len(з['движки']) for з in зд)
@@ -106,9 +127,12 @@ for n, (шаг, имя, модель) in enumerate(ЭТАПЫ):
         v = по_файлу.get(шаг) or {'конец': 'да' if 'готово' in лог_шага(шаг)[-200:] else '', 'код': 0,
                                   'старт': time.strftime('%Y-%m-%d %H:%M', time.localtime(max(
                                       os.path.getmtime(x) for x in glob.glob(os.path.join(DIR, 'konveyer_%s_poisk_razbor_*.log' % НАБОР))) - 60))}
-        if фон.get(шаг) == 'идёт':
+        if фон.get(шаг) == 'идёт' or живой:
             v = dict(v, конец='')
-        if v.get('конец') or (шаг in фон and фон[шаг] != 'идёт'):
+            if живой and фон.get(шаг) != 'идёт' and (v_.get('конец') or v_.get('волна') not in ('финал', 'после агентов')):
+                v['старт'] = старт_лога(шаг) or v.get('старт')
+                р['пояснение'] = 'запущен вручную'
+        if v.get('конец') or (шаг in фон and фон[шаг] != 'идёт' and not живой):
             р['состояние'] = 'готово' if v.get('код', 0) == 0 and фон.get(шаг, 'код 0') == 'код 0' else 'ошибка'
         else:
             р['состояние'] = 'идёт'
