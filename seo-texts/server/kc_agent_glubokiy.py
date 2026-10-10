@@ -30,9 +30,10 @@ sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
 НАБОР = os.environ.get('KC_NABOR', 'poisk')
 # 10.10, проверка гипотезы на финале meyer7: проход Luna (120–500 млн, свой файл) — 45% итогов пустые (150 из 334: агент
-# сдаётся за 5–7 шагов, у 42 ни одной открытой страницы), у Sol — 13%. Хвост тоже на Sol (~$0,07 на компанию);
-# KC_AGENT_HVOST_SOL=0 — как было. Модель задаётся до импорта kc_kontakty (он читает PROVIDER_MODEL).
-if os.environ.get('KC_AGENT_FAYL') and os.environ.get('KC_AGENT_HVOST_SOL', '1') == '1':
+# сдаётся за 5–7 шагов, у 42 ни одной открытой страницы), у Sol — 13%. Но разница — в основном размер компаний: Sol на
+# тех же пустых Luna нашёл результат у 13 из 129, а реальная цена Sol — ~$0,2 на агента (не $0,07). По умолчанию хвост —
+# снова Luna; KC_AGENT_HVOST_SOL=1 — на Sol. Модель задаётся до импорта kc_kontakty (он читает PROVIDER_MODEL).
+if os.environ.get('KC_AGENT_FAYL') and os.environ.get('KC_AGENT_HVOST_SOL', '0') == '1':
     os.environ['PROVIDER_MODEL'] = 'gpt-6-sol'
 import kc_kontakty as KK  # noqa: E402  (модель, КЛАССЫ)
 import kc_sayty as KS  # noqa: E402  (ядра названия)
