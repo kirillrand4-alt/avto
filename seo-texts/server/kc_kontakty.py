@@ -40,6 +40,13 @@ import enrich_contacts as EC  # noqa: E402
 import kc_pochty as KP  # noqa: E402  (почты — план Meyer п. 3.2)
 
 ВЫХОД = os.path.join(DIR, НАБОР + '-kontakty.jsonl')
+# 10.10, финал meyer7: обход упирался в одно ядро (разбор HTML на Python под GIL: процесс ~1,0 ядра при 48 и при
+# 96 потоках, 5–7 компаний в минуту). KC_PROTSESSOV процессов (по умолчанию 3 вне пилотов): родитель берёт долю 0 и
+# запускает детей на доли 1..N-1 (crc32(ИНН) % N); дети пишут каждый в свой файл (KC_FAYL) — два процесса в один
+# журнал на Windows не пишем; родитель ждёт детей и дописывает их журналы в общий (слитые файлы переименовываются).
+ГЛАВНЫЙ = ВЫХОД
+if os.environ.get('KC_FAYL'):
+    ВЫХОД = os.path.join(DIR, os.environ['KC_FAYL'])
 # Беларусь (пилот 08.10: CO.ТЕЛ ловит только +7/8 — белорусские номера терялись): +375 XX XXX-XX-XX и 8 0XX …
 ТЕЛ_BY = re.compile(r'(?:\+\s?375|(?<!\d)375|(?<!\d)8[\s\u00a0\-\(]*0)[\s\u00a0\-\(\)]*\d{2,4}[\s\u00a0\-\)]*\d{1,3}'
                     r'[\s\u00a0\-]*\d{2}[\s\u00a0\-]*\d{2}(?!\d)')
@@ -912,11 +919,44 @@ def приоритет(к):
         выр = 1e7 if к.get('вне_списка') else 3e7
     return (0 if к.get('сайт') else 1, -выр)
 
+def слить_доли():
+    """Журналы детей (<набор>-kontakty-dolyaN.jsonl) -> общий журнал; слитый файл переименовывается."""
+    import glob
+    слито = 0
+    for пф in sorted(glob.glob(os.path.join(DIR, НАБОР + '-kontakty-dolya*.jsonl'))):
+        with _лок:
+            with io.open(ГЛАВНЫЙ, 'a', encoding='utf-8') as f:
+                for s in io.open(пф, encoding='utf-8', errors='replace'):
+                    if not s.strip():
+                        continue
+                    try:
+                        json.loads(s)
+                    except ValueError:
+                        continue
+                    f.write(s if s.endswith('\n') else s + '\n')
+                    слито += 1
+                f.flush()
+                os.fsync(f.fileno())
+        os.replace(пф, пф + '.slito-' + time.strftime('%d%m-%H%M%S'))
+    return слито
+
+
 def main():
+    import subprocess
+    import zlib
+    доля = os.environ.get('KC_DOLYA', '')
+    процессов = int(os.environ.get('KC_PROTSESSOV', '1' if НАБОР.startswith('pilot') else '3'))
+    k_, N_ = (int(x) for x in доля.split('/')) if доля else (0, max(1, процессов))
+    if not доля:
+        с = слить_доли()  # остатки прерванного прошлого запуска
+        if с:
+            print('слито из долей прошлого запуска:', с, flush=True)
     сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     сделано, пустые = set(), {}
-    if os.path.exists(ВЫХОД):
-        for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
+    for журнал in dict.fromkeys((ГЛАВНЫЙ, ВЫХОД)):
+        if not os.path.exists(журнал):
+            continue
+        for s in io.open(журнал, encoding='utf-8', errors='replace'):
             try:
                 з = json.loads(s)
                 if з.get('итог') == 'ok' and (not ВЕРСИЯ or з.get('версия') == ВЕРСИЯ):
@@ -942,6 +982,19 @@ def main():
         print('заново по страницам Зенки (раньше сайт не открылся):', повтор_зенка, flush=True)
     очередь = sorted((к for i, к in сп.items() if (i, MN.домен(к['сайт'] or '')) not in сделано),
                      key=приоритет)  # сменился сайт (08.10: сайты групп) — обойти заново
+    if N_ > 1:
+        очередь = [к for к in очередь if zlib.crc32(str(к['inn']).encode('utf-8')) % N_ == k_]
+    дети = []
+    if not доля and N_ > 1:
+        мп = int(os.environ.get('KC_MODEL_PARALLEL', '24'))
+        for j in range(1, N_):
+            env = dict(os.environ, KC_DOLYA='%d/%d' % (j, N_), KC_FAYL='%s-kontakty-dolya%d.jsonl' % (НАБОР, j),
+                       KC_MODEL_PARALLEL=str(max(12, мп // N_ + 4)))
+            лог = open(os.path.join(DIR, 'konveyer_%s_kc_kontakty_dolya%d_%s.log' % (НАБОР, j, time.strftime('%d%m-%H%M'))), 'ab')
+            дети.append(subprocess.Popen([sys.executable, '-u', os.path.abspath(__file__), '--nabor=%s' % НАБОР,
+                                          '--shag=kc_kontakty.py_dolya%d' % j], cwd=DIR, env=env,
+                                         stdout=лог, stderr=subprocess.STDOUT))
+        print('процессов обхода', N_, '(дети: %s)' % ', '.join(str(д.pid) for д in дети), flush=True)
     ПРОКСИ.extend(п for п in (CP.Прокси(x) for x in json.load(open(os.path.join(DIR, 'checko-proxies.json'))))
                   if п.get('https://checko.ru/')[0] == 200)
     print('компаний', len(сп), 'в очереди', len(очередь), 'прокси', len(ПРОКСИ), flush=True)
@@ -976,8 +1029,9 @@ def main():
             finally:
                 в_работе.pop(threading.get_ident(), None)
 
+    всего_потоков = int(os.environ.get('KC_POTOKOV', '24' if НАБОР == 'pilot' else '6'))
     потоки = [threading.Thread(target=рабочий, daemon=True)
-              for _ in range(int(os.environ.get('KC_POTOKOV', '24' if НАБОР == 'pilot' else '6')))]
+              for _ in range(max(16, всего_потоков // N_ + 16) if N_ > 1 else всего_потоков)]
     for т in потоки:
         т.start()
     брошены = []
@@ -986,9 +1040,14 @@ def main():
         if оч.empty() and в_работе and all(time.time() - t0_ > лимит for _, t0_ in list(в_работе.values())):
             брошены = [i for i, _ in в_работе.values()]
             break
-    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-kontakty.jsonl'))
     if брошены:
         print('брошены (дольше %d мин, возьмёт следующий проход): %s' % (лимит / 60, ', '.join(брошены)), flush=True)
+    if дети:
+        for д in дети:
+            д.wait()
+        print('доли готовы, коды: %s; слито записей: %d' % ([д.returncode for д in дети], слить_доли()), flush=True)
+    if not доля:
+        shutil.copyfile(ГЛАВНЫЙ, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-kontakty.jsonl'))
     print('готово', flush=True)
     if брошены:
         os._exit(0)  # зависшие потоки-демоны не держат процесс
