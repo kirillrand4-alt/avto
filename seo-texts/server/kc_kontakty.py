@@ -879,17 +879,29 @@ def приоритет(к):
 
 def main():
     сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
-    сделано = set()
+    сделано, пустые = set(), {}
     if os.path.exists(ВЫХОД):
         for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
             try:
                 з = json.loads(s)
                 if з.get('итог') == 'ok' and (not ВЕРСИЯ or з.get('версия') == ВЕРСИЯ):
                     сделано.add((з['inn'], MN.домен(з.get('сайт') or '')))
+                    пустые[(з['inn'], MN.домен(з.get('сайт') or ''))] = bool(з.get('сайт')) and not any(
+                        ст in ('ok', 'кэш') for _, ст in з.get('страницы') or [])
                 if ВЕРСИЯ and з.get('итог') == 'ok' and any(x.get('url') for x in з.get('закупки') or []):
                     ПРОШЛЫЕ_ЗАКУПКИ[з['inn']] = з['закупки']
             except ValueError:
                 pass
+    # 10.10 (владелец: Зенка): сайт не открылся ни одной страницей, а теперь в кэше есть страницы этого домена (Зенка
+    # открыла его в браузере) — обойти заново: обход возьмёт страницы из кэша
+    повтор_зенка = 0
+    for кл, пуст in пустые.items():
+        if пуст and кл in сделано and кл[0] in сп and any(
+                MN.домен(x.get('url') or '') == кл[1] and x.get('html') for x in прочитать_кэш(кл[0]).get('pages') or []):
+            сделано.discard(кл)
+            повтор_зенка += 1
+    if повтор_зенка:
+        print('заново по страницам Зенки (раньше сайт не открылся):', повтор_зенка, flush=True)
     очередь = sorted((к for i, к in сп.items() if (i, MN.домен(к['сайт'] or '')) not in сделано),
                      key=приоритет)  # сменился сайт (08.10: сайты групп) — обойти заново
     ПРОКСИ.extend(п for п in (CP.Прокси(x) for x in json.load(open(os.path.join(DIR, 'checko-proxies.json'))))
