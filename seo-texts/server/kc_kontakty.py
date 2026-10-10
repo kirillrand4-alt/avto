@@ -70,6 +70,27 @@ def _сторож_прокси():
 if os.environ.get('KC_STOROZH_PROKSI', '1') == '1' and __name__ == '__main__':
     threading.Thread(target=_сторож_прокси, daemon=True).start()
 import enrich_contacts as EC  # noqa: E402
+
+# 11.10, финал meyer7 (py-spy по зависшим долям обхода): поток обогатителя держал GIL в _harvest_from_html —
+# EMAIL_RE `[A-Za-z0-9._%+\-]+@…` на длинной строке без пробелов (base64-картинка, сжатые данные в странице)
+# перебирает каждую стартовую позицию до конца строки: квадратично, на мегабайте — часы; весь процесс стоял.
+# Перед разбором — вырезать куски длиннее 300 символов без пробелов, кавычек, угловых скобок и «@» (адресов и номеров в
+# них нет). Общий enrich_contacts на сервере не трогаем — подмена только в процессе обхода.
+_ДЛИННОЕ = re.compile(r'[^\s<>"\'@]{300,}')
+
+
+def без_длинного(html):
+    return _ДЛИННОЕ.sub(' ', html) if html and len(html) > 300 else html
+
+
+_ec_harvest_исходный = EC._harvest_from_html
+
+
+def _ec_harvest_безопасно(blob, srcmap=None):
+    return _ec_harvest_исходный(без_длинного(blob), srcmap)
+
+
+EC._harvest_from_html = _ec_harvest_безопасно
 import kc_pochty as KP  # noqa: E402  (почты — план Meyer п. 3.2)
 
 ВЫХОД = os.path.join(DIR, НАБОР + '-kontakty.jsonl')
@@ -707,6 +728,7 @@ def обход(к, сайт):
         u = очередь[i]
         i += 1
         ст, html, _ = MN.скачать(u)
+        html = без_длинного(html)  # 11.10: base64 и прочие длинные куски — квадратичные регэкспы почты (см. выше)
         страницы.append([u, ст])
         if ст != 'ok':
             continue
