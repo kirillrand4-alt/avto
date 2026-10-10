@@ -26,6 +26,8 @@ os.environ.update({
     'POISK_NABOR': 'meyer7', 'KC_NABOR': 'meyer7', 'POISK_REGIONY_SVERKI': 'все', 'PILOT_VOLNY': '1',
     'KC_EC': '1', 'KC_EC_XML_OT': '5e8', 'KC_EC_BEZ_MODELI': '1', 'KC_LIMIT_MIN': '25',
     'KC_POTOKOV': '96', 'KC_MODEL_PARALLEL': '32',
+    # 10.10 23:53 / 00:20: обход упирается в одно ядро на процесс (GIL); 3 процесса дали ~2× (12 компаний/мин), ядер 12
+    'KC_PROTSESSOV': '6',
     'PILOT_SAYTY_MAX': '24000', 'KC_AGENT_XML_MIN': '60',
     'PILOT_MODEL': 'gpt-6-luna', 'PROVIDER_FALLBACK_CHEAP': 'gpt-5.6-luna'})
 sys.path.insert(0, DIR)
@@ -40,7 +42,7 @@ try:
 except Exception:  # noqa: BLE001
     pass
 w.o['волна'] = 'финал'
-w.o['перезапуск'] = 'финал с обхода %s: потоков 96, обогатитель параллельно' % time.strftime('%d.%m %H:%M')
+w.o['перезапуск'] = 'финал с обхода %s: 6 процессов обхода, обогатитель параллельно' % time.strftime('%d.%m %H:%M')
 w.статус()
 
 
