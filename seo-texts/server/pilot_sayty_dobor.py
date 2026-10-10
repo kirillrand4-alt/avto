@@ -28,6 +28,7 @@ import sayt_po_nazvaniyu as SN  # noqa: E402  (проверка найденно
 НАБОР = os.environ.get('POISK_NABOR', 'pilot')
 СПИСОК = os.path.join(DIR, НАБОР + '-spisok.json')
 ЖУРНАЛ = os.path.join(DIR, НАБОР + '-sayty-dobor.jsonl')
+ОШИБКА_XML = re.compile(r'аняты все|429|перезапрос|xmlriver-err|timed out|timeout', re.I)
 _лок = threading.Lock()
 
 
@@ -68,7 +69,9 @@ def main():
         for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):
             try:
                 з = json.loads(s)
-                if з.get('итог') in ('найден', 'не найден', 'отклонён'):
+                # 10.10, ревизия: 2212 из 2250 «не найден» были ошибками xmlriver («Заняты все каналы», 429,
+                # «перезапрос») — такие не «сделано», перезапрашиваются
+                if з.get('итог') in ('найден', 'отклонён') or (з.get('итог') == 'не найден' and not ОШИБКА_XML.search(з.get('источник') or '')):
                     сделано[з['inn']] = з
             except ValueError:
                 pass
@@ -96,11 +99,14 @@ def main():
         if 'средств' in (ист or ''):
             стоп[''] = ист
             return
+        if not сайт and ОШИБКА_XML.search(ист or ''):
+            записать({'inn': к['inn'], 'итог': 'ошибка', 'ошибка': ист})
+            return
         if сайт:  # 10.10: агрегаторы, реестры, чужие сайты — не принимаем (sayt_po_nazvaniyu)
             with _лок_д:
                 чужой = any(д == MN.домен(сайт) and и != к['inn'] for и, д in найдено_дом.items())
                 найдено_дом[к['inn']] = MN.домен(сайт)
-            принят, почему = SN.проверить(к['имя'], к['inn'], сайт, чужой)
+            принят, почему = SN.проверить(к['имя'], к['inn'], сайт, чужой, к.get('регион') or '', к.get('сегм') or '')
             if not принят:
                 записать({'inn': к['inn'], 'итог': 'отклонён', 'сайт': сайт, 'источник': ист or '', 'почему': почему})
                 return

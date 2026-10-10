@@ -16,6 +16,7 @@ import time
 from openpyxl import Workbook, load_workbook
 
 import kc_pochty as KP
+import sayt_po_nazvaniyu as SN
 from kc_xlsx import ГОРЯЧАЯ, лист, отличительные, хост
 from unikalnye_4_fayla import инн_листа
 
@@ -180,7 +181,7 @@ def main(п, п_meyer, п_анализ, п_слабые, п_out, набор='pil
                               (н.get('контекст') or '')[-160:]])
             з = {}
         сайт = з.get('сайт') or ''
-        инн_на = i in (з.get('инн_живой') or [])
+        инн_на = SN.инн_доказывает(i, з.get('сайт'), з.get('инн_живой'))  # 10.10: ИНН на реестре/каталоге — не доказательство
         м, о = пров.get(i), опров.get(i)
         if о and хост(о.get('сайт')) != хост(сайт):
             о = None

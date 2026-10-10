@@ -28,7 +28,10 @@ for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):
     if з.get('inn'):
         посл[з['inn']] = з
 сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
-найд = {i: з for i, з in посл.items() if з.get('итог') == 'найден'}
+# 10.10: ВТОРОЙ_ПРОХОД=1 — перепроверка отклонённых исправленным правилом (сущности HTML в названии, невидимые
+# символы); прошедшим дописывается «найден» (восстановлен)
+ВТОРОЙ = os.environ.get('VTOROY_PROHOD') == '1'
+найд = {i: з for i, з in посл.items() if з.get('итог') == ('отклонён' if ВТОРОЙ else 'найден')}
 частота = collections.Counter(MN.домен(з['сайт']) for з in найд.values())
 лок = threading.Lock()
 итог = collections.Counter()
@@ -38,10 +41,18 @@ for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):
 def одна(x):
     i, з = x
     имя = (сп.get(i) or {}).get('имя') or з.get('имя') or ''
-    принят, почему = SN.проверить(имя, i, з['сайт'], частота[MN.домен(з['сайт'])] > 1)
+    повтор = частота[MN.домен(з['сайт'])] > 1 or (ВТОРОЙ and 'другой компании' in (з.get('почему') or ''))
+    к_ = сп.get(i) or {}
+    принят, почему = SN.проверить(имя, i, з['сайт'], повтор, к_.get('регион') or '', к_.get('сегм') or '')
     with лок:
         итог['принят' if принят else 'отклонён'] += 1
-        if not принят:
+        if принят and ВТОРОЙ:
+            with io.open(ЖУРНАЛ, 'a', encoding='utf-8') as f:
+                f.write(json.dumps({'inn': i, 'итог': 'найден', 'сайт': з['сайт'], 'источник': з.get('источник', ''),
+                                    'почему': почему, 'восстановлен': '10.10'}, ensure_ascii=False) + '\n')
+                f.flush()
+                os.fsync(f.fileno())
+        if not принят and not ВТОРОЙ:
             причины[почему.split(':')[0][:40]] += 1
             with io.open(ЖУРНАЛ, 'a', encoding='utf-8') as f:
                 f.write(json.dumps({'inn': i, 'итог': 'отклонён', 'сайт': з['сайт'], 'источник': з.get('источник', ''),

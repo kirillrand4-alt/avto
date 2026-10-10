@@ -86,12 +86,15 @@ def поиск(q):
     U, K = os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')
     url = ('http://xmlriver.com/search_yandex/xml?user=%s&key=%s&groupby=10&query=%s'
            % (urllib.parse.quote(U), urllib.parse.quote(K), urllib.parse.quote(q)))
-    for _ in range(3):
+    for попытка in range(6):
         try:
             xml = urllib.request.build_opener(urllib.request.ProxyHandler({})).open(url, timeout=120).read().decode('utf-8', 'replace')
-        except Exception:  # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
+            time.sleep(min(60, 15 * (попытка + 1)) if '429' in repr(e) else 5)
             continue
-        if 'перезапрос' in xml:
+        # 10.10, ревизия: «Заняты все доступные вам каналы» превращалось в «пусто» — агент решал, что ничего нет
+        if 'перезапрос' in xml or 'аняты все' in xml or 'свободных каналов' in xml:
+            time.sleep(4 + 3 * попытка)
             continue
         out = []
         for блок in re.findall(r'<doc>(.*?)</doc>', xml, re.S)[:10]:

@@ -462,7 +462,7 @@ def main():
             сайт, ист, _ = EC.find_site_via_xmlriver({'name': x['имя'], 'city': рег})
             if сайт:
                 import sayt_po_nazvaniyu as SN  # 10.10: агрегаторы и чужие сайты не принимаем
-                принят, почему = SN.проверить(x['имя'], x['inn'], сайт)
+                принят, почему = SN.проверить(x['имя'], x['inn'], сайт, False, x.get('регион') or '', x.get('сегм') or '')
                 if принят:
                     x['сайт'], x['сайт_откуда'] = сайт, 'поиск по названию (%s)' % ист
         except Exception:  # noqa: BLE001
