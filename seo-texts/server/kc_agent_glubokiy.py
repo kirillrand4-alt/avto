@@ -289,7 +289,7 @@ def main():
                 except (ValueError, KeyError):
                     pass
     # 10.10: пустой итог прохода Luna (ни сайта, ни номеров, ни почт) — переделать на Sol: запись без «модель» = Luna
-    if os.environ.get('KC_AGENT_FAYL') and os.path.exists(ВЫХОД):
+    if os.environ.get('KC_AGENT_FAYL') and 'sol' in os.environ.get('PROVIDER_MODEL', '') and os.path.exists(ВЫХОД):
         посл = {}
         for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
             try:
