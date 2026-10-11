@@ -131,6 +131,15 @@ def main():
         переделать = {str(r[0]) for r in _ro.execute("select inn from site_facts where ts >= ? and ts < ? and "
                                                      "coalesce(facts_json,'')<>''", (от, до))}
         _ro.close()
+    # неудачный пересбор (сбой провайдера) обновляет ts, а факты оставляет прежними — такие строки уходят из окна по
+    # времени; PASPORT_PEREDELAT_SBOI='от': с факт-картой и пометкой «провайдер: …» не раньше «от» — тоже собрать заново
+    от_сбоев = os.environ.get('PASPORT_PEREDELAT_SBOI', '')
+    if от_сбоев:
+        _ro = sqlite3.connect('file:%s?mode=ro' % SF.BD.replace('\\', '/'), uri=True, timeout=60)
+        переделать |= {str(r[0]) for r in _ro.execute("select inn from site_facts where ts >= ? and "
+                                                      "coalesce(facts_json,'')<>'' and note like 'провайдер%'", (от_сбоев,))}
+        _ro.close()
+        окно = окно or ('сбои с ' + от_сбоев)
     for x in список:
         if x['inn'] in был_сайт and MN.домен(был_сайт[x['inn']]) != MN.домен(x['site']):
             x['pererazbor'] = True
