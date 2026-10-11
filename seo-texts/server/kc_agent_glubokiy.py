@@ -88,11 +88,22 @@ def записать(з):
             os.fsync(f.fileno())
 
 
+# 11.10: два прохода агентов по 30 потоков упираются в лимит каналов xmlriver — «заняты все каналы» на 6 попытках, и
+# «поиск не ответил» у 41–56 из 60 последних агентов (агент работал вслепую, вызовы модели впустую). Поиск — очередью:
+# не больше KC_XML_KANALOV запросов одновременно на процесс, на «заняты» — терпеливые повторы
+_XML_МЕСТА = threading.BoundedSemaphore(int(os.environ.get('KC_XML_KANALOV', '4')))
+
+
 def поиск(q):
     U, K = os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')
     url = ('http://xmlriver.com/search_yandex/xml?user=%s&key=%s&groupby=10&query=%s'
            % (urllib.parse.quote(U), urllib.parse.quote(K), urllib.parse.quote(q)))
-    for попытка in range(6):
+    with _XML_МЕСТА:
+        return _поиск(url)
+
+
+def _поиск(url):
+    for попытка in range(15):
         try:
             xml = urllib.request.build_opener(urllib.request.ProxyHandler({})).open(url, timeout=120).read().decode('utf-8', 'replace')
         except Exception as e:  # noqa: BLE001
@@ -100,7 +111,7 @@ def поиск(q):
             continue
         # 10.10, ревизия: «Заняты все доступные вам каналы» превращалось в «пусто» — агент решал, что ничего нет
         if 'перезапрос' in xml or 'аняты все' in xml or 'свободных каналов' in xml:
-            time.sleep(4 + 3 * попытка)
+            time.sleep(min(30, 3 + 3 * попытка))
             continue
         out = []
         for блок in re.findall(r'<doc>(.*?)</doc>', xml, re.S)[:10]:
@@ -301,6 +312,21 @@ def main():
             x.get('номера') or x.get('почты') or x.get('сайт_завода') or x.get('сайт_холдинга'))}
         сделано -= повтор
         print('пустые итоги Luna — заново на Sol:', len(повтор), flush=True)
+    # 11.10: итог агента, работавшего вслепую (≥2 раз «поиск не ответил» в журнале) и ничего не нашедшего, — переделать
+    посл_все = {}
+    for п in (ОБЩИЙ, ВЫХОД):
+        if os.path.exists(п):
+            for s in io.open(п, encoding='utf-8', errors='replace'):
+                try:
+                    x = json.loads(s)
+                    посл_все[x['inn']] = x
+                except (ValueError, KeyError):
+                    pass
+    слепые = {i for i, x in посл_все.items()
+              if json.dumps(x.get('журнал') or '', ensure_ascii=False).count('поиск не ответил') >= 2
+              and not (x.get('номера') or x.get('почты') or x.get('сайт_завода') or x.get('сайт_холдинга'))}
+    сделано -= слепые
+    print('вслепую (поиск не ответил) и пусто — заново:', len(слепые & set(вход)), flush=True)
     задачи = [dict(сп[i], отклонены=v.get('отклонены', '')) for i, v in вход.items() if i in сп and i not in сделано]
     # 09.10, сравнение моделей: ниже ~120 млн ₽ выручки агенты (обе модели) не находят почти ничего — не тратимся
     if os.environ.get('KC_AGENT_OT'):
