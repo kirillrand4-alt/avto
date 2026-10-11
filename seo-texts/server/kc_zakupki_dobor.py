@@ -30,6 +30,7 @@ import kc_kontakty as KK  # noqa: E402
 ВЫХОД = os.path.join(DIR, НАБОР + '-kontakty.jsonl')
 ОТ = float(os.environ.get('KC_ZAKUPKI_DOBOR_OT', '120e6'))
 ПОТОКОВ = int(os.environ.get('KC_ZAKUPKI_POTOKOV', '6'))
+СДЕЛАНО = os.path.join(DIR, НАБОР + '-zakupki-dobor-sdelano.txt')  # ИНН без карточек ЕИС (не ошибка) — резюм
 _лок = threading.Lock()
 
 
@@ -88,10 +89,11 @@ def main():
             continue
         if з.get('inn'):
             последняя[з['inn']] = з
+    сделано = set(io.open(СДЕЛАНО, encoding='utf-8').read().split()) if os.path.exists(СДЕЛАНО) else set()
     задачи = []
     for i, к in сп.items():
         з = последняя.get(i)
-        if not з or not i.isdigit() or (к.get('выручка') or 0) < ОТ:
+        if not з or not i.isdigit() or (к.get('выручка') or 0) < ОТ or i in сделано:
             continue
         if any(x.get('люди') or x.get('url') for x in з.get('закупки') or []):
             continue
@@ -125,8 +127,15 @@ def main():
             if not any('434' in str(c.get('ошибка') or '') for c in зак):
                 break
             time.sleep(60 * (попытка + 1))
-        нов = dict(з, закупки=зак, закупки_добор=time.strftime('%Y-%m-%d %H:%M'))
-        записать(нов)
+        if any(c.get('url') for c in зак):
+            записать(dict(з, закупки=зак, закупки_добор=time.strftime('%Y-%m-%d %H:%M')))
+        elif not any(('403' in str(c.get('ошибка') or '') or '434' in str(c.get('ошибка') or '')) for c in зак):
+            # 11.10: без карточек — не полная копия записи (файл обхода и так 370 МБ), а отметка «сделано» (резюм)
+            with _лок:
+                with io.open(СДЕЛАНО, 'a', encoding='utf-8') as f:
+                    f.write(к['inn'] + '\n')
+                    f.flush()
+                    os.fsync(f.fileno())
         люди = sum(len(c.get('люди') or []) for c in зак)
         with _лок:
             сч['карточек'] += sum(1 for c in зак if c.get('url'))
