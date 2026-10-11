@@ -155,8 +155,22 @@ def main():
                 сделано.add((x['inn'], MN.домен(x.get('сайт') or '')))
             except (ValueError, KeyError):
                 pass
+    # 11.10: сайт, который проверка (kc_sayt_proverka) уже признала «другая», Excel отклоняет при любом ответе
+    # опровергателя, а агенты (kc_glubokiy_vhod) берут его сами — вызовы модели на нём впустую
+    другая = set()
+    п_пров = os.path.join(DIR, НАБОР + '-sayt-proverka.jsonl')
+    if os.path.exists(п_пров):
+        посл = {}
+        for s in io.open(п_пров, encoding='utf-8', errors='replace'):
+            try:
+                x = json.loads(s)
+                посл[x['inn']] = x
+            except (ValueError, KeyError):
+                pass
+        другая = {(i, MN.домен(x.get('сайт') or '')) for i, x in посл.items() if x.get('итог') == 'другая'}
     задачи = [(сп[i], з, random.random() < 0.2) for i, з in конт.items() if i in сп and (i, MN.домен(з['сайт'])) not in сделано
-              and not i.startswith('САЙТ:')]  # без ИНН опровергать нечего — компания определена самим сайтом
+              and not i.startswith('САЙТ:')  # без ИНН опровергать нечего — компания определена самим сайтом
+              and (i, MN.домен(з['сайт'])) not in другая]
     print('сайтов на опровержение', len(задачи), flush=True)
     n = [0]
 
