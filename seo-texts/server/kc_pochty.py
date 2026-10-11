@@ -9,6 +9,7 @@
 """
 import html as H
 import re
+import urllib.parse
 
 ПОЧТА = re.compile(r'(?<![\w.+-])([a-z0-9][a-z0-9._%+-]{0,63}@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,24})(?![\w-])', re.I)
 ЗАЩИТА = [
@@ -45,7 +46,7 @@ def почты(html, текст):
         поз = поз if поз >= 0 else м.start()
         out.append({'почта': п, 'поз': поз, 'контекст': re.sub(r'\s+', ' ', текст[max(0, поз - 200):поз + 80])})
     for м in re.finditer(r'(?i)href\s*=\s*["\']mailto:([^"\'?]+)', html or ''):
-        п = H.unescape(м.group(1)).strip().lower()
+        п = urllib.parse.unquote(H.unescape(м.group(1))).strip().lower()  # 2-04: «mailto:%20addr» выбрасывался целиком
         if not ПОЧТА.fullmatch(п) or п in видел or ЛОВУШКИ.search(п):
             continue
         видел.add(п)

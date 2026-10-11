@@ -433,6 +433,9 @@ _МЕССЕНДЖЕР = re.compile(r'(?is)<a\b[^>]*\bhref=["\'](?:https?://)?(?:
                          r'["\'][^>]*>')
 
 
+_С_КОНТАКТОМ = re.compile(r'(?i)mailto:|tel:|[\w.+-]+@[\w-]+\.[a-zа-я]{2,10}\b')
+
+
 def _коды(с):
     try:
         return ''.join(chr(int(x)) for x in (с or '').split(',') if x.strip())
@@ -474,11 +477,23 @@ def раскрыть(h):
             if re.sub(r'\s', '', m.group(1)) in взято:
                 continue
             т = _коды(m.group(1))
-            if _похоже_контакт(т) and т not in хвост:
+            if т in хвост:
+                continue
+            if _похоже_контакт(т):
                 хвост.append(т)
+            elif _С_КОНТАКТОМ.search(т):  # 2-04: emailriddler — в массиве целая ссылка <a href="mailto:…">
+                h += '<div>%s</div>' % т
         if хвост:
             h += ''.join('<p>%s</p>' % _html.escape(т.split(':', 1)[-1] if re.match(r'(?i)(?:tel|mailto):', т) else т)
                          for т in хвост)
+    if re.search(r'unescape\(|decodeURI', h):
+        # 2-04: eval(unescape('%64%6f%63…')) — document.write('<a href="mailto:…">') целиком в %-кодировке (mdok.ru,
+        # zkdm.ru, biovesta.ru); раскодированное — разметкой в конец страницы
+        for m in re.finditer(r'(?:unescape|decodeURIComponent|decodeURI)\(\s*([\'"])((?:%[0-9a-fA-F]{2}|%u[0-9a-fA-F]{4}|[^\'"%]){12,6000}?)\1\s*\)', h):
+            т = re.sub(r'%u([0-9a-fA-F]{4})', lambda x: chr(int(x.group(1), 16)), m.group(2))
+            т = urllib.parse.unquote(т)
+            if _С_КОНТАКТОМ.search(т):
+                h += '<div>%s</div>' % т
     if re.search(r'(?i)wa\.me/|whatsapp|viber://', h):
         def _мес(m):
             ц = m.group(2)

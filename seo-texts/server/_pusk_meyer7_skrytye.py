@@ -2,7 +2,7 @@
 # 11.10 19:00: спрятанные контакты (kc_skrytye: JS-коды «Доминанта», мессенджеры) — отдельным процессом, стоп при шагах после агентов.
 # отдельным процессом; файл обхода сейчас никто не пишет (агенты пишут свой журнал), стоп — при шагах после агентов.
 import json, os, subprocess, sys, time, hashlib
-PROBA = '1'  # '1' — только счёт и примеры; '0' — запись
+PROBA = '0'  # '1' — только счёт и примеры; '0' — запись
 DIR = r'C:\sender\server'
 ЛОГ = os.path.join(DIR, 'konveyer_meyer7_skrytye_%s.log' % time.strftime('%d%m-%H%M'))
 python = r'C:\Program Files\Python312\python.exe'

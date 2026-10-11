@@ -6,6 +6,8 @@ r"""Спрятанные контакты из кэша страниц (реви
    (в_текст выбрасывает <script>), у 6 заводов (≈20 млрд выручки) в Excel 0 номеров и 0 почт.
 2) Номера только в ссылках мессенджеров (wa.me, api.whatsapp.com, whatsapp://, viber://) — у 12 компаний без номеров
    это был бы первый номер, у 86 с одним номером — второй (обычно мобильный менеджера).
+3) (2-04) eval(unescape('%64%6f…')) / decodeURI — document.write с mailto целиком в %-кодировке (mdok.ru, zkdm.ru),
+   emailriddler (массив кодов с целой ссылкой), «mailto:%20адрес» (выбрасывался целиком, ~1% компаний).
 
 По компаниям с открывшимся сайтом: страницы кэша с fromCharCode / wa.me / whatsapp / viber, разбор после
 telefony_izvlech.раскрыть; новое = найденное после раскрытия минус найденное без него и минус уже записанное.
@@ -14,7 +16,6 @@ kc_audit), прочие — отметкой в <набор>-skrytye-sdelano.txt
 
     KC_NABOR=<набор> python kc_skrytye.py            (KC_SKRYTYE_PROBA=1 — только счёт и примеры)
 """
-import gzip
 import io
 import json
 import os
@@ -22,6 +23,7 @@ import re
 import shutil
 import sys
 import time
+import zlib
 from concurrent.futures import ThreadPoolExecutor
 
 DIR = r'C:\sender\server'
@@ -39,19 +41,20 @@ import telefony_izvlech as TI  # noqa: E402
 ВЫХОД = os.path.join(DIR, НАБОР + '-kontakty.jsonl')
 СДЕЛАНО = os.path.join(DIR, НАБОР + '-skrytye-sdelano.txt')
 ПРОБА = os.environ.get('KC_SKRYTYE_PROBA') == '1'
-МЕТКА = re.compile(r'fromCharCode|wa\.me/|whatsapp|viber://', re.I)
-МЕТКА_Б = re.compile(rb'fromCharCode|wa\.me/|whatsapp|viber://', re.I)
+МЕТКА = re.compile(r'fromCharCode|wa\.me/|whatsapp|viber://|unescape\(|decodeURI|mailto:%', re.I)
+МЕТКИ_Б = (b'fromcharcode', b'wa.me/', b'whatsapp', b'viber://', b'unescape(', b'decodeuri', b'mailto:%')
 
 
 def кэш_с_меткой(ключ):
     """Страницы кэша, только если в файле есть метка (проба: полный разбор JSON 16 тыс. файлов — 65 мин)."""
     п = os.path.join(KK.КЭШ_СТРАНИЦ, '%s.json.gz' % re.sub(r'[^\w.-]', '_', ключ or ''))
     try:
-        with gzip.open(п, 'rb') as f:
-            б = f.read()
+        with open(п, 'rb') as f:
+            б = zlib.decompress(f.read(), 47)  # одним вызовом (gzip.open читает кусками по 8 КБ — 4,5 мин на 1000 файлов)
     except Exception:  # noqa: BLE001
         return []
-    if not МЕТКА_Б.search(б):
+    н = б.lower()
+    if not any(x in н for x in МЕТКИ_Б):
         return []
     try:
         return (json.loads(б.decode('utf-8', 'replace')) or {}).get('pages') or []
@@ -90,15 +93,15 @@ def одна(з):
         if not h or not МЕТКА.search(h) or (u not in свои_стр and MN.домен(u) != сайт_дом):
             continue
         р = TI.раскрыть(h)
-        if р == h:
-            continue
-        п0, н0 = разбор(h)
         п1, н1 = разбор(р)
+        п0, н0 = разбор(h) if р != h else (п1, н1)
+        # почты — против записи (доизвлечение почт уже прошло тем же разбором; новое — раскрытое и «mailto:%20адрес»),
+        # номера — ещё и против разбора без раскрытия (лишние номера страницы доизвлечение отсекло пределом)
         for e, (кт, как) in п1.items():
-            if e in п0 or e in есть_п or e in нов or not PI.годный(e):
+            if e in есть_п or e in нов or not PI.годный(e):
                 continue
             нов[e] = {'почта': e, 'доб': '', 'страницы': [u], 'контекст': кт, 'фио': '', 'должность': '',
-                      'скрытые': как or 'js-коды'}
+                      'скрытые': как or ('js-коды' if e not in п0 else 'mailto/повтор разбора')}
         for к, (номер, доб, кт) in н1.items():
             if к in н0 or к in есть_н or (not доб and к.split('|')[0] in есть_ц) or к in нов:
                 continue
@@ -134,7 +137,7 @@ def main():
         except Exception as e:  # noqa: BLE001
             print('сбой', з['inn'], repr(e)[:100], flush=True)
             return з, None
-    with ThreadPoolExecutor(int(os.environ.get('KC_SKRYTYE_POTOKOV', '4'))) as ex:
+    with ThreadPoolExecutor(int(os.environ.get('KC_SKRYTYE_POTOKOV', '8'))) as ex:
         for n, (з, нов) in enumerate(ex.map(найти_, задачи), 1):
             if not ПРОБА and time.time() - проверено > 60:
                 проверено = time.time()
