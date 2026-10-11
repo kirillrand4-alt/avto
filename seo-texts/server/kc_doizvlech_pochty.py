@@ -73,8 +73,15 @@ def main():
         if з.get('inn'):
             последняя[з['inn']] = з
     сделано = set(io.open(СДЕЛАНО, encoding='utf-8').read().split()) if os.path.exists(СДЕЛАНО) else set()
+    # 11.10: KC_TOLKO_INN=<файл со списком ИНН> — только эти компании, отметки «сделано» по ИНН не в счёт (хвост: компании,
+    # обойдённые заново по новому сайту, — их прежние отметки относятся к старому сайту)
+    if os.environ.get('KC_TOLKO_INN'):
+        только = set(io.open(os.environ['KC_TOLKO_INN'], encoding='utf-8').read().split())
+        сделано = set()
+    else:
+        только = None
     задачи = [з for з in последняя.values() if з.get('итог') == 'ok' and з.get('сайт') and not з.get('доизвлечено_почты')
-              and з['inn'] not in сделано]
+              and з['inn'] not in сделано and (только is None or з['inn'] in только)]
     if ПРОБА:
         задачи = задачи[:int(os.environ.get('KC_DOIZV_VYBORKA', '1500'))]
     print('компаний', len(задачи), 'проба' if ПРОБА else '', flush=True)

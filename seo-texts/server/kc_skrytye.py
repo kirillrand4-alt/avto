@@ -266,8 +266,15 @@ def main():
                 сделано.add(json.loads(s)['inn'])
             except (ValueError, KeyError):
                 pass
+    # 11.10: KC_TOLKO_INN=<файл со списком ИНН> — только эти компании, отметки «сделано» по ИНН не в счёт (хвост: компании,
+    # обойдённые заново по новому сайту, — их прежние отметки относятся к старому сайту)
+    if os.environ.get('KC_TOLKO_INN'):
+        только = set(io.open(os.environ['KC_TOLKO_INN'], encoding='utf-8').read().split())
+        сделано = set()
+    else:
+        только = None
     задачи = [з for з in последняя.values() if з.get('итог') == 'ok' and з.get('сайт') and not з.get('скрытые')
-              and з['inn'] not in сделано]
+              and з['inn'] not in сделано and (только is None or з['inn'] in только)]
     if ДОЛЯ:
         k, N = (int(x) for x in ДОЛЯ.split('/'))
         задачи = [з for з in задачи if zlib.crc32(з['inn'].encode('utf-8')) % N == k]

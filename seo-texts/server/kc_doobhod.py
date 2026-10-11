@@ -138,8 +138,15 @@ def main():
         Теперь: своих страниц ≤2 или среди обойдённых нет страницы контактов — независимо от почт."""
         свои = [u for u, ст in з.get('страницы') or [] if ст in ('ok', 'кэш')]
         return len(свои) <= 2 or not any(КОНТ.search(urllib.parse.unquote(u)) for u in свои)
+    # 11.10: KC_TOLKO_INN=<файл со списком ИНН> — только эти компании, отметки «сделано» по ИНН не в счёт (хвост: компании,
+    # обойдённые заново по новому сайту, — их прежние отметки относятся к старому сайту)
+    if os.environ.get('KC_TOLKO_INN'):
+        только = set(io.open(os.environ['KC_TOLKO_INN'], encoding='utf-8').read().split())
+        сделано = set()
+    else:
+        только = None
     задачи = [з for з in последняя.values() if з.get('итог') == 'ok' and з.get('сайт') and not з.get('дообход')
-              and з['inn'] not in сделано and any(ст in ('ok', 'кэш') for _, ст in з.get('страницы') or [])
+              and з['inn'] not in сделано and (только is None or з['inn'] in только) and any(ст in ('ok', 'кэш') for _, ст in з.get('страницы') or [])
               and (not any(н.get('почта') for н in з.get('номера') or []) or мало_страниц(з))]
     print('компаний без почт с открывшимся сайтом', len(задачи), flush=True)
     сч = {'страниц': 0, 'компаний_с_новыми': 0, 'новых_почт': 0, 'новых_номеров': 0}
