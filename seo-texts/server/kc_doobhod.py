@@ -67,6 +67,8 @@ def кандидаты(з, стр):
         h = x.get('html') or ''
         база = re.search(r'(?i)<base[^>]+href=["\']([^"\']+)', h)
         осн = база.group(1) if база else x.get('url') or ''
+        if not re.match(r'(?i)https?://', осн):  # 2-08: «//xn--…/about» при адресе без схемы — «unknown url type»
+            осн = 'http://' + осн.lstrip('/')
         for м in re.finditer(r'(?is)<a\b[^>]*?href\s*=\s*["\']?([^"\'\s>]+)[^>]*>(.*?)</a>', h):
             href, текст = H.unescape(м.group(1)), re.sub(r'<[^>]+>', ' ', м.group(2))[:80]
             if href.startswith(('mailto:', 'tel:', 'javascript:', '#')):

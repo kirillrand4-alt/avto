@@ -425,6 +425,72 @@ import html as _html  # noqa: E402
 import json as _json  # noqa: E402
 
 
+_ОБФ_ЭЛ = re.compile(r'([\w-]+)["\']?\s*:\s*\{\s*["\']?t["\']?\s*:\s*\[([\d,\s]+)\](?:\s*,\s*["\']?h["\']?\s*:\s*\[([\d,\s]+)\])?')
+_ОБФ_МАССИВ = re.compile(r'\[((?:\s*\d{2,5}\s*,){5,}\s*\d{2,5}\s*)\]')
+_ОБФ_ССЫЛКА = re.compile(r'(?is)<a\b([^>]*\bdata-(?:deep-)?obf-contact=["\']([\w-]+)["\'][^>]*)>.*?</a>')
+_МЕССЕНДЖЕР = re.compile(r'(?is)<a\b[^>]*\bhref=["\'](?:https?://)?(?:(wa\.me/|(?:api|web)\.whatsapp\.com/send/?\?(?:[^"\']*?&(?:amp;)?)?phone='
+                         r'|whatsapp://send/?\?(?:[^"\']*?&(?:amp;)?)?phone=)|viber://(?:chat|add)/?\?number=)(?:%2B|\+)?(\d{10,12})(?!\d)[^"\']*'
+                         r'["\'][^>]*>')
+
+
+def _коды(с):
+    try:
+        return ''.join(chr(int(x)) for x in (с or '').split(',') if x.strip())
+    except (ValueError, OverflowError):
+        return ''
+
+
+def _похоже_контакт(т):
+    return bool(re.fullmatch(r'(?:tel:|mailto:)?[\s\d()+\-.,;]{7,40}|(?:mailto:)?[\w.+-]+@[\w.-]+\.\w{2,10}', т or ''))
+
+
+def раскрыть(h):
+    """11.10, ревизия (2-05): спрятанные контакты — до разбора (в_текст выбрасывает <script>).
+    1) Сайты группы «Доминант» (зао-усз.рф и др.): <a data-obf-contact="c2">Показать телефон</a> + в скрипте
+       var c={c2:{t:[43,55,...],h:[116,101,108,58,...]}} и String.fromCharCode.apply — ссылка подменяется расшифровкой
+       (текст + href tel:/mailto:), прочие массивы кодов с контактом — абзацем в конце.
+    2) Ссылки мессенджеров wa.me / api.whatsapp.com / whatsapp:// / viber:// — номер в href → tel:-ссылка с подписью."""
+    if not h:
+        return h
+    if 'fromCharCode' in h:
+        знач, взято = {}, set()
+        for m in _ОБФ_ЭЛ.finditer(h):
+            т, сс = _коды(m.group(2)), _коды(m.group(3))
+            if _похоже_контакт(т) or _похоже_контакт(сс):
+                знач[m.group(1)] = (т, сс)
+                взято.update(re.sub(r'\s', '', x or '') for x in (m.group(2), m.group(3)))
+
+        def _зам(m):
+            т, сс = знач.get(m.group(2), ('', ''))
+            if not т and not сс:
+                return m.group(0)
+            if not re.match(r'(?i)(?:tel|mailto):', сс or ''):
+                сс = ('mailto:' if '@' in т else 'tel:') + т
+            return '<a href="%s">%s</a>' % (_html.escape(сс), _html.escape(т or сс.split(':', 1)[-1]))
+        if знач:
+            h = _ОБФ_ССЫЛКА.sub(_зам, h)
+        хвост = []
+        for m in _ОБФ_МАССИВ.finditer(h):
+            if re.sub(r'\s', '', m.group(1)) in взято:
+                continue
+            т = _коды(m.group(1))
+            if _похоже_контакт(т) and т not in хвост:
+                хвост.append(т)
+        if хвост:
+            h += ''.join('<p>%s</p>' % _html.escape(т.split(':', 1)[-1] if re.match(r'(?i)(?:tel|mailto):', т) else т)
+                         for т in хвост)
+    if re.search(r'(?i)wa\.me/|whatsapp|viber://', h):
+        def _мес(m):
+            ц = m.group(2)
+            if len(ц) == 11 and ц[0] == '8':
+                ц = '7' + ц[1:]
+            elif len(ц) == 10:
+                ц = '7' + ц
+            return ' <a href="tel:+%s">%s ' % (ц, 'WhatsApp' if m.group(1) else 'Viber')
+        h = _МЕССЕНДЖЕР.sub(_мес, h)
+    return h
+
+
 def в_текст(h):
     h = re.sub(r'(?is)<(script|style|noscript)[^>]*>.*?</\1>', ' ', h)
     h = re.sub(r'(?i)<a[^>]+href=["\']tel:([^"\']+)["\'][^>]*>', r' [tel:\1] ', h)
