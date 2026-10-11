@@ -33,6 +33,43 @@ import kc_kontakty as KK  # noqa: E402
 _лок = threading.Lock()
 
 
+ЕИС_ИНТЕРВАЛ = float(os.environ.get('KC_EIS_INTERVAL', '1.5'))
+_еис_лок, _еис_посл = threading.Lock(), [0.0]
+
+
+def _еис_с_паузой(исходный):
+    """11.10: первый добор meyer7 (4 потока без пауз) — ЕИС закрылся «403 Forbidden» на 4971 из 5202 через минуту.
+    Все запросы ЕИС (RSS и карточки) — не чаще одного в ЕИС_ИНТЕРВАЛ с на процесс; 403/434 — пауза 2 мин и повтор."""
+    def обёртка(url, *a, **k):
+        for попытка in range(3):
+            with _еис_лок:
+                ждать = _еис_посл[0] + ЕИС_ИНТЕРВАЛ - time.time()
+                if ждать > 0:
+                    time.sleep(ждать)
+                _еис_посл[0] = time.time()
+            try:
+                return исходный(url, *a, **k)
+            except Exception as e:  # noqa: BLE001
+                if попытка < 2 and ('403' in str(e) or '434' in str(e)):
+                    time.sleep(120)
+                    continue
+                raise
+    return обёртка
+
+
+KK.EC._eis_get = _еис_с_паузой(KK.EC._eis_get)
+
+
+def пора_стоп(t0_iso):
+    """Файл обхода пишут и шаги оркестратора после агентов — их старт после нашего = остановиться (гонка записей)."""
+    try:
+        шаги = json.load(io.open(os.path.join(DIR, НАБОР + '-konveyer.json'), encoding='utf-8')).get('шаги', {})
+    except Exception:  # noqa: BLE001
+        return False
+    return any(str((шаги.get(ш) or {}).get('старт') or '') > t0_iso
+               for ш in ('pilot_sayty_agentov.py', 'kc_kontakty.py', 'kc_dorazmetka.py'))
+
+
 def записать(з):
     with _лок:
         with io.open(ВЫХОД, 'a', encoding='utf-8') as f:
@@ -56,7 +93,12 @@ def main():
         з = последняя.get(i)
         if not з or not i.isdigit() or (к.get('выручка') or 0) < ОТ:
             continue
-        if з.get('закупки_добор') or any(x.get('люди') or x.get('url') for x in з.get('закупки') or []):
+        if any(x.get('люди') or x.get('url') for x in з.get('закупки') or []):
+            continue
+        # 11.10: первый добор meyer7 — ЕИС ответил «403 Forbidden» на 4971 из 5202 (блок адреса сервера): такие отметки
+        # не считаются сделанными, при следующем запуске — повтор
+        if з.get('закупки_добор') and not any(('403' in str(x.get('ошибка') or '') or '434' in str(x.get('ошибка') or ''))
+                                              for x in з.get('закупки') or []):
             continue
         задачи.append((к, з))
     задачи.sort(key=lambda x: -(x[0].get('выручка') or 0))
@@ -65,7 +107,13 @@ def main():
     сч = {'карточек': 0, 'людей': 0, 'с людьми': 0, 'ошибок': 0}
     n = [0]
 
+    t0_iso = time.strftime('%Y-%m-%dT%H:%M:%S')
+    стоп = [False, 0.0]
+
     def одна(x):
+        if стоп[0] or (time.time() - стоп[1] > 60 and (стоп.__setitem__(1, time.time()) or пора_стоп(t0_iso))):
+            стоп[0] = True
+            return
         к, з = x
         # 11.10, ревизия (№48/50): у 882 из 1884 компаний обхода ЕИС ответил «HTTP 434» (лимит частоты) — это не «закупок
         # нет»: пауза и повтор (до 3 попыток); после — запись с ошибкой (видно в проверке), отметка добора ставится
