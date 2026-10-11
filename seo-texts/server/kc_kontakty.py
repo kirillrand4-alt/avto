@@ -79,8 +79,21 @@ import enrich_contacts as EC  # noqa: E402
 _ДЛИННОЕ = re.compile(r'[^\s<>"\'@]{300,}')
 
 
+# 11.10 (py-spy, доля 4): заголовок раздела `<div…>\s*([^<]{4,70}?)\s*</` (EC._разделы в people_from_html) на `<div>` и
+# 20 тыс. пробелов без закрывающего тега — 27 с (сотни тысяч — часы): ведущий \s*, ленивая группа и хвостовой \s* делят один
+# пробельный прогон всеми способами. Прогоны пробелов сжимаем до одного символа (с переводом строки — до «\n»): разметка и
+# текст те же, длинных прогонов, на которых регэкспы съезжают в перебор, больше нет.
+_ПРОБЕЛЫ = re.compile(r'\s{2,}')
+
+
+def _сжать_прогон(m):
+    return '\n' if '\n' in m.group() else ' '
+
+
 def без_длинного(html):
-    return _ДЛИННОЕ.sub(' ', html) if html and len(html) > 300 else html
+    if not html or len(html) <= 300:
+        return html
+    return _ПРОБЕЛЫ.sub(_сжать_прогон, _ДЛИННОЕ.sub(' ', html))
 
 
 _ec_harvest_исходный = EC._harvest_from_html
@@ -91,6 +104,14 @@ def _ec_harvest_безопасно(blob, srcmap=None):
 
 
 EC._harvest_from_html = _ec_harvest_безопасно
+_ec_people_исходный = EC.people_from_html
+
+
+def _ec_people_безопасно(html, url=''):
+    return _ec_people_исходный(без_длинного(html), url)
+
+
+EC.people_from_html = _ec_people_безопасно
 # 11.10 (py-spy: все доли стояли в _harvest_from_html на `for rx, rep in _DEOBF`): деобфускация «[at]/(точка)»
 # начинается с `\s*` — на каждой позиции пробельного прогона (после снятия тегов сжатая вёрстка даёт прогоны в
 # десятки тысяч пробелов) регэксп съедает прогон до конца и откатывается: 20 тыс. пробелов — 8 с, сотни тысяч — часы.
@@ -1046,7 +1067,26 @@ def main():
     очередь = sorted((к for i, к in сп.items() if (i, MN.домен(к['сайт'] or '')) not in сделано),
                      key=приоритет)  # сменился сайт (08.10: сайты групп) — обойти заново
     if N_ > 1:
-        очередь = [к for к in очередь if zlib.crc32(str(к['inn']).encode('utf-8')) % N_ == k_]
+        # 11.10: доли — по позиции в общей очереди родителя (k::N), а не по хешу ИНН: при перезапуске весь остаток
+        # одной доли (590 компаний доли 4) снова доставался одному процессу, остальные пять простаивали. Родитель пишет
+        # порядок очереди в файл до запуска детей; позиция делит любой остаток поровну и по каждому уровню приоритета.
+        ФАЙЛ_ОЧ = os.path.join(DIR, НАБОР + '-kontakty-ochered.json')
+        порядок = None
+        if not доля:
+            порядок = [str(к['inn']) for к in очередь]
+            with open(ФАЙЛ_ОЧ + '.tmp', 'w', encoding='utf-8') as f:
+                json.dump(порядок, f, ensure_ascii=False)
+            os.replace(ФАЙЛ_ОЧ + '.tmp', ФАЙЛ_ОЧ)
+        elif os.path.exists(ФАЙЛ_ОЧ):
+            try:
+                порядок = json.load(open(ФАЙЛ_ОЧ, encoding='utf-8'))
+            except ValueError:
+                порядок = None
+        if порядок is not None:
+            моя = set(порядок[k_::N_])
+            очередь = [к for к in очередь if str(к['inn']) in моя]
+        else:
+            очередь = [к for к in очередь if zlib.crc32(str(к['inn']).encode('utf-8')) % N_ == k_]
     дети = []
     if not доля and N_ > 1:
         мп = int(os.environ.get('KC_MODEL_PARALLEL', '24'))
