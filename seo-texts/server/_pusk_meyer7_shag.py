@@ -4,10 +4,11 @@
 import json, os, subprocess, sys, time
 DIR = r'C:\sender\server'
 НАБОР = 'meyer7'
-ШАГ, МОДЕЛЬ = 'pilot_pasport.py', 'gpt-6-luna'
-# 11.10: паспорт шёл на модели по умолчанию site_facts (Luna 5.6): 39 компаний/мин в 8 потоков, молчащие стримы по 90 с,
-# ~10,9 тыс. к разбору = 4,5 ч. Luna 6 (основная модель прогона; запасная — Luna 5.6) и 24 потока.
-ДОП_ENV = {'FACTS_MODEL': 'gpt-6-luna', 'PASPORT_POTOKOV': '24'}
+ШАГ, МОДЕЛЬ = 'pilot_pasport.py', 'gpt-5.6-luna'
+# 11.10: паспорт шёл 39 компаний/мин в 8 потоков (~10,9 тыс. к разбору = 4,5 ч). Luna 6 в 24 потока (06:06–06:43) дала
+# 60/мин, но на одних и тех же 14 компаниях вдвое меньше оборудования линий / контроля качества / мощностей, чем Luna 5.6
+# -> обратно Luna 5.6 (модель site_facts по умолчанию), 24 потока; паспорта окна Luna 6 — собрать заново (сливаются)
+ДОП_ENV = {'FACTS_MODEL': 'gpt-5.6-luna', 'PASPORT_POTOKOV': '24', 'PASPORT_PEREDELAT': '2026-10-11T06:06|2026-10-11T06:43'}
 ЛОГ = os.path.join(DIR, 'konveyer_%s_%s_%s.log' % (НАБОР, ШАГ[:-3], time.strftime('%d%m-%H%M')))
 python = r'C:\Program Files\Python312\python.exe'
 if ШАГ == 'pilot_pasport.py':  # паспорт (site_facts -> gen_provider -> anthropic) — только питон панели 3.11

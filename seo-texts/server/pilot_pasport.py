@@ -36,9 +36,24 @@ def main():
     _ro = sqlite3.connect('file:%s?mode=ro' % SF.BD.replace('\\', '/'), uri=True, timeout=60)
     был_сайт = {str(r[0]): r[1] or '' for r in _ro.execute("select inn, site from site_facts where coalesce(site,'')<>''")}
     _ro.close()
+    # 11.10: паспорта, собранные в окне PASPORT_PEREDELAT='от|до' (ts site_facts), — собрать заново: сравнение на одних и
+    # тех же 14 компаниях — Luna 6 даёт вдвое меньше оборудования линий, контроля качества и мощностей, чем Luna 5.6
+    # (12/20, 6/12, 6/12 элементов); новые факты сливаются со старыми (site_facts._sliyanie), ничего не теряется
+    окно = os.environ.get('PASPORT_PEREDELAT', '')
+    переделать = set()
+    if '|' in окно:
+        от, до = окно.split('|', 1)
+        _ro = sqlite3.connect('file:%s?mode=ro' % SF.BD.replace('\\', '/'), uri=True, timeout=60)
+        переделать = {str(r[0]) for r in _ro.execute("select inn from site_facts where ts >= ? and ts < ? and "
+                                                     "coalesce(facts_json,'')<>''", (от, до))}
+        _ro.close()
     for x in список:
         if x['inn'] in был_сайт and MN.домен(был_сайт[x['inn']]) != MN.домен(x['site']):
             x['pererazbor'] = True
+        if x['inn'] in переделать:
+            x['pererazbor'] = True
+    if переделать:
+        print('паспорт заново (окно %s):' % окно, sum(1 for x in список if x['inn'] in переделать), flush=True)
     print('компаний с открывшимся сайтом', len(список), 'паспорт заново (сайт сменился)',
           sum(1 for x in список if x.get('pererazbor')), flush=True)
     итог = SF.sobrat(predel=len(список), spisok=список, potokov=int(os.environ.get('PASPORT_POTOKOV', '8')))
