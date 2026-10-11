@@ -89,7 +89,60 @@ _без_серт = urllib.request.build_opener(
 _хосты, _хосты_лок = {}, threading.Lock()
 
 
+_замена, _замена_лок = {}, threading.Lock()  # (схема, хост) -> (схема, хост), открывшиеся вместо, или None
+
+
+def _запасные(url, ошибка):
+    """11.10 (ревизор 24, 502 неоткрывшихся сайта): обход не менял ни схему, ни хост. «SSL EOF» на https у
+    mostovskoye.ru, а по http он открывается; «getaddrinfo» у pobedavkusa.ru, а www.pobedavkusa.ru живой;
+    «RemoteDisconnected» на http у agrokomplex.ru, а https — открывается. Ответ сервера (HTTP 4xx/5xx) — не повод."""
+    u = urllib.parse.urlsplit(url)
+    хост = (u.hostname or '').lower()
+    if not хост or хост.replace('.', '').isdigit() or ошибка.startswith('ошибка: HTTP '):
+        return []
+    т = ошибка.lower()
+    if 'getaddrinfo' in т or 'name or service' in т or 'nodename' in т:
+        другой = хост[4:] if хост.startswith('www.') else 'www.' + хост
+        return [(u.scheme, другой)] + ([('https', другой)] if u.scheme == 'http' else [])
+    if u.scheme == 'https':
+        return [('http', хост)]
+    if u.scheme == 'http':
+        return [('https', хост)]
+    return []
+
+
+def _с_хостом(url, схема, хост):
+    u = urllib.parse.urlsplit(url)
+    порт = ':%d' % u.port if u.port and u.port not in (80, 443) else ''
+    return urllib.parse.urlunsplit((схема, хост + порт, u.path, u.query, u.fragment))
+
+
 def скачать(url):
+    """Как _скачать_раз, плюс запасной адрес при ошибке соединения (см. _запасные). Удачная замена запоминается на
+    хост: остальные страницы сайта сразу идут по ней, без повторной ошибки; неудачная — тоже (не пробуем снова)."""
+    u = urllib.parse.urlsplit(url)
+    ключ = (u.scheme, (u.hostname or '').lower())
+    with _замена_лок:
+        зам = _замена.get(ключ, 0)
+    if зам:  # исходный адрес у этого хоста уже не открылся — не тратим на него время снова
+        return _скачать_раз(_с_хостом(url, *зам))
+    итог = _скачать_раз(url)
+    if not итог[0].startswith('ошибка') or зам is None:
+        return итог
+    for схема, хост in _запасные(url, итог[0]):
+        if (схема, хост) == ключ:
+            continue
+        другое = _скачать_раз(_с_хостом(url, схема, хост))
+        if not другое[0].startswith('ошибка'):
+            with _замена_лок:
+                _замена[ключ] = (схема, хост)
+            return другое
+    with _замена_лок:
+        _замена.setdefault(ключ, None)
+    return итог
+
+
+def _скачать_раз(url):
     """Быстрый скачок для проверки наличия: одна попытка напрямую (15 с); сертификат —
     только при ошибке сертификата; прокси — только при обрыве/403; 429/503 — одна пауза."""
     хост = urllib.parse.urlsplit(url).hostname or ''
