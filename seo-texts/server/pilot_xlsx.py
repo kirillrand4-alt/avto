@@ -43,7 +43,8 @@ from unikalnye_4_fayla import инн_листа
 
 # хосты, которые не бывают сайтом предприятия (дополнение к ploshchadki.СПИСОК)
 НЕ_САЙТЫ = ('onrender.com', 'netlify.app', 'vercel.app', 'github.io', 'herokuapp.com', 'orgs.biz', 'vk.link',
-            'tilda.ws', 'clck.ru', 'bit.ly', 'list-org.com', 'zachestnyibiznes.ru', 'rusprofile.ru', 'checko.ru')
+            'tilda.ws', 'clck.ru', 'bit.ly', 'list-org.com', 'zachestnyibiznes.ru', 'rusprofile.ru', 'checko.ru',
+            'max.ru')  # 2-04: канал мессенджера MAX (max.ru/u/…) вместо сайта
 
 def лпр_по_умолчанию(роль, сегм):
     с = (сегм or '').lower()
