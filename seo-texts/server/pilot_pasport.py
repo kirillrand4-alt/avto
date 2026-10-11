@@ -175,9 +175,9 @@ def main():
     n = 0
     with io.open(ВЫХОД, 'w', encoding='utf-8') as f:
         for i in (x['inn'] for x in список):
-            р = c.execute('select facts_json from site_facts where inn=?', (i,)).fetchone()
-            if р and р[0]:
-                f.write(json.dumps({'inn': i, 'паспорт': json.loads(р[0])}, ensure_ascii=False) + '\n')
+            р = c.execute('select facts_json, site from site_facts where inn=?', (i,)).fetchone()
+            if р and р[0]:  # 11.10: + сайт паспорта — Excel показывает паспорт только по текущему подтверждённому сайту
+                f.write(json.dumps({'inn': i, 'паспорт': json.loads(р[0]), 'сайт': р[1] or ''}, ensure_ascii=False) + '\n')
                 n += 1
         f.flush()
         os.fsync(f.fileno())
