@@ -93,6 +93,8 @@ def плохой_номер(номер):
             return 'кода %s в России нет — ошибка разбора' % ц[1:4]
         if ц[1] == '7':
             return 'код %s — Казахстан или сбитый номер' % ц[1:4]
+        if ц[1:3] in ('88', '89'):
+            return 'кода %s в России нет — ошибка разбора' % ц[1:4]
     return ''
 
 
@@ -162,6 +164,83 @@ def jl(п):
 ]
 
 
+# 11.10, ревизия 50 агентов (№07/08/09): почты в записях обхода — склейки и кодировки (серверный обогатитель ищет адрес
+# без границ слова): «%20info@», «u003einfo@», «36-52-16kdodf@», «e-mailinfo@», «info@kzp.ruinfo», «.vyaznikov@», ROT13
+# («hx@rkbvytebhc.eh» = uk@exoilgroup.ru), опечатки сайтов (gmail.ru, yndex.ru); демо-адреса шаблонов (commerce@site.ru,
+# mail@example.com) и служебные адреса сервисов (VK ID на InSales: info@sferum.ru, passwd_lc@corp.mail.ru; хостинги).
+# Битый адрес в рассылке — отказ доставки и удар по репутации домена: чиним, что чинится, остальное — в «Снято».
+ЗОНЫ = ('xn--p1ai', 'xn--90ais', 'xn--p1acf', 'online', 'group', 'store', 'moscow', 'info', 'biz', 'pro', 'net', 'org',
+        'com', 'site', 'shop', 'tech', 'agro', 'spb', 'рус', 'бел', 'ru', 'su', 'by', 'kz', 'ua', 'рф', 'io', 'me', 'de', 'eu',
+        'uk', 'cn', 'tv', 'uz', 'am', 'az', 'ge', 'kg', 'md', 'tj', 'lv', 'lt', 'ee', 'pl', 'it', 'fr', 'es', 'nl', 'ch', 'at',
+        'us', 'co', 'cc', 'ws', 'name', 'club', 'market', 'company', 'center', 'expert', 'farm', 'land', 'space', 'top', 'ltd')
+ОПЕЧАТКИ_ДОМЕНОВ = {'gmail.ru': 'gmail.com', 'gmal.com': 'gmail.com', 'gmail.co': 'gmail.com', 'yndex.ru': 'yandex.ru',
+                    'yadex.ru': 'yandex.ru', 'yandex.ri': 'yandex.ru', 'mal.ru': 'mail.ru', 'mail.ri': 'mail.ru',
+                    'mail.rum': 'mail.ru', 'mail.ruu': 'mail.ru', 'maill.ru': 'mail.ru', 'inbox.ri': 'inbox.ru'}
+ДЕМО_ДОМЕНЫ = {'site.ru', 'site.com', 'example.com', 'example.ru', 'example.org', 'example.net', 'domain.ru', 'domain.com',
+               'yoursite.ru', 'yoursite.com', 'yourdomain.ru', 'yourdomain.com', 'yourwebsitedomain.com', 'mysite.ru',
+               'mysite.com', 'test.ru', 'test.com', 'primer.ru', 'email.com', 'company.com', 'company.ru', 'sferum.ru',
+               'website.com', 'sitename.ru', 'mail.example'}
+ДЕМО_АДРЕСА = {'passwd_lc@corp.mail.ru', 'info@google.com', 'example@mail.ru', 'name@mail.ru', 'user@mail.ru',
+               'mail@mail.ru', 'ivanov@mail.ru', 'test@mail.ru', 'email@email.com', 'your@email.com', 'you@yourwebsitedomain.com'}
+СЕРВИСЫ_ПОЧТ = re.compile(r'@(?:[\w-]+\.)*(?:beget\.(?:com|ru|tech)|timeweb\.(?:ru|com)|sweb\.ru|spaceweb\.ru|reg\.ru|nic\.ru|'
+                          r'hostland\.ru|jino\.ru|masterhost\.ru|ihc\.ru|sprinthost\.ru|majordomo\.ru|deal\.by|ds-russia\.ru|'
+                          r'tilda\.(?:cc|ws)|wix\.com|wixpress\.com|insales\.ru|nethouse\.ru|ukit\.(?:me|com)|sentry\.io|'
+                          r'corp\.mail\.ru)$')
+_ПОЧТА_СТРОГО = re.compile(r'^[a-z0-9а-яё_][a-z0-9а-яё._%+\-]*@(?:[a-z0-9а-яё](?:[a-z0-9а-яё\-]*[a-z0-9а-яё])?\.)+'
+                           r'(?:[a-zа-яё]{2,}|xn--[a-z0-9\-]+)$')
+
+
+_СТОП_ДОП = set()  # доп. стоп-лист (адреса и домены): <набор>-stop-pochty.txt рядом с данными набора, по строке
+
+
+def почта_чисто(п):
+    """-> (адрес, '') — годный (возможно исправленный) | ('', причина) — снять."""
+    import codecs
+    import urllib.parse
+    a = (п or '').strip().lower()
+    if '%' in a:
+        a = urllib.parse.unquote(a)
+    a = re.sub(r'^(?:u003e|u003c|%3e|%20|mailto:|[>\s:;,])+', '', a)
+    a = a.strip(' .,;:)(<>"\'')
+    if a.count('@') != 1:
+        return '', 'битый адрес'
+    лок, дом = a.split('@')
+    if re.match(r'^e-?mail[:\-_]?(?=[a-z])', лок) and лок not in ('email', 'e-mail'):
+        лок = re.sub(r'^e-?mail[:\-_]?', '', лок)
+    м = re.match(r'^[\d\-()+ ]{6,}(?=[a-zа-я])', лок)  # «36-52-16kdodf» — приклеен номер телефона
+    if м:
+        лок = лок[м.end():]
+    if 'mailto' in лок:  # «page-mailtosales@» — склейка ссылки
+        лок = лок.split('mailto')[-1].lstrip(':')
+    лок = лок.lstrip('._-')
+    метки = дом.split('.')
+    if len(метки) >= 2 and метки[-1] not in ЗОНЫ:
+        for з in sorted(ЗОНЫ, key=len, reverse=True):  # «kzp.ruinfo» — к зоне приклеилось следующее слово
+            if метки[-1].startswith(з) and len(метки[-1]) > len(з):
+                метки[-1] = з
+                break
+        else:
+            r = codecs.encode(лок + '@' + дом, 'rot13')
+            if r.split('.')[-1] in ('ru', 'com', 'by', 'net', 'org', 'su', 'info', 'biz'):
+                лок, метки = r.split('@')[0], r.split('@')[1].split('.')
+    дом = '.'.join(метки)
+    дом = ОПЕЧАТКИ_ДОМЕНОВ.get(дом, дом)
+    a = лок + '@' + дом
+    if not _ПОЧТА_СТРОГО.match(a):
+        return '', 'битый адрес (%s)' % (п or '')[:40]
+    if a in ДЕМО_АДРЕСА or дом in ДЕМО_ДОМЕНЫ or a in _СТОП_ДОП or дом in _СТОП_ДОП:
+        return '', 'демо-адрес шаблона/сервиса'
+    if СЕРВИСЫ_ПОЧТ.search(a):
+        return '', 'адрес хостинга/конструктора/сервиса, не компании'
+    return a, ''
+
+
+def фантом_сдвиг(ц10, все):
+    """Серверный обогатитель добавляет копию городского номера со сдвигом на цифру: 845 354-36-47 -> 453 543-64-75.
+    True, если первые 9 цифр номера равны последним 9 цифрам другого номера той же компании."""
+    return any(x != ц10 and len(x) == 10 and ц10[:9] == x[1:] for x in все)
+
+
 def роль_по_почте(почта):
     лок = почта.split('@')[0].lower()
     for rx, роль in ПОЧТА_РОЛЬ:
@@ -177,6 +256,9 @@ def main(п, п_meyer, п_анализ, п_слабые, п_out, набор='pil
     конт = {i: з for i, з in jl(ф('kontakty.jsonl')).items() if з.get('итог') == 'ok'}
     аудит, аудит2 = jl(ф('audit.jsonl')), jl(ф('audit2.jsonl'))
     пров, опров, глуб = jl(ф('sayt-proverka.jsonl')), jl(ф('oprov.jsonl')), jl(ф('glubokiy2.jsonl'))
+    if os.path.exists(ф('stop-pochty.txt')):
+        _СТОП_ДОП.update(x.strip().lower() for x in open(ф('stop-pochty.txt'), encoding='utf-8')
+                         if x.strip() and not x.startswith('#'))
     доп = jl(ф('dop.jsonl'))  # сегмент по доп. ОКВЭД — проверка по сайту (pilot_dop_proverka)
     паспорт = {i: (x.get('паспорт') or {}) for i, x in jl(ф('pasport.jsonl')).items()}  # паспорт сайта (site_facts)
 
@@ -260,8 +342,11 @@ def main(п, п_meyer, п_анализ, п_слабые, п_out, набор='pil
                             'Почему': (м.get('почему') or '')[:200], 'Контактов с сайта (не в «Контактах»)': len(з.get('номера', []))})
         else:
             а2 = (аудит2.get(i) or аудит.get(i) or {}).get('сайт_чей', '')
-            if а2.startswith('свой') or а2.startswith('по названию'):
-                статус = а2
+            if а2.startswith('свой') and len(set(з.get('инн_живой') or [])) > 6:
+                # 11.10, ревизия (№21): «свой» по ИНН на каталоге/реестре (b2b-69.ru — 562 ИНН) — не доказательство
+                отклонён = 'каталог/реестр: на сайте ИНН %d организаций' % len(set(з.get('инн_живой') or []))
+            elif а2.startswith('свой') or а2.startswith('по названию'):
+                статус = а2 + ('' if а2.startswith('свой') else '; моделью не проверен')
             else:
                 отклонён = 'не подтверждён: на сайте нет ни ИНН, ни названия (%s)' % а2
         if отклонён and инн_на and о and о.get('итог') == 'опровергаю':
@@ -308,8 +393,19 @@ def main(п, п_meyer, п_анализ, п_слабые, п_out, набор='pil
 
         for x in з.get('почты_исключены', []):  # 09.10: не видна людям ни на одной странице (ловушка для сборщиков)
             снято.append([к['имя'], i, x['почта'], x.get('страница', ''), 'почта не видна на странице: %s' % x.get('где', ''), ''])
+        все10 = {re.sub(r'\D', '', н.get('номер') or '')[-10:] for н in з.get('номера', []) if н.get('номер')}
         for н in з.get('номера', []):
             номер, почта, доб = н.get('номер') or '', н.get('почта') or '', н.get('доб') or ''
+            if почта:
+                чист, прич = почта_чисто(почта)
+                if not чист:
+                    снято.append([к['имя'], i, почта, н['страницы'][0], 'почта: ' + прич, (н.get('контекст') or '')[-160:]])
+                    continue
+                почта = чист
+            if номер and re.sub(r'\D', '', номер).startswith('7') and фантом_сдвиг(re.sub(r'\D', '', номер)[-10:], все10):
+                снято.append([к['имя'], i, номер, н['страницы'][0], 'номер: копия другого номера со сдвигом на цифру (ошибка разбора)',
+                              (н.get('контекст') or '')[-160:]])
+                continue
             if номер and плохой_номер(номер):
                 снято.append([к['имя'], i, номер, н['страницы'][0], 'номер: ' + плохой_номер(номер), (н.get('контекст') or '')[-160:]])
                 continue
@@ -338,6 +434,11 @@ def main(п, п_meyer, п_анализ, п_слабые, п_out, набор='pil
                 if почта and KP.вид(почта, сайт) == 'своя' and роль_по_почте(почта):
                     роль, лпр = роль_по_почте(почта)
                     н = dict(н, почему='по адресу почты')
+            # 11.10, ревизия (№07): snab@/zakup@/otk@ с классом «общий» от обогатителя — 21% почт снабжения без роли отдела
+            if почта and роль in ('Общий номер / приёмная', 'Прочее') and роль_по_почте(почта) and \
+                    KP.вид(почта, сайт) in ('своя', 'публичная'):
+                роль, лпр = роль_по_почте(почта)
+                н = dict(н, почему='по адресу почты')
             if почта and re.match(r'^(info|office|mail|sales|zakaz|order|secretar|priem|reception|post)\b', почта):
                 роль, лпр = (роль if роль != 'Прочее' else 'Общий номер / приёмная'), (лпр if н.get('фио') else 'нет')
             скрыта = ('; почта %s — возможна ловушка, не для рассылки' % н['видимость']) if н.get('видимость') else ''
