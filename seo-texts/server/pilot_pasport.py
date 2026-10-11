@@ -160,6 +160,43 @@ def main():
     переделать |= {str(r[0]) for r in _ro.execute("select inn from site_facts where note='страниц в кэше нет' and "
                                                   "inn like 'САЙТ:%'")}
     _ro.close()
+    # 11.10, ревизия (№36): пустой паспорт (все поля пусты) site_facts считает готовым навсегда — 1,2 тыс. таких, в т.ч.
+    # на своих сайтах с фотосепаратором на странице. Пересобрать один раз (pererazborov=0; после пересбора станет 1)
+    ПОЛЯ = ('продукция', 'оборудование_линии', 'контроль_качества', 'мощности', 'сырьё', 'упаковка_фасовка')
+    _ro = sqlite3.connect('file:%s?mode=ro' % SF.BD.replace('\\', '/'), uri=True, timeout=60)
+    пустые = set()
+    for инн, fj in _ro.execute("select inn, facts_json from site_facts where coalesce(facts_json,'')<>'' and "
+                               "coalesce(pererazborov,0)=0"):
+        try:
+            ф = json.loads(fj)
+        except ValueError:
+            continue
+        if isinstance(ф, dict) and all(SF._pusto(ф.get(п)) for п in ПОЛЯ):
+            пустые.add(str(инн))
+    _ro.close()
+    в_списке = {x['inn'] for x in список}
+    if пустые & в_списке:
+        print('паспорт заново (пустой):', len(пустые & в_списке), flush=True)
+    переделать |= пустые
+    # 11.10, ревизия (№36): сайт сменился (чужой заменён своим) — site_facts._sliyanie склеивал новые факты со старыми
+    # фактами чужого сайта (химера: у КДВ «мука», у НАК Азот «аммиак» КазАзота). Старые факты — в резервный файл
+    # (<набор>-pasport-staroe.jsonl, fsync) и обнулить до пересбора: склеивать будет не с чем
+    сменился = [x['inn'] for x in список if x['inn'] in был_сайт and MN.домен(был_сайт[x['inn']]) != MN.домен(x['site'])]
+    if сменился and os.environ.get('PASPORT_BEZ_HIMER', '1') == '1':
+        c = sqlite3.connect(SF.BD, timeout=120)
+        with io.open(os.path.join(DIR, НАБОР + '-pasport-staroe.jsonl'), 'a', encoding='utf-8') as f:
+            for i in сменился:
+                р = c.execute('select facts_json, site, ts from site_facts where inn=?', (i,)).fetchone()
+                if р and р[0]:
+                    f.write(json.dumps({'inn': i, 'facts_json': р[0], 'site': р[1], 'ts': р[2]}, ensure_ascii=False) + '\n')
+            f.flush()
+            os.fsync(f.fileno())
+        for k in range(0, len(сменился), 500):
+            ч = сменился[k:k + 500]
+            c.execute("update site_facts set facts_json='', sources_json='' where inn in (%s)" % ','.join('?' * len(ч)), ч)
+        c.commit()
+        c.close()
+        print('сайт сменился — старые факты сняты (резерв в pasport-staroe.jsonl):', len(сменился), flush=True)
     for x in список:
         if x['inn'] in был_сайт and MN.домен(был_сайт[x['inn']]) != MN.домен(x['site']):
             x['pererazbor'] = True
