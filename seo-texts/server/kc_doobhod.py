@@ -72,6 +72,9 @@ def кандидаты(з, стр):
             if href.startswith(('mailto:', 'tel:', 'javascript:', '#')):
                 continue
             u = urllib.parse.urljoin(осн, href).split('#')[0]
+            if дом(u).endswith('tilda.ws') and дом(u) != сайт_д:  # 2-08: меню на техническом домене Tilda — свой хост
+                u = urllib.parse.urlunsplit(urllib.parse.urlsplit(з['сайт'] if з['сайт'].startswith('http') else
+                                                                  'https://' + з['сайт'])[:2] + urllib.parse.urlsplit(u)[2:])
             if дом(u) != сайт_д or норм(u) in были or МИМО.search(urllib.parse.unquote(u)):
                 continue
             for k, rx in enumerate(ПРИОРИТЕТ):
@@ -93,6 +96,10 @@ def одна(з):
         страницы.append([u, 'дообход: ' + ст])
         if ст != 'ok':
             continue
+        try:  # 2-08: страницы дообхода — и в кэш (повторное извлечение, паспорт, ревизии их видят)
+            KK.в_кэш(з['inn'], {u: html}, сайт=з.get('сайт') or '')
+        except Exception:  # noqa: BLE001
+            pass
         html = KK.без_длинного(html)
         текст = KK.MP.в_текст(html) + KK.json_текст(html)
         for x in KP.почты(html, текст):
@@ -122,9 +129,16 @@ def main():
         if з.get('inn'):
             последняя[з['inn']] = з
     сделано = set(io.open(СДЕЛАНО, encoding='utf-8').read().split()) if os.path.exists(СДЕЛАНО) else set()
+    КОНТ = re.compile(r'kontakt|contact|контакт|svyaz|связ', re.I)
+
+    def мало_страниц(з):
+        """2-08: дообход брал только компании без почт — 142 из 158 с необойдённой «Контакты» отсеялись (info@ с главной).
+        Теперь: своих страниц ≤2 или среди обойдённых нет страницы контактов — независимо от почт."""
+        свои = [u for u, ст in з.get('страницы') or [] if ст in ('ok', 'кэш')]
+        return len(свои) <= 2 or not any(КОНТ.search(urllib.parse.unquote(u)) for u in свои)
     задачи = [з for з in последняя.values() if з.get('итог') == 'ok' and з.get('сайт') and not з.get('дообход')
               and з['inn'] not in сделано and any(ст in ('ok', 'кэш') for _, ст in з.get('страницы') or [])
-              and not any(н.get('почта') for н in з.get('номера') or [])]
+              and (not any(н.get('почта') for н in з.get('номера') or []) or мало_страниц(з))]
     print('компаний без почт с открывшимся сайтом', len(задачи), flush=True)
     сч = {'страниц': 0, 'компаний_с_новыми': 0, 'новых_почт': 0, 'новых_номеров': 0}
     t0, t0_iso, стоп = time.time(), time.strftime('%Y-%m-%dT%H:%M:%S'), [False, time.time()]
