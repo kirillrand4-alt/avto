@@ -107,6 +107,21 @@ if os.environ.get('PASPORT_KUSKAMI', '1') == '1':
     транспорт_кусками()
 
 
+# 11.10: кэш страниц обхода лежит под именем с «_» вместо недопустимых в Windows символов (kc_kontakty.в_кэш:
+# re.sub(r'[^\w.-]', '_', ключ)), а site_facts ищет <ключ>.json.gz как есть — у компаний «вне списка» (САЙТ:<домен>)
+# паспорт ни разу не собирался: «страниц в кэше нет» у 4471 из 4532 на прогоне 11.10.
+import re as _re  # noqa: E402
+_стр_исх, _сыр_исх = SF._stranicy, SF._syrye_stranicy
+
+
+def _имя_кэша(ключ):
+    return _re.sub(r'[^\w.-]', '_', str(ключ))
+
+
+SF._stranicy = lambda inn, *a, **k: _стр_исх(_имя_кэша(inn), *a, **k)  # noqa: E731
+SF._syrye_stranicy = lambda inn: _сыр_исх(_имя_кэша(inn))  # noqa: E731
+
+
 def main():
     сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     конт = {}
@@ -140,6 +155,11 @@ def main():
                                                       "coalesce(facts_json,'')<>'' and note like 'провайдер%'", (от_сбоев,))}
         _ro.close()
         окно = окно or ('сбои с ' + от_сбоев)
+    # компании «вне списка» без паспорта из-за имени файла кэша (см. _имя_кэша) — собрать заново (отложены на 6 ч)
+    _ro = sqlite3.connect('file:%s?mode=ro' % SF.BD.replace('\\', '/'), uri=True, timeout=60)
+    переделать |= {str(r[0]) for r in _ro.execute("select inn from site_facts where note='страниц в кэше нет' and "
+                                                  "inn like 'САЙТ:%'")}
+    _ro.close()
     for x in список:
         if x['inn'] in был_сайт and MN.домен(был_сайт[x['inn']]) != MN.домен(x['site']):
             x['pererazbor'] = True

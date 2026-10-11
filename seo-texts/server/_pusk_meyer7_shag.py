@@ -9,7 +9,8 @@ DIR = r'C:\sender\server'
 # 60/мин, но на одних и тех же 14 компаниях вдвое меньше оборудования линий / контроля качества / мощностей, чем Luna 5.6
 # -> обратно Luna 5.6 (модель site_facts по умолчанию), 24 потока; паспорта окна Luna 6 — собрать заново (сливаются).
 # 07:42: обрывы 10054 — тело одним куском; pilot_pasport шлёт кусками (PASPORT_KUSKAMI=1 по умолчанию)
-ДОП_ENV = {'FACTS_MODEL': 'gpt-5.6-luna', 'PASPORT_POTOKOV': '24', 'PASPORT_PEREDELAT': '2026-10-11T06:06|2026-10-11T06:43'}
+# 10:30: догон — «вне списка» без паспорта из-за имени файла кэша (4471) и 196 неудачных пересборов окна Luna 6
+ДОП_ENV = {'FACTS_MODEL': 'gpt-5.6-luna', 'PASPORT_POTOKOV': '24', 'PASPORT_PEREDELAT_SBOI': '2026-10-11T06:43'}
 ЛОГ = os.path.join(DIR, 'konveyer_%s_%s_%s.log' % (НАБОР, ШАГ[:-3], time.strftime('%d%m-%H%M')))
 python = r'C:\Program Files\Python312\python.exe'
 if ШАГ == 'pilot_pasport.py':  # паспорт (site_facts -> gen_provider -> anthropic) — только питон панели 3.11
