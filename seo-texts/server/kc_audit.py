@@ -57,7 +57,9 @@ def хост(u):
 def одна(к, з):
     out = {'inn': к['inn'], 'сайт': з['сайт']}
     out['сайт_чей'] = KS.чей_сайт(к, з)
-    без = [н for н in з.get('номера', []) if н.get('чей') not in ('эта', 'другая')]
+    # 12.10: почты дообхода/спрятанных/Зенки записаны без ключа «номер» (KeyError уронил аудит 00:53) — нормализуем
+    без = [dict(н, номер=н.get('номер') or '', доб=н.get('доб') or '') for н in з.get('номера', [])
+           if н.get('чей') not in ('эта', 'другая')]
     ответ = {}
     # 10.10, ревизия: пустой фрагмент модель отмечала «чужой» — без фрагмента судить не о чем, номер с сайта компании
     for н in без:
@@ -80,6 +82,14 @@ def одна(к, з):
     записать(out)
 
 
+def безопасно(к, з):
+    """12.10: одна запись с неожиданной формой контакта уронила весь аудит (KeyError) — сбой компании не роняет шаг."""
+    try:
+        одна(к, з)
+    except Exception as e:  # noqa: BLE001
+        print('сбой', к.get('inn'), repr(e)[:120], flush=True)
+
+
 def main():
     сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     конт = {}
@@ -92,7 +102,7 @@ def main():
     задачи = [(к, конт[i]) for i, к in сп.items()
               if i in конт and конт[i].get('сайт') and хост(конт[i]['сайт']) == хост(к['сайт'])]
     with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV_SHAGA', '8'))) as ex:  # 09.10: на полном прогоне 24
-        list(ex.map(lambda x: одна(*x), задачи))
+        list(ex.map(lambda x: безопасно(*x), задачи))
     shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-audit.jsonl'))
     сч = {'компаний': len(задачи), 'сайт': {}, 'номера': {}}
     for s in io.open(ВЫХОД, encoding='utf-8'):

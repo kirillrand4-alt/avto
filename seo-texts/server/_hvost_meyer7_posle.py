@@ -7,7 +7,8 @@
 #   2) список ИНН, обойдённых заново (последняя запись без «доизвлечено»: прежние записи доизвлечение пометило все);
 #   3) доизвлечение для них: номера (kc_doizvlech), почты (kc_doizvlech_pochty), спрятанные (kc_skrytye), дообход
 #      (kc_doobhod) — обход kc_kontakty этих разборщиков не вызывает;
-#   4) kc_dorazmetka (роли новым контактам), kc_sayt_proverka (возвращённые сайты), копии на дроп.
+#   4) kc_dorazmetka (роли новым контактам), kc_audit + kc_audit2 (аудит оркестратора упал 00:53), kc_sayt_proverka
+#      (возвращённые сайты), копии на дроп.
 # Лог: konveyer_meyer7_hvost_posle_*.log.
 import io, json, os, re, shutil, subprocess, sys, time
 DIR = r'C:\sender\server'
@@ -152,8 +153,12 @@ del посл
 шаг('kc_skrytye.py', dict(ТОЛЬКО, KC_SKRYTYE_PROBA='0'))
 шаг('kc_doobhod.py', ТОЛЬКО)
 шаг('kc_dorazmetka.py')
+# 12.10: kc_audit оркестратора упал на почтах без ключа «номер» (KeyError, 00:53; исправлено), аудит-2 по его неполному
+# выходу остановлен — оба здесь, после всех добавок (и хвостовые контакты получают «чей»)
+шаг('kc_audit.py')
+шаг('kc_audit2.py')
 шаг('kc_sayt_proverka.py')
-for ф in ('-kontakty.jsonl', '-sayt-proverka.jsonl', '-spisok.json'):
+for ф in ('-kontakty.jsonl', '-sayt-proverka.jsonl', '-spisok.json', '-audit.jsonl', '-audit2.jsonl'):
     try:
         shutil.copyfile(os.path.join(DIR, 'meyer7' + ф), os.path.join(PK.ДРОП, 'meyer7' + ф))
     except Exception as e:  # noqa: BLE001
