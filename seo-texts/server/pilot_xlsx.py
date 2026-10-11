@@ -41,6 +41,18 @@ from unikalnye_4_fayla import инн_листа
               (r'закуп|снабж|мто|контрактн', 'Закупки / снабжение'), (r'бухгалт|финанс|экономист', 'Финансы / бухгалтерия')]
 
 
+# 11.10: общие зоны и хостинги — поддомены разных владельцев, не группа компаний (kc_gruppy объединял по 2 уровням домена:
+# vrn.ru — 20 «общих» контактов чужой «головной», narod.ru — 11)
+ОБЩИЕ_ЗОНЫ = {'narod.ru', 'tilda.ws', 'com.ru', 'spb.ru', 'msk.ru', 'vrn.ru', 'nnov.ru', 'nsk.ru', 'ekb.ru', 'kazan.ru',
+              'samara.ru', 'perm.ru', 'omsk.ru', 'tomsk.ru', 'org.ru', 'net.ru', 'pp.ru', 'ru.com', 'regtorg.ru', 'mya5.ru',
+              'orgs.biz', '1c-umi.ru', 'clients.site', 'business.site', '1gb.ru', 's2s.ru', 'wixsite.com', 'ucoz.ru',
+              'ucoz.com', 'ucoz.net', 'at.ua', 'nethouse.ru', 'bitrix24site.ru', 'bitrix24.ru', 'tw1.ru', 'okis.ru',
+              'pulscen.ru', 'onrender.com', 'narod2.ru', 'jimdo.com', 'jimdofree.com', 'ukit.me', 'ukit.com', 'taplink.cc',
+              'taplink.ws', 'webnode.ru', 'mozello.ru', 'wix.com', 'blogspot.com', 'livejournal.com', 'sites.google.com',
+              'google.com', 'vk.com', 'tiu.ru', 'satu.kz', 'all.biz', 'flagma.ru', 'deal.by', 'blizko.ru', 'promportal.su',
+              'agroserver.ru', 'diary.ru', 'beget.tech', 'timeweb.ru', 'hostfly.by', 'by.ru', 'h1.ru', 'hut.ru'}
+
+
 # хосты, которые не бывают сайтом предприятия (дополнение к ploshchadki.СПИСОК)
 НЕ_САЙТЫ = ('onrender.com', 'netlify.app', 'vercel.app', 'github.io', 'herokuapp.com', 'orgs.biz', 'vk.link',
             'tilda.ws', 'clck.ru', 'bit.ly', 'list-org.com', 'zachestnyibiznes.ru', 'rusprofile.ru', 'checko.ru',
@@ -676,8 +688,8 @@ def main(п, п_meyer, п_анализ, п_слабые, п_out, набор='pil
     гр_решение, гр_лист, гр_лиды, гр_член = {}, [], [], {}
     for г in (jl_все(ф('gruppy.jsonl')) if os.path.exists(ф('gruppy.jsonl')) else []):
         члены = [ч['inn'] for ч in г['члены'] if ч['inn'] in комп]
-        if len(члены) < 2:
-            continue
+        if len(члены) < 2 or г['домен'] in ОБЩИЕ_ЗОНЫ or г['домен'] in НЕ_САЙТЫ or PL.из_списка(г['домен']):
+            continue  # 11.10: «группа» несвязанных компаний на общем хостинге/зоне (dsk.vrn.ru и tehnogaz.vrn.ru, *.narod.ru)
         головная = max(члены, key=lambda i_: комп[i_].get('выручка') or 0)
         имя_ = {ч['inn']: ч['имя'] for ч in г['члены']}
         for i_ in члены:  # 11.10 (владелец: «у групп остаются самостоятельные ИНН контакты?») — да; колонка «Группа»

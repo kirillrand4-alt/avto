@@ -83,6 +83,16 @@ def база():
     return дом, тел, почт, адр
 
 
+# 11.10: общие зоны и хостинги — поддомены разных владельцев (dsk.vrn.ru и tehnogaz.vrn.ru, *.narod.ru), не группа
+ОБЩИЕ_ЗОНЫ = {'narod.ru', 'tilda.ws', 'com.ru', 'spb.ru', 'msk.ru', 'vrn.ru', 'nnov.ru', 'nsk.ru', 'ekb.ru', 'kazan.ru',
+              'samara.ru', 'perm.ru', 'omsk.ru', 'tomsk.ru', 'org.ru', 'net.ru', 'pp.ru', 'ru.com', 'regtorg.ru', 'mya5.ru',
+              'orgs.biz', '1c-umi.ru', 'clients.site', 'business.site', '1gb.ru', 's2s.ru', 'wixsite.com', 'ucoz.ru',
+              'ucoz.com', 'ucoz.net', 'at.ua', 'nethouse.ru', 'bitrix24site.ru', 'bitrix24.ru', 'tw1.ru', 'okis.ru',
+              'pulscen.ru', 'onrender.com', 'narod2.ru', 'jimdo.com', 'jimdofree.com', 'ukit.me', 'taplink.cc', 'taplink.ws',
+              'webnode.ru', 'wix.com', 'blogspot.com', 'google.com', 'vk.com', 'tiu.ru', 'all.biz', 'flagma.ru', 'blizko.ru',
+              'agroserver.ru', 'beget.tech', 'by.ru', 'h1.ru', 'hut.ru'}
+
+
 def группы(сп, посл, пров, дом_базы):
     кл = {}
     for i, з in посл.items():
@@ -91,7 +101,7 @@ def группы(сп, посл, пров, дом_базы):
         кл.setdefault(MN.домен(з['сайт']), []).append(i)
     out = {}
     for д, члены in кл.items():
-        if len(члены) < 2 or (ТОЛЬКО and д not in ТОЛЬКО):
+        if len(члены) < 2 or (ТОЛЬКО and д not in ТОЛЬКО) or д in ОБЩИЕ_ЗОНЫ:
             continue
         док = []
         for i in члены:
