@@ -23,6 +23,90 @@ import site_facts as SF  # noqa: E402
 ВЫХОД = os.path.join(DIR, НАБОР + '-pasport.jsonl')
 
 
+def транспорт_кусками():
+    """11.10: паспорт в 24 потока — 877 обрывов «[WinError 10054]» за 45 мин, 9–19 паспортов/мин, а журнал шлюза видит
+    почти все дошедшие вызовы успешными (Luna 5.6: 208 ok / 6 ош за 15 мин). Диагноз уже записан в verify_company
+    (_provider_call_stdlib, инцидент 24.07): маршрут сервера до шлюза душит большие POST-тела одним куском, проходит
+    gzip + chunked мелкими кусками с паузами. Обход и аудит ходят так и обрывов не видят; паспорт шлёт ~100 КБ страниц
+    через gen_provider одним куском. Подмена ТОЛЬКО в этом процессе: httpx.stream/httpx.post внутри gen_provider ->
+    тот же запрос (заголовки, тело, модель, рассуждение, лимит ответа — как были) сжатым телом кусками по 1200 байт,
+    соединение с перебором адресов шлюза (verify_company._HTTPSPerebor, если импортируется)."""
+    import contextlib
+    import gzip
+    import http.client
+    import time
+    import urllib.parse
+    import httpx
+    import gen_provider as GP
+    try:
+        import verify_company as VC
+        соединение = VC._HTTPSPerebor
+    except Exception:  # noqa: BLE001
+        соединение = http.client.HTTPSConnection
+
+    class Ответ:
+        def __init__(self, rs):
+            self._rs, self.status_code, self.request, self._тело = rs, rs.status, None, None
+
+        def read(self):
+            if self._тело is None:
+                self._тело = self._rs.read()
+            return self._тело
+
+        @property
+        def text(self):
+            return self.read().decode('utf-8', 'replace')
+
+        def json(self):
+            return json.loads(self.text)
+
+        def iter_lines(self):
+            for сырая in self._rs:
+                yield сырая.decode('utf-8', 'replace').rstrip('\r\n')
+
+    def послать(url, headers, тело, timeout):
+        u = urllib.parse.urlsplit(url)
+        gz = gzip.compress(json.dumps(тело, ensure_ascii=False).encode('utf-8'), 6)
+
+        def куски():
+            for i in range(0, len(gz), 1200):
+                yield gz[i:i + 1200]
+                time.sleep(0.15)
+        загл = {k: v for k, v in (headers or {}).items() if k.lower() not in ('content-length', 'content-encoding')}
+        загл['content-type'] = 'application/json'
+        загл['content-encoding'] = 'gzip'
+        cn = соединение(u.hostname, timeout=min(float(timeout or 240), 240))
+        cn.request('POST', (u.path or '/') + ('?' + u.query if u.query else ''), body=куски(), headers=загл)
+        return cn, cn.getresponse()
+
+    @contextlib.contextmanager
+    def stream(method, url, headers=None, json=None, timeout=None, **_):  # noqa: A002
+        cn, rs = послать(url, headers, json, timeout)
+        try:
+            yield Ответ(rs)
+        finally:
+            cn.close()
+
+    def post(url, headers=None, json=None, timeout=None, **_):  # noqa: A002
+        cn, rs = послать(url, headers, json, timeout)
+        try:
+            о = Ответ(rs)
+            о.read()
+            return о
+        finally:
+            cn.close()
+    class Шим:  # остальное (классы исключений и пр.) — из настоящего httpx
+        def __getattr__(self, имя):
+            return getattr(httpx, имя)
+    шим = Шим()
+    шим.stream, шим.post = stream, post
+    GP.httpx = шим
+
+
+if os.environ.get('PASPORT_KUSKAMI', '1') == '1':
+    транспорт_кусками()
+
+
 def main():
     сп = json.load(io.open(os.path.join(DIR, НАБОР + '-spisok.json'), encoding='utf-8'))['компании']
     конт = {}
