@@ -82,6 +82,8 @@ def лист(wb, имя, поля, строки, ширины):
                     pass
             if isinstance(v, str):
                 v = ILLEGAL_CHARACTERS_RE.sub('', v)  # управляющие символы из текста страниц
+                if v.startswith('='):  # 11.10 (№50): текст страницы «=…» openpyxl пишет формулой — Excel ругается на файл
+                    v = ' ' + v
             ряд.append(v)
         ws.append(ряд)
     последняя = len(поля)
