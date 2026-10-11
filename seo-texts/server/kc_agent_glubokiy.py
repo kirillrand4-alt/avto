@@ -95,15 +95,19 @@ _XML_МЕСТА = threading.BoundedSemaphore(int(os.environ.get('KC_XML_KANALOV'
 
 
 def поиск(q):
+    """11.10 15:57: Яндекс через xmlriver — «Выполните перезапрос. Ответ от поисковой системы не получен» на 2 из 6
+    и 24–40 с на ответ; Google через тот же xmlriver — 6 из 6 за 2–3 с. Попытки — по очереди Яндекс / Google."""
     U, K = os.environ.get('XMLRIVER_USER', ''), os.environ.get('XMLRIVER_KEY', '')
-    url = ('http://xmlriver.com/search_yandex/xml?user=%s&key=%s&groupby=10&query=%s'
-           % (urllib.parse.quote(U), urllib.parse.quote(K), urllib.parse.quote(q)))
+    урлы = ['http://xmlriver.com/search_yandex/xml?user=%s&key=%s&groupby=10&query=%s',
+            'http://xmlriver.com/search/xml?user=%s&key=%s&query=%s']
+    урлы = [u % (urllib.parse.quote(U), urllib.parse.quote(K), urllib.parse.quote(q)) for u in урлы]
     with _XML_МЕСТА:
-        return _поиск(url)
+        return _поиск(урлы)
 
 
-def _поиск(url):
+def _поиск(урлы):
     for попытка in range(15):
+        url = урлы[попытка % len(урлы)]
         try:
             xml = urllib.request.build_opener(urllib.request.ProxyHandler({})).open(url, timeout=120).read().decode('utf-8', 'replace')
         except Exception as e:  # noqa: BLE001
@@ -111,7 +115,7 @@ def _поиск(url):
             continue
         # 10.10, ревизия: «Заняты все доступные вам каналы» превращалось в «пусто» — агент решал, что ничего нет
         if 'перезапрос' in xml or 'аняты все' in xml or 'свободных каналов' in xml:
-            time.sleep(min(30, 3 + 3 * попытка))
+            time.sleep(min(30, 1 + 2 * попытка))
             continue
         out = []
         for блок in re.findall(r'<doc>(.*?)</doc>', xml, re.S)[:10]:
