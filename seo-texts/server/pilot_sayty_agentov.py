@@ -61,6 +61,18 @@ def main():
                 continue
             if з.get('итог') in ('та же', 'группа'):
                 подтверждён.add((з.get('inn'), MN.домен(з.get('сайт') or '')))
+    # 11.10: сайт из наших баз (pilot_sayty_baz) с ИНН компании на главной ещё не обойдён и не проверен — но доказан;
+    # агентский сайт только с названием его не заменяет (АУРАТ: auratlab.ru с ИНН -> aurat.ru по названию)
+    п_баз = os.path.join(DIR, НАБОР + '-sayty-baz.jsonl')
+    if os.path.exists(п_баз):
+        for s in io.open(п_баз, encoding='utf-8', errors='replace'):
+            try:
+                з = json.loads(s)
+            except ValueError:
+                continue
+            if з.get('принят') and str(з.get('проверка') or '').startswith('ИНН'):
+                подтверждён.add((з.get('inn'), MN.домен(з.get('сайт') or '')))
+    ВИЗИТКИ = ('clients.site', 'business.site', 'taplink.cc', 'taplink.ws', 'mya5.ru')
     with zamok.замок(СПИСОК):
         сп = zamok.прочитать(СПИСОК)
         замен = []
@@ -69,6 +81,10 @@ def main():
             if к is None or MN.домен(к.get('сайт') or '') == MN.домен(сайт):
                 continue
             if (i, MN.домен(к.get('сайт') or '')) in подтверждён:
+                continue
+            # визитка (Яндекс Бизнес, taplink) не заменяет обычный сайт (Камапэк: kamapek.ru -> *.clients.site)
+            if any(MN.домен(сайт).endswith(в) for в in ВИЗИТКИ) and к.get('сайт') and \
+                    not any(MN.домен(к['сайт']).endswith(в) for в in ВИЗИТКИ):
                 continue
             к['сайт_был'] = к.get('сайт') or ''
             к['сайт'] = сайт if сайт.startswith('http') else 'https://' + сайт
