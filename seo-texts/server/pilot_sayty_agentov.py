@@ -73,6 +73,17 @@ def main():
             if з.get('принят') and str(з.get('проверка') or '').startswith('ИНН'):
                 подтверждён.add((з.get('inn'), MN.домен(з.get('сайт') or '')))
     ВИЗИТКИ = ('clients.site', 'business.site', 'taplink.cc', 'taplink.ws', 'mya5.ru')
+    # 11.10: страница компании на торговой площадке/каталоге — не сайт (Крелит: krelit.ru -> krelit.regtorg.ru)
+    КАТАЛОГИ = ('regtorg.ru', 'pulscen.ru', 'tiu.ru', 'satu.kz', 'all.biz', 'flagma.ru', 'deal.by', 'prom.ua', 'blizko.ru',
+                'promportal.su', 'agroserver.ru', 'fis.ru', 'yell.ru', 'zoon.ru', '2gis.ru', 'spravker.ru', 'orgpage.ru')
+    отклонён = {}  # последний вердикт проверки сайта «другая» — такой сайт визиткой заменить можно
+    if os.path.exists(п_пров):
+        for s in io.open(п_пров, encoding='utf-8', errors='replace'):
+            try:
+                з = json.loads(s)
+            except ValueError:
+                continue
+            отклонён[(з.get('inn'), MN.домен(з.get('сайт') or ''))] = з.get('итог') == 'другая'
     with zamok.замок(СПИСОК):
         сп = zamok.прочитать(СПИСОК)
         замен = []
@@ -82,9 +93,13 @@ def main():
                 continue
             if (i, MN.домен(к.get('сайт') or '')) in подтверждён:
                 continue
-            # визитка (Яндекс Бизнес, taplink) не заменяет обычный сайт (Камапэк: kamapek.ru -> *.clients.site)
+            if MN.домен(сайт) in КАТАЛОГИ:
+                continue
+            # визитка (Яндекс Бизнес, taplink) не заменяет обычный неотклонённый сайт (Камапэк: kamapek.ru ->
+            # *.clients.site); отклонённый («другая») — заменяет (Мельница Купца Маркова: ciarf.ru -> визитка)
             if any(MN.домен(сайт).endswith(в) for в in ВИЗИТКИ) and к.get('сайт') and \
-                    not any(MN.домен(к['сайт']).endswith(в) for в in ВИЗИТКИ):
+                    not any(MN.домен(к['сайт']).endswith(в) for в in ВИЗИТКИ) and \
+                    not отклонён.get((i, MN.домен(к['сайт']))):
                 continue
             к['сайт_был'] = к.get('сайт') or ''
             к['сайт'] = сайт if сайт.startswith('http') else 'https://' + сайт
