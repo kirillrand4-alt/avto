@@ -163,6 +163,40 @@ def подпись_перед(кт, номер, почта):
     return р if р in РОЛИ_ПО_ПОДПИСИ else ''
 
 
+def скелет(с):
+    """Согласные транслита: ardashev / ardashev / ardachev → «rdsv» (варианты sh/sch/kh/ts/zh сводятся)."""
+    с = (с or '').lower()
+    for а, б in (('shch', 's'), ('sch', 's'), ('kh', 'h'), ('ts', 'c'), ('tc', 'c'), ('zh', 'j'), ('ch', 'c'), ('sh', 's'),
+                 ('w', 'v'), ('x', 'ks'), ('q', 'k')):
+        с = с.replace(а, б)
+    return re.sub(r'[^a-z]|[aeiouy]', '', с)
+
+
+ОБЩИЙ_ЯЩИК = re.compile(r'^(info|office|sales?|zakaz|mail|post|priem|secretar|snab|zakup|buh|kadr|hr|otk|lab|tender|market|'
+                        r'reklama|export|import|logist|dostavka|sklad|admin|director|dir|gendir|reception|contact|opt|shop|'
+                        r'service|support|kanc|glavbuh|ok|pr|press|order|commerce|ved|ogm|oge|energ|meh|teh|tech|it|ur|jur|'
+                        r'legal|kp|torg|sbyt|prod|proizv|quality|kachestvo|lk|ekonom|fin|plan)\d*$')
+
+
+def владелец_ящика(почта, з):
+    """11.10, ревизия (2-10 Н2): почта ardasheviu@ идёт отдельной строкой без ФИО («Общий/приёмная»), а номер того же
+    человека в записи — с ФИО и должностью (Ардашев И.Ю., нач. отдела снабжения): ~189 почт, 49 ЛПР «да». Скелет
+    транслита фамилии (≥4 согласных) — начало ящика -> контакт с ФИО."""
+    лок = (почта or '').split('@')[0].lower()
+    if not лок or ОБЩИЙ_ЯЩИК.match(re.sub(r'[^a-z0-9]', '', лок)):
+        return None
+    ск = скелет(лок)
+    for н in з.get('номера', []):
+        if not н.get('номер') or not н.get('фио') or н.get('чей') == 'другая':
+            continue
+        сл = [w for w in н['фио'].split() if re.fullmatch(r'[А-ЯЁ][а-яё-]{2,}', w)]
+        for w in сл[:1] + сл[-1:]:
+            с = скелет(транслит(w))
+            if len(с) >= 4 and ск.startswith(с):
+                return н
+    return None
+
+
 def лпр_потолок(лпр, роль, долж):
     if роль in ЛПР_НЕТ or НЕ_БИЗНЕС.search(долж or ''):
         return 'нет'
@@ -968,6 +1002,14 @@ def main(п, п_meyer, п_анализ, п_слабые, п_out, набор='pil
                     KP.вид(почта, сайт) in ('своя', 'публичная'):
                 роль, лпр = роль_по_почте(почта)
                 н = dict(н, почему='по адресу почты')
+            if почта and not н.get('фио'):
+                в_ = владелец_ящика(почта, з)
+                if в_:
+                    н = dict(н, фио=в_['фио'], должность=н.get('должность') or в_.get('должность') or '')
+                    if роль in ('Общий номер / приёмная', 'Прочее') and (в_.get('роль') or в_.get('класс')):
+                        роль = в_.get('роль') or КЛАСС_РОЛЬ.get(в_.get('класс') or '', роль)
+                        лпр = в_.get('лпр') or ''
+                    н['почему'] = 'ящик по фамилии: %s' % в_['фио']
             долж_ = н.get('должность') or ''
             if роль in ('Общий номер / приёмная', 'Прочее') and not долж_ and not н.get('фио'):
                 р_ = подпись_перед(н.get('контекст'), н.get('номер'), почта)
