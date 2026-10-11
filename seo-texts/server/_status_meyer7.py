@@ -101,6 +101,34 @@ def старт_лога(шаг):
     return time.strftime('%Y-%m-%d %H:%M', time.localtime(os.path.getctime(лл[-1]))) if лл else ''
 
 
+def обход_долями():
+    """11.10: обход идёт в несколько процессов (родитель + доли), у каждого свой лог, и последним по времени оказывался
+    лог одной доли (страница показывала «60/2371» вместо общего хода). Сумма «готово n/m» (до первой отметки — «в очереди m»)
+    по логу последнего запуска родителя и последним логам долей, созданным после него -> (сделано, всего, старт)."""
+    лл = sorted(glob.glob(os.path.join(DIR, 'konveyer_%s_kc_kontakty_*.log' % НАБОР)), key=os.path.getmtime)
+    род = [л for л in лл if '_dolya' not in л]
+    if not род or not any('_dolya' in л for л in лл):
+        return None, None, None
+    t0 = os.path.getctime(род[-1]) - 5
+    доли = {}
+    for л in лл:
+        м = re.search(r'_dolya(\d+)_', л)
+        if м and os.path.getctime(л) >= t0:
+            доли[м.group(1)] = л
+    сд = вс = 0
+    for л in [род[-1]] + list(доли.values()):
+        т = io.open(л, encoding='utf-8', errors='replace').read()
+        г = re.findall(r'готово (\d+)/(\d+)', т)
+        о = re.findall(r'в очереди (\d+)', т)
+        сд += int(г[-1][0]) if г else 0
+        вс += int(г[-1][1]) if г else (int(о[-1]) if о else 0)
+    обход_долями.n = 1 + len(доли)
+    return сд, вс, time.strftime('%Y-%m-%d %H:%M', time.localtime(t0 + 5))
+
+
+обход_долями.n = 0
+
+
 for n, (шаг, имя, модель) in enumerate(ЭТАПЫ):
     р = {'n': n, 'этап': имя, 'модель': модель, 'сделано': None, 'всего': None, 'процент': 0, 'состояние': 'ждёт',
          'осталось_мин': None, 'пояснение': ''}
@@ -138,7 +166,12 @@ for n, (шаг, имя, модель) in enumerate(ЭТАПЫ):
             р['состояние'] = 'идёт'
             л = лог_шага(шаг)
             пары = re.findall(r'(\d+)/(\d+)', л)
-            if пары:
+            доли_ = обход_долями() if шаг == 'kc_kontakty.py' else (None,)
+            if доли_[0] is not None:
+                р['сделано'], р['всего'], с_доли = доли_
+                v = dict(v, старт=с_доли)
+                р['пояснение'] = 'долями (процессов %d)' % обход_долями.n
+            elif пары:
                 р['сделано'], р['всего'] = int(пары[-1][0]), int(пары[-1][1])
             elif шаг == 'poisk_razbor.py':
                 м = re.findall(r'в очереди (\d+)(?: (\d+))?', л)
