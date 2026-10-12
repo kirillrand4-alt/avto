@@ -1370,8 +1370,15 @@ class Store:
         """
         now_iso = _now_iso()
         _ящик = str(mailbox_id).strip() if mailbox_id else ""
+        # ВРЕМЕННАЯ ОШИБКА НЕ ЗАКРЕПЛЯЕТ ЯЩИК (владелец 12.10). auto_send
+        # читает messages.mailbox_id как ящик, закреплённый менеджером, и не
+        # делает ротацию: после первого таймаута все письма прибивались к
+        # одному ящику. При повторе ящик неудачи пишем в текст ошибки —
+        # разбор отказов по ящикам сохраняется, ротация — тоже.
+        if retryable and _ящик:
+            error = "[%s] %s" % (_ящик, error)
         with self.transaction() as conn:
-            if _ящик:
+            if _ящик and not retryable:
                 conn.execute(
                     "UPDATE messages SET mailbox_id=? WHERE id=?",
                     (_ящик, message_id))
