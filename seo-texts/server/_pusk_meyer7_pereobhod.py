@@ -22,7 +22,17 @@ sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
 ОТ = '2026-10-12 08:00'  # старт 1-го серверного прохода: всё, разобранное раньше, — разобрать заново
 
+ДОЛЕЙ, ПОТОКОВ = 4, '64'  # 12.10: серверный обход — 4 процесса по 64 потока (один процесс упирается в GIL)
+
 if '--vnutri' not in sys.argv:
+    # перезапуск: прежний оркестратор (ещё ждёт 1-й проход) — остановить
+    r0 = subprocess.run(['wmic', 'process', 'where', "name='python.exe'", 'get', 'ProcessId,CommandLine'],
+                        capture_output=True, text=True, errors='replace')
+    for x in r0.stdout.splitlines():
+        if '_pusk_meyer7_pereobhod.py' in x and '--vnutri' in x:
+            pid0 = x.strip().split()[-1]
+            if pid0.isdigit():
+                subprocess.run(['taskkill', '/F', '/PID', pid0], capture_output=True)
     лог = os.path.join(DIR, 'konveyer_meyer7_pereobhod_%s.log' % time.strftime('%d%m-%H%M'))
     with open(лог, 'wb') as в:
         p = subprocess.Popen([sys.executable, '-u', os.path.abspath(__file__), '--vnutri', '--metka=pereobhod_meyer7'],
@@ -48,7 +58,9 @@ def идут(*метки):
     return [м for м in метки if any(м in x for x in r.stdout.splitlines() if '_pusk_meyer7_pereobhod' not in x)]
 
 
-while идут('zenka_server_obhod.py'):
+пусто = 0
+while пусто < 2:  # две проверки подряд без процессов обхода (перезапуск долями — пауза в секунды)
+    пусто = 0 if идут('zenka_server_obhod.py') else пусто + 1
     time.sleep(60)
 п('1-й серверный проход закончен')
 
@@ -59,11 +71,12 @@ while идут('zenka_server_obhod.py'):
 карта = json.load(io.open(п_map, encoding='utf-8'))
 обратно = {v: k for k, v in карта.items()}
 уже = {y.split(';')[0] for y in io.open(НАША, encoding='utf-8').read().splitlines() if ';' in y}
-for s in io.open(ЖУР, encoding='utf-8', errors='replace'):
-    try:
-        уже.add(json.loads(s)['ключ'])
-    except (ValueError, KeyError):
-        pass
+for ж in [ЖУР] + sorted(glob.glob(os.path.join(DIR, 'meyer7-server-obhod-d*.jsonl'))):
+    for s in io.open(ж, encoding='utf-8', errors='replace'):
+        try:
+            уже.add(json.loads(s)['ключ'])
+        except (ValueError, KeyError):
+            pass
 сп = zamok.прочитать(os.path.join(DIR, 'meyer7-spisok.json'))['компании']
 нов = []
 for i, к in sorted(сп.items(), key=lambda x: -(x[1].get('выручка') or 0)):
@@ -93,9 +106,13 @@ with io.open(НАША, 'a', encoding='utf-8') as f:
     os.fsync(f.fileno())
 п('2-й проход: поставлено', len(нов))
 t0 = time.time()
-r = subprocess.run([sys.executable, '-u', os.path.join(DIR, 'zenka_server_obhod.py')], cwd=DIR, capture_output=True, text=True,
-                   errors='replace', env=dict(os.environ, ZS_POTOKOV='48'))
-п('2-й проход: код', r.returncode, 'за %.0f мин' % ((time.time() - t0) / 60), '|', (r.stdout + r.stderr)[-600:].replace('\n', ' | '))
+доли = [subprocess.Popen([sys.executable, '-u', os.path.join(DIR, 'zenka_server_obhod.py')], cwd=DIR, stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT, text=True, errors='replace',
+                         env=dict(os.environ, ZS_POTOKOV=ПОТОКОВ, ZS_DOLYA='%d/%d' % (k, ДОЛЕЙ))) for k in range(ДОЛЕЙ)]
+for k, д in enumerate(доли):
+    out, _ = д.communicate()
+    п('2-й проход доля', k, 'код', д.returncode, '|', (out or '')[-400:].replace('\n', ' | '))
+п('2-й проход за %.0f мин' % ((time.time() - t0) / 60))
 
 # 3) один писатель файла обхода
 while идут('vozvrat2_', '_vozvrat_sdelki_meyer7', '_shiroko_doobhod_meyer7', 'shiroko_'):
@@ -141,7 +158,11 @@ for k, p_ in enumerate(пр):
 шаг('kc_skrytye.py', {'KC_SKRYTYE_REZHIM': 'slit_zenka'})
 шаг('kc_dorazmetka.py')
 шаг('kc_audit.py')
-for ф in ('-kontakty.jsonl', '-audit.jsonl', '-zenno-surrogat.json', '-server-obhod.jsonl'):
+with io.open(ЖУР + '.vse', 'w', encoding='utf-8') as f:  # журналы долей — одним файлом на дроп
+    for ж in [ЖУР] + sorted(glob.glob(os.path.join(DIR, 'meyer7-server-obhod-d*.jsonl'))):
+        f.write(io.open(ж, encoding='utf-8', errors='replace').read())
+shutil.copyfile(ЖУР + '.vse', os.path.join(PK.ДРОП, 'meyer7-server-obhod-vse.jsonl'))
+for ф in ('-kontakty.jsonl', '-audit.jsonl', '-zenno-surrogat.json'):
     try:
         shutil.copyfile(os.path.join(DIR, 'meyer7' + ф), os.path.join(PK.ДРОП, 'meyer7' + ф))
     except Exception as e:  # noqa: BLE001

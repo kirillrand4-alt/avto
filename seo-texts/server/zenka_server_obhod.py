@@ -21,6 +21,7 @@ r"""Обход сайтов ПО ЛОГИКЕ КУБИКА ЗЕНКИ, но си
   (без ключа) обойти meyer7-server-ochered.txt, пропуская уже сделанное по журналу.
 """
 import csv
+import glob
 import io
 import json
 import os
@@ -37,6 +38,11 @@ GOTOVO = os.path.join(ZENNO, 'gotovo')
 ОЧЕРЕДЬ = os.path.join(ZENNO, 'ochered.txt')
 НАША = os.path.join(DIR, 'meyer7-server-ochered.txt')
 ЖУРНАЛ = os.path.join(DIR, 'meyer7-server-obhod.jsonl')
+# 12.10 (владелец: «у сервера ещё есть мощность»): один процесс упирается в GIL (~7000 сайтов/ч на 96 потоках при
+# загрузке ЦП 15% из 12 ядер) — ZS_DOLYA=k/N: доля очереди в отдельном процессе, свой журнал (дозапись из нескольких
+# процессов в один файл на Windows не атомарна); «сделано» — по всем журналам
+ДОЛЯ = os.environ.get('ZS_DOLYA', '')
+ЖУРНАЛ_ЗАП = os.path.join(DIR, 'meyer7-server-obhod-d%s.jsonl' % ДОЛЯ.split('/')[0]) if ДОЛЯ else ЖУРНАЛ
 sys.path.insert(0, DIR)
 sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
@@ -325,8 +331,10 @@ def main():
         забрать()
         return
     сделано = set()
-    if os.path.exists(ЖУРНАЛ):
-        for s in io.open(ЖУРНАЛ, encoding='utf-8', errors='replace'):
+    for ж in [ЖУРНАЛ] + sorted(glob.glob(os.path.join(DIR, 'meyer7-server-obhod-d*.jsonl'))):
+        if not os.path.exists(ж):
+            continue
+        for s in io.open(ж, encoding='utf-8', errors='replace'):
             try:
                 сделано.add(json.loads(s)['ключ'])
             except (ValueError, KeyError):
@@ -336,7 +344,10 @@ def main():
         ч = y.split(';')
         if len(ч) >= 2 and ч[0] not in сделано and ч[0] not in {к for к, _ in задачи}:
             задачи.append((ч[0], ч[1]))
-    print('к обходу', len(задачи), 'уже в журнале', len(сделано), flush=True)
+    if ДОЛЯ:
+        k_, N_ = (int(x) for x in ДОЛЯ.split('/'))
+        задачи = задачи[k_::N_]
+    print('к обходу', len(задачи), 'уже в журнале', len(сделано), 'доля', ДОЛЯ or '-', flush=True)
     сч = {'открыт': 0, 'защита -> Зенке': 0, 'мёртвый домен': 0, 'не открылся': 0, 'страниц': 0, 'сбой': 0}
     зенке, t0, n = [], time.time(), [0]
 
@@ -346,7 +357,7 @@ def main():
         except Exception as e:  # noqa: BLE001
             з = {'ключ': кв[0], 'url': кв[1], 'итог': 'сбой', 'причина': repr(e)[:100], 'страниц': 0}
         with _лок:
-            with io.open(ЖУРНАЛ, 'a', encoding='utf-8') as f:
+            with io.open(ЖУРНАЛ_ЗАП, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(з, ensure_ascii=False) + '\n')
                 f.flush()
                 os.fsync(f.fileno())
