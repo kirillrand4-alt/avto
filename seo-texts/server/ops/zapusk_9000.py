@@ -23,13 +23,16 @@ import time
 # здесь лишний, а его последовательные пачки стопорят всё на подвисших
 # вызовах шлюза (таймаут ожидания 600 с).
 флаги = ["--" + ф.strip() for ф in (sys.argv[5] if len(sys.argv) > 5 else "").split(",") if ф.strip()]
+# Именованные аргументы драйвера (6-й аргумент, через запятую), например
+# «predklass_segment=plastik» — предклассификатор только для пластика.
+доп_арг = [а.strip() for а in (sys.argv[6] if len(sys.argv) > 6 else "").split(",") if "=" in а]
 журнал = r"C:\sender\_ops\gen-rossiya-9000.jsonl"
 лог = r"C:\sender\_ops\gen-rossiya-9000.log"
 арг = [sys.executable, r"C:\sender\server\ops\partiya_gen.py",
        сколько, "10800", "meyer", "0",
        "gruppa=Россия 9000", "camp_meyer=14", "zhurnal=" + журнал,
        "threads=" + потоков, "spisok=C:\\sender\\_ops\\partiya-500-dop.json",
-       "revenue=0", "model=" + модель, "porog=" + порог] + флаги
+       "revenue=0", "model=" + модель, "porog=" + порог] + доп_арг + флаги
 ф = io.open(лог, "a", encoding="utf-8")
 ф.write("\n==== ЗАПУСК %s: %s писем, %s, потоков %s, порог %s, флаги %s ====\n"
         % (time.strftime("%H:%M:%S"), сколько, модель, потоков, порог, флаги))
