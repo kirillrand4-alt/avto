@@ -40,10 +40,13 @@ cx.row_factory = sqlite3.Row
 print("companies: %s" % ", ".join(sorted(колонки)))
 print("emails:    %s" % ", ".join(sorted(кол_адр)))
 
+# Имена колонок — как в живой enrich.companies: доверие к сайту лежит в
+# `verified` (его и читает company_card._SITE_VERIFIED_OK), выручка — в
+# `revenue_rub`.
 ПОЛЯ = [("name", "name"), ("site", "site"), ("activity", "activity"),
-        ("verified", "site_verified"), ("region", "region"),
+        ("verified", "verified"), ("region", "region"),
         ("okved", "okved"), ("okved_all", "okved_all"),
-        ("revenue", "revenue")]
+        ("revenue", "revenue_rub")]
 ПОЛЯ = [(к, с) for к, с in ПОЛЯ if с in колонки]
 print("пишем колонки: %s" % ", ".join(с for _, с in ПОЛЯ))
 
@@ -61,6 +64,10 @@ for к in компании:
         стар = (было[стлб] if было is not None and стлб in было.keys() else None)
         # паспорт не затираем более коротким, остальное обновляем
         if стлб == "activity" and стар and len(str(стар)) >= len(str(з)):
+            continue
+        # доверие к сайту не понижаем: если проверка уже что-то установила,
+        # книга его не трогает — она добавляет его только там, где пусто
+        if стлб == "verified" and стар:
             continue
         if стар == з:
             continue
