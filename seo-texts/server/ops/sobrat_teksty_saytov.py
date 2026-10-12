@@ -166,7 +166,25 @@ store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 # письмо: строки группы партии. Без аргумента - прежнее поведение.
 КАНДИДАТЫ = "кандидаты" in sys.argv
 ГРУППА_ПАРТИИ = "Партия 935"
-if КАНДИДАТЫ:
+# СПИСОК ИЗ ФАЙЛА (12.10, партия 500 из книг паспортов): JSON со списком
+# recipient_id. Текст сайта собираем ДО генерации — по нему рецензент
+# сверяет, не достроила ли модель цех от себя.
+ИЗ_ФАЙЛА = next((a.split("=", 1)[1] for a in sys.argv[1:]
+                 if a.startswith("--iz-fayla=")), "")
+if ИЗ_ФАЙЛА:
+    ид_пол = json.load(io.open(ИЗ_ФАЙЛА, encoding="utf-8"))
+    инн, видели_и = [], set()
+    for rid in ид_пол:
+        rec = store.get_recipient(int(rid))
+        if not rec:
+            continue
+        i = "".join(c for c in str(getattr(rec, "inn", "") or "")
+                    if c.isdigit())
+        if i and i not in видели_и:
+            видели_и.add(i)
+            инн.append(i)
+    print(f"режим «из файла»: ИНН в {ИЗ_ФАЙЛА}: {len(инн)}")
+elif КАНДИДАТЫ:
     группы = store.recipient_groups().get("по_id") or {}
     инн = []
     видели_и = set()
