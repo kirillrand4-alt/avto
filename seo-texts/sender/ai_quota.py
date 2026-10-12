@@ -1561,7 +1561,13 @@ class AiQuota:
             if not варианты:
                 continue
             try:
+                # Судья идей — проверка, не письмо: модель проверок
+                # (владелец 12.10, решение 18.08), а не opus по умолчанию.
                 суд, _ = default_caller(
+                    model=str(self._config.get("ai_quota.checker_model",
+                                               "claude-sonnet-4-6")
+                              or "claude-sonnet-4-6"),
+                    prompt=
                     "Выбери ОДНУ лучшую идею захода холодного письма для этой "
                     f"компании.\n{ctx}\n\nИдеи:\n"
                     + "\n".join(f"{i+1}. {v}" for i, v in enumerate(варианты))

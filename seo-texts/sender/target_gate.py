@@ -352,8 +352,20 @@ def build_target_gate(db_path: str, config: Any = None) -> TargetGate:
     try:
         from sender.review_lenses import default_caller
 
+        # МОДЕЛЬ ПРОВЕРОК, НЕ OPUS (владелец 12.10: «перестанем жечь
+        # деньги»; решение 18.08 — гейт адресата на sonnet). Гейт отвечает
+        # коротким JSON по готовым карточкам, а шёл на opus без явной модели:
+        # 23–35 тыс. токенов на вход, $0.19–0.33 за вызов.
+        _модель = "claude-sonnet-4-6"
+        try:
+            if config is not None and hasattr(config, "get"):
+                _модель = str(config.get("ai_quota.checker_model",
+                                         _модель) or _модель)
+        except Exception:  # noqa: BLE001
+            pass
+
         def caller(prompt: str) -> str:  # noqa: F811
-            текст, _мета = default_caller(prompt)
+            текст, _мета = default_caller(prompt, model=_модель)
             return текст
     except Exception:  # noqa: BLE001 - нет ключа/модуля -> гейт спит
         logger.warning("target_gate: провайдер недоступен, гейт спит")
