@@ -58,103 +58,117 @@ if "--zapusk" in sys.argv:
                 "ORDER BY id LIMIT 1" % ",".join(str(int(x)) for x in кандидаты),
                 (о,)):
             выбор.append(р["id"])
+    if os.path.exists(ВЫБОР):
+        выбор = json.load(io.open(ВЫБОР, encoding="utf-8"))   # те же компании
     json.dump(выбор, io.open(ВЫБОР, "w", encoding="utf-8"))
     print("выбрано компаний: %d" % len(выбор))
+    # ПО ПРОЦЕССУ НА МОДЕЛЬ: запасная модель задаётся переменной окружения
+    # процесса, у каждого своя — прогоны идут параллельно и не мешают.
     лог = io.open(r"C:\sender\_ops\sravnenie.log", "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"],
-                         cwd=r"C:\sender", stdout=лог, stderr=лог,
-                         creationflags=0x00000008 | 0x00000200)
-    print("сравнение запущено фоном, pid %d" % п.pid)
+    for модель in МОДЕЛИ:
+        окр = dict(os.environ, LENS_FALLBACK_MODEL=модель)
+        п = subprocess.Popen([sys.executable, os.path.abspath(__file__),
+                              "--rabota", модель],
+                             cwd=r"C:\sender", stdout=лог, stderr=лог, env=окр,
+                             creationflags=0x00000008 | 0x00000200)
+        print("   %s: pid %d" % (модель, п.pid))
     print("=== СРАВНЕНИЕ: ЗАПУЩЕНО ===")
     sys.exit(0)
 
 if "--rabota" in sys.argv:
+    from concurrent.futures import ThreadPoolExecutor
     from sender.ai_quota import build_ai_quota
     from sender.ai_letter import AiLetterGen, load_facts
     from sender.config import Config
     from sender.review_lenses import default_caller
     from sender.store import Store
 
+    модель = sys.argv[sys.argv.index("--rabota") + 1]
+    файл = ВЫХОД.replace(".json", "-%s.json" % модель)
     cfg = Config.load(r"C:\sender\sender.yaml")
     store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
     q = build_ai_quota(store, cfg)
     best = int(cfg.get("ai_quota.best_of", 2) or 2)
     выбор = json.load(io.open(ВЫБОР, encoding="utf-8"))
-    получатели = [store.get_recipient(int(x)) for x in выбор]
-    получатели = [r for r in получатели if r is not None]
-    итог = {"старт": time.strftime("%H:%M:%S"), "модели": {}, "компании": []}
-    for r in получатели:
-        итог["компании"].append({"id": r.id, "inn": r.inn, "email": r.email,
-                                 "name": r.company_name, "otrasl": r.segment})
-    сохранить(итог)
+    получатели = [r for r in (store.get_recipient(int(x)) for x in выбор) if r]
+    поток = {"model": модель, "старт": time.strftime("%H:%M:%S"),
+             "компании": [{"id": r.id, "name": r.company_name,
+                           "otrasl": r.segment, "email": r.email}
+                          for r in получатели],
+             "письма": {}, "вызовов": 0}
     замок = threading.Lock()
 
-    def прогон(модель):
-        поток = {"model": модель, "письма": {}, "время_с": 0, "вызовов": 0}
-        t0 = time.time()
-        try:
-            def caller(prompt):
-                поток["вызовов"] += 1
-                текст, ответила = default_caller(prompt, max_tokens=8000,
-                                                 model=модель)
-                if ответила and ответила != модель:
-                    поток.setdefault("подмена", []).append(ответила)
-                return текст
+    def записать():
+        with io.open(файл, "w", encoding="utf-8") as ф:
+            json.dump(поток, ф, ensure_ascii=False)
+            ф.flush()
+            os.fsync(ф.fileno())
 
-            def checker(prompt):
-                текст, _ = default_caller(prompt, max_tokens=8000, model=ПРОВЕРКА)
-                return текст
+    записать()
 
-            ген = AiLetterGen(caller, facts=load_facts(), best_of=best,
-                              checker=checker)
-            reqs = [q._request(r) for r in получатели]
-            q._add_ideas_generic(reqs)
-            for n in range(0, len(reqs), 4):
-                out = ген.generate(reqs[n:n + 4])
-                for j in range(len(reqs[n:n + 4])):
-                    r = получатели[n + j]
-                    L = out.ok.get(j)
-                    if L:
-                        поток["письма"][str(r.id)] = {
-                            "статус": "ok", "тема": L.get("subject"),
-                            "текст": L.get("body"),
-                            "кругов": len(L.get("rounds") or [])}
-                    else:
-                        черн = (getattr(out, "drafts", None) or {}).get(j) or {}
-                        поток["письма"][str(r.id)] = {
-                            "статус": "брак",
-                            "причины": [str(x)[:200] for x in
-                                        (out.rejected.get(j) or [])][:4],
-                            "тема": черн.get("subject", ""),
-                            "текст": черн.get("body", "")}
-        except Exception as e:  # noqa: BLE001
-            поток["ошибка"] = str(e)[:300]
-        поток["время_с"] = round(time.time() - t0)
+    def caller(prompt):
         with замок:
-            итог["модели"][модель] = поток
-            сохранить(итог)
+            поток["вызовов"] += 1
+        текст, ответила = default_caller(prompt, max_tokens=8000, model=модель)
+        if ответила and ответила != модель:
+            with замок:
+                поток.setdefault("подмена", []).append(ответила)
+        return текст
 
-    # Запасная = та же модель: сбой шлюза не подменит автора письма.
-    # Переменная читается внутри каждого вызова, поэтому прогоны — по
-    # очереди, а не параллельно (иначе один поток перебьёт другому).
-    for модель in МОДЕЛИ:
-        os.environ["LENS_FALLBACK_MODEL"] = модель
-        прогон(модель)
-    итог["финиш"] = time.strftime("%H:%M:%S")
-    сохранить(итог)
+    def checker(prompt):
+        текст, _ = default_caller(prompt, max_tokens=8000, model=ПРОВЕРКА)
+        return текст
+
+    def батч(кусок):
+        t0 = time.time()
+        ген = AiLetterGen(caller, facts=load_facts(), best_of=best,
+                          checker=checker)
+        reqs = [q._request(r) for r in кусок]
+        q._add_ideas_generic(reqs)
+        out = ген.generate(reqs)
+        with замок:
+            for j, r in enumerate(кусок):
+                L = out.ok.get(j)
+                if L:
+                    поток["письма"][str(r.id)] = {
+                        "статус": "ok", "тема": L.get("subject"),
+                        "текст": L.get("body"),
+                        "кругов": len(L.get("rounds") or []),
+                        "сек": round(time.time() - t0)}
+                else:
+                    черн = (getattr(out, "drafts", None) or {}).get(j) or {}
+                    поток["письма"][str(r.id)] = {
+                        "статус": "брак",
+                        "причины": [str(x)[:200] for x in
+                                    (out.rejected.get(j) or [])][:4],
+                        "тема": черн.get("subject", ""),
+                        "текст": черн.get("body", ""),
+                        "сек": round(time.time() - t0)}
+            записать()
+
+    try:
+        куски = [получатели[n:n + 4] for n in range(0, len(получатели), 4)]
+        with ThreadPoolExecutor(max_workers=len(куски)) as пул:
+            list(пул.map(батч, куски))
+    except Exception as e:  # noqa: BLE001
+        поток["ошибка"] = str(e)[:300]
+    поток["финиш"] = time.strftime("%H:%M:%S")
+    записать()
     sys.exit(0)
 
 # --- показать, что готово ---
-try:
-    итог = json.load(io.open(ВЫХОД, encoding="utf-8"))
-except Exception as e:  # noqa: BLE001
-    print("результата нет: %s" % e)
-    sys.exit(0)
-print("старт %s, финиш %s" % (итог.get("старт"), итог.get("финиш", "—")))
-for м, п in (итог.get("модели") or {}).items():
+for модель in МОДЕЛИ:
+    файл = ВЫХОД.replace(".json", "-%s.json" % модель)
+    try:
+        п = json.load(io.open(файл, encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        print("   %-20s файла нет" % модель)
+        continue
     ок = sum(1 for x in п["письма"].values() if x["статус"] == "ok")
-    print("   %-20s писем ok %d / брак %d, %d с, вызовов писателя %d%s%s"
-          % (м, ок, len(п["письма"]) - ок, п["время_с"], п["вызовов"],
+    print("   %-20s старт %s финиш %s | готово %d из %d (ok %d, брак %d), "
+          "вызовов писателя %d%s%s"
+          % (модель, п.get("старт"), п.get("финиш", "—"), len(п["письма"]),
+             len(п["компании"]), ок, len(п["письма"]) - ок, п["вызовов"],
              ", подмена: %s" % п["подмена"] if п.get("подмена") else "",
              ", ОШИБКА: %s" % п["ошибка"] if п.get("ошибка") else ""))
 print("=== СРАВНЕНИЕ: СТАТУС ===")
