@@ -64,6 +64,8 @@ for р in строки:
           % (р["id"], р["status"], (р["mailbox_id"] or "-")[:28], р["ac"],
              str(р["sch"])[5:16], str(р["cl"] or "-")[5:19], str(р["upd"])[5:19],
              домен[:22], р["tz"], р["le"][:60]))
+if "spisok" in sys.argv:
+    print("   " + " ".join("m%s:%s:%s:%s:%s" % (р["id"], р["status"][:5], (р["mailbox_id"] or "-").split("@")[0], р["ac"], (р["email"] or "").split("@")[-1][:14]) for р in строки))
 print("   итого %d: %s" % (len(строки), dict(счёт)))
 print("   reason/decided: %s" % Counter((р["reason"], str(р["dec"])[:13]) for р in строки).most_common(3))
 
