@@ -45,17 +45,44 @@ print("smtp_probe в конфиге: %s (лёгкая проверка не тр
 with store._lock:
     for р in store._conn.execute(
             "SELECT id, inn, lower(email) email, valid_status FROM recipients "
-            " WHERE source='knigi-meyer7' ORDER BY id"):
+            " WHERE source='knigi-meyer7' "
+            "   AND (valid_status IS NULL OR valid_status='unknown') "
+            " ORDER BY id"):
         строки.append(dict(р))
 if ЛИМИТ:
     строки = строки[:ЛИМИТ]
 print("адресов партии к проверке: %d" % len(строки))
 
+# DNS с этого сервера отвечает ~2 секунды на домен, а доменов тысячи:
+# последовательный проход занял бы часы. Гоним пулом, домены кэшируем —
+# у Validation кэш свой, но он не спасает от параллельных промахов.
+from concurrent.futures import ThreadPoolExecutor                # noqa: E402
+
+ПОТОКОВ = 12
 свод = Counter()
 приговор = []
 начало = time.time()
-for н, р in enumerate(строки, 1):
-    рез = val.validate(р["email"])
+
+
+def _проверить(р):
+    try:
+        return р, val.validate(р["email"])
+    except Exception as e:  # noqa: BLE001
+        return р, None
+
+
+готово = []
+with ThreadPoolExecutor(max_workers=ПОТОКОВ) as пул:
+    for н, (р, рез) in enumerate(пул.map(_проверить, строки), 1):
+        if рез is None:
+            свод["проверка сорвалась"] += 1
+            continue
+        готово.append((р, рез))
+        if н % 1000 == 0:
+            print("   ... %d из %d, %.0f сек"
+                  % (н, len(строки), time.time() - начало))
+
+for р, рез in готово:
     свод[рез.valid_status] += 1
     if not рез.mx_ok:
         свод["MX нет"] += 1
@@ -75,8 +102,6 @@ for н, р in enumerate(строки, 1):
                  1 if рез.role_based else 0, 1 if рез.disposable else 0,
                  None if рез.catch_all is None else int(рез.catch_all),
                  time.strftime("%Y-%m-%dT%H:%M:%S"), р["id"]))
-    if н % 1000 == 0:
-        print("   ... %d из %d, %.0f сек" % (н, len(строки), time.time() - начало))
 
 if ПРИМЕНИТЬ:
     with store._lock:
