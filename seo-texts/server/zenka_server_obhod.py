@@ -79,6 +79,9 @@ HREF = re.compile(r'''href\s*=\s*["']([^"'#]{1,180})["']''', re.I)
 ЗАЩИТА_ОШИБКИ = re.compile(r'HTTP (403|429|503|401|406|444|520|521|522|523|525|526)|ssl|certificate|socket|timed? ?out|'
                            r'reset|remote ?disconnected|eof|connection ?(aborted|refused)', re.I)
 МЁРТВЫЙ = re.compile(r'getaddrinfo|name or service|11001|11002|nodename', re.I)
+# 12.10: почта — с ограниченной длиной и началом на границе токена. Было [\w.+-]+@ — на странице с base64-картинкой
+# (сотни КБ без «@») перебор квадратичный, поток держит GIL, и весь обход вставал (48 потоков — темп падал, 96 — встал)
+ПОЧТА = re.compile(r'(?<![\w.+-])[\w.+-]{1,64}@[\w-]{1,63}\.[a-z]{2,6}')
 _лок = threading.Lock()
 
 
@@ -220,7 +223,7 @@ def обойти(ключ, url):
                 второй.append(п2)
     # СВЕРХ КУБИКА (владелец 12.10, as-agro.ru: почта на страницах направлений «птицефабрика», «переработка», а их
     # имена не из словаря — кубик их тоже не берёт): мало страниц и ни одной почты — любые внутренние ссылки главной
-    if len(htmly) <= 2 and not re.search(r'[\w.+-]+@[\w-]+\.[a-z]{2,6}', ' '.join(htmly).lower()):
+    if len(htmly) <= 2 and not ПОЧТА.search(' '.join(htmly).lower()):
         прочие = []
         for м in HREF.finditer(главная):
             с = м.group(1).strip()
@@ -255,7 +258,7 @@ def обойти(ключ, url):
     with io.open(os.path.join(GOTOVO, '%s.urls.txt' % ключ), 'w', encoding='utf-8') as f:
         f.write('\n'.join(адреса))
     return {'ключ': ключ, 'url': url, 'итог': 'открыт', 'страниц': len(htmly), 'отказов': len(отказы),
-            'почт': len(set(re.findall(r'[\w.+-]+@[\w-]+\.[a-z]{2,6}', ' '.join(htmly).lower()))),
+            'почт': len(set(ПОЧТА.findall(' '.join(htmly).lower()))),
             'сек': round(time.time() - t0, 1)}
 
 
