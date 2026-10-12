@@ -106,12 +106,19 @@ with io.open(НАША, 'a', encoding='utf-8') as f:
     os.fsync(f.fileno())
 п('2-й проход: поставлено', len(нов))
 t0 = time.time()
-доли = [subprocess.Popen([sys.executable, '-u', os.path.join(DIR, 'zenka_server_obhod.py')], cwd=DIR, stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, text=True, errors='replace',
-                         env=dict(os.environ, ZS_POTOKOV=ПОТОКОВ, ZS_DOLYA='%d/%d' % (k, ДОЛЕЙ))) for k in range(ДОЛЕЙ)]
+# 12.10: вывод долей — В ФАЙЛЫ, не в трубу: оркестратор читал трубы по очереди, у непрочитанных долей буфер трубы
+# (4 КБ) заполнялся на ~19-й строке прогресса, печать вставала под замком доли — доля стояла до своей очереди чтения
+доли, логи_д = [], []
+for k in range(ДОЛЕЙ):
+    лог_д = os.path.join(DIR, 'konveyer_meyer7_server_obhod_%s_p2d%d.log' % (time.strftime('%d%m-%H%M'), k))
+    логи_д.append(лог_д)
+    with open(лог_д, 'wb') as в_:
+        доли.append(subprocess.Popen([sys.executable, '-u', os.path.join(DIR, 'zenka_server_obhod.py')], cwd=DIR, stdout=в_,
+                                     stderr=subprocess.STDOUT, env=dict(os.environ, ZS_POTOKOV=ПОТОКОВ,
+                                                                        ZS_DOLYA='%d/%d' % (k, ДОЛЕЙ))))
 for k, д in enumerate(доли):
-    out, _ = д.communicate()
-    п('2-й проход доля', k, 'код', д.returncode, '|', (out or '')[-400:].replace('\n', ' | '))
+    д.wait()
+    п('2-й проход доля', k, 'код', д.returncode, '|', open(логи_д[k], encoding='utf-8', errors='replace').read()[-300:].replace('\n', ' | '))
 п('2-й проход за %.0f мин' % ((time.time() - t0) / 60))
 
 # 3) один писатель файла обхода
@@ -144,16 +151,18 @@ def шаг(файл, доп=None):
 # 5) разбор долями
 N = 6
 t1 = time.time()
-пр = []
-for k in range(N):
+пр, логи_р = [], []
+for k in range(N):  # вывод — в файлы (см. 2-й проход: трубы, читаемые по очереди, вставали)
     env = dict(w.env_шага('kc_skrytye.py'), KC_SKRYTYE_REZHIM='zenka', KC_SKRYTYE_ZENKA_OT=ОТ, KC_SKRYTYE_PROBA='0',
                KC_SKRYTYE_DOLYA='%d/%d' % (k, N))
-    пр.append(subprocess.Popen([PK.питон('kc_skrytye.py'), '-u', os.path.join(DIR, 'kc_skrytye.py'),
-                                '--metka=pereobhod_zenka_%d' % k], cwd=DIR, env=env, stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT, text=True, errors='replace'))
+    лог_р = os.path.join(DIR, 'konveyer_meyer7_pereobhod_razbor_%s_d%d.log' % (time.strftime('%d%m-%H%M'), k))
+    логи_р.append(лог_р)
+    with open(лог_р, 'wb') as в_:
+        пр.append(subprocess.Popen([PK.питон('kc_skrytye.py'), '-u', os.path.join(DIR, 'kc_skrytye.py'),
+                                    '--metka=pereobhod_zenka_%d' % k], cwd=DIR, env=env, stdout=в_, stderr=subprocess.STDOUT))
 for k, p_ in enumerate(пр):
-    out, _ = p_.communicate()
-    п('разбор доля', k, 'код', p_.returncode, '|', (out or '')[-300:].replace('\n', ' | '))
+    p_.wait()
+    п('разбор доля', k, 'код', p_.returncode, '|', open(логи_р[k], encoding='utf-8', errors='replace').read()[-300:].replace('\n', ' | '))
 п('разбор долями за %.1f мин' % ((time.time() - t1) / 60))
 шаг('kc_skrytye.py', {'KC_SKRYTYE_REZHIM': 'slit_zenka'})
 шаг('kc_dorazmetka.py')
