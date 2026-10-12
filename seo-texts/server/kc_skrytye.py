@@ -146,7 +146,43 @@ def _кэш_файла(ключ):
         return {}
 
 
-def одна_зенка(з, суррогаты):
+RAZOBRANO = (r'C:\seostat\drop\zenno\razobrano', r'C:\seostat\drop\zenno\gotovo')
+
+
+def индекс_разобрано(ключи):
+    """12.10: {ключ: [(путь html, номер)]} по папкам Зенки — одним проходом (в razobrano сотни тысяч файлов)."""
+    инд = {}
+    for п in RAZOBRANO:
+        if not os.path.isdir(п):
+            continue
+        for e in os.scandir(п):
+            if not e.name.endswith('.html'):
+                continue
+            k, _, n = e.name[:-5].rpartition('_')
+            if k in ключи and n.isdigit():
+                инд.setdefault(k, []).append((e.path, int(n), п))
+    return инд
+
+
+def страницы_разобрано(ключ, инд):
+    """Страницы ключа прямо из папок Зенки: адрес — строка N файла <ключ>.urls.txt рядом с html."""
+    out, адреса = [], {}
+    for путь, n, п in sorted(инд.get(ключ) or [], key=lambda x: x[1]):
+        if п not in адреса:
+            try:
+                адреса[п] = [x.strip().lstrip('\ufeff') for x in io.open(os.path.join(п, ключ + '.urls.txt'), encoding='utf-8-sig',
+                                                                     errors='replace') if x.strip()]
+            except OSError:
+                адреса[п] = []
+        if n < len(адреса[п]):
+            try:
+                out.append({'url': адреса[п][n], 'html': io.open(путь, encoding='utf-8', errors='replace').read()[:600000]})
+            except OSError:
+                pass
+    return out
+
+
+def одна_зенка(з, суррогаты, инд=None):
     """11.10: приёмник Зенки (zenno_most.priyom) кладёт страницы в кэш и только — в обход meyer7 они не попадают
     (обход уже отметил компанию). Страницы своего домена из кэша компании (если его писала Зенка) и из кэша
     суррогатного ключа («САЙТ:»/BY — приёмник берёт только цифровые ключи) -> почты и номера против записи."""
@@ -157,6 +193,15 @@ def одна_зенка(з, суррогаты):
         стр += д.get('pages') or []
     for кл in суррогаты:
         стр += _кэш_файла(кл).get('pages') or []
+    # 12.10: приёмник кладёт в кэш не больше 2,5 МБ страниц (старые — первыми): у крупных сайтов страницы переобхода
+    # в кэш не попадали — берём их и прямо из папок Зенки
+    if инд:
+        были = {x.get('url') for x in стр}
+        for кл in [з['inn']] + list(суррогаты):
+            for x in страницы_разобрано(кл, инд):
+                if x['url'] not in были:
+                    были.add(x['url'])
+                    стр.append(x)
     есть_п = {(x.get('почта') or '').lower() for x in з.get('номера') or [] if x.get('почта')} | исключённые(з)
     есть_н = {ключ_н(x.get('номер'), x.get('доб')) for x in з.get('номера') or [] if x.get('номер')}
     есть_ц = {к.split('|')[0] for к in есть_н}
@@ -215,8 +260,11 @@ def main_зенка():
                     pass
             кандидаты = [з for з in кандидаты if з['inn'] not in сделано]
 
+    инд = индекс_разобрано({з['inn'] for з in кандидаты} | {кл for з in кандидаты for кл in сур.get(з['inn'], [])})
+    print('ключей со страницами в папках Зенки', len(инд), flush=True)
+
     def зенкин(з):  # кэш писала Зенка — метка в конце файла (после страниц), проверка без разбора JSON
-        if з['inn'] in сур:
+        if з['inn'] in сур or з['inn'] in инд:
             return True
         п = os.path.join(KK.КЭШ_СТРАНИЦ, '%s.json.gz' % re.sub(r'[^\w.-]', '_', з['inn']))
         try:
@@ -232,7 +280,7 @@ def main_зенка():
     t0 = time.time()
     for n, з in enumerate(задачи, 1):
         try:
-            нов, свои = одна_зенка(з, сур.get(з['inn'], []))
+            нов, свои = одна_зенка(з, сур.get(з['inn'], []), инд)
         except Exception as e:  # noqa: BLE001
             print('сбой', з['inn'], repr(e)[:100], flush=True)
             continue
