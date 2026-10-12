@@ -32,8 +32,14 @@ except Exception:                                               # noqa: BLE001
         return 0
 
 ПРИМЕНИТЬ = "--primenit" in sys.argv
-ГРУППА = "9000"
+# Владелец 12.10: «заведи 2 партии, Россия 9000 и Белорусь 1000».
+ГРУППА_РФ = "Россия 9000"
+ГРУППА_РБ = "Белорусь 1000"
 ЖУРНАЛ = r"C:\sender\_ops\partiya-9000.jsonl"
+# Какие компании книга реально обогатила паспортом — по журналу заливки.
+# Сравнивать длину паспорта с enrich.db уже нельзя: книги туда залиты, и
+# всё совпадает само с собой.
+ЖУРНАЛ_ЗАЛИВКИ = r"C:\sender\_ops\knigi-zaliv.jsonl"
 
 компании, адреса = [], []
 for п in sorted(glob.glob(r"C:\sender\server\ops\knigi2_*.json")):
@@ -81,19 +87,22 @@ with store._lock:
 print("уже писали адресов: %d, в получателях: %d, стоп: почт %d, ИНН %d"
       % (len(ушло), len(в_базе), len(стоп_почта), len(стоп_инн)))
 
-cx = sqlite3.connect(r"C:\sender\enrich.db", timeout=60)
-cx.row_factory = sqlite3.Row
-паспорт_был = {}
-for н in range(0, len(инны), 400):
-    к_ = инны[н:н + 400]
-    м = ",".join("?" * len(к_))
-    for р in cx.execute(
-            "SELECT inn, activity FROM companies WHERE inn IN (" + м + ")", к_):
-        паспорт_был[р["inn"]] = len(str(р["activity"] or ""))
-cx.close()
+паспорт_дала_книга = set()
+try:
+    for с in io.open(ЖУРНАЛ_ЗАЛИВКИ, encoding="utf-8"):
+        с = с.strip()
+        if not с:
+            continue
+        з = json.loads(с)
+        if з.get("что") == "company" and "activity" in (з.get("поля") or {}):
+            паспорт_дала_книга.add(з["inn"])
+except Exception as e:  # noqa: BLE001
+    print("журнал заливки не прочитан: %s" % e)
+print("компаний, которым книга дала/расширила паспорт: %d"
+      % len(паспорт_дала_книга))
 
 свод = Counter()
-набор = []
+набор, занятые = [], set()
 for к in компании:
     инн, отр = к["inn"], str(к.get("otrasl") or "")
     выбран = str(к.get("pismo") or "").strip().lower()
@@ -115,10 +124,8 @@ for к in компании:
             адрес = дальше[0]["email"]
             свод["адрес заменён следующим по лесенке"] += 1
         else:
-            # тупик: пишем повторно, только если книга добавляет паспорт
-            было = паспорт_был.get(инн, 0)
-            стало = len(str(к.get("activity") or ""))
-            if стало < 40 or (было >= 40 and стало <= было * 3 // 2):
+            # тупик: пишем повторно, только если книга добавила паспорт
+            if инн not in паспорт_дала_книга:
                 свод["мимо: тупик, книга ничего не добавляет"] += 1
                 continue
             повтор = True
@@ -128,13 +135,27 @@ for к in компании:
     if адрес in стоп_почта:
         свод["мимо: адрес в стоп-листе"] += 1
         continue
-    набор.append((к, адрес, повтор, отр))
+    страна = str(к.get("strana") or "")
+    группа = ГРУППА_РБ if "елар" in страна else ГРУППА_РФ
+    # Один адрес может достаться двум компаниям книги (общий info@, холдинг),
+    # а в получателях почта уникальна. Берём первую компанию, остальные
+    # считаем — иначе вся партия падает на UNIQUE посреди записи.
+    if адрес in занятые:
+        свод["мимо: этот адрес уже занят другой компанией партии"] += 1
+        continue
+    занятые.add(адрес)
+    набор.append((к, адрес, повтор, отр, группа))
 
 print("")
 for кл, n in свод.most_common():
     print("   %-44s %6d" % (кл, n))
 
-по_отрасли = Counter(о for _, _, _, о in набор)
+по_отрасли = Counter(о for _, _, _, о, _ in набор)
+по_группе = Counter(г for _, _, _, _, г in набор)
+print("")
+print("--- партии ---")
+for г, n in по_группе.most_common():
+    print("   %-24s %6d" % (г, n))
 print("")
 print("--- партия по отраслям (это и будет segment) ---")
 for о, n in по_отрасли.most_common():
@@ -146,8 +167,8 @@ ts = int(time.time())
 сейчас = time.strftime("%Y-%m-%dT%H:%M:%S")
 with store._lock:
     c = store._conn
-    for к, адрес, повтор, отр in набор:
-        доп = {"gruppy": [ГРУППА], "division": "meyer", "otrasl": отр,
+    for к, адрес, повтор, отр, группа in набор:
+        доп = {"gruppy": [группа], "division": "meyer", "otrasl": отр,
                "istochnik": "knigi-meyer7"}
         if к.get("klass"):
             доп["klass_somneniya"] = к["klass"]
@@ -158,6 +179,13 @@ with store._lock:
         if к.get("dolzh"):
             доп["dolzhnost"] = к["dolzh"]
         есть = в_базе.get(адрес)
+        if есть is None:
+            # страховка: адрес мог появиться в получателях между опросом и
+            # записью — тогда не падаем, а обновляем существующую строку
+            ряд = c.execute("SELECT id, segment, extra_json FROM recipients "
+                            "WHERE lower(email)=?", (адрес,)).fetchone()
+            if ряд is not None:
+                есть = (ряд["id"], ряд["segment"], ряд["extra_json"])
         if есть is None:
             заведено += 1
             if ПРИМЕНИТЬ:
@@ -178,8 +206,8 @@ with store._lock:
                 except Exception:  # noqa: BLE001
                     старое = {}
                 группы = [str(g) for g in (старое.get("gruppy") or [])]
-                if ГРУППА not in группы:
-                    группы.append(ГРУППА)
+                if группа not in группы:
+                    группы.append(группа)
                 старое.update(доп)
                 старое["gruppy"] = группы
                 c.execute("UPDATE recipients SET segment=?, extra_json=?,"
@@ -189,7 +217,7 @@ with store._lock:
         if ПРИМЕНИТЬ:
             журнал.write(json.dumps(
                 {"ts": ts, "inn": к["inn"], "email": адрес, "otrasl": отр,
-                 "povtor": повтор, "novyy": есть is None},
+                 "gruppa": группа, "povtor": повтор, "novyy": есть is None},
                 ensure_ascii=False) + "\n")
     if ПРИМЕНИТЬ:
         c.commit()
@@ -206,6 +234,8 @@ print("   получателей в партии:      %6d" % len(набор))
 print("     из них заведём заново:   %6d" % заведено)
 print("     из них обновим в базе:   %6d" % обновлено)
 print("   отраслей (segment):        %6d" % len(по_отрасли))
+for г, n in по_группе.most_common():
+    print("   партия %-20s %6d" % (г, n))
 print("   повторных по новому паспорту: %3d"
       % свод.get("тупик: повторное письмо по новому паспорту", 0))
 print("   журнал:                    %s" % ЖУРНАЛ)
