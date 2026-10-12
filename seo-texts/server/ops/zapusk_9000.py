@@ -9,6 +9,7 @@ partiya_gen — драйвер с учётом цены каждого пись�
     zapusk_9000.py <сколько писем> <модель> [потоков] [порог]
 """
 import io
+import os
 import subprocess
 import sys
 import time
@@ -33,7 +34,10 @@ import time
 ф.write("\n==== ЗАПУСК %s: %s писем, %s, потоков %s, порог %s, флаги %s ====\n"
         % (time.strftime("%H:%M:%S"), сколько, модель, потоков, порог, флаги))
 ф.flush()
-п = subprocess.Popen(арг, cwd=r"C:\sender", stdout=ф, stderr=ф,
+# Канал Claude Kiro включает рассуждение на любом поле thinking — не шлём
+# его вовсе (опыт 12.10: 870 токенов с рассуждением против 52-290 без).
+окр = dict(os.environ, PROVIDER_THINKING_FIELD="omit")
+п = subprocess.Popen(арг, cwd=r"C:\sender", stdout=ф, stderr=ф, env=окр,
                      creationflags=0x00000008 | 0x00000200)
 io.open(r"C:\sender\_ops\gen-rossiya-9000.pid", "w").write(str(п.pid))
 time.sleep(20)

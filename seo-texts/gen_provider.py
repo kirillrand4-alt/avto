@@ -380,8 +380,16 @@ def _raw_stream(messages, model, max_tokens, thinking=True, effort=None,
         # тарифицируется по ставке выхода. На партии 935 это давало 57%
         # «срывов» и цену письма $2.52 вместо $0.75. Панель router.cheap
         # подтверждает: её колонка «Рассуждение» показывает «отключено».
-        body['thinking'] = ({'type': 'adaptive'} if thinking
-                            else {'type': 'disabled'})
+        # ПОЛЕ THINKING — ПОД КАНАЛ (12.10). Канал Claude Kiro, увидев ЛЮБОЕ
+        # поле thinking (даже disabled), включает рассуждение: 870 токенов
+        # выхода и ~2100 знаков рассуждения против 52-290 токенов и нуля без
+        # поля. На прежнем канале (17.08) было наоборот. Поэтому переключатель:
+        # PROVIDER_THINKING_FIELD=omit — не слать поле при thinking=False.
+        if thinking:
+            body['thinking'] = {'type': 'adaptive'}
+        elif (os.environ.get('PROVIDER_THINKING_FIELD') or 'disabled'
+              ).strip().lower() != 'omit':
+            body['thinking'] = {'type': 'disabled'}
         if effort:
             body['output_config'] = {'effort': effort}   # low|medium|high|xhigh|max
         if system:
