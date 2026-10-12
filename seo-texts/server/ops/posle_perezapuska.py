@@ -1,74 +1,79 @@
 # -*- coding: utf-8 -*-
-"""Что панель увидела после перезапуска: пороги, потолок, паузы, темп."""
-import subprocess, sys, time
-from collections import Counter
-from datetime import datetime, timezone
-sys.path.insert(0, r"C:\sender")
-from sender.auto_send import ENABLED_KEY                        # noqa: E402
-from sender.config import Config                                # noqa: E402
-from sender.otkaz_spam import porogi, min_yashchikov            # noqa: E402
-from sender.store import Store                                  # noqa: E402
+"""После перезапуска SenderPanel (владелец 12.10: «сделал, письма старые сними»).
 
-cfg = Config.load(r"C:\sender\sender.yaml")
-store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
-теперь = datetime.now(timezone.utc)
+1. Кампания 14: снять закрепление за ящиком (scheduled) и вернуть в очередь
+   письма, которые перезапуск застал в 'sending' (Яндекс лежит — они не
+   ушли; панель сама такие не возвращает).
+2. Кампания 11: снять 18 одобренных писем, висящих в 'sending' с 1–10
+   сентября (решение владельца — «сними»): статус skipped, причина в ошибке.
 
-ком = ("Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
-       "Where-Object {$_.CommandLine -like '*serve-api*'} | "
-       "Select-Object ProcessId,CreationDate | Format-List")
-r = subprocess.run(["powershell", "-NoProfile", "-Command", ком],
-                   capture_output=True, timeout=120)
-т = (r.stdout or b"").decode("cp866", errors="replace")
-if not т.strip():
-    т = (r.stdout or b"").decode("utf-8", errors="replace")
-print("--- процесс панели ---")
-print(т.strip()[:400])
+Запуск: posle_perezapuska.py [--primenit]
+"""
+import io
+import json
+import os
+import sqlite3
+import sys
+import time
 
-пауз = 0
-готовы = []
-for mb in cfg.mailboxes():
-    if str(getattr(mb, "division", "")).lower() != "meyer":
-        continue
-    st = store.get_mailbox_state(mb.mailbox_id)
-    if st is not None and getattr(st, "paused", False):
-        пауз += 1
-    else:
-        готовы.append(mb.mailbox_id)
+ПРИМЕНИТЬ = "--primenit" in sys.argv
+c = sqlite3.connect(r"C:\sender\sender.db", timeout=30)
+c.row_factory = sqlite3.Row
+now = time.strftime("%Y-%m-%dT%H:%M:%S")
+print("время сервера: %s" % now)
 
-ушло = отказ = 0
-по_часам = Counter()
-with store._lock:
-    кол = [c[1] for c in store._conn.execute("PRAGMA table_info(events)")]
-    вр = next((c for c in ("ts", "created_at") if c in кол), None)
-    тп = next((c for c in ("type", "event_type") if c in кол), None)
-    ушло = store._conn.execute(
-        "SELECT COUNT(*) FROM messages WHERE status='sent' AND sent_at >= "
-        "datetime('now','start of day')").fetchone()[0]
-    отказ = store._conn.execute(
-        "SELECT COUNT(*) FROM events WHERE %s='reject_spam' AND %s >= "
-        "datetime('now','start of day')" % (тп, вр)).fetchone()[0]
-    for р in store._conn.execute(
-            "SELECT sent_at FROM messages WHERE status='sent' AND sent_at >= "
-            "datetime('now','-3 hours')"):
-        по_часам[str(р["sent_at"]).replace("T", " ")[:13]] += 1
-    ждут = store._conn.execute(
-        "SELECT COUNT(*) FROM messages WHERE status='scheduled'").fetchone()[0]
-
-print("")
-print("--- отправки по часам (UTC, 3 часа) ---")
-for к in sorted(по_часам):
-    print("   %s  %4d" % (к, по_часам[к]))
-print("")
-print("=" * 74)
-print("=== ПОСЛЕ ПЕРЕЗАПУСКА ===")
-print("сейчас UTC %s" % теперь.strftime("%H:%M"))
-п_я, п_н = porogi(cfg)
-print("пороги заслона: ящик %s, направление %s, минимум ящиков %s"
-      % (п_я, п_н, min_yashchikov(cfg)))
-try:
-    print("автоотправка включена: %s" % store.get_setting(ENABLED_KEY, False))
-    print("send_limits: %s" % store.get_setting("send_limits"))
-except Exception as ex:                                         # noqa: BLE001
-    print("настройки не прочитались: %s" % str(ex)[:70])
-print("ящиков Meyer готовы: %d, на паузе: %d" % (len(готовы), пауз))
-print("за сегодня: ушло %d, отказов %d; ждут отправки %d" % (ушло, отказ, ждут))
+к14 = [dict(р) for р in c.execute(
+    "SELECT id, status, mailbox_id, claimed_at FROM messages "
+    "WHERE campaign_id=14 AND status IN ('scheduled','sending')")]
+откр = [р["id"] for р in к14 if р["mailbox_id"] and р["status"] == "scheduled"]
+# В 'sending' возвращаем только СИРОТ: взятых больше 15 минут назад. Свежие
+# может держать текущий проход нового процесса — он вернёт их сам.
+from datetime import datetime, timedelta  # noqa: E402
+порог = (datetime.utcnow() - timedelta(minutes=15)).isoformat()
+зав14 = [р["id"] for р in к14 if р["status"] == "sending"
+         and str(р["claimed_at"] or "") < порог]
+свежие14 = [р["id"] for р in к14 if р["status"] == "sending"
+            and str(р["claimed_at"] or "") >= порог]
+к11 = [dict(р) for р in c.execute(
+    "SELECT id, claimed_at, attempt_count FROM messages "
+    "WHERE campaign_id=11 AND status='sending'")]
+print("кампания 14: в очереди с закреплением %d, в 'sending' сирот %d, "
+      "свежих (в работе прохода) %d" % (len(откр), len(зав14), len(свежие14)))
+for р in к14:
+    if р["status"] == "sending":
+        print("   sending #%s claimed %s" % (р["id"], р["claimed_at"]))
+print("кампания 11: в 'sending' %d (claimed %s … %s)"
+      % (len(к11), min((р["claimed_at"] or "") for р in к11) if к11 else "-",
+         max((р["claimed_at"] or "") for р in к11) if к11 else "-"))
+if ПРИМЕНИТЬ:
+    with c:
+        if откр:
+            c.execute("UPDATE messages SET mailbox_id=NULL, updated_at=? "
+                      "WHERE id IN (%s) AND status='scheduled'"
+                      % ",".join(map(str, откр)), (now,))
+        if зав14:
+            c.execute("UPDATE messages SET status='scheduled', claimed_at=NULL, "
+                      "mailbox_id=NULL, updated_at=? WHERE id IN (%s) "
+                      "AND status='sending'" % ",".join(map(str, зав14)), (now,))
+        if к11:
+            c.execute("UPDATE messages SET status='skipped', claimed_at=NULL, "
+                      "last_error=?, updated_at=? WHERE id IN (%s) "
+                      "AND status='sending'" % ",".join(str(р["id"]) for р in к11),
+                      ("снято владельцем 12.10: висело в sending с сентября", now))
+    with io.open(r"C:\sender\_ops\posle-perezapuska.jsonl", "a",
+                 encoding="utf-8") as ж:
+        ж.write(json.dumps({"ts": now, "14_otkrepleno": откр,
+                            "14_iz_sending": зав14,
+                            "11_snyato": [р["id"] for р in к11]},
+                           ensure_ascii=False) + "\n")
+        ж.flush()
+        os.fsync(ж.fileno())
+итог = {р[0]: р[1] for р in c.execute(
+    "SELECT status || ' ' || COALESCE(mailbox_id,'(без ящика)'), COUNT(*) "
+    "FROM messages WHERE campaign_id=14 AND status IN ('scheduled','sending') "
+    "GROUP BY 1")}
+print("кампания 14 сейчас: %s" % итог)
+print("кампания 11 в 'sending': %d" % c.execute(
+    "SELECT COUNT(*) FROM messages WHERE campaign_id=11 AND status='sending'"
+).fetchone()[0])
+print("=== ПОСЛЕ ПЕРЕЗАПУСКА: %s ===" % ("ПРИМЕНЕНО" if ПРИМЕНИТЬ else "сухой прогон"))
