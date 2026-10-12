@@ -124,6 +124,27 @@ if "--rabota" in sys.argv:
             ф.flush()
             os.fsync(ф.fileno())
 
+    буфер_обзвона = []
+
+    def слить_обзвон():
+        if not буфер_обзвона:
+            return
+        try:
+            ox = sqlite3.connect(r"C:\sender\obzvon-index.db", timeout=60)
+            ox.execute("CREATE TABLE IF NOT EXISTS email_probe (email TEXT "
+                       "PRIMARY KEY, verdict TEXT, source TEXT, answer TEXT, "
+                       "ts INTEGER)")
+            ox.executemany(
+                "INSERT INTO email_probe (email, verdict, source, answer, ts) "
+                "VALUES (?,?,?,?,?) ON CONFLICT(email) DO UPDATE SET "
+                "verdict=excluded.verdict, answer=excluded.answer, "
+                "ts=excluded.ts", буфер_обзвона)
+            ox.commit()
+            ox.close()
+            del буфер_обзвона[:]
+        except Exception:  # noqa: BLE001 - не слилось: попробуем со следующей пачкой
+            pass
+
     def в_три_базы(адрес, инн, вер, ответ):
         ts = int(time.time())
         try:
@@ -135,19 +156,13 @@ if "--rabota" in sys.argv:
             cx.close()
         except Exception:  # noqa: BLE001
             pass
-        try:
-            ox = sqlite3.connect(r"C:\sender\obzvon-index.db", timeout=60)
-            ox.execute("CREATE TABLE IF NOT EXISTS email_probe (email TEXT "
-                       "PRIMARY KEY, verdict TEXT, source TEXT, answer TEXT, "
-                       "ts INTEGER)")
-            ox.execute("INSERT INTO email_probe (email, verdict, source, answer,"
-                       " ts) VALUES (?,?,?,?,?) ON CONFLICT(email) DO UPDATE "
-                       "SET verdict=excluded.verdict, answer=excluded.answer, "
-                       "ts=excluded.ts", (адрес, вер, "smtp-server", str(ответ)[:300], ts))
-            ox.commit()
-            ox.close()
-        except Exception:  # noqa: BLE001
-            pass
+        # БАЗА ОБЗВОНА — ПАЧКАМИ. Она в режиме журнала delete: каждая запись
+        # на миг запирает её для чтения, а генерация писем читает её на
+        # каждую карточку («database is locked», 12.10). Копим и сливаем
+        # одной транзакцией; журнал с fsync держит вердикты до слива.
+        буфер_обзвона.append((адрес, вер, "smtp-server", str(ответ)[:300], ts))
+        if len(буфер_обзвона) >= 200:
+            слить_обзвон()
         with io.open(ЖУРНАЛ, "a", encoding="utf-8") as ж:
             ж.write(json.dumps({"ts": ts, "email": адрес, "inn": инн,
                                 "verdict": вер}, ensure_ascii=False) + "\n")
@@ -182,6 +197,7 @@ if "--rabota" in sys.argv:
         очередь, отложено = отложено, []
         if очередь:
             time.sleep(5)
+    слить_обзвон()
     ход["финиш"] = time.strftime("%H:%M:%S")
     отметить()
     sys.exit(0)
