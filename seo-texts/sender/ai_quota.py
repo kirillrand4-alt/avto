@@ -72,6 +72,37 @@ _БРАК_ПО_СУЩЕСТВУ = ("инженерная линза", "проф�
                      "не производств")
 
 
+import threading as _threading
+
+# Подпись «кто писал письмо» (владелец 12.10). Список моделей, ответивших
+# на вызовы-черновики текущего батча; у каждого потока свой.
+_МОДЕЛЬ_ПИСЬМА = _threading.local()
+
+
+def _podpis_modeli() -> str:
+    """«claude-opus-4-8» или «claude-opus-4-8 + claude-sonnet-4-6»."""
+    след = [м for м in (getattr(_МОДЕЛЬ_ПИСЬМА, "список", None) or []) if м]
+    if not след:
+        return ""
+    порядок = []
+    for м in след:
+        if м not in порядок:
+            порядок.append(м)
+    return " + ".join(порядок)
+
+
+def _s_podpisyu(панель):
+    """Добавить подпись модели в инфо-панель письма, не ломая её."""
+    try:
+        if isinstance(панель, dict):
+            подпись = _podpis_modeli()
+            if подпись:
+                панель["model_pisma"] = подпись
+    except Exception:  # noqa: BLE001 - подпись не должна ронять очередь
+        pass
+    return панель
+
+
 def статус_брака(причины) -> str:
     """Форма или существо: от этого зависит, будет ли вторая попытка."""
     текст = " ".join(str(p) for p in (причины or [])).lower()
@@ -342,6 +373,11 @@ class AiQuota:
             # JSON партии обрывался на середине, и письмо шло в брак «нет
             # JSON» — не по качеству, а по длине ответа.
             text, _meta = default_caller(prompt, max_tokens=8000)
+            # ПОДПИСЬ «КТО ПИСАЛ» (владелец 12.10). _meta — модель, которая
+            # реально ответила: при трёх отказах opus это запасная sonnet.
+            _след = getattr(_МОДЕЛЬ_ПИСЬМА, "список", None)
+            if _след is not None:
+                _след.append(str(_meta or ""))
             return text
 
         # ПРОВЕРКИ — ОТДЕЛЬНОЙ МОДЕЛЬЮ (владелец 18.08: «проверки, для них
@@ -1849,6 +1885,7 @@ class AiQuota:
                     req.setdefault("extra", {}).setdefault(
                         "сменить_заход", _перебор)
             self._add_ideas_generic(reqs)
+            _МОДЕЛЬ_ПИСЬМА.список = []
             try:
                 out = self._gen_factory().generate(reqs)
             except Exception as e:  # noqa: BLE001 - батч упал, остальные едут
@@ -1868,7 +1905,8 @@ class AiQuota:
                                     body=letter["body"], inn=r.inn,
                                     campaign_id=campaign_id, recipient_id=r.id,
                                     message_id=mid,
-                                    panel=self._panel(r, letter, day, reqs[j]))
+                                    panel=_s_podpisyu(
+                                        self._panel(r, letter, day, reqs[j])))
                         if mid is None:
                             with замок:
                                 res.errors.append(f"{r.email}: {why}")
