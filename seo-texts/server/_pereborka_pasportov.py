@@ -97,8 +97,16 @@ GP.call = _call_счёт
 ЦЕНА = {'gpt-5.6-luna': (0.1, 6), 'gpt-6-luna': (0.05, 5), 'claude-haiku-4-5': (0.5, 5), 'claude-haiku-5-5': (0.05, 5)}
 
 
+# 12.10: фактическое списание шлюза (скриншот владельца: 20 268/2 403 токенов -> $0,017668) ≈ 2,5× прайса /api/pricing
+# (группа ключа «default · 4x»); берём 2,6 с запасом. Потолок — накопленная сумма по всем запускам (файл), $145.
+КФ_ФАКТ = 2.6
+ПОТОЛОК = float(os.environ.get('PASPORT_POTOLOK', '145'))
+СТОИМ_Ф = os.path.join(DIR, 'meyer7-pereborka-stoimost.json')
+БЫЛО_ДО = json.load(io.open(СТОИМ_Ф, encoding='utf-8')).get('итого', 0.0) if os.path.exists(СТОИМ_Ф) else 0.0
+
+
 def стоимость():
-    return sum((вх * ЦЕНА.get(м, (0.1, 6))[0] + вых * ЦЕНА.get(м, (0.1, 6))[0] * ЦЕНА.get(м, (0.1, 6))[1]) * 2 / 1e6
+    return КФ_ФАКТ * sum((вх * ЦЕНА.get(м, (0.1, 6))[0] + вых * ЦЕНА.get(м, (0.1, 6))[0] * ЦЕНА.get(м, (0.1, 6))[1]) * 2 / 1e6
                for м, (вх, вых, n) in ТОК.items())
 
 
@@ -150,6 +158,9 @@ SF._syrye_stranicy = lambda inn: _сырые(inn)
 сч = {'компаний': 0, 'полей_было': 0, 'полей_стало': 0, 'выросло': 0, 'стало_3+': 0, 'стало_5+': 0, 'было_3+': 0, 'было_5+': 0}
 t0 = time.time()
 for k in range(0, len(выб), ПАЧКА):
+    if БЫЛО_ДО + стоимость() >= ПОТОЛОК:
+        print('ПОТОЛОК $%.0f достигнут (накоплено $%.2f) — стоп' % (ПОТОЛОК, БЫЛО_ДО + стоимость()), flush=True)
+        break
     пачка = выб[k:k + ПАЧКА]
     список = [{'inn': i, 'name': сп[i].get('имя') or '', 'site': сп[i]['сайт'], 'pererazbor': True} for i in пачка]
     итог = SF.sobrat(predel=len(список), spisok=список, potokov=int(os.environ.get('PASPORT_POTOKOV', '32')))
@@ -175,8 +186,14 @@ for k in range(0, len(выб), ПАЧКА):
         f_сд.flush()
         os.fsync(f_сд.fileno())
     ro.close()
+    with io.open(СТОИМ_Ф + '.tmp', 'w', encoding='utf-8') as f_с:
+        json.dump({'итого': БЫЛО_ДО + стоимость(), 'кф_факт': КФ_ФАКТ, 'ts': time.strftime('%Y-%m-%d %H:%M')}, f_с)
+        f_с.flush()
+        os.fsync(f_с.fileno())
+    os.replace(СТОИМ_Ф + '.tmp', СТОИМ_Ф)
     print(time.strftime('%H:%M:%S'), 'пачка %d-%d из %d' % (k, k + len(пачка), len(выб)), json.dumps(итог, ensure_ascii=False)[:200],
           '| итого', json.dumps(сч, ensure_ascii=False), '| $%.2f' % стоимость(), '| %.0f мин' % ((time.time() - t0) / 60), flush=True)
 for м, (вх, вых, n) in ТОК.items():
     print('модель', м, 'вызовов', n, 'вход', вх, 'выход', вых, flush=True)
-print('===ИТОГ ПЕРЕСБОРКИ===', json.dumps(сч, ensure_ascii=False), '$%.2f' % стоимость(), flush=True)
+print('===ИТОГ ПЕРЕСБОРКИ===', json.dumps(сч, ensure_ascii=False), 'этот запуск $%.2f, всего $%.2f' % (стоимость(), БЫЛО_ДО + стоимость()),
+      flush=True)

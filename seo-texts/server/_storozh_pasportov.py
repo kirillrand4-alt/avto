@@ -21,20 +21,17 @@ if '--vnutri' not in sys.argv:
                              stdin=subprocess.DEVNULL, stdout=в, stderr=subprocess.STDOUT, close_fds=False)
     print('===ИТОГ===', json.dumps({'остановлены': убиты, 'сторож': p.pid, 'лог': os.path.basename(лог)}, ensure_ascii=False))
     sys.exit(0)
-import gen_provider as GP  # noqa: E402
-к = GP.make_client()
-подряд = 0
-while подряд < 3:
-    try:
-        GP.call(к, [{'role': 'user', 'content': 'Перечисли через запятую пять фруктов.'}], model='gpt-5.6-luna', attempts=1)
-        подряд += 1
-        print(time.strftime('%H:%M:%S'), 'luna отвечает', подряд, flush=True)
-        time.sleep(30)
-    except Exception as e:  # noqa: BLE001
-        подряд = 0
-        print(time.strftime('%H:%M:%S'), 'luna недоступна:', str(e)[60:140], flush=True)
-        time.sleep(300)
-print(time.strftime('%H:%M:%S'), 'шлюз ожил — запускаю пересборку паспортов', flush=True)
-r = subprocess.run([sys.executable, os.path.join(DIR, '_pereborka_pasportov.py')], cwd=DIR, capture_output=True, text=True,
-                   errors='replace')
-print((r.stdout + r.stderr)[-500:], flush=True)
+# 12.10, владелец: «запусти всё, может ночью оживёт» — шлюз мигает, «3 ответа подряд» может не случиться никогда.
+# Теперь: пересборка сразу; отказы шлюза (отложенные) — повтор кругами через 20 мин, до 15 кругов; потолок $145 — в самой
+# пересборке (накопленная сумма, meyer7-pereborka-stoimost.json).
+for круг in range(1, 16):
+    t0 = time.time()
+    r = subprocess.run([sys.executable, os.path.join(DIR, '_pereborka_pasportov.py'), '--vnutri'], cwd=DIR, capture_output=True,
+                       text=True, errors='replace')
+    хв = (r.stdout + r.stderr)
+    итог = [s for s in хв.splitlines() if 'ИТОГ ПЕРЕСБОРКИ' in s or 'ПОТОЛОК' in s or s.startswith('к пересборке')]
+    print(time.strftime('%H:%M:%S'), 'круг', круг, 'за %.0f мин' % ((time.time() - t0) / 60), '|', ' | '.join(итог)[-700:], flush=True)
+    if any('ПОТОЛОК' in s for s in итог) or any('бедных 0 средних 0' in s for s in итог):
+        break
+    time.sleep(1200)
+print(time.strftime('%H:%M:%S'), 'СТОРОЖ ПАСПОРТОВ ГОТОВ', flush=True)
