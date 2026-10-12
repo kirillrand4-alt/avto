@@ -290,7 +290,10 @@ class ObzvonIndex:
 # enrich.db (динамические колонки: снапшоты бывают новее схемы в репо)
 # --------------------------------------------------------------------------- #
 
-_SITE_VERIFIED_OK = frozenset({"inn", "ogrn", "phone", "provider"})
+# «sam_sayt» — компанию опознал ИМЕННО этот сайт (номера в базе не было).
+# Владелец 12.10: «согласен» — такой паспорт считается снятым с
+# подтверждённого сайта, иначе метрика их теряла.
+_SITE_VERIFIED_OK = frozenset({"inn", "ogrn", "phone", "provider", "sam_sayt"})
 
 
 def _load_enrich(inn: str, db_path: Optional[str]) -> dict:
