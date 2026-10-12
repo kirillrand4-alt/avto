@@ -29,6 +29,7 @@ from sender.config import Config                                 # noqa: E402
 from sender.store import Store                                   # noqa: E402
 
 КАМП = int(sys.argv[1])
+СПИСОК = sys.argv[2] if len(sys.argv) > 2 else r"C:\sender\_ops\partiya-500.json"
 ПРОГРЕСС = r"C:\sender\_ops\gen500-progress.json"
 
 
@@ -44,7 +45,7 @@ try:
     cfg = Config.load(r"C:\sender\sender.yaml")
     store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
     q = build_ai_quota(store, cfg)
-    ид = json.load(io.open(r"C:\sender\_ops\partiya-500.json", encoding="utf-8"))
+    ид = json.load(io.open(СПИСОК, encoding="utf-8"))
     свои, видели = [], set()
     for rid in ид:
         r = store.get_recipient(int(rid))
@@ -67,7 +68,11 @@ try:
         отметить(этап="идёт", кампания=КАМП, получателей=len(свои),
                  готово=ok, брак=brak)
 
-    рез = q.run_today(КАМП, quota=len(свои), progress_cb=пульс)
+    # Квота дня считает и прошлые попытки кампании: перезапуск должен
+    # прибавить свой список к уже сделанному, иначе «квота выбрана».
+    до_ok, до_брак = q.counters(КАМП, [q.today()]).get(q.today(), (0, 0))
+    рез = q.run_today(КАМП, quota=до_ok + до_брак + len(свои),
+                      progress_cb=пульс)
     отметить(этап="готово", кампания=КАМП, получателей=len(свои),
              готово=рез.generated, брак=рез.rejected, причина=рез.reason,
              ошибок=len(рез.errors), ошибки=[str(e)[:160] for e in рез.errors[:15]])

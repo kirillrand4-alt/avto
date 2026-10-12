@@ -1934,9 +1934,15 @@ class AiQuota:
                     if друг:
                         with замок:
                             переставлено = self._perestavit_napravlenie(r.id, друг)
+                    # ЧЕРНОВИК БРАКА СОХРАНЯЕМ (владелец 12.10): генератор
+                    # держит последний текст отбитого письма в out.drafts.
+                    # Пустое тело в журнале означало, что спасти письмо
+                    # правкой отбитого места нельзя — только новой генерацией.
+                    _черн = (getattr(out, "drafts", None) or {}).get(j) or {}
                     items.append({"email": r.email, "recipient_id": r.id,
                                   "status": статус_брака(rej),
-                                  "subject": "", "body": "",
+                                  "subject": str(_черн.get("subject") or ""),
+                                  "body": str(_черн.get("body") or ""),
                                   "rounds": [{"rejected": rej,
                                               "perestavleno": друг or "",
                                               "zapisano": переставлено}]})
