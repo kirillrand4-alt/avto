@@ -23,9 +23,10 @@ import time
 # здесь лишний, а его последовательные пачки стопорят всё на подвисших
 # вызовах шлюза (таймаут ожидания 600 с).
 флаги = ["--" + ф.strip() for ф in (sys.argv[5] if len(sys.argv) > 5 else "").split(",") if ф.strip()]
-# Именованные аргументы драйвера (6-й аргумент, через запятую), например
-# «predklass_segment=plastik» — предклассификатор только для пластика.
-доп_арг = [а.strip() for а in (sys.argv[6] if len(sys.argv) > 6 else "").split(",") if "=" in а]
+# Именованные аргументы драйвера (6-й аргумент, через ТОЧКУ С ЗАПЯТОЙ —
+# запятая нужна внутри значений), например
+# «predklass_segment=plastik,metallurgiya».
+доп_арг = [а.strip() for а in (sys.argv[6] if len(sys.argv) > 6 else "").split(";") if "=" in а]
 журнал = r"C:\sender\_ops\gen-rossiya-9000.jsonl"
 лог = r"C:\sender\_ops\gen-rossiya-9000.log"
 арг = [sys.executable, r"C:\sender\server\ops\partiya_gen.py",
