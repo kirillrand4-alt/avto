@@ -3619,7 +3619,20 @@ def gate(subject: str, body: str, *, mode: str = 'GENERIC',
     # фотосепаратора щепка и деревяшка в зерновом потоке — законная задача
     # сортировки, и запрещать их всему Meyer было бы неверно.
     if str(division or '').startswith('meyer') and re.search(r'(?i)рентген', body):
-        заслоны = заслоны + NEVIDIMOE_RENTGENOM
+        # ДЕРЕВО, ВОЛОС, ПЕРЧАТКИ — ТОЛЬКО В ПРЕДЛОЖЕНИИ ПРО РЕНТГЕН (12.10).
+        # Раньше слово «рентген» где угодно включало проверку всего письма, и
+        # «на входе фотосепаратор снимает щепу, на выходе рентген проверяет
+        # упаковку» уходило в брак — почти любое письмо лесу. Кость — на всё
+        # письмо, как было: её не упоминаем вовсе (правка редактора 12.08).
+        for _rx, _name in NEVIDIMOE_RENTGENOM:
+            if 'кост' in _rx:
+                заслоны = заслоны + [(_rx, _name)]
+                continue
+            for _пр in re.findall(r'[^.!?\n]+', body):
+                if (re.search(r'(?i)рентген|просвеч', _пр)
+                        and re.search(_rx, _пр)):
+                    fails.append(f'{_name}: «{_пр.strip()[:120]}»')
+                    break
     if str(division or '').startswith('meyer'):
         заслоны = заслоны + STRASHILKI_MEYER + PRAVKI_REDAKTORA_1408
         fails.extend(_vozdukh_ne_po_delu(body))
