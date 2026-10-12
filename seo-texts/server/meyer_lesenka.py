@@ -35,6 +35,7 @@ _ЯЩИК = (
     (re.compile(r'^(kadr|kadry|hr|personal|job|jobs|rabota|vakans|career|resume|ok)\d*$'), НИКОГДА),
     (re.compile(r'^(buh|buhg|bux|glavbuh|account|accounting|fin|finance|ekonom|kazna|nalog|zarplata)\w{0,6}$'), НИКОГДА),
     (re.compile(r'^(press|pr|smi|media|reklama|marketing|market|smm|ur|jur|legal|yurist)\d*$'), НИКОГДА),
+    (re.compile(r'^(hotline|anticor\w*|antikor\w*|doverie|ethics|compliance|sb|security|bezopasnost)\d*$'), НИКОГДА),
     (re.compile(r'^(tehnolog|technolog|tech?nolog\w*|gl\.?tehnolog)\d*$'), 1),
     (re.compile(r'^(kachestvo|quality|qa|qc|otk|lab|lab\w+|haccp|okk|sluzhbakachestva)\d*$'), 2),
     (re.compile(r'^(proizv|proizvodstvo|production|prod|ceh|tseh)\d*$'), 4),
@@ -67,6 +68,8 @@ def ступень(роль, сегмент='', должность='', почт�
     по_ящ, ст_ящ = по_ящику(почта)
     if по_ящ and ст_ящ is НИКОГДА:
         return НИКОГДА
+    if re.search(r'hotline|anticor|antikor|doverie|ethics|compliance', (почта or '').lower().split('@')[0]):
+        return НИКОГДА  # uc.hotline@ — горячая линия в любой части ящика
     if _ЗАПРЕТ_ТЕКСТ.search(должность or '') and роль not in ('Руководитель', 'Технолог', 'Качество / лаборатория',
                                                                'Производство', 'Техдиректор / главный инженер'):
         return НИКОГДА
@@ -119,6 +122,7 @@ if __name__ == '__main__':  # самотест
     assert ступень('Прочее', должность='Руководитель пресс-службы', почта='bukreevaai@x.ru') is None
     assert ступень('', почта='info@x.ru') == 13 and ступень('', почта='sales@x.ru') == 14
     assert ступень('', почта='tender.pro@x.ru') == 9
+    assert ступень('', почта='hotline@gap-rs.ru') is None and ступень('', почта='uc.hotline@x.co') is None
     assert ступень('Руководитель', должность='Генеральный директор') == 7
     assert ступень('Руководитель', должность='директор', почта='reception@glanit.ru') == 13
     assert ступень('Технолог', почта='info@x.ru') == 13
