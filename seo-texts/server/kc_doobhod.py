@@ -10,6 +10,10 @@ r"""Дообход страниц контактов, которые обход 
 (kc_pochty.почты + pochty_izvlech.найти) и номера (telefony_izvlech). Новое — строкой в <набор>-kontakty.jsonl (копия
 последней записи + новые контакты без роли: роль — kc_dorazmetka, «чей» — kc_audit), прочие — отметкой в
 <набор>-doobhod-sdelano.txt. Стоп — при старте шагов после агентов.
+
+12.10 (владелец, скриншот as-agro.ru): KC_DOOBHOD_SHIROKO=1 — широкий режим для сайтов, где обход увидел ≤2 своих
+страниц и ни одной почты: после ссылок по приоритету — любые внутренние ссылки главной (страницы направлений,
+«птицефабрика», «переработка»: контакты в их подвале), до 6 страниц. Отметки — <набор>-doobhod-shiroko-sdelano.txt.
 """
 import html as H
 import io
@@ -36,7 +40,9 @@ import telefony_izvlech as TI  # noqa: E402
 
 НАБОР = os.environ.get('KC_NABOR', 'pilot')
 ВЫХОД = os.path.join(DIR, НАБОР + '-kontakty.jsonl')
-СДЕЛАНО = os.path.join(DIR, НАБОР + '-doobhod-sdelano.txt')
+ШИРОКО = os.environ.get('KC_DOOBHOD_SHIROKO') == '1'
+СДЕЛАНО = os.path.join(DIR, НАБОР + ('-doobhod-shiroko-sdelano.txt' if ШИРОКО else '-doobhod-sdelano.txt'))
+ШИРОКО_МИМО = re.compile(r'[?&=]|/(en|eng|de|cn|zh)/|/(tag|page|feed|wp-json|cdn-cgi)/|\.(css|js|xml|txt|svg|webp|mp4)$', re.I)
 ПРИОРИТЕТ = [re.compile(x, re.I) for x in (
     r'kontakt|contact|svyaz|контакт|связ', r'rekvizit|requisit|реквизит|kartochka|карточк', r'rukovod|руковод|struktur|структур|'
     r'komand|команд|personal|сотрудник|direkc|дирекц|administr', r'o-kompanii|about|o-nas|o_kompanii|о-компании|о компании|о нас|'
@@ -84,7 +90,12 @@ def кандидаты(з, стр):
                     if норм(u) not in найдено or найдено[норм(u)][0] > k:
                         найдено[норм(u)] = (k, u)
                     break
-    return [u for _, u in sorted(найдено.values())][:3]
+            else:
+                # широкий режим: прочие внутренние страницы — после приоритетных, в порядке появления на странице
+                if ШИРОКО and норм(u) not in найдено and норм(u) != норм(осн) and urllib.parse.urlsplit(u).path.strip('/') \
+                        and not ШИРОКО_МИМО.search(urllib.parse.unquote(u)):
+                    найдено[норм(u)] = (len(ПРИОРИТЕТ) + len(найдено) / 1000, u)
+    return [u for _, u in sorted(найдено.values())][:6 if ШИРОКО else 3]
 
 
 def одна(з):
@@ -145,9 +156,17 @@ def main():
         сделано = set()
     else:
         только = None
-    задачи = [з for з in последняя.values() if з.get('итог') == 'ok' and з.get('сайт') and not з.get('дообход')
-              and з['inn'] not in сделано and (только is None or з['inn'] in только) and any(ст in ('ok', 'кэш') for _, ст in з.get('страницы') or [])
-              and (not any(н.get('почта') for н in з.get('номера') or []) or мало_страниц(з))]
+    def мало_своих(з):
+        return len({норм(u) for u, ст in з.get('страницы') or [] if ст in ('ok', 'кэш') or str(ст).startswith('дообход: ok')}) <= 2
+    if ШИРОКО:  # 12.10: ≤2 своих страниц и ни одной почты — независимо от прежнего (узкого) дообхода
+        задачи = [з for з in последняя.values() if з.get('итог') == 'ok' and з.get('сайт') and not з.get('дообход_широко')
+                  and з['inn'] not in сделано and (только is None or з['inn'] in только)
+                  and any(ст in ('ok', 'кэш') for _, ст in з.get('страницы') or [])
+                  and not any(н.get('почта') for н in з.get('номера') or []) and мало_своих(з)]
+    else:
+        задачи = [з for з in последняя.values() if з.get('итог') == 'ok' and з.get('сайт') and not з.get('дообход')
+                  and з['inn'] not in сделано and (только is None or з['inn'] in только) and any(ст in ('ok', 'кэш') for _, ст in з.get('страницы') or [])
+                  and (not any(н.get('почта') for н in з.get('номера') or []) or мало_страниц(з))]
     print('компаний без почт с открывшимся сайтом', len(задачи), flush=True)
     сч = {'страниц': 0, 'компаний_с_новыми': 0, 'новых_почт': 0, 'новых_номеров': 0}
     t0, t0_iso, стоп = time.time(), time.strftime('%Y-%m-%dT%H:%M:%S'), [False, time.time()]
@@ -169,7 +188,8 @@ def main():
                 сч['новых_номеров'] += sum(1 for x in нов if x.get('номер'))
                 with io.open(ВЫХОД, 'a', encoding='utf-8') as f:
                     f.write(json.dumps(dict(з, номера=(з.get('номера') or []) + нов, страницы=(з.get('страницы') or []) + страницы,
-                                            дообход=time.strftime('%Y-%m-%d %H:%M')), ensure_ascii=False) + '\n')
+                                            **{'дообход_широко' if ШИРОКО else 'дообход': time.strftime('%Y-%m-%d %H:%M')}),
+                                       ensure_ascii=False) + '\n')
                     f.flush()
                     os.fsync(f.fileno())
             else:
