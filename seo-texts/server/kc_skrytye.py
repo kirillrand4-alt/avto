@@ -194,8 +194,26 @@ def main_зенка():
     сур = {}
     for кл, i in карта.items():
         сур.setdefault(i, []).append(кл)
-    сделано = set(io.open(СДЕЛАНО + '.zenka', encoding='utf-8').read().split()) if os.path.exists(СДЕЛАНО + '.zenka') else set()
-    кандидаты = [з for з in последняя.values() if з.get('сайт') and not з.get('зенка_разбор') and з['inn'] not in сделано]
+    # 12.10 (владелец: переобход всех сайтов по логике кубика силами сервера, «не забыв и про телефоны»):
+    # KC_SKRYTYE_ZENKA_OT='ГГГГ-ММ-ДД ЧЧ:ММ' — разобрать заново всех, чей прошлый разбор Зенки раньше этой отметки (свои
+    # отметки «сделано»); KC_SKRYTYE_DOLYA=k/N — доля компаний, запись в свой файл (слияние — режим slit_zenka)
+    от = os.environ.get('KC_SKRYTYE_ZENKA_OT', '')
+    п_сд = СДЕЛАНО + '.zenka' + ('-' + re.sub(r'\D', '', от) if от else '') + ('.' + ДОЛЯ.split('/')[0] if ДОЛЯ else '')
+    сделано = set(io.open(п_сд, encoding='utf-8').read().split()) if os.path.exists(п_сд) else set()
+    кандидаты = [з for з in последняя.values() if з.get('сайт') and з['inn'] not in сделано and
+                 (str(з.get('зенка_разбор') or '') < от if от else not з.get('зенка_разбор'))]
+    вых = ВЫХОД
+    if ДОЛЯ:
+        k_, N_ = (int(x) for x in ДОЛЯ.split('/'))
+        кандидаты = sorted(кандидаты, key=lambda з: з['inn'])[k_::N_]
+        вых = os.path.join(DIR, НАБОР + '-zenka-dolya-%d.jsonl' % k_)
+        if os.path.exists(вых):  # резюм доли: уже записанные
+            for s_ in io.open(вых, encoding='utf-8', errors='replace'):
+                try:
+                    сделано.add(json.loads(s_)['inn'])
+                except (ValueError, KeyError):
+                    pass
+            кандидаты = [з for з in кандидаты if з['inn'] not in сделано]
 
     def зенкин(з):  # кэш писала Зенка — метка в конце файла (после страниц), проверка без разбора JSON
         if з['inn'] in сур:
@@ -229,18 +247,18 @@ def main_зенка():
                 print('  пример', з['inn'], (нов[0].get('номер') or нов[0].get('почта')), нов[0]['контекст'][-100:], flush=True)
             if not ПРОБА:
                 доп = {'итог': 'ok', 'итог_был': з.get('итог')} if з.get('итог') != 'ok' else {}
-                with io.open(ВЫХОД, 'a', encoding='utf-8') as f:
+                with io.open(вых, 'a', encoding='utf-8') as f:
                     f.write(json.dumps(dict(з, номера=(з.get('номера') or []) + нов, зенка_разбор=time.strftime('%Y-%m-%d %H:%M'),
                                             страницы=(з.get('страницы') or []) + [[u, 'зенка'] for u in свои[:20]], **доп),
                                        ensure_ascii=False) + '\n')
                     f.flush()
                     os.fsync(f.fileno())
         elif not ПРОБА:
-            with io.open(СДЕЛАНО + '.zenka', 'a', encoding='utf-8') as f:
+            with io.open(п_сд, 'a', encoding='utf-8') as f:
                 f.write(з['inn'] + '\n')
                 f.flush()
                 os.fsync(f.fileno())
-    if not ПРОБА:
+    if not ПРОБА and not ДОЛЯ:
         shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', os.path.basename(ВЫХОД)))
     сч['минут'] = round((time.time() - t0) / 60, 1)
     print('===ИТОГ===')
@@ -335,6 +353,56 @@ def main():
     print('готово', json.dumps(сч, ensure_ascii=False), flush=True)
 
 
+def слить_зенку():
+    """12.10: находки долей режима zenka — в файл обхода одним писателем: новые контакты (поле «зенка») и страницы —
+    к ТЕКУЩЕЙ последней записи компании; запускать, когда файл обхода никто не пишет. Файлы долей — в .slito."""
+    посл = {}
+    for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
+        try:
+            з = json.loads(s)
+        except ValueError:
+            continue
+        if з.get('inn'):
+            посл[з['inn']] = з
+    файлы = [ф for ф in sorted(os.listdir(DIR)) if re.fullmatch(re.escape(НАБОР) + r'-zenka-dolya-\d+\.jsonl', ф)]
+    доли = {}
+    for ф in файлы:
+        for s in io.open(os.path.join(DIR, ф), encoding='utf-8', errors='replace'):
+            try:
+                з = json.loads(s)
+            except ValueError:
+                continue
+            доли[з['inn']] = з
+    сч = {'компаний': 0, 'контактов': 0, 'итог стал ok': 0}
+    with io.open(ВЫХОД, 'a', encoding='utf-8') as f:
+        for i, зд in доли.items():
+            з = посл.get(i)
+            if not з:
+                continue
+            есть = {(x.get('почта') or '').lower() for x in з.get('номера') or [] if x.get('почта')} | исключённые(з) | \
+                   {ключ_н(x.get('номер'), x.get('доб')) for x in з.get('номера') or [] if x.get('номер')}
+            доб_ = [x for x in зд.get('номера') or [] if x.get('зенка') and
+                    ((x.get('почта') or '').lower() if x.get('почта') else ключ_н(x.get('номер'), x.get('доб'))) not in есть]
+            if not доб_:
+                continue
+            было_стр = {u for u, _ in з.get('страницы') or []}
+            доп = {'итог': 'ok', 'итог_был': з.get('итог')} if з.get('итог') != 'ok' else {}
+            сч['итог стал ok'] += bool(доп)
+            f.write(json.dumps(dict(з, номера=(з.get('номера') or []) + доб_, зенка_разбор=зд.get('зенка_разбор'),
+                                    страницы=(з.get('страницы') or []) + [x for x in зд.get('страницы') or []
+                                                                          if x and x[0] not in было_стр and x[1] == 'зенка'],
+                                    **доп), ensure_ascii=False) + '\n')
+            сч['компаний'] += 1
+            сч['контактов'] += len(доб_)
+        f.flush()
+        os.fsync(f.fileno())
+    for ф in файлы:
+        os.replace(os.path.join(DIR, ф), os.path.join(DIR, ф + '.slito'))
+    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', os.path.basename(ВЫХОД)))
+    print('===ИТОГ===')
+    print('слито', json.dumps(сч, ensure_ascii=False), flush=True)
+
+
 def слить():
     """Находки долей — в файл обхода одним писателем (дозапись из нескольких процессов в один файл на Windows не
     атомарна). Новые контакты (с полем «скрытые») добавляются к ТЕКУЩЕЙ последней записи компании — если после чтения
@@ -417,4 +485,4 @@ def очистка():
 
 
 if __name__ == '__main__':
-    {'zenka': main_зенка, 'slit': слить, 'ochistka': очистка}.get(РЕЖИМ, main)()
+    {'zenka': main_зенка, 'slit': слить, 'slit_zenka': слить_зенку, 'ochistka': очистка}.get(РЕЖИМ, main)()
