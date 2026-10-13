@@ -22,6 +22,8 @@ from sender.suppression import Suppression  # noqa: E402
 
 арг = dict(а.split("=", 1) for а in sys.argv[1:] if "=" in а)
 ПОРОГ = float(арг.get("porog", "0.30"))
+ОБРАЗЦЫ = int(арг.get("obrazcy", "0"))   # >0: по N из каждой отрасли ВНЕ дешёвых ячеек
+ПАУЗА = {"Лес и деревообработка", "Металлургия"}
 КЛЮЧИ = ("продукция", "сырьё", "мощности", "контроль_качества",
          "оборудование_линии", "упаковка_фасовка", "экспорт", "масштаб")
 cfg = Config.load(r"C:\sender\sender.yaml")
@@ -86,9 +88,13 @@ for я in sorted(хорошие, key=lambda x: цена[x] / годн[x]):
 вер = {р[0].lower(): р[1] for р in c.execute("SELECT email, verdict FROM addr_probe")}
 св = Counter()
 по_ячейке = Counter()
-for rid, (inn, е, сег) in получатели.items():
+образцы = {}
+for rid, (inn, е, сег) in sorted(получатели.items(), key=lambda x: -полнота.get(x[1][0], 0)):
     я = (сег, корзина(полнота.get(inn, 0)))
-    if я not in хорошие:
+    if ОБРАЗЦЫ:
+        if я in хорошие or сег in ПАУЗА or len(образцы.get(сег, [])) >= ОБРАЗЦЫ:
+            continue
+    elif я not in хорошие:
         continue
     if rid in были:
         св["уже генерировали"] += 1
@@ -101,9 +107,18 @@ for rid, (inn, е, сег) in получатели.items():
         св["заслон: " + п.split(":")[0]] += 1
         continue
     св["КАНДИДАТ"] += 1
+    if ОБРАЗЦЫ:
+        if вер.get(е) not in ("есть", "принимает всё"):
+            continue
+        образцы.setdefault(сег, []).append(rid)
     св["   из них адрес подтверждён пробой" if вер.get(е) in ("есть", "принимает всё") else "   из них адрес ещё не проверен/неясно"] += 1
     по_ячейке[я] += 1
 for к, n in св.most_common():
     print("   %-40s %d" % (к, n))
 print("кандидаты по ячейкам: %s" % ", ".join("%s/%s: %d" % (я[0][:18], я[1], n) for я, n in по_ячейке.most_common(14)))
+if ОБРАЗЦЫ:
+    import io as _io
+    сп = [rid for v in образцы.values() for rid in v]
+    json.dump(сп, _io.open(r"C:\sender\_ops\partiya-obrazcy.json", "w", encoding="utf-8"))
+    print("образцы: %d в _ops/partiya-obrazcy.json: %s" % (len(сп), {к: len(v) for к, v in образцы.items()}))
 print("=== КАНДИДАТЫ ДО $%.2f ===" % ПОРОГ)
