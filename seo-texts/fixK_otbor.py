@@ -61,6 +61,23 @@ for i in sb.vozvrat:
 for i in VOR16:
     if i not in {x['inn'] for x in kand_b} and i in sb.komp:
         kand_b.append({'inn': i, 'nazvanie': M.s(sb.komp[i]['Название']), 'region': M.s(sb.komp[i]['Регион'])})
+# «полимеры, гранула» – владелец 13.10 вернул в пул («пластик в гранулах мы сортируем»): из листа «Компании» с теми же
+# фильтрами, что у пула (не в панели, без активной сделки по сборке, не «похоже, не покупатель», с ИНН, не «ИНН вероятный»)
+POLIMERY, POLIMERY_STROKI = [], []
+for _, r in k3.iterrows():
+    if 'полимеры, гранула' not in M.s(r['Сегмент']):
+        continue
+    if r['v_paneli'] or r['akt'] or r['ne_pok'] or M.s(r['key']).startswith('САЙТ') or M.s(r['ИНН вероятный ⚠']):
+        continue
+    i = M.kl_inn(r['inn'])
+    if not i or i in {M.kl_inn(x) for x in pul['inn']}:
+        continue
+    POLIMERY.append(i)
+    POLIMERY_STROKI.append({'inn': i, 'vyr': r['vyr'], 'eda': False, 'dop': M.s(r['Как определён сегмент']) != 'по основному ОКВЭД',
+                   'Сегмент': r['Сегмент'], 'Основной ОКВЭД': r['Основной ОКВЭД'], 'Ревизия: профиль': r['Ревизия: профиль'],
+                   'dom': ''})
+    kand_b.append({'inn': i, 'nazvanie': M.s(r['Название']), 'region': M.s(r['Регион'])})
+print('«полимеры, гранула» возвращены в пул: %d' % len(POLIMERY))
 json.dump(kand_b, open(os.path.join(W, 'kandidaty-bitrix.json'), 'w', encoding='utf-8'), ensure_ascii=False)
 SV = os.path.join(W, 'sverka.json')
 if not os.path.exists(SV):
@@ -99,6 +116,8 @@ for i in sorted(VOR16):
     if i not in inn_pula and i in sb.komp:
         otkaz[i].append('воронежская из архива fixG2 не в пуле MEYER-7 (%s)' % (M.s(sb.komp[i]['Ревизия: профиль']) or 'отсеяна сборкой'))
 stroki = [dict(r) for _, r in pul.iterrows()]
+for r in POLIMERY_STROKI:
+    stroki.append(r)
 for i in sb.vozvrat:          # возвращённые из «Не вошли» (сайт клиента со сделкой): у самой компании сделки быть не должно
     z = sb.komp[i]
     stroki.append({'inn': i, 'vyr': float('nan'), 'eda': sb.vozvrat_eda[i], 'dop': False, 'Сегмент': z['Сегмент'],
@@ -192,8 +211,9 @@ for inn in kand:
 # eda: из пула (pul индекс совпадает с K3?)
 eda = dict(zip([M.kl_inn(x) for x in pul['inn']], pul['eda']))
 eda.update(sb.vozvrat_eda)
+eda.update({i: False for i in POLIMERY})
 dom = dict(zip([M.kl_inn(x) for x in pul['inn']], pul['dom']))
-for i in sb.vozvrat:
+for i in list(sb.vozvrat) + POLIMERY:
     rg = E1.region_norm(M.s(sb.komp[i]['Регион']))
     dom[i] = {'Алтайский край': 'Алтай', 'Краснодарский край': 'Краснодар', 'Воронежская область': 'Воронеж'}.get(rg, '')
 for inn, z in rez.items():

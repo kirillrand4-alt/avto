@@ -208,7 +208,8 @@ def status_proverka(inn):
     d = DD.get(inn) or {}
     st = d.get('status')
     if not st:
-        return False, '', 'нет в ЕГРЮЛ по DaData'
+        return False, '', ('статус не проверен: DaData не запрашивалась (кандидат дальше проверенной части очереди)'
+                           if inn not in DD else 'нет в ЕГРЮЛ по DaData')
     if st not in ('ACTIVE', 'REORGANIZING'):
         return False, '', 'ЕГРЮЛ (DaData): %s' % st
     z = CH.get(inn) or {}
@@ -290,7 +291,7 @@ def vybor_odna(inn, otkaz, vybor, reg_sch, isklyuchit, pozzhe_mozhno):
         pr.append('выручка %.1f млн по checko – меньше 30 млн (владелец 13.10)' % (v_ / 1e6))
     ok, st_tekst, prich = status_proverka(inn)
     if not ok:
-        pr.append('недействующая: ' + prich)
+        pr.append(prich if prich.startswith('статус не проверен') else 'недействующая: ' + prich)
     reg, reg_ist = region_oficialnyy(inn, c)
     if reg in EMK and reg_sch[reg] >= EMK[reg]:
         pr.append('домашний регион %s заполнен (%d)' % (reg, EMK[reg]))
