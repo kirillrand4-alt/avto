@@ -274,50 +274,67 @@ def snyat(sb, inn, kl):
 
 
 # ---------------------------------------------------------------- контакты одной компании
+def istochnik_tekst(ist, pr, rol, lpr_s, pochemu):
+    """Источник номера – как у fixJ (усиление 600): «MEYER-7 13.10: <Источник> · <Проверка> · подсказка MEYER-7: …»."""
+    podsk = 'подсказка MEYER-7: роль «%s», ЛПР по оборудованию «%s»%s' % (rol, lpr_s, ('; ' + pochemu[:150]) if pochemu else '')
+    return ('MEYER-7 13.10: %s · %s · %s' % (ist or 'сайт компании', pr or 'проверка не указана', podsk))[:900]
+
+
 def kontakty_kompanii(sb, inn, cat):
-    """-> (kontakty, lyudi, zhurnal) в схеме панели. cat – app.services.centro_catalog (для rol_kontakta)."""
+    """-> (kontakty, lyudi, pochty, zhurnal) в схеме панели (contact только phone, как сейчас в базе; почты – списком
+    (адрес, пометка, ЛПР?) для company.pochta, как fixJ). cat – app.services.centro_catalog (rol_kontakta)."""
     c = sb.komp[inn]
     naim, sayt, chey = s(c['Название']), s(c['Сайт']), s(c['Сайт: чей'])
     strana = s(c['Страна']) or 'Россия'
     po_kl = collections.OrderedDict()
     zh = collections.Counter()
-    lyudi = []
+    lyudi, pochty = [], []
 
     def dobavit(kl, row):
         if kl in po_kl:
             st = po_kl[kl]
-            # источники копятся: ссылки через « ; », проверки и источники – через « | »
-            for u in s(row['source_url']).split(' ; '):
+            for u in s(row['source_url']).split(' ; '):           # источники копятся: ссылки через « ; »
                 if u and u not in st['source_url'].split(' ; '):
                     st['source_url'] = (st['source_url'] + ' ; ' + u).strip(' ;')
-            for pole in ('source', 'proverka_sborki'):
-                if s(row.get(pole)) and s(row.get(pole)) not in s(st.get(pole)):
-                    st[pole] = (s(st.get(pole)) + ' | ' + s(row.get(pole))).strip(' |')
-            # имя и должность – у кого есть
-            for pole in ('person', 'position', 'fragment', 'lpr_sborki', 'lpr_pochemu'):
+            if s(row.get('source')) and s(row['source'])[:60] not in s(st.get('source')):
+                st['source'] = (s(st.get('source')) + ' | ' + s(row['source']))[:1500]
+            for pole in ('person', 'position', 'fragment', 'role'):
                 if not s(st.get(pole)) and s(row.get(pole)):
                     st[pole] = row[pole]
             if row.get('_prinyat') and not st.get('_prinyat'):
-                st['_prinyat'], st['_pochemu_net'] = True, ''
-            st['istochnikov'] = st.get('istochnikov', 1) + 1
-            zh['повтор номера/почты – источники сведены'] += 1
+                st['_prinyat'], st['_pochemu_net'], st['_gruppa_d'] = True, '', ''
+            st['_n'] = st.get('_n', 1) + 1
+            zh['повтор номера – источники сведены'] += 1
             return
-        row['istochnikov'] = 1
+        row['_n'] = 1
         po_kl[kl] = row
 
+    def pochta(mail, pom, lpr=False, ist='MEYER-7'):
+        mail = s(mail).strip().strip('.').lower()
+        if not mail or '@' not in mail:
+            return
+        if snyat(sb, inn, '@' + mail):
+            zh['почта в «Снято» – не взята'] += 1
+            return
+        if any(mail == p[0] for p in pochty):
+            return
+        pochty.append((mail, '%s%s%s' % ('ЛПР: ' if lpr else '', ist, (': ' + pom) if pom else ''), lpr))
+
     for r in sb.kont.get(inn, []):
-        mob, rab, mail = s(r['Мобильный']), s(r['Рабочий']), s(r['E-mail']).strip().strip('.')
+        mob, rab, mail = s(r['Мобильный']), s(r['Рабочий']), s(r['E-mail'])
         dob = s(r['Добавочный'])
         dob = dob[:-2] if dob.endswith('.0') else dob
-        url = s(r['Ссылка на источник'])
+        url = s(r['Ссылка на источник']) or s(r['Сайт'])
         pr, ist = s(r['Проверка']), s(r['Источник'])
+        fio, dolzh = s(r['ФИО']), s(r['Должность (как на сайте)'])
         prinyat, pochemu_net = kontakt_prinyat(pr, ist, url, sayt, chey)
-        baza = {'inn': inn, 'person': s(r['ФИО']) or None, 'position': s(r['Должность (как на сайте)']),
+        baza = {'inn': inn, 'person': fio or None, 'position': dolzh,
                 'role': ROL_SBORKI.get(s(r['Роль']), s(r['Роль']).lower()),
-                'source': ' · '.join(x for x in (ist or 'сайт компании', 'сборка MEYER-7 ' + DATA_SBORKI) if x),
-                'source_url': url, 'fragment': s(r['Фрагмент страницы'])[:600], 'is_unknown_owner': 0,
-                'proverka_sborki': pr[:900], 'rol_sborki': s(r['Роль']), 'lpr_sborki': s(r['ЛПР по оборудованию']),
-                'lpr_pochemu': s(r['Почему ЛПР'])[:500], '_prinyat': prinyat, '_pochemu_net': pochemu_net}
+                'source': istochnik_tekst(ist, pr, s(r['Роль']), s(r['ЛПР по оборудованию']), s(r['Почему ЛПР'])),
+                'source_url': url, 'fragment': s(r['Фрагмент страницы'])[:1500], 'is_unknown_owner': 0,
+                'vid_pochemu': '', 'rol_vruchnuyu': '', 'podpis_stranicy': '',
+                '_prinyat': prinyat, '_pochemu_net': pochemu_net, '_gruppa_d': domen(url)}
+        est_nomer = False
         for v, tip in ((mob, 'мобильный'), (rab, '')):
             if not v:
                 continue
@@ -325,83 +342,83 @@ def kontakty_kompanii(sb, inn, cat):
                 v = v + ' доб. ' + dob
             val = pokaz_nomera(v, strana)
             kl = kl_nomera(val)
-            if not kl and not cifry(val):
+            if not kl:
+                zh['номер не разобран'] += 1
                 continue
             if snyat(sb, inn, kl):
                 zh['номер в «Снято» – не взят'] += 1
                 continue
             vid = cat.vid_nomera_po_cifram(val)
-            row = dict(baza, value=val, kind='phone',
-                       phone_type=tip or (vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800',
-                                                         'международный', 'Казахстан') else 'рабочий'))
-            dobavit('t:' + (kl or cifry(val)), row)
-        if mail and '@' in mail:
-            if snyat(sb, inn, '@' + mail.lower()):
-                zh['почта в «Снято» – не взята'] += 1
-                continue
-            dobavit('e:' + mail.lower(), dict(baza, value=mail, kind='email', phone_type=''))
+            row = dict(baza, value=val, kind='phone', vid_nomera=vid,
+                       phone_type=vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий')
+            dobavit('t:' + kl, row)
+            est_nomer = True
+        if mail:
+            rk0 = cat.rol_kontakta({'position': dolzh, 'role': baza['role']})
+            lpr_m = bool(rk0['lpr']) and (prinyat or bool(nazvan_vo_fragmente(baza['fragment'], naim, inn)))
+            pom = ', '.join(v for v in (dolzh or s(r['Роль']), fio) if v)
+            if not prinyat and not lpr_m:
+                pom += '; ' + pochemu_net[:80]
+            pochta(mail, pom, lpr_m)
+            if fio and not est_nomer:              # человек только с почтой – в «Люди предприятия»
+                lyudi.append({'inn': inn, 'person': fio, 'position': dolzh, 'role': baza['role'], 'phone': '', 'phone_type': '',
+                              'email': mail.lower(), 'source_url': url, 'source': baza['source'], 'is_tech': rk0['teh'],
+                              'chuzhoy_istochnik': None if lpr_m or prinyat else (
+                                  'с сайта группы: %s – человек не назван сотрудником этой компании' % (domen(url) or ist))[:400],
+                              'sprosit_u_priemnoy': 'MEYER-7: на странице «%s» – %s; номера нет, есть почта %s' % (
+                                  domen(url), ', '.join(v for v in (fio, dolzh) if v), mail.lower())})
 
-    # Лиды группы: контакты площадок группы – к компании группы, не ЛПР
+    # Лиды группы: контакты площадок группы – к компании группы, не ЛПР этой компании
     for r in sb.lidy.get(inn, []):
         plosh = s(r['Площадка (как на сайте)'])[:160]
-        gr = s(r['Группа'])
-        tekst = 'контакт группы «%s»: площадка %s (сайт группы %s) – не эта компания, звонить через группу' % (
-            gr, ('«%s»' % plosh) if plosh else 'не указана', s(r['Сайт группы']))
-        baza = {'inn': inn, 'person': s(r['ФИО']) or None, 'position': s(r['Должность']),
-                'role': ROL_SBORKI.get(s(r['Роль']), s(r['Роль']).lower()),
-                'source': 'сайт группы · лист «Лиды группы» сборки MEYER-7 ' + DATA_SBORKI,
-                'source_url': s(r['Ссылка']), 'fragment': s(r['Фрагмент'])[:600], 'is_unknown_owner': 0,
-                'chuzhoy_istochnik': tekst[:400], 'chuzhoy_dokaz': 'лист «Лиды группы»: %s' % plosh,
-                'rol_sborki': s(r['Роль']), '_prinyat': True, '_pochemu_net': ''}
+        tekst = 'контакт группы «%s»: площадка %s (сайт группы %s) – не эта компания' % (
+            s(r['Группа']), ('«%s»' % plosh) if plosh else 'не указана', s(r['Сайт группы']))
         tel = s(r['Телефон'])
         dob = s(r['Доб.'])
         dob = dob[:-2] if dob.endswith('.0') else dob
         if tel:
             val = pokaz_nomera(tel + ((' доб. ' + dob) if dob and not DOB_RX.search(tel) else ''), strana)
             kl = kl_nomera(val)
-            if not snyat(sb, inn, kl):
+            if kl and not snyat(sb, inn, kl):
                 vid = cat.vid_nomera_po_cifram(val)
-                dobavit('t:' + (kl or cifry(val)), dict(baza, value=val, kind='phone',
-                                                         phone_type=vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий'))
+                dobavit('t:' + kl, {'inn': inn, 'value': val, 'kind': 'phone', 'person': s(r['ФИО']) or None,
+                                    'position': s(r['Должность']), 'role': ROL_SBORKI.get(s(r['Роль']), ''),
+                                    'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий',
+                                    'vid_nomera': vid, 'source': ('MEYER-7 13.10: лист «Лиды группы» (сайт группы %s) · площадка %s'
+                                                                  % (s(r['Сайт группы']), plosh))[:900],
+                                    'source_url': s(r['Ссылка']), 'fragment': s(r['Фрагмент'])[:1500], 'is_unknown_owner': 0,
+                                    'chuzhoy_istochnik': tekst[:400], 'chuzhoy_dokaz': 'MEYER-7, лист «Лиды группы»: %s' % plosh,
+                                    'vid_pochemu': '', 'rol_vruchnuyu': '', 'podpis_stranicy': '', '_prinyat': True,
+                                    '_pochemu_net': '', '_gruppa_d': ''})
                 zh['лиды группы: номер'] += 1
-        mail = s(r['E-mail'])
-        if mail and '@' in mail and not snyat(sb, inn, '@' + mail.lower()):
-            dobavit('e:' + mail.lower(), dict(baza, value=mail, kind='email', phone_type=''))
+        if s(r['E-mail']):
+            pochta(s(r['E-mail']), 'контакт группы, площадка %s' % (plosh or s(r['Группа'])))
             zh['лиды группы: почта'] += 1
 
-    # База обзвона: телефоны и почты; тех. службы (наша база)
+    # База обзвона (наша база): номера, почты; тех. службы (наша база); директор базы обзвона – человек
     for v in [x.strip() for x in s(c['База обзвона: телефоны']).split('|') if x.strip()]:
         val = pokaz_nomera(v, strana)
         kl = kl_nomera(val)
         if not kl or snyat(sb, inn, kl):
             continue
-        row = {'inn': inn, 'value': val, 'kind': 'phone', 'person': None, 'position': '', 'role': '',
-               'phone_type': cat.vid_nomera_po_cifram(val), 'source': 'база обзвона (наша база) · сборка MEYER-7 ' + DATA_SBORKI,
-               'source_url': '', 'fragment': '', 'is_unknown_owner': 0, '_prinyat': True, '_pochemu_net': '',
-               'rol_sborki': 'база обзвона'}
-        if row['phone_type'] not in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800'):
-            row['phone_type'] = 'рабочий'
-        dobavit('t:' + kl, row)
+        vid = cat.vid_nomera_po_cifram(val)
+        dobavit('t:' + kl, {'inn': inn, 'value': val, 'kind': 'phone', 'person': None, 'position': '', 'role': '',
+                            'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий',
+                            'vid_nomera': vid, 'source': 'MEYER-7 13.10: база обзвона (наша база), колонка «База обзвона: телефоны»',
+                            'source_url': '', 'fragment': '', 'is_unknown_owner': 0, 'vid_pochemu': '', 'rol_vruchnuyu': '',
+                            'podpis_stranicy': '', '_prinyat': True, '_pochemu_net': '', '_gruppa_d': ''})
         zh['база обзвона: номер'] += 1
     for v in [x.strip() for x in s(c['База обзвона: почты']).split('|') if x.strip()]:
         m = re.match(r'([^\s()]+@[^\s()]+)\s*(?:\((.*)\))?', v)
-        if not m:
-            continue
-        mail, zamet = m.group(1).strip('.'), s(m.group(2))
-        if snyat(sb, inn, '@' + mail.lower()):
-            continue
-        dobavit('e:' + mail.lower(), {'inn': inn, 'value': mail, 'kind': 'email', 'person': None, 'position': '',
-                                      'role': '', 'phone_type': '', 'source': 'база обзвона (наша база) · сборка MEYER-7 ' + DATA_SBORKI,
-                                      'source_url': '', 'fragment': '', 'is_unknown_owner': 0, 'vid_pochemu': zamet[:300],
-                                      '_prinyat': True, '_pochemu_net': '', 'rol_sborki': 'база обзвона'})
-        zh['база обзвона: почта'] += 1
+        if m:
+            pochta(m.group(1), s(m.group(2)), ist='база обзвона')
+            zh['база обзвона: почта'] += 1
     for strk in [x.strip() for x in s(c['Тех. службы (наша база)']).split('\n') if x.strip()]:
         m = re.match(r'(.+?)\s+—\s+(.+?)(?:;\s*(.*?))?\s*(\(([^()]*(?:\([^()]*\))?[^()]*)\))?\s*$', strk)
         if not m:
             continue
         fio, dolzh, kont, ist = m.group(1).strip(), m.group(2).strip(), s(m.group(3)), s(m.group(5))
-        tel = ''
-        mail = ''
+        tel, mail = '', ''
         for x in [y.strip() for y in kont.split(',') if y.strip()]:
             if '@' in x:
                 mail = x
@@ -410,82 +427,123 @@ def kontakty_kompanii(sb, inn, cat):
         dob_m = re.search(r'добавочный (\d{1,6})', ist)
         if tel and dob_m and 'доб.' not in tel:
             tel += ' доб. ' + dob_m.group(1)
-        src = 'тех. службы (наша база): %s · сборка MEYER-7 %s' % (ist or 'источник не указан', DATA_SBORKI)
-        if tel and not snyat(sb, inn, kl_nomera(tel)):
+        src = 'MEYER-7 13.10: тех. службы (наша база): %s' % (ist or 'источник не указан')
+        if mail:
+            pochta(mail, '%s, %s' % (dolzh, fio), ist='тех. службы (наша база)')
+        if tel and kl_nomera(tel) and not snyat(sb, inn, kl_nomera(tel)):
             vid = cat.vid_nomera_po_cifram(tel)
-            dobavit('t:' + kl_nomera(tel), {'inn': inn, 'value': tel, 'kind': 'phone', 'person': fio, 'position': dolzh,
-                                            'role': '', 'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий',
-                                            'source': src, 'source_url': '', 'fragment': strk[:600], 'is_unknown_owner': 0,
-                                            '_prinyat': True, '_pochemu_net': '', 'rol_sborki': 'тех. службы (наша база)'})
+            dobavit('t:' + kl_nomera(tel), {'inn': inn, 'value': tel, 'kind': 'phone', 'person': fio, 'position': dolzh, 'role': '',
+                                            'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий',
+                                            'vid_nomera': vid, 'source': src, 'source_url': '', 'fragment': strk[:600],
+                                            'is_unknown_owner': 0, 'vid_pochemu': '', 'rol_vruchnuyu': '', 'podpis_stranicy': '',
+                                            '_prinyat': True, '_pochemu_net': '', '_gruppa_d': ''})
             zh['тех. службы: номер'] += 1
         else:
             lyudi.append({'inn': inn, 'person': fio, 'position': dolzh, 'role': '', 'phone': '', 'phone_type': '',
-                          'email': mail, 'source_url': '', 'source': src, 'is_tech': 0, 'sprosit_u_priemnoy': 'тех. службы (наша база)'})
+                          'email': mail, 'source_url': '', 'source': src, 'is_tech': 0, 'chuzhoy_istochnik': None,
+                          'sprosit_u_priemnoy': 'тех. службы (наша база): %s' % (ist or '')})
             zh['тех. службы: человек без номера'] += 1
     dir_bo = s(c['База обзвона: директор'])
     if dir_bo:
         lyudi.append({'inn': inn, 'person': dir_bo, 'position': 'директор', 'role': 'директор/руководитель', 'phone': '',
-                      'phone_type': '', 'email': '', 'source_url': '',
-                      'source': 'база обзвона (наша база): директор · сборка MEYER-7 ' + DATA_SBORKI, 'is_tech': 0,
-                      'sprosit_u_priemnoy': 'директор по базе обзвона'})
+                      'phone_type': '', 'email': '', 'source_url': '', 'chuzhoy_istochnik': None,
+                      'source': 'MEYER-7 13.10: база обзвона (наша база), колонка «База обзвона: директор»', 'is_tech': 0,
+                      'sprosit_u_priemnoy': 'директор по базе обзвона (наша база)'})
 
-    # роль по смыслу (логика панели); непринятый сайт без имени компании – ЛПР не считается
+    # роль по смыслу (логика панели); непринятый сайт без имени компании – как у fixJ: метка «с сайта группы»
     kontakty = []
     for kl, x in po_kl.items():
-        if x['kind'] == 'phone':
-            rk = cat.rol_kontakta(x)
-            if rk['lpr'] and not x.get('_prinyat'):
-                nazv = nazvan_vo_fragmente(x.get('fragment'), naim, inn)
-                if nazv:
-                    x['vid_pochemu'] = ('%s; принято: %s' % (x['_pochemu_net'], nazv))[:400]
-                    zh['непринятый сайт, но компания названа – ЛПР'] += 1
-                else:
-                    x['rol_vruchnuyu'] = 'общий номер'
-                    x['vid_pochemu'] = ('%s; был бы ЛПР «%s» – не считается ЛПР этой компании (правило 13.10: человек '
-                                        'не назван её)' % (x['_pochemu_net'], rk['vid']))[:500]
-                    zh['непринятый сайт: ЛПР -> общий номер (путь через группу)'] += 1
-                    rk = cat.rol_kontakta(x)
-            elif not x.get('_prinyat') and x.get('_pochemu_net'):
-                x['vid_pochemu'] = x['_pochemu_net'][:400]
-            x['is_purchaser'], x['is_tech'] = rk['zakup'], rk['teh']
-            x['has_role'] = int(bool(rk['lpr']) or rk['vid'] in ('приёмная', 'общий номер', 'техслужба (не ЛПР)', 'без подписи'))
-            x['nomer_ne_lichnyy'] = None if rk['lpr'] else rk['vid']
-            # role НЕ переписывается видом: при общей должности («руководитель») rol_kontakta решает по role,
-            # а вид «первое лицо» в role дал бы «без подписи»; role остаётся в словаре панели (_PO_ROLI)
-            x['_rol'] = rk['vid']
-            x['_lpr'] = rk['lpr']
-        else:
-            x['is_purchaser'] = x['is_tech'] = x['has_role'] = 0
-            x['nomer_ne_lichnyy'] = 'почта'
-            x['_rol'], x['_lpr'] = 'почта', 0
-            if not x.get('_prinyat') and x.get('_pochemu_net'):
-                x['vid_pochemu'] = x['_pochemu_net'][:400]
+        rk = cat.rol_kontakta(x)
+        if rk['lpr'] and not x.get('_prinyat'):
+            nazv = nazvan_vo_fragmente(x.get('fragment'), naim, inn)
+            if nazv:
+                x['vid_pochemu'] = ('%s; принято: %s' % (x['_pochemu_net'], nazv))[:400]
+                zh['непринятый сайт, но компания названа во фрагменте – ЛПР'] += 1
+            else:
+                x['chuzhoy_istochnik'] = ('с сайта группы: %s – человек не назван сотрудником этой компании'
+                                          % (x.get('_gruppa_d') or 'сайт'))[:400]
+                x['chuzhoy_dokaz'] = ('MEYER-7: %s; был бы «%s»' % (x['_pochemu_net'], rk['vid']))[:500]
+                zh['непринятый сайт: ЛПР не этой компании (метка «с сайта группы»)'] += 1
+                rk = cat.rol_kontakta(x)
+        elif not x.get('_prinyat') and x.get('_pochemu_net'):
+            x['vid_pochemu'] = x['_pochemu_net'][:400]
+        x['is_purchaser'], x['is_tech'] = rk['zakup'], rk['teh']
+        x['has_role'] = int(bool(rk['lpr']) or rk['vid'] in ('приёмная', 'общий номер', 'техслужба (не ЛПР)', 'без подписи'))
+        x['nomer_ne_lichnyy'] = None if rk['lpr'] else rk['vid']
+        # role НЕ переписывается видом: при общей должности («руководитель») rol_kontakta решает по role (словарь
+        # панели), а вид «первое лицо» в role дал бы «без подписи»
+        x['_rol'], x['_lpr'] = rk['vid'], rk['lpr']
+        if x['_n'] > 1:
+            x['source'] = ('%s · источников: %d' % (x['source'], x['_n']))[:1500]
         kontakty.append(x)
-    # люди: с номером (строки телефонов) и только с почтой; почта человека – в person.email.
-    # Человек с непринятого сайта (без имени компании) – с пометкой chuzhoy_istochnik: в «привязка снята»,
-    # «спросить у приёмной» по нему не строится.
-    po_fio = collections.OrderedDict()
-    for x in kontakty:
-        f = s(x.get('person'))
-        if not f:
+        if s(x.get('person')):
+            lyudi.append({'inn': inn, 'person': x['person'], 'position': x.get('position') or '', 'role': x.get('role') or '',
+                          'phone': x['value'], 'phone_type': x.get('phone_type') or '', 'email': '',
+                          'source_url': (x.get('source_url') or '').split(' ; ')[0], 'source': x.get('source') or '',
+                          'is_tech': rk['teh'], 'chuzhoy_istochnik': x.get('chuzhoy_istochnik') or None,
+                          'sprosit_u_priemnoy': None})
+    # почта человека – в person.email; один человек – одна строка без номера
+    po_fio = {}
+    for p in lyudi:
+        if p['email'] and p['person']:
+            po_fio.setdefault(p['person'], p['email'])
+    vidali, lyudi2 = set(), []
+    for p in sorted(lyudi, key=lambda p: 0 if p['phone'] else 1):
+        if not p['email'] and p['person'] in po_fio:
+            p['email'] = po_fio[p['person']]
+        kk = (cat._kl_fio(p['person']), k10(p['phone']))
+        if kk in vidali or (not p['phone'] and any(v[0] == kk[0] for v in vidali)):
             continue
-        p = po_fio.get(f)
-        if p is None:
-            ne_nash = s(x.get('chuzhoy_istochnik')) or (
-                x.get('_pochemu_net') if (not x.get('_prinyat') and not nazvan_vo_fragmente(x.get('fragment'), naim, inn)) else '')
-            p = {'inn': inn, 'person': f, 'position': x.get('position') or '', 'role': x.get('role') or '',
-                 'phone': '', 'phone_type': '', 'email': '', 'source_url': (x.get('source_url') or '').split(' ; ')[0],
-                 'source': x.get('source') or '', 'is_tech': x.get('is_tech') or 0, 'sprosit_u_priemnoy': None,
-                 'chuzhoy_istochnik': s(ne_nash)[:400] or None}
-            po_fio[f] = p
-        if x['kind'] == 'phone' and not p['phone']:
-            p['phone'], p['phone_type'] = x['value'], x.get('phone_type') or ''
-        if x['kind'] == 'email' and not p['email']:
-            p['email'] = x['value']
-        if not p['position'] and x.get('position'):
-            p['position'] = x['position']
-    for p in po_fio.values():
-        if not p['phone']:
-            p['sprosit_u_priemnoy'] = 'на странице есть только почта' if p['email'] else None
-    lyudi = list(po_fio.values()) + lyudi
-    return kontakty, lyudi, zh
+        vidali.add(kk)
+        lyudi2.append(p)
+    return kontakty, lyudi2, pochty, zh
+
+
+# ---------------------------------------------------------------- флаги ЛПР (копия fixH_zamena.flagi / fixF2_dannye)
+def pokaz(cat, v):
+    osn, dob = cat._razdelit_dobavochnyy(v)
+    d = re.sub(r'\D', '', osn)
+    if len(d) == 11 and d[0] == '7':
+        osn = '+7 %s %s-%s-%s' % (d[1:4], d[4:7], d[7:9], d[9:])
+    return osn + (' доб. ' + dob if dob else '')
+
+
+def flagi(cat, items):
+    tel = [x for x in items if x['kind'] == 'phone']
+    lpr = [x for x in tel if x['lpr']]
+    sprosit = [x for x in items if x['kind'] == 'sprosit']
+    roli = list(dict.fromkeys(x['rol_vid'] for x in lpr))
+    fio_lpr = {cat._kl_fio(x['person']) for x in lpr if x['person']}
+    mob = [x for x in lpr if x['vid_nomera'] == 'мобильный']
+    fio_mob = [x for x in mob if x['person']]
+    if lpr:
+        l0 = (fio_mob or mob or lpr)[0]
+        kr = ' · '.join(v for v in (l0['person'], l0['position'] or l0['rol_vid'], pokaz(cat, l0['value'])) if v)
+        if len(lpr) > 1:
+            kr += ' (+ ещё %d)' % (len(lpr) - 1)
+    elif sprosit:
+        s0 = sprosit[0]
+        kr = '%s · %s (без номера – спросить у приёмной)' % (s0['person'], s0['position'] or s0['rol_vid'])
+    else:
+        put_ = [x for x in tel if x['has_role']]
+        if put_:
+            p0 = put_[0]
+            kr = ('ЛПР не найден, через приёмную: %s' if p0['rol_vid'] in ('приёмная', 'общий номер')
+                  else 'ЛПР не найден, номер с сайта: %s') % pokaz(cat, p0['value'])
+            n_mob = sum(1 for x in tel if x['vid_nomera'] == 'мобильный')
+            if n_mob:
+                kr += ' (мобильных без ЛПР: %d)' % n_mob
+        else:
+            kr = 'ЛПР не найден' + (', номера только неличные: %d' % len(tel) if tel else ', номеров нет')
+    return {'has_tech': int(any(x['is_tech'] for x in lpr)), 'n_tech': sum(1 for x in lpr if x['is_tech']),
+            'has_purchaser': int(any(x['is_purchaser'] for x in lpr)), 'n_purchaser': sum(1 for x in lpr if x['is_purchaser']),
+            'lpr_mobilnyy': int(bool(mob)), 'lpr_s_fio': len(fio_lpr), 'lpr_roli': ', '.join(roli), 'lpr_kratko': kr,
+            'n_phones': len(tel), 'has_phone': int(bool(tel))}
+
+
+def search_blob(cat, inn, c, items, lpr_kratko):
+    return ' '.join(str(v) for v in (
+        inn, c.get('predpriyatie'), c.get('region'), c.get('okvedy_vse'), c.get('segment'), c.get('segment_meyer7'),
+        c.get('opisanie'), c.get('produkciya'), c.get('holding'), c.get('sayt'), lpr_kratko, c.get('adres'), c.get('direktor'),
+        ' '.join('%s %s %s %s' % (x.get('person') or '', x.get('position') or '', x.get('rol_vid') or '',
+                                  cat._phone_key(x.get('value'))) for x in items if x['kind'] in ('phone', 'sprosit'))) if v).lower()

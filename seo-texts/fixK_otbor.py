@@ -130,17 +130,13 @@ print('воронежские из архива fixG2: в пуле %d, прош�
 
 # ---------------------------------------------------------------- контакты и ступень панели на копии каталога
 kol_c = {r[1] for r in k.execute('PRAGMA table_info(contact)')}
-for c_ in ('proverka_sborki', 'rol_sborki', 'lpr_sborki', 'lpr_pochemu', 'istochnikov'):
-    if c_ not in kol_c:
-        k.execute('ALTER TABLE contact ADD COLUMN %s TEXT' % c_)
-kol_c = {r[1] for r in k.execute('PRAGMA table_info(contact)')}
 kol_p = {r[1] for r in k.execute('PRAGMA table_info(person)')}
 statistika = collections.Counter()
 for n, inn in enumerate(kand):
     c = sb.komp[inn]
     k.execute('INSERT INTO company (inn, predpriyatie, region, okved, sayt, vyruchka_rub) VALUES (?,?,?,?,?,?)',
               (inn, M.s(c['Название']), M.s(c['Регион']), M.s(c['Основной ОКВЭД']), M.s(c['Сайт']), M.chislo(c['Выручка, руб'])))
-    kont, lyudi, zh = M.kontakty_kompanii(sb, inn, cat)
+    kont, lyudi, pochty, zh = M.kontakty_kompanii(sb, inn, cat)
     statistika.update(zh)
     for x in kont:
         rr = {kk: v for kk, v in x.items() if kk in kol_c and not kk.startswith('_')}
