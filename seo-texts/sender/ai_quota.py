@@ -1338,6 +1338,11 @@ class AiQuota:
                 "segment": сегмент or None,
                 "contact_name": (r.contact_name or "").strip()
                                 or _имя_из_карточки or None,
+                # АДРЕС ПИСЬМА (13.10). Без него сверка «имя ↔ ящик» в
+                # ai_letter всегда отвечала «не согласуется», и именных
+                # приветствий не было: из 111 писем с полным именем по имени
+                # поздоровались в одном (kudinov@ ↔ «Кудинов Роман»).
+                "email": (getattr(r, "email", "") or "").strip().lower() or None,
                 "mode": "auto", "extra": extra,
                 "_digest": dg.get("digest", ""), "_url": dg.get("news_url", "")}
 
