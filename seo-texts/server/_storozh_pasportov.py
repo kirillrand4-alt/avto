@@ -24,6 +24,8 @@ if '--vnutri' not in sys.argv:
 # 12.10, владелец: «запусти всё, может ночью оживёт» — шлюз мигает, «3 ответа подряд» может не случиться никогда.
 # Теперь: пересборка сразу; отказы шлюза (отложенные) — повтор кругами через 20 мин, до 15 кругов; потолок $145 — в самой
 # пересборке (накопленная сумма, meyer7-pereborka-stoimost.json).
+# 13.10, владелец: «доделай, пополнил провайдер» — потолок поднят до $185 (остаток ~2000 компаний ≈ $28 сверх $145)
+os.environ.setdefault('PASPORT_POTOLOK', '185')
 for круг in range(1, 16):
     t0 = time.time()
     r = subprocess.run([sys.executable, os.path.join(DIR, '_pereborka_pasportov.py'), '--vnutri'], cwd=DIR, capture_output=True,
