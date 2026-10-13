@@ -125,8 +125,9 @@ if CHAST == 'osnova':
     ok(set(vlad) == vse and all(sch[p] == 270 for p in STARYE) and all(sch[p] == 120 for p in NOVYE_PR),
        'назначения = каталог (%d компаний); у продавцов: %s' % (len(vse), {FIO[p]: sch[p] for p in PRODAVCY}))
     sch_n = collections.Counter(vlad.get(i) for i in novye)
-    ok(all(sch_n[p] == 120 for p in PRODAVCY) and all(vlad.get(i) == p for i, p in plan['prodavcy'].items()),
-       'новых База 7 по 120 и по плану: %s' % {FIO[p]: sch_n[p] for p in PRODAVCY})
+    ok(all(sch_n[p] == plan['cel'][p] for p in PRODAVCY) and all(vlad.get(i) == p for i, p in plan['prodavcy'].items()),
+       'новых База 7 по квотам (120; у Ерохина, Беляева, Волкова +1/+1/+2 взамен убранных не покупателей) и по плану: %s' % {
+           FIO[p]: sch_n[p] for p in PRODAVCY})
     for reg, kto_ in plan['dom'].items():
         c = collections.Counter(vlad.get(i) for i in vse if kat[i]['region'] == reg)
         ok(set(c) <= set(kto_), 'домашний регион «%s» (%d): %s – только %s' % (reg, sum(c.values()), {FIO[p]: n for p, n in c.items()},
