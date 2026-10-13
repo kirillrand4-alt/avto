@@ -77,6 +77,20 @@ if режим == 'svod':
     print('направления:', Counter(str(з.get('направление')) for з in записи))
     print('дни:', sorted(Counter(str(з.get('день')) for з in записи).items())[-8:])
     print('поля итога:', sorted(записи[-1].keys()) if записи else '-')
+elif режим == 'reason':
+    под = sys.argv[2]
+    n = 0
+    по_сег = Counter()
+    for з in записи:
+        for б in (з.get('брак') or []):
+            if под in str(б):
+                n += 1
+                по_сег[з['_seg']] += 1
+                print('%s rid=%s %s | %s' % (з.get('день'), з.get('recipient_id'),
+                      з['_seg'][:18], str(б)[:230]))
+    print('ВСЕГО', n, dict(по_сег))
+    ок = Counter((з['_seg'], bool(з.get('ок'))) for з in записи)
+    print('appr:', sum(1 for з in записи if 'очередь: approved' in str(з.get('брак')) and з['_seg'].startswith('Зерно')))
 elif режим == 'kart':
     seg = СЕГ[sys.argv[2]]
     тек = sys.argv[3] if len(sys.argv) > 3 else ''
