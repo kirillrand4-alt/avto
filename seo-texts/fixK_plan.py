@@ -52,6 +52,10 @@ import fixF2_ball as E2  # noqa: E402
 T0 = time.time()
 DATA = '13.10.2026'
 NUZHNO = 120
+# координатор 13.10 (вердикт оценщика L): 4 компании панели – реальные не покупатели – в архив; их продавцам по 1 замене
+# сверх 120, чтобы у старых было ровно 270
+UBRAT = {'2983009226': 'ООО «Дока»', '4706054164': 'ООО «Альтаир»', '3918502352': 'ООО «Балтфуд»', '9102204592': 'ООО «Империя» (Крым)'}
+NE_BRAT = {'5040005678': 'АО «ВБД Напитки»: холдинг в активной сделке Meyer (координатор 13.10) – не беру'}
 PRODAVCY = ['meyer1', 'meyer2', 'meyer3', 'meyer4', 'meyer5', 'meyer6', 'meyer7', 'meyer8', 'meyer9']
 FIO = {'meyer1': 'Пяткова', 'meyer2': 'Ерохин', 'meyer3': 'Беляев', 'meyer4': 'Волков', 'meyer5': 'Козлов',
        'meyer6': 'Тюнин', 'meyer7': 'Иванов', 'meyer8': 'Кузнецова', 'meyer9': 'Кузьмин'}
@@ -123,9 +127,11 @@ for r in csv.reader(io.open(os.path.join(M.SCR, 'vhod-nepok', 'meyer-ne-pokupate
 
 # оценщик L (координатор 13.10): по кандидатам с ЛПР из списка – «покупатель» / «не покупатель» / «неясно»
 OCENKA = {}
+L_SPISOK = []
 _put_L = os.path.join(M.SCR, 'fix', 'L', 'ocenka.json')
 if os.path.exists(_put_L):
     _o = json.load(open(_put_L, encoding='utf-8'))
+    L_SPISOK = _o if isinstance(_o, list) else []
     _it = _o.items() if isinstance(_o, dict) else ((x.get('inn') or x.get('ИНН') or x.get('key'), x) for x in _o)
     for _k, _v in _it:
         if isinstance(_v, dict):
@@ -165,6 +171,16 @@ arhiv = {r[0] for r in k.execute('SELECT inn FROM arhiv_company')}
 VOR16 = set(OTB['vor16'])
 vlad = dict(s_.execute('SELECT inn, username FROM company_assignment').fetchall())
 assert set(vlad) == set(panel) and len(panel) == 600, (len(vlad), len(panel))
+UBRAT_U = {i: vlad[i] for i in UBRAT}
+CEL = {p: NUZHNO + sum(1 for i in UBRAT if vlad[i] == p) for p in ['meyer%d' % n for n in range(1, 10)]}
+print('убрать из панели (L: не покупатель): %s; квоты новых: %s' % ({i: vlad[i] for i in UBRAT}, CEL))
+for i in UBRAT:          # дальше – как будто их уже нет в панели (общие номера, группы, назначения)
+    del panel[i], vlad[i]
+k.execute('DELETE FROM contact WHERE inn IN (%s)' % ','.join('?' * len(UBRAT)), list(UBRAT))
+k.execute('DELETE FROM person WHERE inn IN (%s)' % ','.join('?' * len(UBRAT)), list(UBRAT))
+k.execute('DELETE FROM company WHERE inn IN (%s)' % ','.join('?' * len(UBRAT)), list(UBRAT))
+k.execute('DELETE FROM holding_chlen WHERE inn IN (%s)' % ','.join('?' * len(UBRAT)), list(UBRAT))
+k.commit()
 
 
 def region_oficialnyy(inn, c):
@@ -258,15 +274,15 @@ def otobrat(isklyuchit):
     pozzhe_mozhno = False
     for z in list(ochered) + [None]:
         if z is None:
-            if len(vybor) >= NUZHNO * len(PRODAVCY) or not otlozheno:
+            if len(vybor) >= sum(CEL.values()) or not otlozheno:
                 break
             pozzhe_mozhno = True
             for inn_ in otlozheno:
-                if len(vybor) >= NUZHNO * len(PRODAVCY):
+                if len(vybor) >= sum(CEL.values()):
                     break
                 vybor_odna(inn_, otkaz, vybor, reg_sch, isklyuchit, True)
             break
-        if len(vybor) >= NUZHNO * len(PRODAVCY):
+        if len(vybor) >= sum(CEL.values()):
             break
         if vybor_odna(z['inn'], otkaz, vybor, reg_sch, isklyuchit, False) == 'позже':
             otlozheno.append(z['inn'])
@@ -286,6 +302,11 @@ def vybor_odna(inn, otkaz, vybor, reg_sch, isklyuchit, pozzhe_mozhno):
         pr.append('в архиве панели')
     if inn in IMENA and IMENA[inn][0]:
         pr.append('активная сделка Meyer по точному названию (проверено вручную): ' + IMENA[inn][1])
+    if inn in NE_BRAT:
+        pr.append(NE_BRAT[inn])
+    pl_ = M.izdeliya_iz_pervichnoy(c)
+    if pl_:
+        pr.append(pl_)
     v_ = vyr_dlya(inn)
     if v_ is not None and v_ < 3e7:
         pr.append('выручка %.1f млн по checko – меньше 30 млн (владелец 13.10)' % (v_ / 1e6))
@@ -778,7 +799,7 @@ def reshit(zs, zp, kor, vremya=240):
         for u in U:
             if (u, p) in idx:
                 row[idx[(u, p)]] = len(edinicy[u]['novye'])
-        A.append(row); lo.append(NUZHNO); hi.append(NUZHNO)
+        A.append(row); lo.append(CEL[p]); hi.append(CEL[p])
     for kl, f in metriki:
         tot = sum(f(dannye[i]) for i in vybor)
         a, b = polosa(tot, zs if kl in STUPENI else zp)
@@ -794,7 +815,16 @@ def reshit(zs, zp, kor, vremya=240):
         for u in U:
             if (u, p) in idx:
                 row[idx[(u, p)]] = sum(dannye[i]['score'] for i in edinicy[u]['novye'])
-        A.append(row); lo.append((sr - kor) * NUZHNO); hi.append((sr + kor) * NUZHNO)
+        A.append(row); lo.append((sr - kor) * CEL[p]); hi.append((sr + kor) * CEL[p])
+    # домашний регион – поровну между продавцами этого города (как краснодарские у Ерохина и Беляева в fixG2/fixI)
+    for reg, kto_ in DOM.items():
+        tot = sum(1 for i in vybor if region[i] == reg)
+        for p in kto_:
+            row = np.zeros(nx)
+            for u in U:
+                if (u, p) in idx:
+                    row[idx[(u, p)]] = sum(1 for i in edinicy[u]['novye'] if region[i] == reg)
+            A.append(row); lo.append(tot // len(kto_) - (zs - 1)); hi.append(-(-tot // len(kto_)) + (zs - 1))
     return milp(np.zeros(nx), constraints=LinearConstraint(np.array(A), lo, hi), integrality=np.ones(nx),
                 bounds=Bounds(0, 1), options={'time_limit': vremya})
 
@@ -907,7 +937,10 @@ for x in kontakty:
         del x[kk]
 otkaz_vse = dict(OTB['otkaz'])
 otkaz_vse.update(otkaz)
-plan = {'vremya': time.strftime('%Y%m%d-%H%M%S'), 'nuzhno': NUZHNO, 'prodavcy': prodavec, 'dom': DOM, 'fio': FIO,
+plan = {'vremya': time.strftime('%Y%m%d-%H%M%S'), 'nuzhno': NUZHNO, 'cel': CEL,
+        'ubrat': {i: {'nazvanie': UBRAT[i], 'prodavec': UBRAT_U[i],
+                      'prichina': 'координатор 13.10 по вердикту оценщика L: не покупатель (%s)' % (
+                          next((x.get('почему') for x in L_SPISOK if x.get('inn') == i), '') or '')[:400]} for i in UBRAT}, 'prodavcy': prodavec, 'dom': DOM, 'fio': FIO,
         'kompanii': list(kompanii.values()), 'kontakty': kontakty, 'lyudi': lyudi, 'istochniki': istochniki,
         'holding_chlen': holding_chlen, 'novye_kolonki': NOVYE_KOLONKI_COMPANY,
         'stupeni': {i: {'tier': dannye[i]['tier'], 'score': dannye[i]['score'], 'ball': dannye[i]['ball']} for i in vybor},

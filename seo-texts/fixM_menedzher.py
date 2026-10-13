@@ -130,12 +130,12 @@ RUCHNYE = [
 AVTO = [
     ('templates/_statblok.html', 45, 'Продавец', ' <label>Продавец', ' <label>Менеджер по продажам'),
     ('templates/_statblok.html', 47, 'продавцы', '="">все продавцы</option', '="">все менеджеры по продажам</option'),
-    ('templates/_statblok.html', 64, 'Продавец', 'pan="2">Продавец</th>', 'pan="2">Менеджер по продажам</th>'),
-    ('templates/_statblok.html', 72, 'продавцы', '<td>Все продавцы</td>{{ ', '<td>Все менеджеры по продажам</td>{{ '),
+    ('templates/_statblok.html', 64, 'Продавец', 'pan="2">Продавец</th>', 'pan="2" title="Менеджер по продажам">Менеджер</th>'),
+    ('templates/_statblok.html', 72, 'продавцы', '<td>Все продавцы</td>{{ ', '<td title="Все менеджеры по продажам">Все менеджеры</td>{{ '),
     ('templates/_statblok.html', 77, 'продавцов', '="tiho">продавцов нет</td', '="tiho">менеджеров по продажам нет</td'),
     ('templates/_statblok.html', 84, 'продавец', 'то, что продавец видит (', 'то, что менеджер по продажам видит ('),
     ('templates/_ochered_spisok.html', 114, 'продавца', 'очередь продавца: больше', 'очередь менеджера по продажам: больше'),
-    ('templates/_ochered_spisok.html', 114, 'Продавец', "' %}<th>Продавец</th>{% ", "' %}<th>Менеджер по продажам</th>{% "),
+    ('templates/_ochered_spisok.html', 114, 'Продавец', "' %}<th>Продавец</th>{% ", '\' %}<th title="Менеджер по продажам">Менеджер</th>{% '),
     ('templates/_ochered_spisok.html', 132, 'продавца', 'очереди продавца её нет;', 'очереди менеджера по продажам её нет;'),
     ('templates/_ochered_spisok.html', 142, 'Продавец', '-label="Продавец">{{ (c.', '-label="Менеджер по продажам">{{ (c.'),
     ('templates/centro_stats.html', 54, 'продавцам', ' <h2>По продавцам: за пер', ' <h2>По менеджерам по продажам: за пер'),
@@ -422,8 +422,8 @@ def render(koren_app, metka, polnyy):
         proverit('от менеджера по продажам: Тестов Т.' in kart_sinn and 'со слов продавца' not in kart_sinn,
                  'карточка %s: пробный номер – «от менеджера по продажам», «со слов продавца» не видно' % SINN)
     for s in itog['stranicy']:
-        if s['kto'] == 'sales' and s['imya'] == 'stats':
-            proverit(s['kod'] == 403, 'менеджер: статистика закрыта (%s)' % s['kod'])
+        if s['kto'] == 'sales' and s['imya'] in ('stats', 'csv'):
+            proverit(s['kod'] == 403, 'менеджер: %s закрыта, как и раньше (%s)' % (s['imya'], s['kod']))
         elif s['imya'] in ('park', 'park_inn', 'spisok_park', 'admin'):
             pass                                   # сравниваются «до/после» снаружи
         else:

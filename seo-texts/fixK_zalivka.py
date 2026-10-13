@@ -39,6 +39,8 @@ PRODAVCY = STARYE + NOVYE_PR
 SOURCE_VERSION = 'meyer-baza7-fixK'
 DEYSTVIYA = ('company_state', 'company_comment', 'zvonok_sobytie', 'activity_log', 'hidden_item')
 VREMYA = time.strftime('%Y%m%d-%H%M%S')
+METKA_ARHIVA = 'fixK ' + time.strftime('%Y-%m-%d %H:%M:%S')
+TABLICY = ('company', 'contact', 'person', 'company_source', 'holding_chlen', 'fact', 'signal')
 
 if '--vnutri' not in sys.argv and '--proverka' not in sys.argv:
     r = subprocess.run([VENV, os.path.abspath(__file__), '--vnutri'] + sys.argv[1:], capture_output=True,
@@ -76,6 +78,32 @@ def nachat(k):
 
 def kolonki(k, t):
     return [r[1] for r in k.execute('PRAGMA table_info(%s)' % t)]
+
+
+def zakrep(s, inny):
+    out = {}
+    inny = list(inny)
+    if not inny:
+        return out
+    for t in DEYSTVIYA:
+        try:
+            n = s.execute('SELECT inn, COUNT(*) FROM %s WHERE inn IN (%s) GROUP BY inn' % (t, ','.join('?' * len(inny))),
+                          inny).fetchall()
+        except sqlite3.OperationalError:
+            continue
+        for inn, c in n:
+            out.setdefault(inn, {})[t] = c
+    return out
+
+
+def arhiv_tablica(k, t):
+    kol = kolonki(k, t)
+    k.execute('CREATE TABLE IF NOT EXISTS arhiv_%s AS SELECT * FROM %s WHERE 0' % (t, t))
+    est = set(kolonki(k, 'arhiv_' + t))
+    for c in kol + ['arhiv_prichina', 'arhiv_data']:
+        if c not in est:
+            k.execute('ALTER TABLE arhiv_%s ADD COLUMN "%s" TEXT' % (t, c))
+    return kol
 
 
 def E2_modul():
@@ -133,7 +161,7 @@ def rabota(KAT, SALES, plan, suhoy_metka=''):
     from app.services import centro_catalog as cat
     from app.services import centro_sales as sales
     zh = {'vremya': VREMYA, 'suhoy': bool(suhoy_metka), 'naznacheniya': [], 'kolonki_dobavleny': [], 'vstavleno': {},
-          'flagi': [], 'ball': [], 'oshibki': []}
+          'flagi': [], 'ball': [], 'oshibki': [], 'ubrano': {}, 'naznacheniya_ubrany': [], 'metka_arhiva': METKA_ARHIVA}
     novye = {c['inn']: c for c in plan['kompanii']}
     prodavec = plan['prodavcy']
     k = podkl(KAT)
@@ -157,12 +185,59 @@ def rabota(KAT, SALES, plan, suhoy_metka=''):
         for j in e['panel']:
             if j not in vlad:
                 osh.append('компании панели %s (группа новых %s) нет в назначениях' % (j, e['novye']))
-    if set(prodavec) != set(novye) or collections.Counter(prodavec.values()) != collections.Counter({p: plan['nuzhno'] for p in PRODAVCY}):
-        osh.append('в плане не по %d каждому' % plan['nuzhno'])
+    if set(prodavec) != set(novye) or collections.Counter(prodavec.values()) != collections.Counter(plan['cel']):
+        osh.append('в плане не по квотам %s' % plan['cel'])
+    ubrat = plan.get('ubrat') or {}
+    for inn, u in ubrat.items():
+        if vlad.get(inn) != u['prodavec'] or inn not in v_kat:
+            osh.append('убираемая %s: сейчас у %s, в каталоге %s (план: у %s)' % (inn, vlad.get(inn), inn in v_kat, u['prodavec']))
+    dz = zakrep(s, list(ubrat))
+    if dz:
+        osh.append('ПО УБИРАЕМЫМ ЕСТЬ ДЕЙСТВИЯ ПРОДАВЦОВ – не трогаю: %s' % dz)
     if osh:
         print('ОСТАНОВКА, ничего не изменено:\n  ' + '\n  '.join(osh))
         raise SystemExit(4)
-    print('сверка: новых %d, в каталоге сейчас %d, назначения %s' % (len(novye), len(v_kat), dict(sch)))
+    print('сверка: новых %d, в каталоге сейчас %d, назначения %s; убрать в архив %d (действий продавцов по ним нет)' % (
+        len(novye), len(v_kat), dict(sch), len(ubrat)))
+
+    # ---------- 1б. убрать в архив компании панели, признанные не покупателями (как fixH: arhiv_* с причиной)
+    if ubrat:
+        nachat(k)
+        try:
+            for t_ in TABLICY:
+                kol = arhiv_tablica(k, t_)
+                sk = ','.join('"%s"' % c for c in kol)
+                n_do = k.execute('SELECT COUNT(*) FROM %s WHERE inn IN (%s)' % (t_, ','.join('?' * len(ubrat))), list(ubrat)).fetchone()[0]
+                n_a = 0
+                for inn, u in ubrat.items():
+                    cur = k.execute('INSERT INTO arhiv_%s (%s, arhiv_prichina, arhiv_data) SELECT %s, ?, ? FROM %s WHERE inn=?'
+                                    % (t_, sk, sk, t_), ((u['prichina'] + '; была у ' + u['prodavec'])[:900], METKA_ARHIVA, inn))
+                    n_a += cur.rowcount
+                zh['ubrano'][t_] = [dict(r) for r in k.execute('SELECT * FROM %s WHERE inn IN (%s)' % (t_, ','.join('?' * len(ubrat))), list(ubrat))]
+                cur = k.execute('DELETE FROM %s WHERE inn IN (%s)' % (t_, ','.join('?' * len(ubrat))), list(ubrat))
+                if not (n_do == n_a == cur.rowcount):
+                    raise RuntimeError('%s: было %d, в архив %d, удалено %d' % (t_, n_do, n_a, cur.rowcount))
+            k.commit()
+        except BaseException:
+            k.rollback()
+            raise
+        nachat(s)
+        try:
+            kol_a = arhiv_tablica(s, 'company_assignment')
+            sk = ','.join('"%s"' % c for c in kol_a)
+            for inn, u in ubrat.items():
+                s.execute('INSERT INTO arhiv_company_assignment (%s, arhiv_prichina, arhiv_data) SELECT %s, ?, ? FROM company_assignment '
+                          'WHERE inn=?' % (sk, sk), ((u['prichina'] + '; была у ' + u['prodavec'])[:900], METKA_ARHIVA, inn))
+            zh['naznacheniya_ubrany'] = [dict(r) for r in s.execute(
+                'SELECT * FROM company_assignment WHERE inn IN (%s)' % ','.join('?' * len(ubrat)), list(ubrat))]
+            if s.execute('DELETE FROM company_assignment WHERE inn IN (%s)' % ','.join('?' * len(ubrat)), list(ubrat)).rowcount != len(ubrat):
+                raise RuntimeError('назначения убираемых удалены не все')
+            s.commit()
+        except BaseException:
+            s.rollback()
+            raise
+        print('в архив (arhiv_*, метка «%s»): %s' % (METKA_ARHIVA, ', '.join('%s %s (%s)' % (i, u['nazvanie'], u['prodavec'])
+                                                                          for i, u in ubrat.items())))
 
     # ---------- 2. продажи: назначения новых ДО каталога
     nachat(s)
@@ -235,8 +310,8 @@ def rabota(KAT, SALES, plan, suhoy_metka=''):
                       'fixK_zalivka': VREMYA, 'fixK_dobavleno': ','.join(sorted(novye))}.items():
             k.execute('INSERT OR REPLACE INTO import_info (key, value) VALUES (?,?)', (kk, v))
         n = k.execute('SELECT COUNT(*) FROM company').fetchone()[0]
-        if n != len(v_kat) + len(novye):
-            raise RuntimeError('в каталоге %d компаний (ждали %d)' % (n, len(v_kat) + len(novye)))
+        if n != len(v_kat) - len(ubrat) + len(novye):
+            raise RuntimeError('в каталоге %d компаний (ждали %d)' % (n, len(v_kat) - len(ubrat) + len(novye)))
         k.commit()
     except BaseException:
         k.rollback()
@@ -339,7 +414,13 @@ def proverka(test_sales, test_kat):
     sch_n = collections.Counter(vlad[i] for i in novye if i in vlad)
     ok(set(vlad) == vse and all(sch[p] == 270 for p in STARYE) and all(sch[p] == 120 for p in NOVYE_PR),
        'назначения = каталог (%d); всего у продавцов %s' % (len(vse), dict(sorted(sch.items()))))
-    ok(novye <= vse and all(sch_n[p] == 120 for p in PRODAVCY), 'новых по 120: %s' % dict(sorted(sch_n.items())))
+    ok(novye <= vse and all(sch_n[p] == plan['cel'][p] for p in PRODAVCY), 'новых по квотам %s: %s' % (plan['cel'], dict(sorted(sch_n.items()))))
+    ub = list(plan.get('ubrat') or {})
+    if ub:
+        n_r = k.execute('SELECT COUNT(*) FROM company WHERE inn IN (%s)' % ','.join('?' * len(ub)), ub).fetchone()[0]
+        n_a = k.execute('SELECT COUNT(*) FROM arhiv_company WHERE inn IN (%s)' % ','.join('?' * len(ub)), ub).fetchone()[0]
+        ok(n_r == 0 and n_a >= len(ub) and not (set(ub) & set(vlad)), 'убранные не покупатели: в каталоге %d, в arhiv_company %d, назначений %d' % (
+            n_r, n_a, len(set(ub) & set(vlad))))
     ok(all(vlad.get(i) == p for i, p in plan['prodavcy'].items()), 'новые – у продавцов по плану')
     for reg, kto in plan['dom'].items():
         c = collections.Counter(vlad.get(i) for i in vse if region[i] == reg)

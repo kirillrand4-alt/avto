@@ -433,7 +433,7 @@ def kontakty_kompanii(sb, inn, cat):
                 continue
             vid = cat.vid_nomera_po_cifram(val)
             row = dict(baza, value=val, kind='phone', vid_nomera=vid,
-                       phone_type=vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий')
+                       phone_type=vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800', 'международный', 'Казахстан') else 'рабочий')
             dobavit('t:' + kl, row)
             est_nomer = True
         if mail:
@@ -469,7 +469,7 @@ def kontakty_kompanii(sb, inn, cat):
             continue
         vid = cat.vid_nomera_po_cifram(val)
         dobavit('t:' + kl, {'inn': inn, 'value': val, 'kind': 'phone', 'person': None, 'position': '', 'role': '',
-                            'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий',
+                            'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800', 'международный', 'Казахстан') else 'рабочий',
                             'vid_nomera': vid, 'source': ('MEYER-7 13.10: лист «Снято» – %s' % prich)[:900],
                             'source_url': s(r['Ссылка']), 'fragment': s(r['Фрагмент'])[:1500], 'is_unknown_owner': 0,
                             'chuzhoy_istochnik': metka, 'chuzhoy_dokaz': prich[:500], 'vid_pochemu': '', 'rol_vruchnuyu': '',
@@ -491,7 +491,7 @@ def kontakty_kompanii(sb, inn, cat):
                 vid = cat.vid_nomera_po_cifram(val)
                 dobavit('t:' + kl, {'inn': inn, 'value': val, 'kind': 'phone', 'person': s(r['ФИО']) or None,
                                     'position': s(r['Должность']), 'role': ROL_SBORKI.get(s(r['Роль']), ''),
-                                    'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий',
+                                    'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800', 'международный', 'Казахстан') else 'рабочий',
                                     'vid_nomera': vid, 'source': ('MEYER-7 13.10: лист «Лиды группы» (сайт группы %s) · площадка %s'
                                                                   % (s(r['Сайт группы']), plosh))[:900],
                                     'source_url': s(r['Ссылка']), 'fragment': s(r['Фрагмент'])[:1500], 'is_unknown_owner': 0,
@@ -511,7 +511,7 @@ def kontakty_kompanii(sb, inn, cat):
             continue
         vid = cat.vid_nomera_po_cifram(val)
         dobavit('t:' + kl, {'inn': inn, 'value': val, 'kind': 'phone', 'person': None, 'position': '', 'role': '',
-                            'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий',
+                            'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800', 'международный', 'Казахстан') else 'рабочий',
                             'vid_nomera': vid, 'source': 'MEYER-7 13.10: база обзвона (наша база), колонка «База обзвона: телефоны»',
                             'source_url': '', 'fragment': '', 'is_unknown_owner': 0, 'vid_pochemu': '', 'rol_vruchnuyu': '',
                             'podpis_stranicy': '', '_prinyat': True, '_pochemu_net': '', '_gruppa_d': ''})
@@ -541,7 +541,7 @@ def kontakty_kompanii(sb, inn, cat):
         if tel and kl_nomera(tel) and not snyat(sb, inn, kl_nomera(tel)):
             vid = cat.vid_nomera_po_cifram(tel)
             dobavit('t:' + kl_nomera(tel), {'inn': inn, 'value': tel, 'kind': 'phone', 'person': fio, 'position': dolzh, 'role': '',
-                                            'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800') else 'рабочий',
+                                            'phone_type': vid if vid in ('мобильный', 'рабочий', 'рабочий с добавочным', '8-800', 'международный', 'Казахстан') else 'рабочий',
                                             'vid_nomera': vid, 'source': src, 'source_url': '', 'fragment': strk[:600],
                                             'is_unknown_owner': 0, 'vid_pochemu': '', 'rol_vruchnuyu': '', 'podpis_stranicy': '',
                                             '_prinyat': True, '_pochemu_net': '', '_gruppa_d': ''})
@@ -655,3 +655,27 @@ def search_blob(cat, inn, c, items, lpr_kratko):
         c.get('opisanie'), c.get('produkciya'), c.get('holding'), c.get('sayt'), lpr_kratko, c.get('adres'), c.get('direktor'),
         ' '.join('%s %s %s %s' % (x.get('person') or '', x.get('position') or '', x.get('rol_vid') or '',
                                   cat._phone_key(x.get('value'))) for x in items if x['kind'] in ('phone', 'sprosit'))) if v).lower()
+
+
+# ---------------------------------------------------------------- изделия из первичной гранулы (владелец 13.10: «пока не заливаем»)
+# Берутся: производство/переработка гранулы, флекс, вторичный полимер, вторсырьё. Сегмент сборки «изделия из пластмасс» –
+# только если в названии, описании, продукции или паспорте (не в поисковом запросе) есть признак переработки.
+PERERABOTKA_RX = re.compile(
+    r'вторичн\w*\s+(?:\w+\s+)?(?:сырь|полимер|пласт|гранул|пэт|rpet|полиэт|полипроп|пп\b|пвд|пнд|пвх|материал|переработ)|'
+    r'вторсырь|рецикл|регранул|\brpet|(?<![а-яё])флекс(?:а|ом|ы)?(?![а-яё])|дробл[её]н\w*|агломерат|'
+    r'(?:производств|выпуск|изготовлен)\w*\s+(?:\w+\s+){0,3}гранул|гранулирован|гранулятор|'
+    r'отход\w*\s+(?:\w+\s+)?(?:пласт|полиэт|полимер|пэт|пл[её]нк|производств|пенопласт)|из\s+отход|'
+    r'переработ\w*\s+(?:\w+\s+){0,2}отход|полимерн\w*\s+отход|утилизац', re.I)
+
+
+def izdeliya_iz_pervichnoy(c):
+    """-> '' (не изделия или есть признак переработки) | причина отказа."""
+    seg = s(c['Сегмент']).lower()
+    if not seg.startswith('изделия из пластмасс'):
+        return ''
+    tekst = ' '.join(s(c[x]) for x in ('Название', 'Описание (по сайту)', 'Продукция', 'Паспорт: сырьё',
+                                        'Паспорт: оборудование и линии', 'Паспорт: мощности', 'Паспорт: масштаб'))
+    if PERERABOTKA_RX.search(tekst):
+        return ''
+    return ('изделия из первичной гранулы (сегмент «%s», признаков переработки/гранулы/вторсырья в описании и паспорте нет) – '
+            'владелец 13.10: «пока не заливаем»' % s(c['Сегмент']))

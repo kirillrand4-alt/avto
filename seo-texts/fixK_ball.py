@@ -629,7 +629,7 @@ def proverka(test_sales, test_kat):
         for n_p, p in enumerate(PRODAVCY, 1):
             PROD = {'id': n_p, 'username': p, 'role': 'sales', 'is_active': 1}
             stroki = []
-            for st in (1, 2, 3):
+            for st in range(1, -(-sum(1 for i in vlad if vlad[i] == p) // 100) + 1):   # страниц по 100 – сколько есть
                 o = poluchit('/centro', PROD, params={'size': 100, 'page': st})
                 ok(o.status_code == 200, '%s: список, стр. %d: %s' % (p, st, o.status_code))
                 stroki += [(i, float(v)) for i, v in rx_row.findall(o.text)]
@@ -654,10 +654,14 @@ def proverka(test_sales, test_kat):
             o = poluchit('/centro/vygruzka.csv', params={'assigned_user': p})
             import csv as _csv
             csv_inn = [r[2] for r in list(_csv.reader(io.StringIO(o.content.decode('utf-8-sig')), delimiter=';'))[1:] if len(r) > 5]
-            ok(csv_inn == [i for i, _ in stroki], '%s: CSV в том же порядке, что список (%d строк)' % (p, len(csv_inn)))
+            _sp = [i for i, _ in stroki]
+            _r = next((j for j in range(min(len(csv_inn), len(_sp))) if csv_inn[j] != _sp[j]), None)
+            ok(csv_inn == _sp, '%s: CSV в том же порядке, что список (%d строк)%s' % (p, len(csv_inn), (
+                '; первое расхождение №%d: CSV %s, список %s' % (_r + 1, csv_inn[_r:_r + 3], _sp[_r:_r + 3])) if _r is not None else
+                ('' if csv_inn == _sp else '; длины %d/%d' % (len(csv_inn), len(_sp)))))
             # статистика директора: очередь продавца – тот же порядок
             o = poluchit('/centro/stats', params={'user': p})
-            st_inn = re.findall(r'<td>(\d{10,12})</td>\s*<td>[-\d.]+</td>', o.text)
+            st_inn = re.findall(r'<td>(\d{9,12})</td>\s*<td>[-\d.]+</td>', o.text)      # 9 цифр – УНП Беларуси
             ok(o.status_code == 200 and st_inn[:len(stroki)] == [i for i, _ in stroki],
                'статистика, очередь %s: %s, тот же порядок (%d строк)' % (p, o.status_code, len(st_inn)))
             print('   %s: топ-20 %s' % (p, ' '.join('%s(%d)' % (i[-4:], stup.get(i) or 0) for i, _ in stroki[:20])))
