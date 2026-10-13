@@ -896,6 +896,20 @@ def _predklass(окно_пар, напр):
                         or (н == "кц" and напр == "kc"))
             if not подходит:
                 лишние.add(инн)
+        # РЕШЕНИЕ — В БАЗЫ (владелец 13.10: «чтобы по всей базе была
+        # информация, наш это или нет»). Пишем направление КАЖДОЙ фирмы пачки,
+        # не только снятых: ops/verdikty_v_bazy.obnovit, младший ранг —
+        # гейт, линза и владелец его потом перетирают.
+        try:
+            sys.path.insert(0, r"C:\sender\server\ops")
+            import verdikty_v_bazy as _вб
+            _вб.obnovit([{"inn": v.get("inn"), "istochnik": "предкласс",
+                          "napr": str(v.get("napravlenie") or "").strip().lower(),
+                          "rusprom": "не покупатель" if str(v.get("napravlenie") or "").strip().lower() == "никуда" else None,
+                          "pochemu": "предклассификатор по паспорту"}
+                         for v in (д.get("firmy") or []) if v.get("napravlenie")])
+        except Exception as _ex:                              # noqa: BLE001
+            print(f"решения предкласса в базы не записались: {str(_ex)[:90]}")
     return лишние
 
 
@@ -1635,6 +1649,14 @@ elif _дорого[0]:
           f"годных {г}, потрачено ${п:.2f} "
           f"({'∞' if г == 0 else f'${ц:.2f}'} за письмо, порог "
           f"${ПОРОГ_ЦЕНЫ:.2f}). Остаток пула не тронут.")
+# ИТОГИ ПРОГОНА — В БАЗЫ «НАШ ИЛИ НЕТ»: гейт, линзы, годные письма (13.10).
+try:
+    import subprocess as _sp
+    _р = _sp.run([sys.executable, r"C:\sender\server\ops\verdikty_v_bazy.py", "--primenit"],
+                 capture_output=True, text=True, timeout=900)
+    print("решения «наш или нет» в базы: " + ((_р.stdout or "").strip().splitlines() or ["?"])[-2][:200])
+except Exception as _ex:                                      # noqa: BLE001
+    print(f"решения в базы не записались: {str(_ex)[:90]}")
 print(f"\nитог: вышло {len(ок)} из {len(итоги)} | "
       f"${sum(x['цена_$'] for x in итоги):.2f} | "
       f"по направлениям {dict(Counter(x['направление'] for x in ок))}"
