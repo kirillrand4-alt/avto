@@ -968,6 +968,11 @@ try:
                 _з = json.loads(_с)
             except Exception:                                     # noqa: BLE001
                 continue
+            # ВОЗВРАТ В ПУЛ (владелец 13.10: «вернуть эти 91 компанию в пул»):
+            # опыт 13.10 — на всех 91 отказавших модель пишет без отказа (0 из
+            # 364 вызовов). Старые отказы забываем, считаем с 14.10.
+            if str(_з.get("день") or "") < "2026-10-14":
+                continue
             if not _з.get("ок") and "I can" in json.dumps(
                     _з.get("брак") or [], ensure_ascii=False):
                 _ОТКАЗАВШИЕ.add(str(_з.get("inn") or ""))
