@@ -165,6 +165,16 @@ def sayt_prinyat(chey):
         return 'свой (подтверждён моделью)', 1
     if g.startswith('сайт группы/бренда'):
         return 'группа', 0
+    if g.startswith('свой:'):
+        return 'свой', 3
+    if g.startswith('найден агентом'):
+        if 'ИНН компании на сайте' in s(chey):
+            return 'свой', 4
+        return 'свой (по названию)', 1
+    if g.startswith('своего сайта нет') and 'сайт холдинга' in s(chey):
+        return 'группа', 0
+    if g.startswith(('сайта нет', 'своего сайта нет')):
+        return 'нет сайта', 0
     return 'не определено', 0
 
 
