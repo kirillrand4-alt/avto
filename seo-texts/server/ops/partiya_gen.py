@@ -299,6 +299,23 @@ _вернули = сделано_инн & _снятые_профилем
 if _вернули:
     print(f"возвращено в пул после снятия по профилю: {len(_вернули)}")
 
+# ПИСЬМО УЖЕ СТОИТ В КАМПАНИИ — НЕ ПЛАТИМ ЗАНОВО (13.10). Прогон образцов
+# заплатил за четыре письма зерновым, у которых в кампании уже лежало
+# одобренное письмо из другого пути (панель, ручная постановка): очередь
+# вернула «approved», и текст ушёл в брак «очередь: approved». Журнал
+# прогонов этих писем не знает — сверяемся с самой очередью.
+try:
+    with store._lock:
+        for (_инн,) in store._conn.execute(
+                "SELECT DISTINCT r.inn FROM messages m JOIN recipients r ON r.id=m.recipient_id "
+                "WHERE m.campaign_id IN (%s) AND m.status IN ('pending_review','scheduled','sending','sent')"
+                % ",".join(str(int(_к)) for _к in КАМПАНИЯ.values())).fetchall():
+            _ц = "".join(c for c in str(_инн or "") if c.isdigit())
+            if _ц:
+                сделано_инн.add(_ц)
+except Exception as _ex:                                      # noqa: BLE001
+    print(f"письма кампании не прочитались: {str(_ex)[:90]}")
+
 # ПРИГОВОРЫ ПРОБ — ОДНИМ ЗАПРОСОМ, ДО ОТБОРА.
 #
 # Владелец 24.08: «почему мы проверяем адреса не по тому, что реально
