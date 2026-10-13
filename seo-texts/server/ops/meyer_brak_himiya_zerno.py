@@ -31,6 +31,12 @@ if len(sys.argv) > 2 and sys.argv[1] == 'hist':
             print({k: (str(v)[:160]) for k, v in з.items()
                    if k not in ('тело_брака', 'inn', 'имя', 'направление')})
     sys.exit(0)
+if len(sys.argv) > 2 and sys.argv[1] == 'rid':
+    c.row_factory = sqlite3.Row
+    r = c.execute('SELECT * FROM recipients WHERE id=?', (int(sys.argv[2]),)).fetchone()
+    for k in r.keys():
+        print('%s = %s' % (k, str(r[k])[:1800]))
+    sys.exit(0)
 записи = []
 with open(ЖУРНАЛ, encoding='utf-8') as f:
     for стр in f:
