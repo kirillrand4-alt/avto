@@ -117,15 +117,37 @@ for r in csv.reader(io.open(os.path.join(M.SCR, 'vhod-nepok', 'meyer-ne-pokupate
         NEPOK_DOM[M.domen(r[3])] = prich
 
 
+# оценщик L (координатор 13.10): по кандидатам с ЛПР из списка – «покупатель» / «не покупатель» / «неясно»
+OCENKA = {}
+_put_L = os.path.join(M.SCR, 'fix', 'L', 'ocenka.json')
+if os.path.exists(_put_L):
+    _o = json.load(open(_put_L, encoding='utf-8'))
+    _it = _o.items() if isinstance(_o, dict) else ((x.get('inn') or x.get('ИНН') or x.get('key'), x) for x in _o)
+    for _k, _v in _it:
+        if isinstance(_v, dict):
+            _v = _v.get('verdikt') or _v.get('вердикт') or _v.get('verdict') or ''
+        OCENKA[re.sub(r'\D', '', str(_k))] = str(_v).strip().lower()
+print('оценщик L: вердиктов %d %s' % (len(OCENKA), dict(collections.Counter(OCENKA.values()))))
+
+
 def nepokupatel(inn):
-    if inn in NEPOK_INN:
-        return NEPOK_INN[inn]
-    d = M.domen(sb.komp[inn]['Сайт'])
-    while d and '.' in d:
-        if d in NEPOK_DOM:
-            return NEPOK_DOM[d] + ' (по домену сайта %s)' % d
-        d = d.split('.', 1)[1]
-    return ''
+    """-> ('', '') – можно; ('нет', причина) – не брать; ('позже', причина) – только если иначе не хватает (L: «неясно»)."""
+    prich = NEPOK_INN.get(inn, '')
+    if not prich:
+        d = M.domen(sb.komp[inn]['Сайт'])
+        while d and '.' in d:
+            if d in NEPOK_DOM:
+                prich = NEPOK_DOM[d] + ' (по домену сайта %s)' % d
+                break
+            d = d.split('.', 1)[1]
+    if not prich:
+        return '', ''
+    v = OCENKA.get(inn, '')
+    if v.startswith('покупатель'):
+        return '', prich + '; оценщик L: покупатель – беру наравне с остальными'
+    if v.startswith('неясно'):
+        return 'позже', prich + '; оценщик L: неясно – только если иначе не хватает'
+    return 'нет', prich + ('; оценщик L: %s' % v if v else '; оценщика L по компании нет')
 
 
 print('данные прочитаны за %.0f с: кандидатов %d, dadata %d, РБ %d, checko %d' % (time.time() - T0, len(OTB['kandidaty']), len(DD),
@@ -215,43 +237,67 @@ pomet = {}
 
 
 def otobrat(isklyuchit):
-    """-> (vybor, otkaz). isklyuchit: ИНН -> причина (конфликт «холдинг – домашний регион»)."""
+    """-> (vybor, otkaz). isklyuchit: ИНН -> причина (конфликт «холдинг – домашний регион»).
+    Кандидаты «неясно» по оценщику L – отдельным вторым проходом, только если первым не набралось."""
     otkaz = collections.OrderedDict()
     vybor = []
     reg_sch = collections.Counter()
-    for z in ochered:
+    otlozheno = []
+    pozzhe_mozhno = False
+    for z in list(ochered) + [None]:
+        if z is None:
+            if len(vybor) >= NUZHNO * len(PRODAVCY) or not otlozheno:
+                break
+            pozzhe_mozhno = True
+            for inn_ in otlozheno:
+                if len(vybor) >= NUZHNO * len(PRODAVCY):
+                    break
+                vybor_odna(inn_, otkaz, vybor, reg_sch, isklyuchit, True)
+            break
         if len(vybor) >= NUZHNO * len(PRODAVCY):
             break
-        inn = z['inn']
-        c = sb.komp[inn]
-        pr = []
-        if inn in panel:
-            pr.append('уже в панели')
-        if inn in arhiv and inn not in VOR16:
-            pr.append('в архиве панели')
-        if inn in IMENA and IMENA[inn][0]:
-            pr.append('активная сделка Meyer по точному названию (проверено вручную): ' + IMENA[inn][1])
-        v_ = vyr_dlya(inn)
-        if v_ is not None and v_ < 3e7:
-            pr.append('выручка %.1f млн по checko – меньше 30 млн (владелец 13.10)' % (v_ / 1e6))
-        ok, st_tekst, prich = status_proverka(inn)
-        if not ok:
-            pr.append('недействующая: ' + prich)
-        reg, reg_ist = region_oficialnyy(inn, c)
-        if reg in EMK and reg_sch[reg] >= EMK[reg]:
-            pr.append('домашний регион %s заполнен (%d)' % (reg, EMK[reg]))
-        if inn in isklyuchit:
-            pr.append(isklyuchit[inn])
-        np_ = nepokupatel(inn)
-        if np_:
-            pr.append(np_)
-        if pr:
-            otkaz[inn] = pr
-            continue
-        reg_sch[reg] += 1
-        pomet[inn] = {'status': st_tekst, 'region': reg, 'region_istochnik': reg_ist}
-        vybor.append(inn)
+        if vybor_odna(z['inn'], otkaz, vybor, reg_sch, isklyuchit, False) == 'позже':
+            otlozheno.append(z['inn'])
+    for inn_ in otlozheno:
+        if inn_ not in vybor and inn_ not in otkaz:
+            otkaz[inn_] = [nepokupatel(inn_)[1] + ' (не понадобилось)']
     return vybor, otkaz
+
+
+def vybor_odna(inn, otkaz, vybor, reg_sch, isklyuchit, pozzhe_mozhno):
+    """Проверки одной компании; годная – в vybor. -> 'да' | 'нет' | 'позже'."""
+    c = sb.komp[inn]
+    pr = []
+    if inn in panel:
+        pr.append('уже в панели')
+    if inn in arhiv and inn not in VOR16:
+        pr.append('в архиве панели')
+    if inn in IMENA and IMENA[inn][0]:
+        pr.append('активная сделка Meyer по точному названию (проверено вручную): ' + IMENA[inn][1])
+    v_ = vyr_dlya(inn)
+    if v_ is not None and v_ < 3e7:
+        pr.append('выручка %.1f млн по checko – меньше 30 млн (владелец 13.10)' % (v_ / 1e6))
+    ok, st_tekst, prich = status_proverka(inn)
+    if not ok:
+        pr.append('недействующая: ' + prich)
+    reg, reg_ist = region_oficialnyy(inn, c)
+    if reg in EMK and reg_sch[reg] >= EMK[reg]:
+        pr.append('домашний регион %s заполнен (%d)' % (reg, EMK[reg]))
+    if inn in isklyuchit:
+        pr.append(isklyuchit[inn])
+    np_vid, np_ = nepokupatel(inn)
+    if np_vid == 'нет':
+        pr.append(np_)
+    if pr:
+        otkaz[inn] = pr
+        return 'нет'
+    if np_vid == 'позже' and not pozzhe_mozhno:
+        return 'позже'
+    reg_sch[reg] += 1
+    pomet[inn] = {'status': st_tekst, 'region': reg, 'region_istochnik': reg_ist,
+                  'nepokupatel': np_}
+    vybor.append(inn)
+    return 'да'
 
 
 # возможные сделки по названию из otbor (там – отказ «не беру без проверки»): тёзки по ручному разбору – вернуть в очередь
@@ -382,7 +428,7 @@ def stroka_kompanii(inn):
     row['sayt_chey'] = ('Проверка сборки MEYER-7 %s: %s' % (DATA, M.s(c['Сайт: чей'])))[:1500]
     row['inn_nayden_po_saytu'] = M.s(c['ИНН найден по сайту: юрлицо']) or None
     # прочее сборки
-    row['reviziya_profil'] = M.s(c['Ревизия: профиль']) or None
+    row['reviziya_profil'] = ' | '.join(x for x in (M.s(c['Ревизия: профиль']), pm.get('nepokupatel') or '') if x) or None
     row['gruppa_meyer7'] = M.s(c['Группа']) or None
     row['otkuda_kompaniya'] = M.s(c['Откуда компания'])
     row['naydena_po_zaprosu'] = M.s(c['Найдена по запросу']) or None
