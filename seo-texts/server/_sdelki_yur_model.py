@@ -126,7 +126,7 @@ def main():
             pass
     import shutil
     shutil.copyfile(ВЫХ, os.path.join(r'C:\seostat\drop\drop-storage', os.path.basename(ВЫХ)))
-    print('===ИТОГ МОДЕЛИ===', json.dumps(dict(collections.Counter((y['сила'], y['ответ']) for y in посл.values()).most_common()),
+    print('===ИТОГ МОДЕЛИ===', json.dumps({'%s: %s' % k: v for k, v in collections.Counter((y['сила'], y['ответ']) for y in посл.values()).most_common()},
                                       ensure_ascii=False), 'за %.1f мин' % ((time.time() - t0) / 60), flush=True)
 
 
