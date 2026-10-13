@@ -17,15 +17,18 @@ print("потолок адресов на компанию: %s за %s дней"
 ид = json.load(io.open(r"C:\sender\_ops\partiya-500-proba.json", encoding="utf-8"))
 мес, сколько, в_работе = Counter(), Counter(), 0
 примеры = []
+список = []
 for rid in ид:
     rec = store.get_recipient(rid)
     inn = "".join(c for c in str(rec.inn or "") if c.isdigit())
-    п = cs._guard(inn=inn, email=str(rec.email or "").lower())
-    if not п or not п.startswith("company_quota"):
-        continue
     ушло = [r for r in store.send_log_history(inn=inn, limit=500)
             if str(r.get("outcome")) == "sent" and cs._v_okne(str(r.get("ts") or "")) is not False]
-    адреса = {str(r.get("email")).lower() for r in ушло}
+    адреса = {str(r.get("email")).lower() for r in ушло} - {str(rec.email or "").lower()}
+    # снятые прежним потолком 2 (12.10) — считаем по факту отправок, а не
+    # по текущей настройке: после подъёма потолка _guard их уже пропускает
+    if len(адреса) < 2:
+        continue
+    список.append(rid)
     раб = cs._adresa_v_rabote(inn) - адреса
     в_работе += 1 if раб else 0
     сколько[len(адреса)] += 1
@@ -41,4 +44,8 @@ print("у скольких ещё письмо стоит в очереди: %d"
 print("по месяцам отправки: %s" % dict(sorted(мес.items())))
 for п in примеры:
     print("   " + п)
+if "--spisok" in sys.argv:
+    with io.open(r"C:\sender\_ops\partiya-kvota-42.json", "w", encoding="utf-8") as ф:
+        json.dump(список, ф)
+    print("список: _ops/partiya-kvota-42.json, %d" % len(список))
 print("=== КВОТА 42 ===")

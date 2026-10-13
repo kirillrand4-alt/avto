@@ -29,7 +29,8 @@ from collections import Counter, defaultdict
 ПАУЗА = {"Лес и деревообработка", "Металлургия"}
 КЛЮЧИ = ("продукция", "сырьё", "мощности", "контроль_качества",
          "оборудование_линии", "упаковка_фасовка", "экспорт", "масштаб")
-ВЫХОД = r"C:\sender\_ops\partiya-500-proba.json"
+ВЫХОД = арг.get("vyhod", r"C:\sender\_ops\partiya-500-proba.json")
+ДОБАВИТЬ = арг.get("dobavit", "")  # json-список rid, идут первыми вне отбора
 
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
 c.row_factory = sqlite3.Row
@@ -47,6 +48,11 @@ for р in c.execute("SELECT id, inn, lower(email) e, segment s, extra_json FROM 
     получатели.append({"id": р["id"], "inn": р["inn"], "e": р["e"], "s": р["s"] or "(нет)",
                        "v": вердикт.get(р["e"] or "")})
 писали = {r[0] for r in c.execute("SELECT DISTINCT recipient_id FROM messages")}
+# компании (по ИНН), которым за 90 дней уже ушло письмо на любой адрес, —
+# не «лучшие новые»: их квота отдельное решение владельца (13.10, 42 фирмы)
+писали_инн = {str(r[0]) for r in c.execute(
+    "SELECT DISTINCT r.inn FROM messages m JOIN recipients r ON r.id=m.recipient_id "
+    "WHERE m.status='sent' AND m.sent_at >= datetime('now','-90 days')") if r[0]}
 
 # цена годного по отраслям — из журнала 9000
 отр_по_rid = {р["id"]: р["s"] for р in получатели}
@@ -67,15 +73,18 @@ for с in io.open(r"C:\sender\_ops\gen-rossiya-9000.jsonl", encoding="utf-8", er
         годн[о] += 1
 print("--- отрасли по журналу 9000 (попыток / годных / $ за годное) ---")
 дешёвые = set()
+цена_отр = {}
 for о in sorted(поп, key=lambda x: цена[x] / max(1, годн[x])):
     за = цена[о] / годн[о] if годн[о] else 99
     ок = за <= ПОРОГ and поп[о] >= 6 and о not in ПАУЗА
+    цена_отр[о] = за
     if ок:
         дешёвые.add(о)
     print("   %-32s %4d %4d  $%5.2f %s" % (о[:32], поп[о], годн[о], за, "<- берём" if ок else ""))
 
 пригодные = [р for р in получатели if р["v"] in ("есть", "принимает всё")
-             and р["id"] not in были and р["id"] not in писали and р["s"] in дешёвые]
+             and р["id"] not in были and р["id"] not in писали and р["s"] in дешёвые
+             and str(р["inn"] or "") not in писали_инн]
 print("подтверждено пробой: %d; из них ещё не генерировали и не писали, в дешёвых отраслях: %d"
       % (sum(1 for р in получатели if р["v"] in ("есть", "принимает всё")), len(пригодные)))
 
@@ -94,8 +103,15 @@ for н in range(0, len(инны), 400):
         полнота[р["inn"]] = sum(1 for к in КЛЮЧИ if д.get(к))
     for р in cx.execute("SELECT inn, length(activity) d FROM companies WHERE inn IN (%s)" % м, к_):
         длина[р["inn"]] = int(р["d"] or 0)
-пригодные.sort(key=lambda р: (-полнота.get(р["inn"], 0), -длина.get(р["inn"], 0), р["id"]))
-выбор = пригодные[:ВСЕГО]
+# Вперёд — богаче паспорт («лучшие»), при равном — дешёвая отрасль (до
+# $0.25 за годное): запуск с бюджетом обрывается на сумме.
+пригодные.sort(key=lambda р: (-полнота.get(р["inn"], 0),
+                              0 if цена_отр.get(р["s"], 99) <= 0.25 else 1,
+                              -длина.get(р["inn"], 0), р["id"]))
+доп = json.load(io.open(ДОБАВИТЬ, encoding="utf-8")) if ДОБАВИТЬ else []
+выбор = [р for р in получатели if р["id"] in set(доп)] + [
+    р for р in пригодные if р["id"] not in set(доп)][:ВСЕГО]
+print("добавлено вне отбора: %d" % len(доп))
 with io.open(ВЫХОД, "w", encoding="utf-8") as ф:
     json.dump([р["id"] for р in выбор], ф)
 print("--- выбрано по отраслям ---")
