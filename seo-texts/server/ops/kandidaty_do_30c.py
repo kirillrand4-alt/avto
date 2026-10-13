@@ -81,8 +81,10 @@ for с in io.open(r"C:\sender\_ops\gen-rossiya-9000.jsonl", encoding="utf-8", er
     цена[я] += float(z.get("цена_$") or 0)
     годн[я] += 1 if z.get("ок") else 0
 хорошие = {я for я in поп if поп[я] >= 8 and годн[я] and цена[я] / годн[я] <= ПОРОГ}
+if арг.get("vse"):
+    хорошие = {(сег, корзина(полнота.get(v[0], 0))) for v in получатели.values() for сег in [v[2]]}
 print("ячейки (отрасль × полнота) с годным ≤ $%.2f при ≥8 попытках:" % ПОРОГ)
-for я in sorted(хорошие, key=lambda x: цена[x] / годн[x]):
+for я in ([] if арг.get("vse") else sorted(хорошие, key=lambda x: цена[x] / годн[x])):
     print("   %-32s %-4s попыток %4d годных %4d  $%.3f" % (я[0][:32], я[1], поп[я], годн[я], цена[я] / годн[я]))
 
 вер = {р[0].lower(): р[1] for р in c.execute("SELECT email, verdict FROM addr_probe")}
@@ -115,6 +117,10 @@ for rid, (inn, е, сег) in sorted(получатели.items(), key=lambda x:
     по_ячейке[я] += 1
 for к, n in св.most_common():
     print("   %-40s %d" % (к, n))
+_по_отр = Counter()
+for я, n in по_ячейке.items():
+    _по_отр[я[0]] += n
+print("кандидаты по отраслям: %s" % ", ".join("%s: %d" % (о[:22], n) for о, n in _по_отр.most_common()))
 print("кандидаты по ячейкам: %s" % ", ".join("%s/%s: %d" % (я[0][:18], я[1], n) for я, n in по_ячейке.most_common(14)))
 if ОБРАЗЦЫ:
     import io as _io
