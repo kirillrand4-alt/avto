@@ -407,7 +407,52 @@ class ConfirmSend:
         в_окне = self._v_okne(str(last.get("ts") or ""))
         if в_окне is None:
             return last  # дата не парсится → консервативно считаем недавним
+        if в_окне and self._povtor_razreshen(email, last):
+            return None
         return last if в_окне else None
+
+    # ПОВТОР ОТ MEYER РАНЬШЕ 90 ДНЕЙ (владелец 13.10). Два случая:
+    #  * прошлое письмо на этот адрес было от КЦ (компрессоры) — «если
+    #    направление было кц, то точно пишем ещё раз от мейера»: это другое
+    #    предложение, окно не держим;
+    #  * компании дали новый паспорт (extra.povtornoe — все её адреса уже
+    #    отработаны) — повтор через 30 дней, а не через 90.
+    # Только для писем Meyer (extra.division) и только тем, кто нам НЕ отвечал:
+    # ответившему (лид есть) повтор автоматом не шлём — окно остаётся 90.
+    _КЦ_КАМПАНИИ = {1, 5, 6, 9, 10}
+    _ПОВТОР_ДНЕЙ = 30
+
+    def _povtor_razreshen(self, email: str, last: dict) -> bool:
+        try:
+            import json as _json
+            from datetime import datetime, timedelta, timezone
+            with self._store._lock:
+                c = self._store._conn
+                р = c.execute("SELECT inn, extra_json FROM recipients WHERE lower(email)=?",
+                              (str(email or "").strip().lower(),)).fetchone()
+                if р is None:
+                    return False
+                ex = _json.loads(р["extra_json"] or "{}") or {}
+                if str(ex.get("division") or "") != "meyer":
+                    return False
+                if р["inn"] and c.execute("SELECT 1 FROM leads WHERE inn=? LIMIT 1",
+                                          (р["inn"],)).fetchone():
+                    return False
+                камп = last.get("campaign_id")
+                if камп is not None:
+                    if int(камп) in self._КЦ_КАМПАНИИ:
+                        return True
+                    имя = c.execute("SELECT name FROM campaigns WHERE id=?", (камп,)).fetchone()
+                    if имя and "КЦ" in str(имя[0] or ""):
+                        return True
+            if ex.get("povtornoe"):
+                then = datetime.fromisoformat(str(last.get("ts") or "").replace("Z", "+00:00"))
+                if then.tzinfo is None:
+                    then = then.replace(tzinfo=timezone.utc)
+                return datetime.now(timezone.utc) - then >= timedelta(days=self._ПОВТОР_ДНЕЙ)
+        except Exception:  # noqa: BLE001 - мок-store или битые данные: не разрешаем
+            return False
+        return False
 
     def _kvota_kompanii(self, *, inn: Optional[str], email: str):
         """Потолок разных адресов компании за окно: запись последней отправки,

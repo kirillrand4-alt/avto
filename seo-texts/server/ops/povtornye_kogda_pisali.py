@@ -31,6 +31,20 @@ for инн in повт:
     писем[min(р[1], 4)] += 1
     if c.execute("SELECT 1 FROM leads WHERE inn=? LIMIT 1", (инн,)).fetchone():
         ответили += 1
+# какое письмо было: кампания последнего письма и до/после заливки книг (12.10)
+камп = Counter()
+до_книг = Counter()
+for инн in повт:
+    р = c.execute("SELECT m.campaign_id, m.sent_at FROM messages m JOIN recipients r ON r.id=m.recipient_id "
+                  "WHERE m.status='sent' AND r.inn=? ORDER BY m.sent_at DESC LIMIT 1", (инн,)).fetchone()
+    if not р:
+        continue
+    имя = {10: "935 КЦ", 11: "935 Meyer", 14: "Россия 9000 Meyer", 9: "Богатые КЦ", 13: "2-е касание Meyer",
+           12: "Вебинар Meyer", 5: "Металлообработка КЦ", 6: "Солянка КЦ", 1: "новостные"}.get(р[0], str(р[0]))
+    камп[имя] += 1
+    до_книг["до 12.10 (паспорта книг ещё не было)" if str(р[1]) < "2026-10-12" else "с 12.10 (уже по книжному паспорту)"] += 1
+print("кампания последнего письма: %s" % dict(камп.most_common()))
+print("когда: %s" % dict(до_книг))
 print("последнее письмо компании по месяцам: %s" % dict(sorted(мес.items())))
 print("сколько прошло: %s" % dict(дни))
 print("писем компании отправлено (4 = 4+): %s" % dict(sorted(писем.items())))
