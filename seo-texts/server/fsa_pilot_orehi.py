@@ -55,7 +55,7 @@ def main():
         n = 0
         for стр in range(10):
             d = запрос(H2, '/api/v1/rds/common/declarations/get', {'size': 100, 'page': стр, 'filter': {'columnsSearch': [
-                {'name': 'productFullName', 'search': сл, 'type': 1, 'translated': False}]}, 'columnsSort': [{'column': 'declDate', 'sort': 'DESC'}]})
+                {'name': 'productFullName', 'search': сл, 'type': 0, 'translated': False}]}, 'columnsSort': [{'column': 'declDate', 'sort': 'DESC'}]})
             it = (d or {}).get('items') or []
             for x in it:
                 if x['id'] in декл:
