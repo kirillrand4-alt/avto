@@ -331,6 +331,77 @@ try:
 except Exception as _ex:                                      # noqa: BLE001
     print(f"приговоры проб не прочитались: {str(_ex)[:90]}")
 
+# МЁРТВЫЙ АДРЕС → СЛЕДУЮЩИЙ ПО ЛЕСЕНКЕ, САМ (владелец 13.10: «если мёртвый
+# адрес — разве компания не автоматически переходит на следующий?»). Раньше
+# приговор только выбрасывал компанию из прогона, а переход делали разовые
+# скрипты. Следующий — адрес той же компании из обогащения: на домене САЙТА
+# компании (домен мёртвого ящика бывает общим провайдером, orel.ru), живой по
+# пробе («есть»/«принимает всё»), не «не для письма», писем на него не было,
+# другим получателем не занят; порядок — лесенка ролей. Смена адреса пишется
+# в recipients и в журнал _ops/zamena-myortvyh.jsonl (fsync).
+_ЖИВЫЕ = {}
+_ЗАНЯТЫ = set()
+_УШЛО = set()
+try:
+    with store._lock:
+        for _а, _в in store._conn.execute("SELECT email, verdict FROM addr_probe"):
+            if _в in ("есть", "принимает всё"):
+                _ЖИВЫЕ[str(_а or "").lower()] = _в
+        _ЗАНЯТЫ = {str(р[0] or "").lower() for р in store._conn.execute("SELECT email FROM recipients")}
+        _УШЛО = {str(р[0] or "").lower() for р in store._conn.execute(
+            "SELECT DISTINCT r.email FROM messages m JOIN recipients r ON r.id=m.recipient_id "
+            "WHERE m.status='sent'")}
+except Exception as _ex:                                      # noqa: BLE001
+    print(f"замена мёртвых: базы не прочитались: {str(_ex)[:90]}")
+try:
+    sys.path.insert(0, r"C:\sender\server")
+    from lead_scoring import _rol_ball as _БАЛЛ_РОЛИ          # noqa: E402
+except Exception:                                             # noqa: BLE001
+    def _БАЛЛ_РОЛИ(_р):
+        return 2
+_ПУБЛИЧНЫЕ = {"mail.ru", "bk.ru", "list.ru", "inbox.ru", "yandex.ru", "ya.ru",
+              "gmail.com", "rambler.ru", "internet.ru"}
+
+
+def _следующий_живой(rid, inn, мёртвый):
+    """Лучший живой адрес той же компании или None; при находке — сменить."""
+    try:
+        import sqlite3 as _sq
+        _cx = _sq.connect(r"C:\sender\enrich.db", timeout=30)
+        _к = _cx.execute("SELECT site FROM companies WHERE inn=?", (inn,)).fetchone()
+        сайт = str((_к and _к[0]) or "").lower().replace("www.", "").split("/")[0]
+        if not сайт or сайт in _ПУБЛИЧНЫЕ:
+            return None
+        лучшие = []
+        for е, роль in _cx.execute("SELECT lower(email), role FROM emails WHERE inn=?", (inn,)):
+            роль = str(роль or "")
+            if (not е or е == мёртвый or е not in _ЖИВЫЕ or е in _ЗАНЯТЫ or е in _УШЛО
+                    or "не для письма" in роль.lower() or _БАЛЛ_РОЛИ(роль) <= 1):
+                continue
+            дом = е.rsplit("@", 1)[-1]
+            if дом != сайт and not дом.endswith("." + сайт):
+                continue
+            лучшие.append((-_БАЛЛ_РОЛИ(роль), е, роль))
+        _cx.close()
+        if not лучшие:
+            return None
+        _, новый, роль = sorted(лучшие)[0]
+        with store._lock:
+            store._conn.execute("UPDATE recipients SET email=?, domain=? WHERE id=?",
+                                (новый, новый.split("@")[-1], rid))
+            store._conn.commit()
+        _ЗАНЯТЫ.add(новый)
+        with io.open(r"C:\sender\_ops\zamena-myortvyh.jsonl", "a", encoding="utf-8") as _ж:
+            _ж.write(json.dumps({"ts": int(time.time()), "rid": rid, "было": мёртвый, "стало": новый,
+                                 "роль": роль, "проба": _ЖИВЫЕ.get(новый), "кто": "partiya_gen"},
+                                ensure_ascii=False) + "\n")
+            _ж.flush()
+            os.fsync(_ж.fileno())
+        return новый
+    except Exception as _ex:                                  # noqa: BLE001
+        print(f"замена мёртвого #{rid} не удалась: {str(_ex)[:80]}")
+        return None
+
 # Выручка из обогащения — одним запросом, до отбора: в карточке получателя
 # её нет, а спрашивать по одной компании на тысячах строк слишком дорого.
 ПОРОГ_ВЫРУЧКИ = int(_арг("выручка", "revenue", по_умолчанию="30000000") or 0)
@@ -454,8 +525,17 @@ for rid in в_группе:
         счёт["без ИНН или почты"] += 1
         continue
     if email in _мёртвые_адреса:
-        счёт["приговор пробы: адрес мёртв"] += 1
-        continue
+        _нов = _следующий_живой(rid, inn, email)
+        if _нов:
+            try:
+                object.__setattr__(rec, "email", _нов)
+            except Exception:                                 # noqa: BLE001
+                pass
+            email = _нов
+            счёт["мёртвый адрес заменён следующим по лесенке"] += 1
+        else:
+            счёт["приговор пробы: адрес мёртв"] += 1
+            continue
     # ПРЕДПРОСЕВ (26.08). Компания, у которой нет своего производства вовсе
     # - чистая торговля, логистика, услуги, госорган, - не нужна ни одному
     # направлению, и писать ей незачем. Метку ставит ops/predprosev_meyer.py
