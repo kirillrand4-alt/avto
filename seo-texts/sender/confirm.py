@@ -202,7 +202,8 @@ class ConfirmSend:
 
     # -- заслоны (общие для очереди и подтверждения) ------------------------ #
 
-    def _guard(self, *, inn: Optional[str], email: str) -> Optional[str]:
+    def _guard(self, *, inn: Optional[str], email: str,
+               otvet: bool = False) -> Optional[str]:
         """Причина блокировки или None. Проверяет suppression (отписка
         навсегда и пр.), заведомо недоставимый адрес, повторное письмо на ТОТ
         ЖЕ адрес <90 дней (Задача 3) и потолок разных адресов одной компании
@@ -210,6 +211,14 @@ class ConfirmSend:
         entry = self._suppression_hit(inn=inn, email=email)
         if entry is not None:
             return f"suppressed:{entry.reason}"
+        # КОМПАНИЯ НАМ ОТВЕЧАЛА — ХОЛОДНЫХ БОЛЬШЕ НЕ ШЛЁМ (владелец 13.10: «если
+        # отвечала, то вообще не надо им писать»). Ответ — живой лид по ИНН;
+        # автоответ и «в отпуске» ответом не считаются. Черновик НАШЕГО ответа
+        # в переписке (submit_reply, otvet=True) это правило не трогает.
+        if not otvet:
+            лид = self._otvechali(inn)
+            if лид:
+                return f"otvechali:{лид}"
         мёртв = self._nedostavimyy(email)
         if мёртв:
             return мёртв
@@ -421,6 +430,21 @@ class ConfirmSend:
     # ответившему (лид есть) повтор автоматом не шлём — окно остаётся 90.
     _КЦ_КАМПАНИИ = {1, 5, 6, 9, 10}
     _ПОВТОР_ДНЕЙ = 30
+
+    def _otvechali(self, inn: Optional[str]) -> Optional[str]:
+        """Статус живого лида компании (она нам отвечала) или None."""
+        цифры = "".join(c for c in str(inn or "") if c.isdigit())
+        if not цифры:
+            return None
+        try:
+            with self._store._lock:
+                р = self._store._conn.execute(
+                    "SELECT status FROM leads WHERE inn=? AND status NOT IN "
+                    "('avtootvet','v_otpuske','deleted') AND coalesce(reply_kind,'') "
+                    "NOT IN ('auto_reply') LIMIT 1", (цифры,)).fetchone()
+        except Exception:  # noqa: BLE001 - мок-store без таблицы лидов
+            return None
+        return str(р[0]) if р else None
 
     def _povtor_razreshen(self, email: str, last: dict) -> bool:
         try:
@@ -1079,7 +1103,7 @@ class ConfirmSend:
         по треду (thread_id или адрес+тема), чтобы повторный входящий не плодил
         дубль-черновик.
         """
-        blocked = self._guard(inn=inn, email=reply_to)
+        blocked = self._guard(inn=inn, email=reply_to, otvet=True)
         # для ответа блокируем только на отписке/жалобе (не на «недавнем
         # контакте» — это диалог, инициированный клиентом)
         if blocked and blocked.startswith("suppressed:") and (
