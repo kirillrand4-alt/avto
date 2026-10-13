@@ -89,6 +89,7 @@ for я in ([] if арг.get("vse") else sorted(хорошие, key=lambda x: ц�
 
 вер = {р[0].lower(): р[1] for р in c.execute("SELECT email, verdict FROM addr_probe")}
 св = Counter()
+_сп_кандидатов = []
 по_ячейке = Counter()
 образцы = {}
 for rid, (inn, е, сег) in sorted(получатели.items(), key=lambda x: -полнота.get(x[1][0], 0)):
@@ -109,6 +110,9 @@ for rid, (inn, е, сег) in sorted(получатели.items(), key=lambda x:
         св["заслон: " + п.split(":")[0]] += 1
         continue
     св["КАНДИДАТ"] += 1
+    if арг.get("spisok"):
+        _сп_кандидатов.append((цена[я] / годн[я], 0 if вер.get(е) in ("есть", "принимает всё") else 1,
+                               -полнота.get(inn, 0), rid))
     if ОБРАЗЦЫ:
         if вер.get(е) not in ("есть", "принимает всё"):
             continue
@@ -122,6 +126,12 @@ for я, n in по_ячейке.items():
     _по_отр[я[0]] += n
 print("кандидаты по отраслям: %s" % ", ".join("%s: %d" % (о[:22], n) for о, n in _по_отр.most_common()))
 print("кандидаты по ячейкам: %s" % ", ".join("%s/%s: %d" % (я[0][:18], я[1], n) for я, n in по_ячейке.most_common(14)))
+if арг.get("spisok"):
+    _n = int(арг["spisok"])
+    # дешевле ячейка → вперёд; при равной — подтверждённый адрес, богаче паспорт
+    _сп = [x[3] for x in sorted(_сп_кандидатов, key=lambda x: (x[1], x[0], x[2]))][:_n]
+    json.dump(_сп, io.open(r"C:\sender\_ops\partiya-deshevye.json", "w", encoding="utf-8"))
+    print("список дешёвых: %d в _ops/partiya-deshevye.json" % len(_сп))
 if ОБРАЗЦЫ:
     import io as _io
     сп = [rid for v in образцы.values() for rid in v]
