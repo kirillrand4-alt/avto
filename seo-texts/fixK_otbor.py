@@ -56,6 +56,8 @@ assert len(VOR16) == 16, len(VOR16)
 
 # ---------------------------------------------------------------- Битрикс: сверка кандидатов (fixH_bitrix_sverka)
 kand_b = [{'inn': M.kl_inn(r['inn']), 'nazvanie': M.s(r['Название']), 'region': M.s(r['Регион'])} for _, r in pul.iterrows()]
+for i in sb.vozvrat:
+    kand_b.append({'inn': i, 'nazvanie': M.s(sb.komp[i]['Название']), 'region': M.s(sb.komp[i]['Регион'])})
 for i in VOR16:
     if i not in {x['inn'] for x in kand_b} and i in sb.komp:
         kand_b.append({'inn': i, 'nazvanie': M.s(sb.komp[i]['Название']), 'region': M.s(sb.komp[i]['Регион'])})
@@ -71,6 +73,12 @@ SVERKA = json.load(open(SV, encoding='utf-8'))
 # Беларусь: УНП 9 цифр – сверка fixH дополняет 9 цифр нулём (как РФ-ИНН, съеденный Excel) и УНП не находит;
 # поэтому отдельно: УНП в поле ИНН сделки как есть и 9 цифр УНП в тексте сделки (активные сделки Meyer)
 AKT_UNP = collections.defaultdict(list)
+for r in csv.DictReader(io.open(os.path.join(M.SCR, 'vhod-bitrix2', 'all', 'meyer_all.csv'), encoding='utf-8-sig', newline=''),
+                        delimiter=';'):
+    d_ = re.sub(r'\D', '', r.get('INN') or '')
+    d_ = ('0' + d_) if len(d_) in (9, 11) else d_
+    if r.get('АКТИВНА') == 'да' and d_:
+        M.KLIENTY.setdefault(d_, (r.get('КОМПАНИЯ') or r.get('НАЗВАНИЕ_В_РЕКВИЗИТАХ') or '')[:80])
 with io.open(os.path.join(M.SCR, 'vhod-bitrix2', 'all', 'meyer_all.csv'), encoding='utf-8-sig', newline='') as f:
     for r in csv.DictReader(f, delimiter=';'):
         if (r.get('АКТИВНА') or '').strip() != 'да':
@@ -90,7 +98,12 @@ inn_pula = [M.kl_inn(x) for x in pul['inn']]
 for i in sorted(VOR16):
     if i not in inn_pula and i in sb.komp:
         otkaz[i].append('воронежская из архива fixG2 не в пуле MEYER-7 (%s)' % (M.s(sb.komp[i]['Ревизия: профиль']) or 'отсеяна сборкой'))
-for _, r in pul.iterrows():
+stroki = [dict(r) for _, r in pul.iterrows()]
+for i in sb.vozvrat:          # возвращённые из «Не вошли» (сайт клиента со сделкой): у самой компании сделки быть не должно
+    z = sb.komp[i]
+    stroki.append({'inn': i, 'vyr': float('nan'), 'eda': sb.vozvrat_eda[i], 'dop': False, 'Сегмент': z['Сегмент'],
+                   'Основной ОКВЭД': z['Основной ОКВЭД'], 'Ревизия: профиль': z['Ревизия: профиль'], 'dom': ''})
+for r in stroki:
     inn = M.kl_inn(r['inn'])
     pr = []
     if inn in panel:
@@ -104,15 +117,13 @@ for _, r in pul.iterrows():
     if sv.get('aktivnye_meyer'):
         a = sv['aktivnye_meyer'][0]
         pr.append('активная сделка Meyer (%s): %s %s «%s»' % (a['kak'], a['id'], a['voronka'], a['title'][:60]))
-    elif sv.get('po_imeni_proverit'):
+    elif sv.get('po_imeni_proverit') and not (inn in M.IMENA and not M.IMENA[inn][0]):
         a = sv['po_imeni_proverit'][0]
         pr.append('возможна активная сделка Meyer по точному названию (у сделки нет ИНН): %s «%s» – не беру без проверки'
                   % (a['id'], a['title'][:60]))
     if len(inn) == 9 and AKT_UNP.get(inn):
         pr.append('активная сделка Meyer (Беларусь, по УНП): ' + AKT_UNP[inn][0])
-    rv = M.s(r['Ревизия: профиль'])
-    if 'идёт сделка' in rv:
-        pr.append('сборка: ' + rv[:160])
+    # «сайт общий с компанией, где идёт сделка» – НЕ причина (владелец 13.10: деление по компании)
     seg = M.s(r['Сегмент']).lower()
     if any(x in seg for x in M.LES_HIM):
         pr.append('лес/химия (владелец 13.10)')
@@ -134,9 +145,12 @@ kol_p = {r[1] for r in k.execute('PRAGMA table_info(person)')}
 statistika = collections.Counter()
 for n, inn in enumerate(kand):
     c = sb.komp[inn]
+    if inn in panel:
+        continue
     k.execute('INSERT INTO company (inn, predpriyatie, region, okved, sayt, vyruchka_rub) VALUES (?,?,?,?,?,?)',
               (inn, M.s(c['Название']), M.s(c['Регион']), M.s(c['Основной ОКВЭД']), M.s(c['Сайт']), M.chislo(c['Выручка, руб'])))
     kont, lyudi, pochty, zh = M.kontakty_kompanii(sb, inn, cat)
+    statistika['почт (в company.pochta)'] += len(pochty)
     statistika.update(zh)
     for x in kont:
         rr = {kk: v for kk, v in x.items() if kk in kol_c and not kk.startswith('_')}
@@ -173,11 +187,15 @@ for inn in kand:
                 'proverka_sayta': vid_s, 'segment_sborki': M.s(c['Сегмент']), 'okved': M.s(c['Основной ОКВЭД']),
                 'n_tel': len(tel), 'n_lpr': len(lpr), 'n_mob_lpr': len(mob),
                 'roli_lpr': sorted({x['rol_vid'] for x in lpr}),
-                'gruppa': M.s(c['Группа']), 'holding_agent': M.s(c['Холдинг (агент)']),
+                'gruppa': M.s(c['Группа']), 'holding_agent': M.s(c['Холдинг (агент)']), 'vozvrat': int(inn in sb.vozvrat),
                 'reviziya': M.s(c['Ревизия: профиль'])}
 # eda: из пула (pul индекс совпадает с K3?)
 eda = dict(zip([M.kl_inn(x) for x in pul['inn']], pul['eda']))
+eda.update(sb.vozvrat_eda)
 dom = dict(zip([M.kl_inn(x) for x in pul['inn']], pul['dom']))
+for i in sb.vozvrat:
+    rg = E1.region_norm(M.s(sb.komp[i]['Регион']))
+    dom[i] = {'Алтайский край': 'Алтай', 'Краснодарский край': 'Краснодар', 'Воронежская область': 'Воронеж'}.get(rg, '')
 for inn, z in rez.items():
     z['eda'] = bool(eda.get(inn))
     z['dom'] = dom.get(inn, '')
