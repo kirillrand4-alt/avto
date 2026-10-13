@@ -247,6 +247,10 @@ def main_зенка():
     сделано = set(io.open(п_сд, encoding='utf-8').read().split()) if os.path.exists(п_сд) else set()
     кандидаты = [з for з in последняя.values() if з.get('сайт') and з['inn'] not in сделано and
                  (str(з.get('зенка_разбор') or '') < от if от else not з.get('зенка_разбор'))]
+    # 13.10: KC_TOLKO_INN — только эти компании (защищённые сайты, чьи страницы Зенка принесла уже после разбора)
+    if os.environ.get('KC_TOLKO_INN'):
+        только_з = set(io.open(os.environ['KC_TOLKO_INN'], encoding='utf-8').read().split())
+        кандидаты = [з for з in кандидаты if з['inn'] in только_з]
     вых = ВЫХОД
     if ДОЛЯ:
         k_, N_ = (int(x) for x in ДОЛЯ.split('/'))
