@@ -2880,6 +2880,31 @@ def teh_lens_prompt(items: list, lens: str, division: str = 'kc') -> str:
 _ТИРЕ_RE = re.compile(r'[ \t]*[—–][ \t]*')
 
 
+# ПРОСЬБУ ПЕРЕНАПРАВИТЬ ВСТАВЛЯЕМ, А НЕ БРАКУЕМ (разбор 13.10). Модель
+# упорно её пропускает: за день 157 писем, во всём остальном годных, ушли в
+# брак после трёх кругов правки. Правится механически, как длинное тире:
+# одна фраза перед подписью. Формы - из эталонов редактора, разные, чтобы
+# партия не звучала одинаково; выбор по тексту письма, повторяемый.
+_PROSBA_VARIANTY = (
+    'Если вопрос не к вам, буду благодарен за контакт коллеги - обращусь напрямую.',
+    'Если этим занимается другой специалист, перешлите, пожалуйста, письмо ему.',
+    'Если вопрос ведёт кто-то из коллег, подскажите, к кому лучше обратиться.',
+    'Если это не ваша зона, передайте, пожалуйста, письмо тому, кто занимается качеством продукции.',
+)
+
+
+def vstavit_prosbu(body: str) -> str:
+    """Вставить просьбу перенаправить перед «С уважением» (или в конец)."""
+    т = str(body or '')
+    if _prosba_perenapravit(т):
+        return т
+    фраза = _PROSBA_VARIANTY[sum(map(ord, т[:400])) % len(_PROSBA_VARIANTY)]
+    м = re.search(r'\n\s*С\s+уважением', т)
+    if м:
+        return т[:м.start()].rstrip() + '\n\n' + фраза + '\n\n' + т[м.start():].lstrip()
+    return т.rstrip() + '\n\n' + фраза
+
+
 def bez_dlinnogo_tire(t: str) -> str:
     """«завод — крупный» → «завод - крупный». Дефис вместо длинного тире:
     так пишут менеджеры, и так требует стайлгайд писем."""
@@ -4691,6 +4716,11 @@ class AiLetterGen:
                 fails = gate(L['subject'], L['body'], mode=_rec['mode'],
                              extra=_extra,
                              facts=self.facts_for(div), division=div)
+                if 'нет просьбы перенаправить письмо ответственному' in fails:
+                    L['body'] = vstavit_prosbu(L['body'])
+                    fails = gate(L['subject'], L['body'], mode=_rec['mode'],
+                                 extra=_extra,
+                                 facts=self.facts_for(div), division=div)
                 if fails:
                     bad[i] = fails
             clean = [i for i in letters if i not in bad]
