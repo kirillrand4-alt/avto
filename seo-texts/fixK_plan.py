@@ -92,12 +92,42 @@ pul, m, k3, dop = M.zagruzit()
 sb = M.Sborka(pul, m, k3, dop)
 # названия клиентов с активной сделкой Meyer – для меток контактов возвращённых из «Не вошли»
 import csv  # noqa: E402
+AKT_MEYER = set()        # ИНН с активной сделкой Meyer (ИНН сделки + ИНН в тексте сделки) – для проверки после заливки
 for r in csv.DictReader(io.open(os.path.join(M.SCR, 'vhod-bitrix2', 'all', 'meyer_all.csv'), encoding='utf-8-sig', newline=''),
                         delimiter=';'):
     d_ = re.sub(r'\D', '', r.get('INN') or '')
     d_ = ('0' + d_) if len(d_) in (9, 11) else d_
-    if r.get('АКТИВНА') == 'да' and d_:
-        M.KLIENTY.setdefault(d_, (r.get('КОМПАНИЯ') or r.get('НАЗВАНИЕ_В_РЕКВИЗИТАХ') or '')[:80])
+    if r.get('АКТИВНА') == 'да':
+        if d_:
+            M.KLIENTY.setdefault(d_, (r.get('КОМПАНИЯ') or r.get('НАЗВАНИЕ_В_РЕКВИЗИТАХ') or '')[:80])
+            AKT_MEYER.add(d_)
+            if len(re.sub(r'\D', '', r.get('INN') or '')) == 9:
+                AKT_MEYER.add(re.sub(r'\D', '', r.get('INN') or ''))      # УНП Беларуси как есть
+        for t_ in (r.get('TITLE') or '', r.get('КОМПАНИЯ') or '', r.get('НАЗВАНИЕ_В_РЕКВИЗИТАХ') or ''):
+            AKT_MEYER.update(re.findall(r'(?<!\d)(\d{12}|\d{10})(?!\d)', t_))
+# владелец 13.10: список «Meyer – не покупатель» (соседняя сессия, данные): по ИНН/УНП и по домену сайта (вид «ключ»)
+NEPOK_INN, NEPOK_DOM = {}, {}
+for r in csv.reader(io.open(os.path.join(M.SCR, 'vhod-nepok', 'meyer-ne-pokupateli-1013-1323.csv'), encoding='utf-8-sig'), delimiter=';'):
+    if r[0].startswith('ИНН или'):
+        continue
+    prich = ('список «Meyer – не покупатель» 13.10 (%s): %s' % (r[6], r[7]))[:250]
+    if r[1] in ('ИНН', 'УНП'):
+        NEPOK_INN[re.sub(r'\D', '', r[0])] = prich
+    elif r[1] == 'ключ' and M.domen(r[3]):
+        NEPOK_DOM[M.domen(r[3])] = prich
+
+
+def nepokupatel(inn):
+    if inn in NEPOK_INN:
+        return NEPOK_INN[inn]
+    d = M.domen(sb.komp[inn]['Сайт'])
+    while d and '.' in d:
+        if d in NEPOK_DOM:
+            return NEPOK_DOM[d] + ' (по домену сайта %s)' % d
+        d = d.split('.', 1)[1]
+    return ''
+
+
 print('данные прочитаны за %.0f с: кандидатов %d, dadata %d, РБ %d, checko %d' % (time.time() - T0, len(OTB['kandidaty']), len(DD),
                                                                                     len(BY), len(CH)))
 
@@ -180,41 +210,50 @@ def poryadok(z):
 
 ochered = sorted((z for z in K.values() if z['tier'] >= 2 or z['n_tel'] > 0), key=poryadok)
 bez_tel = sum(1 for z in K.values() if z['tier'] == 1 and z['n_tel'] == 0)
-otkaz = collections.OrderedDict()
-pomet = {}
-vybor = []
-reg_sch = collections.Counter()
 EMK = {'Алтайский край': 600, 'Краснодарский край': 240, 'Воронежская область': 240}
-for z in ochered:
-    if len(vybor) >= NUZHNO * len(PRODAVCY):
-        break
-    inn = z['inn']
-    c = sb.komp[inn]
-    pr = []
-    if inn in panel:
-        pr.append('уже в панели')
-    if inn in arhiv and inn not in VOR16:
-        pr.append('в архиве панели')
-    if inn in IMENA and IMENA[inn][0]:
-        pr.append('активная сделка Meyer по точному названию (проверено вручную): ' + IMENA[inn][1])
-    v_ = vyr_dlya(inn)
-    if v_ is not None and v_ < 3e7:
-        pr.append('выручка %.1f млн по checko – меньше 30 млн (владелец 13.10)' % (v_ / 1e6))
-    ok, st_tekst, prich = status_proverka(inn)
-    if not ok:
-        pr.append('недействующая: ' + prich)
-    reg, reg_ist = region_oficialnyy(inn, c)
-    if reg in EMK and reg_sch[reg] >= EMK[reg]:
-        pr.append('домашний регион %s заполнен (%d)' % (reg, EMK[reg]))
-    if pr:
-        otkaz[inn] = pr
-        continue
-    reg_sch[reg] += 1
-    pomet[inn] = {'status': st_tekst, 'region': reg, 'region_istochnik': reg_ist}
-    vybor.append(inn)
-print('отбор: просмотрено %d (до места %d из %d в очереди), взято %d; отказ на проверках %d: %s' % (
-    len(vybor) + len(otkaz), ochered.index(K[vybor[-1]]) + 1, len(ochered), len(vybor), len(otkaz),
-    dict(collections.Counter(v[0].split(':')[0] for v in otkaz.values()))))
+pomet = {}
+
+
+def otobrat(isklyuchit):
+    """-> (vybor, otkaz). isklyuchit: ИНН -> причина (конфликт «холдинг – домашний регион»)."""
+    otkaz = collections.OrderedDict()
+    vybor = []
+    reg_sch = collections.Counter()
+    for z in ochered:
+        if len(vybor) >= NUZHNO * len(PRODAVCY):
+            break
+        inn = z['inn']
+        c = sb.komp[inn]
+        pr = []
+        if inn in panel:
+            pr.append('уже в панели')
+        if inn in arhiv and inn not in VOR16:
+            pr.append('в архиве панели')
+        if inn in IMENA and IMENA[inn][0]:
+            pr.append('активная сделка Meyer по точному названию (проверено вручную): ' + IMENA[inn][1])
+        v_ = vyr_dlya(inn)
+        if v_ is not None and v_ < 3e7:
+            pr.append('выручка %.1f млн по checko – меньше 30 млн (владелец 13.10)' % (v_ / 1e6))
+        ok, st_tekst, prich = status_proverka(inn)
+        if not ok:
+            pr.append('недействующая: ' + prich)
+        reg, reg_ist = region_oficialnyy(inn, c)
+        if reg in EMK and reg_sch[reg] >= EMK[reg]:
+            pr.append('домашний регион %s заполнен (%d)' % (reg, EMK[reg]))
+        if inn in isklyuchit:
+            pr.append(isklyuchit[inn])
+        np_ = nepokupatel(inn)
+        if np_:
+            pr.append(np_)
+        if pr:
+            otkaz[inn] = pr
+            continue
+        reg_sch[reg] += 1
+        pomet[inn] = {'status': st_tekst, 'region': reg, 'region_istochnik': reg_ist}
+        vybor.append(inn)
+    return vybor, otkaz
+
+
 # возможные сделки по названию из otbor (там – отказ «не беру без проверки»): тёзки по ручному разбору – вернуть в очередь
 vernut = [i for i, (plohaya, _) in IMENA.items() if not plohaya]
 print('тёзки сделок по названию (вручную – не та компания): %d – в очередь возвращаются, если проходят: %s' % (
@@ -368,13 +407,16 @@ def stroka_kompanii(inn):
     return row, pochty_checko
 
 
-kompanii, kontakty, lyudi, istochniki = {}, [], [], []
-pochty_po = {}
+KESH = {}
 stat_k = collections.Counter()
-for inn in vybor:
+
+
+def stroki(inn):
+    """Строки каталога одной компании (кэш): company, номера, люди, источники."""
+    if inn in KESH:
+        return KESH[inn]
     row, pch = stroka_kompanii(inn)
     kont, lyud, pochty, zh = M.kontakty_kompanii(sb, inn, cat)
-    stat_k.update(zh)
     # почты: checko (как panel_checko_zalit) + сборка с пометкой (как fixJ) – в company.pochta
     vse, est = [], set()
     for e, prim in pch:
@@ -386,31 +428,26 @@ for inn in vybor:
             est.add(e.lower())
             vse.append('%s (%s)' % (e, pom))
     row['pochta'] = ', '.join(vse)[:6000]
-    pochty_po[inn] = len(vse)
-    kompanii[inn] = row
-    for x in kont:
-        kontakty.append(x)
-    lyudi += lyud
+    ist_ = []
     z = CH.get(inn) or {}
     if z.get('ogrn') and not z.get('oshibka'):
-        istochniki.append({'inn': inn, 'field_name': 'Реквизиты, руководитель, финансы (checko)', 'source': 'checko.ru %s' % DATA,
-                           'source_url': 'https://checko.ru/company/' + z['ogrn']})
-    if len(inn) == 10 or len(inn) == 12:
+        ist_.append({'inn': inn, 'field_name': 'Реквизиты, руководитель, финансы (checko)', 'source': 'checko.ru %s' % DATA,
+                     'source_url': 'https://checko.ru/company/' + z['ogrn']})
+    if len(inn) in (10, 12):
         d = DD.get(inn) or {}
-        istochniki.append({'inn': inn, 'field_name': 'Статус ЕГРЮЛ (DaData)', 'source': 'DaData findById %s: %s%s' % (
+        ist_.append({'inn': inn, 'field_name': 'Статус ЕГРЮЛ (DaData)', 'source': 'DaData findById %s: %s%s' % (
             DATA, d.get('status'), (', ОГРН %s' % d['ogrn']) if d.get('ogrn') else ''), 'source_url': ''})
     else:
-        b = BY.get(inn) or {}
-        istochniki.append({'inn': inn, 'field_name': 'Статус плательщика (МНС Беларуси)',
-                           'source': ('реестр МНС РБ %s: %s, рег. %s' % (DATA, b.get('vkods'), b.get('dreg'))) if b.get('vkods') else
-                           'реестр МНС РБ %s: ответа нет – статус не проверен' % DATA,
-                           'source_url': 'https://grp.nalog.gov.by/grp/'})
-    istochniki.append({'inn': inn, 'field_name': 'Сайт и контакты (сборка MEYER-7)', 'source': row['sayt_chey'][:500],
-                       'source_url': row['sayt'] if row['sayt'].startswith('http') else ''})
+        b_ = BY.get(inn) or {}
+        ist_.append({'inn': inn, 'field_name': 'Статус плательщика (МНС Беларуси)',
+                     'source': ('реестр МНС РБ %s: %s, рег. %s' % (DATA, b_.get('vkods'), b_.get('dreg'))) if b_.get('vkods') else
+                     'реестр МНС РБ %s: ответа нет – статус не проверен' % DATA, 'source_url': 'https://grp.nalog.gov.by/grp/'})
+    ist_.append({'inn': inn, 'field_name': 'Сайт и контакты (сборка MEYER-7)', 'source': row['sayt_chey'][:500],
+                 'source_url': row['sayt'] if row['sayt'].startswith('http') else ''})
     for x in kont:
         if x.get('_lpr') and x.get('source_url'):
-            istochniki.append({'inn': inn, 'field_name': 'ЛПР: %s' % (x.get('position') or x['_rol']),
-                               'source': 'сайт компании (MEYER-7 13.10)', 'source_url': x['source_url'].split(' ; ')[0]})
+            ist_.append({'inn': inn, 'field_name': 'ЛПР: %s' % (x.get('position') or x['_rol']),
+                         'source': 'сайт компании (MEYER-7 13.10)', 'source_url': x['source_url'].split(' ; ')[0]})
     ist = ['сборка MEYER-7 13.10']
     if z.get('ogrn'):
         ist.append('checko.ru')
@@ -421,8 +458,169 @@ for inn in vybor:
     if row.get('bitrix_kc'):
         ist.append('Битрикс 09.10')
     row['istochniki'], row['istochnikov'] = ' | '.join(ist), len(ist)
+    KESH[inn] = {'row': row, 'kont': kont, 'lyud': lyud, 'ist': ist_, 'zh': zh}
+    return KESH[inn]
+
+
+# ---------------------------------------------------------------- группы: холдинги, общие номера, связи с панелью
+def norm_h(h):
+    h = M.s(h).lower()
+    h = re.sub(r'\(.*?\)', ' ', h)
+    h = re.sub(r'\b(ооо|ао|пао|зао|оао|гк|группа компаний|холдинг|агрохолдинг)\b', ' ', h)
+    h = re.sub(r'[«»"\'“”„.,]', ' ', h)
+    return ' '.join(h.split())
+
+
+NOM_PANELI = collections.defaultdict(set)
+for r in k.execute("SELECT inn, value FROM contact WHERE kind='phone' AND TRIM(COALESCE(chuzhoy_istochnik,''))=''"):
+    kk = cat._phone_key(r['value'])
+    if kk:
+        NOM_PANELI[kk].add(r['inn'])
+HC = collections.defaultdict(list)
+for r in k.execute("SELECT gruppa, inn FROM holding_chlen WHERE gruppa NOT LIKE 'snyato%'"):
+    HC[r['gruppa']].append(r['inn'])
+
+
+def gruppy(vybor):
+    rod = {}
+
+    def koren(a):
+        rod.setdefault(a, a)
+        while rod[a] != a:
+            rod[a] = rod[rod[a]]
+            a = rod[a]
+        return a
+
+    def soed(a, b):
+        rod[koren(a)] = koren(b)
+    VYB = set(vybor)
+    svyazi = collections.defaultdict(set)
+    for g in sb.gruppy:                                   # (а) общий сайт – лист «Группы»
+        chl = [i for i in g['inns'] if i in VYB or i in panel]
+        if len(chl) > 1 and any(i in VYB for i in chl):
+            for i in chl:
+                svyazi[i].add('общий сайт группы %s (лист «Группы» MEYER-7)' % g['sayt'])
+            for i in chl[1:]:
+                soed(chl[0], i)
+    po_h = collections.defaultdict(list)                  # (б) холдинг агента – только между новыми
+    for i in vybor:
+        h = norm_h(sb.komp[i]['Холдинг (агент)'])
+        if h:
+            po_h[h].append(i)
+    for h, inns in po_h.items():
+        if len(inns) > 1:
+            for i in inns:
+                svyazi[i].add('холдинг «%s» по данным составителя файла (не подтверждено)' % h)
+            for i in inns[1:]:
+                soed(inns[0], i)
+    po_nom = collections.defaultdict(set)                 # (в) общие номера (без помеченных чужими)
+    for kk, inns in NOM_PANELI.items():
+        po_nom[kk] |= inns
+    for i in vybor:
+        for x in KESH[i]['kont']:
+            if not M.s(x.get('chuzhoy_istochnik')):
+                kk = cat._phone_key(x['value'])
+                if kk:
+                    po_nom[kk].add(i)
+    for kk, inns in po_nom.items():
+        if len(inns) > 1 and inns & VYB:
+            inns = sorted(inns)
+            for i in inns:
+                svyazi[i].add('общий номер …%s с %s' % (kk[-4:], ', '.join(x for x in inns if x != i)[:120]))
+            for i in inns[1:]:
+                soed(inns[0], i)
+    for g, chl in HC.items():                             # (г) группы панели
+        if set(chl) & VYB:
+            for i in chl:
+                svyazi[i].add('группа панели %s' % g)
+            for i in chl[1:]:
+                soed(chl[0], i)
+    for i in vybor:
+        g = HOLD['inn_gruppa'].get(i)
+        if g:
+            for j, gg in HOLD['inn_gruppa'].items():
+                if gg == g and j in panel:
+                    svyazi[i].add('группа панели %s (fixD)' % g)
+                    soed(i, j)
+    komp = collections.defaultdict(list)
+    for i in vybor:
+        komp[koren(i)].append(i)
+    edinicy = {}
+    for kor, chl in komp.items():
+        edinicy['u-' + min(chl)] = {'novye': sorted(chl), 'panel': sorted({j for j in rod if koren(j) == kor and j in panel})}
+    # допустимые продавцы и конфликты «холдинг – домашний регион»: владелец разрешает только своему городу,
+    # холдинг – целиком одному; если вместе нельзя – новая компания-нарушитель не берётся (замена следующей по очереди)
+    dop_, isk = {}, {}
+    for u, e in edinicy.items():
+        mozhno = set(PRODAVCY)
+        po_reg = collections.defaultdict(list)
+        for i in e['novye']:
+            if pomet[i]['region'] in DOM:
+                po_reg[pomet[i]['region']].append(i)
+        for reg in po_reg:
+            mozhno &= set(DOM[reg])
+        prod_panel = sorted({vlad[j] for j in e['panel']})
+        if len(prod_panel) > 1:
+            for i in e['novye']:
+                isk[i] = 'группа связана с компаниями панели у разных продавцов (%s) – не беру, чтобы не рвать холдинг' % prod_panel
+            continue
+        if prod_panel:
+            p0 = prod_panel[0]
+            if p0 in mozhno:
+                mozhno = {p0}
+            else:
+                for i in e['novye']:
+                    if pomet[i]['region'] in DOM and p0 not in DOM[pomet[i]['region']]:
+                        isk[i] = ('холдинг/общий номер с компанией панели у %s, а регион %s – только %s: правила '
+                                  'холдинга и городов вместе не выполнить – не беру' % (FIO[p0], pomet[i]['region'],
+                                                                                        ', '.join(FIO[p] for p in DOM[pomet[i]['region']])))
+                if not any(i in isk for i in e['novye']):
+                    for i in e['novye']:
+                        isk[i] = 'холдинг с компанией панели у %s – не беру (правило городов)' % FIO[p0]
+                continue
+        if not mozhno:
+            # разные домашние регионы в одной группе: оставляется регион с бОльшим числом членов, прочие не берутся
+            glav = max(po_reg, key=lambda r_: (len(po_reg[r_]), -min(ochered_mesto[i] for i in po_reg[r_])))
+            for reg, chl in po_reg.items():
+                if reg != glav:
+                    for i in chl:
+                        isk[i] = ('в одной группе с компаниями региона %s (только %s), а регион %s – только %s: '
+                                  'не беру' % (glav, ', '.join(FIO[p] for p in DOM[glav]), reg, ', '.join(FIO[p] for p in DOM[reg])))
+            continue
+        dop_[u] = sorted(mozhno)
+    return edinicy, svyazi, dop_, isk
+
+
+ochered_mesto = {z['inn']: n for n, z in enumerate(ochered)}
+isklyuchit = {}
+for popytka in range(10):
+    vybor, otkaz = otobrat(isklyuchit)
+    for inn in vybor:
+        stroki(inn)
+    edinicy, svyazi, dop_, isk = gruppy(vybor)
+    print('проход %d: взято %d, единиц %d, конфликтов «холдинг – город»: %d' % (popytka + 1, len(vybor), len(edinicy), len(isk)))
+    if not isk:
+        break
+    isklyuchit.update(isk)
+else:
+    raise SystemExit('конфликты групп не сошлись')
+print('отбор: просмотрено %d (до места %d из %d в очереди), взято %d; отказ на проверках %d: %s' % (
+    len(vybor) + len(otkaz), ochered_mesto[vybor[-1]] + 1, len(ochered), len(vybor), len(otkaz),
+    dict(collections.Counter(v[0].split(':')[0][:60] for v in otkaz.values()))))
+konflikty = [(i, isklyuchit[i]) for i in isklyuchit]
+for i, pr in konflikty:
+    print('   конфликт: %s %s – %s' % (i, K[i]['nazvanie'][:40], pr[:160]))
+kompanii = {i: KESH[i]['row'] for i in vybor}
+kontakty = [x for i in vybor for x in KESH[i]['kont']]
+lyudi = [x for i in vybor for x in KESH[i]['lyud']]
+istochniki = [x for i in vybor for x in KESH[i]['ist']]
+for i in vybor:
+    stat_k.update(KESH[i]['zh'])
+region = {i: kompanii[i]['region'] for i in vybor}
 print('строки: компаний %d, номеров %d, людей %d, источников %d; контакты: %s' % (
     len(kompanii), len(kontakty), len(lyudi), len(istochniki), dict(stat_k)))
+print('единиц раздачи %d (групп из 2+ новых %d; связаны с компаниями панели %d)' % (
+    len(edinicy), sum(1 for e in edinicy.values() if len(e['novye']) > 1), sum(1 for e in edinicy.values() if e['panel'])))
 
 # ====================================================================== 3. ВСТАВКА В КОПИЮ КАТАЛОГА, СТУПЕНЬ И БАЛЛ
 kol_c = {r[1] for r in k.execute('PRAGMA table_info(company)')}
@@ -443,6 +641,17 @@ for x in lyudi:
     rr = {kk: v for kk, v in x.items() if kk in kol_p}
     k.execute('INSERT INTO person (%s) VALUES (%s)' % (','.join(rr), ','.join('?' * len(rr))), list(rr.values()))
 k.commit()
+_kesh_sh = {}
+_orig_sh = cat._shared_phone_keys
+
+
+def _sh(conn):          # общий номер панели считается один раз (каталог в цикле не меняется)
+    if 'k' not in _kesh_sh:
+        _kesh_sh['k'] = _orig_sh(conn)
+    return _kesh_sh['k']
+
+
+cat._shared_phone_keys = _sh
 dannye = {}
 flagi_novyh = {}
 for inn in vybor:
@@ -455,132 +664,18 @@ for inn in vybor:
     f['moy_prioritet'], f['prioritet_pochemu'] = d['ball'], d['pochemu']
     f['kachestvo_nomera'] = {4: 'ЛПР мобильный', 3: 'ЛПР мобильный', 2: 'ЛПР рабочий / с добавочным', 1: 'ЛПР не найден'}[d['tier']]
     flagi_novyh[inn] = f
-    k.execute('UPDATE company SET %s WHERE inn=?' % ', '.join('"%s"=?' % x for x in f), list(f.values()) + [inn])
     d['eda'] = int(bool(K[inn]['eda']))
     d['rb'] = int(len(inn) == 9)
     d['vozvrat'] = int(bool(K[inn].get('vozvrat')))
     dannye[inn] = d
+cat._shared_phone_keys = _orig_sh
+for inn, f in flagi_novyh.items():
+    k.execute('UPDATE company SET %s WHERE inn=?' % ', '.join('"%s"=?' % x for x in f), list(f.values()) + [inn])
 k.commit()
 for inn in vybor:
     kompanii[inn].update(flagi_novyh[inn])
 sch_t = collections.Counter((dannye[i]['tier'], K[i]['tier']) for i in vybor)
 print('ступень в копии каталога (итоговый состав) против предварительной: %s' % sorted(sch_t.items()))
-
-# ====================================================================== 4. ГРУППЫ: холдинги, общие номера, связи с панелью
-rod = {}
-
-
-def koren(a):
-    rod.setdefault(a, a)
-    while rod[a] != a:
-        rod[a] = rod[rod[a]]
-        a = rod[a]
-    return a
-
-
-def soed(a, b):
-    rod[koren(a)] = koren(b)
-
-
-VYB = set(vybor)
-svyazi = collections.defaultdict(set)      # ИНН -> чем связан
-# (а) группы сборки (общий сайт) – лист «Группы»
-for g in sb.gruppy:
-    chl = [i for i in g['inns'] if i in VYB or i in panel]
-    if len(chl) > 1 and any(i in VYB for i in chl):
-        for i in chl:
-            svyazi[i].add('общий сайт группы %s (лист «Группы» MEYER-7)' % g['sayt'])
-        for i in chl[1:]:
-            soed(chl[0], i)
-
-
-# (б) холдинг по мнению агента – только между новыми (как База 6: связывает только тех, кто идёт в панель)
-def norm_h(h):
-    h = M.s(h).lower()
-    h = re.sub(r'\(.*?\)', ' ', h)
-    h = re.sub(r'\b(ооо|ао|пао|зао|оао|гк|группа компаний|холдинг|агрохолдинг)\b', ' ', h)
-    h = re.sub(r'[«»"\'“”„.,]', ' ', h)
-    return ' '.join(h.split())
-
-
-po_h = collections.defaultdict(list)
-for i in vybor:
-    h = norm_h(sb.komp[i]['Холдинг (агент)'])
-    if h:
-        po_h[h].append(i)
-for h, inns in po_h.items():
-    if len(inns) > 1:
-        for i in inns:
-            svyazi[i].add('холдинг «%s» по данным составителя файла (не подтверждено)' % h)
-        for i in inns[1:]:
-            soed(inns[0], i)
-# (в) общие номера в копии каталога (без помеченных чужими) – между новыми и с компаниями панели
-po_nom = collections.defaultdict(set)
-for r in k.execute("SELECT inn, value FROM contact WHERE kind='phone' AND TRIM(COALESCE(chuzhoy_istochnik,''))=''"):
-    kk = cat._phone_key(r['value'])
-    if kk:
-        po_nom[kk].add(r['inn'])
-obshchie = []
-for kk, inns in po_nom.items():
-    if len(inns) > 1 and inns & VYB:
-        inns = sorted(inns)
-        obshchie.append({'inns': inns, 'hvost': kk[-4:]})
-        for i in inns:
-            svyazi[i].add('общий номер …%s с %s' % (kk[-4:], ', '.join(x for x in inns if x != i)[:120]))
-        for i in inns[1:]:
-            soed(inns[0], i)
-# (г) группы панели: holding_chlen (кроме снятых) и fixD-holdingi
-for r in k.execute("SELECT gruppa, inn FROM holding_chlen WHERE gruppa NOT LIKE 'snyato%'"):
-    if r['inn'] in VYB:
-        chl = [x[0] for x in k.execute('SELECT inn FROM holding_chlen WHERE gruppa=?', (r['gruppa'],)) if x[0] in panel]
-        for i in chl:
-            svyazi[r['inn']].add('группа панели %s' % r['gruppa'])
-            soed(r['inn'], i)
-for i in vybor:
-    g = HOLD['inn_gruppa'].get(i)
-    if g:
-        for j, gg in HOLD['inn_gruppa'].items():
-            if gg == g and j in panel:
-                svyazi[i].add('группа панели %s (fixD)' % g)
-                soed(i, j)
-komp = collections.defaultdict(list)
-for i in vybor:
-    komp[koren(i)].append(i)
-for i in list(rod):
-    if i in panel and koren(i) in komp:
-        pass
-edinicy = {}
-for kor, chl in komp.items():
-    panelnye = sorted({j for j in rod if koren(j) == kor and j in panel})
-    edinicy['u-' + min(chl)] = {'novye': sorted(chl), 'panel': panelnye}
-print('единиц раздачи %d (групп из 2+ новых %d; связаны с компаниями панели %d)' % (
-    len(edinicy), sum(1 for e in edinicy.values() if len(e['novye']) > 1), sum(1 for e in edinicy.values() if e['panel'])))
-region = {i: kompanii[i]['region'] for i in vybor}
-konflikty = []
-dop_ = {}
-for u, e in edinicy.items():
-    mozhno = set(PRODAVCY)
-    for i in e['novye']:
-        if region[i] in DOM:
-            mozhno &= set(DOM[region[i]])
-    prod_panel = {vlad[j] for j in e['panel']}
-    if prod_panel:
-        if len(prod_panel) > 1:
-            konflikty.append('%s: компании панели группы у разных продавцов %s – группа к первому' % (e['novye'], prod_panel))
-        p0 = sorted(prod_panel)[0]
-        for j in e['panel']:
-            if region.get(j) is None and (panel[j].get('region') in DOM) and p0 not in DOM[panel[j]['region']]:
-                pass
-        if p0 in mozhno:
-            mozhno = {p0}
-        else:
-            konflikty.append('%s (%s): группа панели у %s, но домашний регион новых – только %s; правило городов главнее' % (
-                e['novye'], [region[i] for i in e['novye']], FIO[p0], sorted(FIO[p] for p in mozhno)))
-    if not mozhno:
-        raise SystemExit('единице %s некому достаться по правилу городов: %s' % (e['novye'], [region[i] for i in e['novye']]))
-    dop_[u] = sorted(mozhno)
-if konflikty:
-    print('КОНФЛИКТЫ ГРУПП: %s' % konflikty)
 
 # ====================================================================== 5. РАЗДАЧА (MILP)
 import numpy as np  # noqa: E402
@@ -758,7 +853,8 @@ plan = {'vremya': time.strftime('%Y%m%d-%H%M%S'), 'nuzhno': NUZHNO, 'prodavcy': 
         'holding_chlen': holding_chlen, 'novye_kolonki': NOVYE_KOLONKI_COMPANY,
         'stupeni': {i: {'tier': dannye[i]['tier'], 'score': dannye[i]['score'], 'ball': dannye[i]['ball']} for i in vybor},
         'edinicy': {u: e for u, e in edinicy.items() if len(e['novye']) + len(e['panel']) > 1}, 'konflikty': konflikty,
-        'otkaz_otbora': otkaz, 'tablica': t_po, 'chisla': ch_po, 'milp': VAR, 'imena_vruchnuyu': IMENA,
+        'otkaz_otbora': otkaz, 'aktivnye_meyer_inn': sorted(AKT_MEYER | {i for i, (pl, _) in IMENA.items() if pl}),
+        'tablica': t_po, 'chisla': ch_po, 'milp': VAR, 'imena_vruchnuyu': IMENA,
         'svod': {'vzyato': len(vybor), 'po_gruppam_poryadka': dict(collections.Counter(
             ('пищевка с ЛПР', 'прочие с ЛПР', 'пищевка без ЛПР', 'прочие без ЛПР')[poryadok(K[i])[0]] for i in vybor)),
             'stupen': dict(collections.Counter(dannye[i]['tier'] for i in vybor)), 'rb': sum(dannye[i]['rb'] for i in vybor),

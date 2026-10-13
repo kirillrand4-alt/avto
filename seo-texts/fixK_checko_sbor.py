@@ -131,7 +131,7 @@ def rabota():
                     except Exception as e:  # noqa: BLE001
                         log('архив не записан', repr(e)[:100])
 
-    for prohod in (1, 2):
+    for prohod in ((1,) if os.path.exists(os.path.join(PAPKA, '_tolko_kartochki')) else (1, 2)):
         if prohod == 1:
             ochered[:] = [('https://checko.ru/search?query=%s' % i, i) for i in vse if not os.path.exists(put(i))]
         else:
@@ -167,7 +167,16 @@ if __name__ == '__main__':
     elif '--arhiv' in sys.argv:
         arhiv()
         print('архив: %s (%d байт)' % (ARH, os.path.getsize(ARH)))
+    elif '--stop' in sys.argv:
+        # остановить отцепленный сбор (после прохода 1): процесс python с _sbor.py этой папки
+        r = subprocess.run(['powershell', '-NoProfile', '-Command',
+                            "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*checko_meyer_fixK*_sbor.py*' } | "
+                            "ForEach-Object { Stop-Process -Id $_.ProcessId -Force; $_.ProcessId }"], capture_output=True, text=True, timeout=120)
+        print('остановлено:', r.stdout.strip(), r.stderr.strip()[:300])
+        log('остановлен по --stop')
     else:
+        if '--tolko-kartochki' in sys.argv:
+            io.open(os.path.join(PAPKA, '_tolko_kartochki'), 'w').write('1')
         shutil.copy(os.path.join(DROP, sys.argv[1]), SPISOK)
         kopiya = os.path.join(PAPKA, '_sbor.py')  # копия скрипта: файл задания может быть удалён
         io.open(kopiya, 'w', encoding='utf-8').write(io.open(os.path.abspath(__file__), encoding='utf-8').read())
