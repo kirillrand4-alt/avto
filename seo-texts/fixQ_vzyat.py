@@ -11,6 +11,8 @@ import zipfile
 APP = r'C:\centro2\app'
 D = r'C:\seostat\drop\drop-storage'
 PRE = 'fixQ-' + (sys.argv[1] if len(sys.argv) > 1 else '')
+if len(sys.argv) > 1 and sys.argv[1].startswith('fix'):      # fixT (14.10): свой префикс целиком, напр. «fixT-1410-»
+    PRE = sys.argv[1]
 OUT = os.path.join(D, PRE + 'kod.zip')
 n = 0
 with zipfile.ZipFile(OUT, 'w', zipfile.ZIP_DEFLATED) as z:
@@ -33,7 +35,7 @@ zp = os.path.join(D, PRE + 'bazy.zip')
 with zipfile.ZipFile(zp, 'w', zipfile.ZIP_DEFLATED) as z:
     for imya in ('meyer_baza1.db', 'centro_sales_meyer1.db'):
         src = sqlite3.connect('file:%s?mode=ro' % os.path.join(r'C:\centro2\data', imya), uri=True)
-        tmp = os.path.join(D, 'fixQ-tmp-' + imya)
+        tmp = os.path.join(D, PRE + 'tmp-' + imya)
         if os.path.exists(tmp):
             os.remove(tmp)
         dst = sqlite3.connect(tmp)

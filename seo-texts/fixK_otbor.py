@@ -106,6 +106,8 @@ with io.open(os.path.join(M.SCR, 'vhod-bitrix2', 'all', 'meyer_all.csv'), encodi
         for t_ in (r.get('TITLE') or '', r.get('КОМПАНИЯ') or '', r.get('НАЗВАНИЕ_В_РЕКВИЗИТАХ') or ''):
             for x in re.findall(r'(?<!\d)(\d{9})(?!\d)', t_):
                 AKT_UNP[x].append('сделка %s %s «%s»: УНП в тексте' % (r['DEAL_ID'], r['ВОРОНКА'], (r['TITLE'] or '')[:60]))
+# fixT (14.10): и УСПЕШНЫЕ сделки Meyer («Meyer клиент», «Meyer привлечение успешно») – владелец: «таких не надо в панель»
+USP_MEYER = M.uspeshnye_meyer(os.path.join(M.SCR, 'vhod-bitrix2', 'all', 'meyer_all.csv'))
 
 # ---------------------------------------------------------------- проверки пула
 otkaz = collections.defaultdict(list)
@@ -142,6 +144,8 @@ for r in stroki:
                   % (a['id'], a['title'][:60]))
     if len(inn) == 9 and AKT_UNP.get(inn):
         pr.append('активная сделка Meyer (Беларусь, по УНП): ' + AKT_UNP[inn][0])
+    if USP_MEYER.get(inn):      # fixT 14.10: не только активные, но и успешные
+        pr.append('успешная сделка Meyer: ' + USP_MEYER[inn][0])
     # «сайт общий с компанией, где идёт сделка» – НЕ причина (владелец 13.10: деление по компании)
     seg = M.s(r['Сегмент']).lower()
     if any(x in seg for x in M.LES_HIM):

@@ -349,6 +349,33 @@ IMENA = {
 KLIENTY = {}      # ИНН клиента с активной сделкой Meyer -> название (заполняет fixK_otbor/fixK_plan из meyer_all.csv)
 
 
+def uspeshnye_meyer(put_csv):
+    """fixT (14.10): ИНН/УНП -> [описание сделки] по УСПЕШНЫМ сделкам Meyer (любая воронка MEYER-*: «Meyer клиент»,
+    «Meyer привлечение успешно»). Владелец: «таких не надо в панель» – при отборе исключать наравне с активными.
+    Сверка как fixS_metki: ИНН сделки (9/11 цифр -> ведущий 0), ИНН 10/12 цифр в тексте сделки, УНП (9 цифр в поле ИНН
+    без КПП; «ИНН/УНП 123456789» в тексте). Проваленные сделки – не причина («Meyer провалено» – хорошие)."""
+    import csv
+    import io
+    out = collections.defaultdict(list)
+    with io.open(put_csv, encoding='utf-8-sig', newline='') as f:
+        for r in csv.DictReader(f, delimiter=';'):
+            if (r.get('СТАТУС') or '').strip() != 'Успешна':
+                continue
+            d9 = re.sub(r'\D', '', r.get('INN') or '')
+            d_ = ('0' + d9) if len(d9) in (9, 11) else d9
+            op_ = 'сделка %s %s «%s» – Успешна' % (r['DEAL_ID'], r['ВОРОНКА'], (r['TITLE'] or '')[:60])
+            if len(d_) in (10, 12):
+                out[d_].append(op_ + ' (ИНН сделки)')
+            if len(d9) == 9 and not (r.get('KPP') or '').strip():
+                out[d9].append(op_ + ' (УНП сделки)')
+            for t_ in (r.get('TITLE') or '', r.get('КОМПАНИЯ') or '', r.get('НАЗВАНИЕ_В_РЕКВИЗИТАХ') or ''):
+                for x in set(re.findall(r'(?<!\d)(\d{12}|\d{10})(?!\d)', t_)):
+                    out[x].append(op_ + ' (ИНН в тексте сделки)')
+                for x in set(re.findall(r'(?:ИНН|УНП)\D{0,4}(\d{9})(?!\d)', t_, re.I)):
+                    out[x].append(op_ + ' (УНП в тексте сделки)')
+    return out
+
+
 def snyat(sb, inn, kl):
     if not kl or inn in getattr(sb, 'vozvrat', {}):
         return False

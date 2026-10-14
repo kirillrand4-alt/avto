@@ -21,6 +21,9 @@ r"""fixQ: замена 330 «не покупателей Meyer» в панели
     python3 zapusk_na_servere.py fixQ_zamena.py --suhoy          # репетиция на копиях боевых баз (всё, кроме замка)
     python3 zapusk_na_servere.py fixQ_zamena.py --primenit       # запись под замком + метки + балл + проверка
     python3 zapusk_na_servere.py fixQ_zamena.py --tolko-proverka
+fixT (14.10): тот же файл для другого плана – `python3 fixT_zapusk.py fixQ_zamena.py --prefiks fixT --plan fixT-plan.json
+--suhoy|--primenit` (на сервере – 3s_fixT_fixQ_zamena.py; журналы, копии, метка архива, source_version – с префиксом fixT;
+вердикт пишется только новым, если в плане verdikt_tolko_novym; проверка – ещё и 0 компаний с успешной сделкой Meyer).
 Нужны рядом (C:\sender\_ops): 3s_fixS_metki.py и 3s_fixS_ball.py – текущие версии fixS (кладёт fixQ_polozhit).
 """
 import collections
@@ -39,7 +42,15 @@ KOREN = r'C:\centro2'
 KAT = os.path.join(KOREN, 'data', 'meyer_baza1.db')
 SALES = os.path.join(KOREN, 'data', 'centro_sales_meyer1.db')
 DROP = r'C:\seostat\drop\drop-storage'
-PLAN = os.path.join(DROP, 'fixQ-plan.json')
+
+
+def _arg(imya, umolch):
+    return sys.argv[sys.argv.index(imya) + 1] if imya in sys.argv else umolch
+
+
+PRE = _arg('--prefiks', 'fixQ')                                   # fixT: «--prefiks fixT --plan fixT-plan.json»
+PLAN = os.path.join(DROP, _arg('--plan', 'fixQ-plan.json'))
+PARAM_ARGV = [x for kl in ('--prefiks', '--plan') if kl in sys.argv for x in (kl, sys.argv[sys.argv.index(kl) + 1])]
 OPS = os.path.dirname(os.path.abspath(__file__))
 METKI_PY = os.path.join(OPS, '3s_fixS_metki.py')
 BITRIX_ZIP = os.path.join(DROP, 'fixS-bitrix-0910.zip')
@@ -49,10 +60,10 @@ STARYE = ['meyer1', 'meyer2', 'meyer3', 'meyer4']
 NOVYE_PR = ['meyer5', 'meyer6', 'meyer7', 'meyer8', 'meyer9']
 PRODAVCY = STARYE + NOVYE_PR
 ITOG = {p: (270 if p in STARYE else 120) for p in PRODAVCY}
-SOURCE_VERSION = 'meyer-baza7-zamena-fixQ'
+SOURCE_VERSION = 'meyer-baza7-zamena-' + PRE
 DEYSTVIYA = ('company_state', 'company_comment', 'zvonok_sobytie', 'activity_log', 'hidden_item')
 VREMYA = time.strftime('%Y%m%d-%H%M%S')
-METKA_ARHIVA = 'fixQ ' + time.strftime('%Y-%m-%d %H:%M:%S')
+METKA_ARHIVA = PRE + ' ' + time.strftime('%Y-%m-%d %H:%M:%S')
 TABLICY = ('company', 'contact', 'person', 'company_source', 'holding_chlen', 'fact', 'signal')
 VERDIKT = ('meyer_verdikt', 'meyer_verdikt_napravlenie', 'meyer_verdikt_uverennost', 'meyer_verdikt_pochemu',
            'meyer_verdikt_dokaz', 'meyer_verdikt_data')
@@ -313,7 +324,8 @@ def rabota(KAT, SALES, plan, suhoy_metka=''):
             a = {'inn': inn, 'username': p, 'assignment_score': st['score'], 'has_phone': int(c.get('has_phone') or 0),
                  'has_purchaser': int(c.get('has_purchaser') or 0), 'has_tech': int(c.get('has_tech') or 0), 'has_signal': 0,
                  'assigned_at': seychas, 'source_version': SOURCE_VERSION,
-                 'assigned_by': 'База 7 (замена 13.10, fixQ): вместо не покупателей Meyer – столько же, холдинги и домашние регионы',
+                 'assigned_by': plan.get('assigned_by') or
+                 'База 7 (замена 13.10, fixQ): вместо не покупателей Meyer – столько же, холдинги и домашние регионы',
                  'stupen_ocheredi': st['tier']}
             a = {kk: v for kk, v in a.items() if kk in kol_a}
             s.execute('INSERT INTO company_assignment (%s) VALUES (%s)' % (','.join(a), ','.join('?' * len(a))), list(a.values()))
@@ -376,8 +388,8 @@ def rabota(KAT, SALES, plan, suhoy_metka=''):
             r = {kk: v for kk, v in x.items() if kk in kh}
             k.execute('INSERT INTO holding_chlen (%s) VALUES (%s)' % (','.join(r), ','.join('?' * len(r))), list(r.values()))
             zh['vstavleno']['holding_chlen'].append([x['gruppa'], x['inn']])
-        for kk, v in {'fixQ_zamena': VREMYA, 'fixQ_dobavleno': ','.join(sorted(novye)), 'fixQ_ubrano': ','.join(sorted(ubrat)),
-                      'fixQ_baza': plan['baza'], 'fixQ_kompaniy_novyh': str(len(novye))}.items():
+        for kk, v in {PRE + '_zamena': VREMYA, PRE + '_dobavleno': ','.join(sorted(novye)), PRE + '_ubrano': ','.join(sorted(ubrat)),
+                      PRE + '_baza': plan['baza'], PRE + '_kompaniy_novyh': str(len(novye))}.items():
             k.execute('INSERT OR REPLACE INTO import_info (key, value) VALUES (?,?)', (kk, v))
         n = k.execute('SELECT COUNT(*) FROM company').fetchone()[0]
         if n != len(v_kat) - len(ubrat) + len(novye):
@@ -394,7 +406,8 @@ def rabota(KAT, SALES, plan, suhoy_metka=''):
     # ---------- 5. вердикт «покупатель Meyer» у всех компаний панели
     nachat(k)
     try:
-        for inn in sorted({r[0] for r in k.execute('SELECT inn FROM company')}):
+        vse_k = sorted({r[0] for r in k.execute('SELECT inn FROM company')})
+        for inn in (sorted(novye) if plan.get('verdikt_tolko_novym') else vse_k):   # fixT – только новым
             v = plan['verdikty'].get(inn)
             if not v:
                 zh['oshibki'].append('%s: вердикта в плане нет' % inn)
@@ -458,7 +471,7 @@ def rabota(KAT, SALES, plan, suhoy_metka=''):
         len(zh['flagi']), len(zh['ball']), sum(1 for x in zh['oshibki'] if 'в плане' in x), [x for x in zh['oshibki'] if 'в плане' in x][:4]))
     k.close()
     s.close()
-    put = os.path.join(DROP, 'fixQ-zhurnal-%s%s.json' % (VREMYA, suhoy_metka))
+    put = os.path.join(DROP, '%s-zhurnal-%s%s.json' % (PRE, VREMYA, suhoy_metka))
     io.open(put, 'w', encoding='utf-8').write(json.dumps(zh, ensure_ascii=False, indent=0, default=str))
     print('журнал «было/стало»: %s' % put)
     return zh
@@ -472,7 +485,7 @@ def metki_i_ball(KAT_, SALES_, papka, suhoy_metka):
     r = subprocess.run([sys.executable, METKI_PY, '--primenit', '--zip', BITRIX_ZIP], capture_output=True, timeout=900,
                        cwd=OPS, env=env)
     v = r.stdout.decode('utf-8', 'replace')
-    io.open(os.path.join(DROP, 'fixQ-metki-%s%s.txt' % (VREMYA, suhoy_metka)), 'w', encoding='utf-8').write(
+    io.open(os.path.join(DROP, '%s-metki-%s%s.txt' % (PRE, VREMYA, suhoy_metka)), 'w', encoding='utf-8').write(
         v + '\n' + r.stderr.decode('utf-8', 'replace')[-3000:])
     if r.returncode:
         raise RuntimeError('fixS_metki: rc=%s %s' % (r.returncode, r.stderr.decode('utf-8', 'replace')[-800:]))
@@ -485,11 +498,11 @@ def metki_i_ball(KAT_, SALES_, papka, suhoy_metka):
     buf = io.StringIO()
     try:
         with contextlib.redirect_stdout(buf):
-            E2.primenit(False, True, KAT=KAT_, SALES=SALES_, metka=('-fixQ' + suhoy_metka) if suhoy_metka else '')
+            E2.primenit(False, True, KAT=KAT_, SALES=SALES_, metka=('-' + PRE + suhoy_metka) if suhoy_metka else '')
     finally:
         cat._shared_phone_keys = orig
     t = buf.getvalue()
-    io.open(os.path.join(DROP, 'fixQ-ball-%s%s.txt' % (VREMYA, suhoy_metka)), 'w', encoding='utf-8').write(t)
+    io.open(os.path.join(DROP, '%s-ball-%s%s.txt' % (PRE, VREMYA, suhoy_metka)), 'w', encoding='utf-8').write(t)
     print('fixS_ball --tolko-ball: %s' % ' | '.join(x for x in t.splitlines() if x.startswith(('база продаж', 'журнал', 'ступени было')) or
                                                     x.strip().startswith('ВСЕГО'))[:900])
     zamok_obnovit()
@@ -567,8 +580,22 @@ def proverka(test_sales, test_kat):
     ok(n_k == n_kp, 'номеров новых в каталоге %d = план %d' % (n_k, n_kp))
     nv = collections.Counter(r[0] for r in k.execute('SELECT meyer_verdikt FROM company'))
     ok(sum(nv.values()) == len(vse) and not nv.get(None) and not nv.get(''), 'вердикт у всех %d: %s' % (len(vse), dict(nv)))
-    nd = k.execute("SELECT COUNT(*) FROM company WHERE meyer_verdikt_data='13.10.2026'").fetchone()[0]
-    ok(nd == len(vse), 'дата вердикта 13.10.2026 у %d' % nd)
+    data_v = plan.get('data') or '13.10.2026'
+    if plan.get('verdikt_tolko_novym'):     # fixT: у новых – дата плана, у прочих вердикт прежний
+        nd = k.execute('SELECT COUNT(*) FROM company WHERE meyer_verdikt_data=? AND inn IN (%s)' % ','.join('?' * len(novye)),
+                       [data_v] + sorted(novye)).fetchone()[0]
+        ok(nd == len(novye), 'дата вердикта %s у новых: %d из %d' % (data_v, nd, len(novye)))
+    else:
+        nd = k.execute('SELECT COUNT(*) FROM company WHERE meyer_verdikt_data=?', (data_v,)).fetchone()[0]
+        ok(nd == len(vse), 'дата вердикта %s у %d' % (data_v, nd))
+    if 'uspeshnye_meyer_inn' in plan:       # fixT 14.10: «Meyer клиент / успешное привлечение – таких не надо в панель»
+        usp = set(plan['uspeshnye_meyer_inn'])
+        ok(not (vse & usp), 'компаний с успешной сделкой Meyer (ИНН сделки, ИНН в тексте, УНП) в каталоге: %d %s' % (
+            len(vse & usp), sorted(vse & usp)[:5]))
+        n_u = k.execute('SELECT COUNT(*) FROM company WHERE bitrix_meyer_uspeshno=1').fetchone()[0]
+        n_r = k.execute("SELECT COUNT(*) FROM company WHERE bitrix_metki_podrobno LIKE '%Meyer в работе%'").fetchone()[0]
+        ok(n_u == 0 and n_r == 0, 'по меткам fixS_metki (свежая сверка всей панели): с успешной сделкой Meyer %d, '
+           'со сделкой Meyer в работе %d' % (n_u, n_r))
     E2 = E2_modul()
     score = dict(s.execute('SELECT inn, assignment_score FROM company_assignment').fetchall())
     stup = dict(s.execute('SELECT inn, stupen_ocheredi FROM company_assignment').fetchall())
@@ -622,16 +649,17 @@ def proverka(test_sales, test_kat):
             moi_n = {i for i in novye if vlad[i] == p} - skr
             n_opc = opciya(o.text, 'baza', plan['baza'])
             n_f = total(get('/centro', p, params={'baza': plan['baza']}).text)
-            ok(o.status_code == 200 and n_p == sch[p] - len({i for i in skr if vlad.get(i) == p}) and n_opc == n_f == len(moi_n),
+            ok(o.status_code == 200 and n_p == sch[p] - len({i for i in skr if vlad.get(i) == p}) and (
+                n_opc == n_f == len(moi_n) or (not moi_n and n_opc == -1 and n_f == 0)),   # нет новых – нет и пункта
                '%s: главная %s, в очереди %d; «%s» число %d = строк %d = новых %d' % (p, o.status_code, n_p, plan['baza'], n_opc, n_f, len(moi_n)))
-        for inn in ub[::33]:
+        for inn in (ub[::33] if len(ub) > 100 else ub):
             if inn in vse:
                 continue
             o = get('/centro', params={'inn': inn})
             naim = plan['ubrat'][inn]['nazvanie']
             ok(o.status_code != 200 or ('contact-card' not in o.text or H.escape(naim) not in o.text.split('<h1>', 1)[-1][:400]),
                'убранная %s не открывается в рабочей панели: %s' % (inn, o.status_code))
-        primery = sorted(novye)[::40]
+        primery = sorted(novye)[::40] if len(novye) > 100 else sorted(novye)
         for inn in primery:
             p = vlad[inn]
             for kak in ('meyer_admin', p):
@@ -656,10 +684,10 @@ def zapustit_proverku(papka, sales_src=SALES, kat_src=KAT, metka=''):
     ts, tk = os.path.join(papka, 'test_sales.db'), os.path.join(papka, 'test_kat.db')
     kopiya(sales_src, ts)
     kopiya(kat_src, tk)
-    r = subprocess.run([VENV, os.path.abspath(__file__), '--proverka', ts, tk], capture_output=True, timeout=1000, cwd=KOREN,
+    r = subprocess.run([VENV, os.path.abspath(__file__), '--proverka', ts, tk] + PARAM_ARGV, capture_output=True, timeout=1000, cwd=KOREN,
                        env=dict(os.environ, PYTHONIOENCODING='utf-8'))
     vyvod = r.stdout.decode('utf-8', 'replace') + r.stderr.decode('utf-8', 'replace')[-3000:]
-    io.open(os.path.join(DROP, 'fixQ-proverka%s-%s.txt' % (metka, time.strftime('%Y%m%d-%H%M%S'))), 'w', encoding='utf-8').write(vyvod)
+    io.open(os.path.join(DROP, '%s-proverka%s-%s.txt' % (PRE, metka, time.strftime('%Y%m%d-%H%M%S'))), 'w', encoding='utf-8').write(vyvod)
     for t in (ts, tk):
         try:
             os.remove(t)
@@ -673,7 +701,7 @@ if '--vnutri' in sys.argv:
     import zapusk  # noqa: F401  – .env в окружение
     import logging
     logging.disable(logging.CRITICAL)
-    BEKAP = os.path.join(KOREN, '_bekap', 'fixQ-' + VREMYA)
+    BEKAP = os.path.join(KOREN, '_bekap', PRE + '-' + VREMYA)
     os.makedirs(BEKAP, exist_ok=True)
     if '--tolko-proverka' in sys.argv:
         print(zapustit_proverku(BEKAP)[-5500:])
@@ -705,7 +733,7 @@ if '--vnutri' in sys.argv:
         raise SystemExit('нужен --suhoy, --primenit или --tolko-proverka')
     assert os.path.normcase(os.environ.get('CENTRIFUGAL_DB', '')) == os.path.normcase(KAT)
     assert os.path.normcase(os.environ.get('CENTRO_SALES_DB', '')) == os.path.normcase(SALES)
-    zamok_vzyat('fixQ (замена 330 не покупателей Meyer: архив, заливка, вердикты, метки, балл)')
+    zamok_vzyat('%s (замена %d компаний панели Meyer: архив, заливка, вердикты, метки, балл)' % (PRE, len(plan['ubrat'])))
     try:
         kopiya(KAT, os.path.join(BEKAP, 'meyer_baza1.db'))
         kopiya(SALES, os.path.join(BEKAP, 'centro_sales_meyer1.db'))

@@ -24,6 +24,13 @@ fix/P/fixP-ubrat.json.
 составам (оставшиеся + новые) попарно внутри группы meyer1–4 и группы meyer5–9: ступени 800/600/400/200, «ЛПР с
 мобильным или Битрикс», пищевка, Беларусь, «неясно» по вердикту, пороги выручки (-> медиана), средний балл,
 домашний регион поровну; сначала не хуже текущего перекоса.
+
+fixT (14.10): тот же конвейер для другого списка на удаление и своей метки базы – параметры окружением (FIXQ_UBRAT,
+FIXQ_BAZA, FIXQ_BAZA_OPIS, FIXQ_DATA, FIXQ_GRUPPA, FIXQ_VERDIKT_VSEM, FIXQ_ASSIGNED_BY; по умолчанию – как в прогоне
+fixQ 13.10), обёртка `fixT_plan.py`. Новое правило отбора (владелец 14.10 про «Meyer: клиент» / «Meyer: успешное
+привлечение» – «таких не надо в панель»): у кандидата нет НИ активной, НИ успешной сделки Meyer (любая воронка
+MEYER-*; ИНН сделки, ИНН в тексте, УНП – как fixS_metki), плюс вторая сверка – метка fixS_metki на копии.
+Проваленные сделки Meyer – можно («Meyer провалено» – хорошие).
 """
 import collections
 import csv
@@ -60,10 +67,18 @@ import fixE1_regiony_segmenty as E1  # noqa: E402
 import fixS_ball as E2  # noqa: E402
 
 T0 = time.time()
-DATA = '13.10.2026'
-BAZA = 'База 7 (замена 13.10)'
-BAZA_OPIS = ('MEYER-7: замена 13.10 вместо компаний, признанных не покупателями Meyer; '
-             'каждая проверена оценщиками: покупатель (сортировка / рентген)')
+DATA = os.environ.get('FIXQ_DATA') or '13.10.2026'
+BAZA = os.environ.get('FIXQ_BAZA') or 'База 7 (замена 13.10)'
+BAZA_OPIS = os.environ.get('FIXQ_BAZA_OPIS') or ('MEYER-7: замена 13.10 вместо компаний, признанных не покупателями Meyer; '
+                                                 'каждая проверена оценщиками: покупатель (сортировка / рентген)')
+UBRAT_PUT = os.environ.get('FIXQ_UBRAT') or os.path.join(M.SCR, 'fix', 'P', 'fixP-ubrat.json')   # fixT: свой список
+GRUPPA_PRE = os.environ.get('FIXQ_GRUPPA') or 'gQ-'           # id новой группы холдинга
+VERDIKT_VSEM = (os.environ.get('FIXQ_VERDIKT_VSEM') or '1') == '1'   # fixQ – вердикт всем 1 680; fixT – только новым
+# fixT: «не хуже текущего разброса» буквально – без бесплатного допуска ±1 (±2 балла), лёгкий штраф до перекоса СЕЙЧАС,
+# тяжёлый – сверх него; полоса медианы – не шире текущего разброса
+STROGO = (os.environ.get('FIXQ_STROGO') or '0') == '1'
+ASSIGNED_BY = os.environ.get('FIXQ_ASSIGNED_BY') or (
+    'База 7 (замена 13.10, fixQ): вместо не покупателей Meyer – столько же, холдинги и домашние регионы')
 PRODAVCY = ['meyer1', 'meyer2', 'meyer3', 'meyer4', 'meyer5', 'meyer6', 'meyer7', 'meyer8', 'meyer9']
 GRUPPY = [['meyer1', 'meyer2', 'meyer3', 'meyer4'], ['meyer5', 'meyer6', 'meyer7', 'meyer8', 'meyer9']]
 RAZMER = {p: (270 if p in GRUPPY[0] else 120) for p in PRODAVCY}
@@ -125,7 +140,7 @@ for i, z in CHQ.items():
 HOLD = zagr_json(os.path.join(WK, 'fixD-holdingi.json'))
 SVP = {x['inn']: x for x in zagr_json(os.path.join(M.SCR, 'fix', 'P', 'svodka.json'))}
 SK = zagr_json(os.path.join(M.SCR, 'fix', 'P2', 'svodka_kand.json'))
-UBR = zagr_json(os.path.join(M.SCR, 'fix', 'P', 'fixP-ubrat.json'))
+UBR = zagr_json(UBRAT_PUT)
 print('данные: кандидатов-покупателей %d, dadata %d, РБ %d, checko %d (новых %d), вердиктов панели %d' % (
     sum(1 for v in SK.values() if v['verdikt_norm'] == 'покупатель'), len(DD), len(BY), len(CH), len(CHQ), len(SVP)))
 pul, m, k3, dop = M.zagruzit()
@@ -135,7 +150,10 @@ print('сборка прочитана (%.0f с)' % (time.time() - T0))
 # ---------------------------------------------------------------- активные сделки Meyer (для меток и итоговой проверки)
 AKT_MEYER = set()
 AKT_UNP = collections.defaultdict(list)
+# fixT (14.10): и УСПЕШНЫЕ сделки Meyer (любая воронка MEYER-*) – владелец: «таких не надо в панель»; сверка как
+# fixS_metki (ИНН сделки, ИНН в тексте, УНП) – fixK_m7.uspeshnye_meyer. Проваленные – можно.
 MEYER_CSV = os.path.join(Q, 'bitrix', 'meyer_all.csv')
+USP_MEYER = M.uspeshnye_meyer(MEYER_CSV)
 for r in csv.DictReader(io.open(MEYER_CSV, encoding='utf-8-sig', newline=''), delimiter=';'):
     d9 = re.sub(r'\D', '', r.get('INN') or '')
     d_ = ('0' + d9) if len(d9) in (9, 11) else d9
@@ -291,6 +309,8 @@ for inn in sorted(K):
         pr.append('активная сделка Meyer (Беларусь, по УНП): ' + AKT_UNP[inn][0])
     if inn in AKT_MEYER:
         pr.append('активная сделка Meyer (ИНН в сделке)')
+    if USP_MEYER.get(inn):      # fixT 14.10: не только активные, но и успешные
+        pr.append('успешная сделка Meyer: ' + USP_MEYER[inn][0])
     pl_ = M.izdeliya_iz_pervichnoy(c)
     if pl_:
         pr.append(pl_)
@@ -605,6 +625,10 @@ print('«до»: формула fixS на db0 против базы продаж
 out_a = vstavit(SIMA, godnye)
 print('копия «все годные»: fixS_metki: %s' % ' | '.join(x for x in out_a.splitlines() if 'ВСЕГО' in x or 'активных' in x)[:400])
 PRED, _ = ocenit(SIMA, sorted(panel) + godnye, set(godnye))
+for i in godnye:        # fixT 14.10: вторая сверка – метка fixS_metki на копии (успешная сделка Meyer)
+    if (PRED[i]['bx_kolonki'] or {}).get('bitrix_meyer_uspeshno'):
+        otkaz[i] = ['успешная сделка Meyer (метка fixS_metki на копии): %s' % (PRED[i]['bx_kolonki'].get('bitrix_metki') or '')]
+godnye = [i for i in godnye if i not in otkaz]
 print('предварительная ступень годных (%d): %s; поднято Битриксом %d (%.0f с)' % (
     len(godnye), dict(collections.Counter(E2.STUPEN[PRED[i]['tier']] for i in godnye)), sum(PRED[i]['bx_podnyal'] for i in godnye),
     time.time() - T0))
@@ -865,15 +889,18 @@ def reshit(vremya=600, mediana=None):
             if GR_METRIKI.get(kl, g) != g:
                 continue
             koridory.append((kl, g, chl, {u: sum(f(PRED[i]) for i in edinicy[u]['novye']) for u in U},
-                             {p: sum(f(PRED[i]) for i in baza[p]) for p in PRODAVCY}, 1.0, max(0, DO_RASBROS[kl][g] - 1),
+                             {p: sum(f(PRED[i]) for i in baza[p]) for p in PRODAVCY}, 0.0 if STROGO else 1.0,
+                             DO_RASBROS[kl][g] if STROGO else max(0, DO_RASBROS[kl][g] - 1),
                              L_LEGKO['st' if kl in STUPENI else 'pr']))
     for g, chl in enumerate(GRUPPY):
         koridory.append(('score', g, chl, {u: sum(PRED[i]['score'] for i in edinicy[u]['novye']) for u in U},
-                         {p: sum(PRED[i]['score'] for i in baza[p]) for p in PRODAVCY}, 2.0 * RAZMER[chl[0]],
-                         max(0.0, DO_RASBROS['score'][g] - 2.0) * RAZMER[chl[0]], L_LEGKO['ball'] / RAZMER[chl[0]]))
+                         {p: sum(PRED[i]['score'] for i in baza[p]) for p in PRODAVCY}, 0.0 if STROGO else 2.0 * RAZMER[chl[0]],
+                         (DO_RASBROS['score'][g] if STROGO else max(0.0, DO_RASBROS['score'][g] - 2.0)) * RAZMER[chl[0]],
+                         L_LEGKO['ball'] / RAZMER[chl[0]]))
     for (reg, g), (kk3, w0) in DO_REG.items():
         koridory.append(('reg:' + reg, g, kk3, {u: sum(1 for i in edinicy[u]['novye'] if region[i] == reg) for u in U},
-                         {p: sum(1 for i in baza[p] if region[i] == reg) for p in PRODAVCY}, 1.0, max(0, w0 - 1), L_LEGKO['reg']))
+                         {p: sum(1 for i in baza[p] if region[i] == reg) for p in PRODAVCY}, 0.0 if STROGO else 1.0,
+                         w0 if STROGO else max(0, w0 - 1), L_LEGKO['reg']))
     ne = 2 * len(koridory) + (4 if mediana else 0)
     n = nx + ne
     c = np.zeros(n)
@@ -952,7 +979,7 @@ for g, chl in enumerate(GRUPPY):
               if not PRED[i]['rb'] and PRED[i]['vyr'] is not None]
         meds.append(E2.mediana(v))
     centr = sorted(meds)[len(meds) // 2]
-    shir = max(20e6, 0.95 * DO_RASBROS_MED[g])
+    shir = max(2e6, 0.95 * DO_RASBROS_MED[g]) if STROGO else max(20e6, 0.95 * DO_RASBROS_MED[g])
     MEDIANA[g] = (centr - shir / 2, centr + shir / 2)
 print('медиана: проход 1 по менеджерам -> полоса %s' % {g: '%.0f–%.0f млн' % (a / 1e6, b / 1e6) for g, (a, b) in MEDIANA.items()})
 res, luchshiy = None, None
@@ -1051,9 +1078,9 @@ def tablica(raspr, dannye, zagolovok):
 
 
 t_do, ch_do = tablica(vlad_vse, DO, 'ДО (панель сейчас, 1 680; формула fixS)')
-t_po, ch_po = tablica(POSLE_RASPR, POSLE, 'ПОСЛЕ (1 350 оставшихся + %d новых; формула fixS на итоговой копии)' % len(vybor))
+t_po, ch_po = tablica(POSLE_RASPR, POSLE, 'ПОСЛЕ (%d оставшихся + %d новых; формула fixS на итоговой копии)' % (len(panel), len(vybor)))
 t_nov, ch_nov = tablica(prodavec, POSLE, 'ТОЛЬКО НОВЫЕ (%d)' % len(vybor))
-t_ub, ch_ub = tablica({i: u['prodavec'] for i, u in UBRAT.items()}, DO, 'УБИРАЕМЫЕ (330, как сейчас)')
+t_ub, ch_ub = tablica({i: u['prodavec'] for i, u in UBRAT.items()}, DO, 'УБИРАЕМЫЕ (%d, как сейчас)' % len(UBRAT))
 PO_RASBROS = {kl: rasbros(POSLE_RASPR, POSLE, f) for kl, _, f in METRIKI + TOLKO_TABLICA}
 PO_RASBROS['score'] = rasbros_sr(POSLE_RASPR, POSLE)
 DO_RASBROS['mediana'] = DO_RASBROS_MED
@@ -1090,7 +1117,7 @@ for u, e in edinicy.items():
         if g_ and not g_.startswith('snyato'):
             gr_panel = g_
             break
-    gid = gr_panel or ('gQ-' + min(e['novye']))
+    gid = gr_panel or (GRUPPA_PRE + min(e['novye']))
     nazv_g = None
     if gr_panel:
         nazv_g = next((panel[j].get('holding') for j in e['panel'] if panel[j].get('holding_gruppa') == gr_panel and panel[j].get('holding')), None)
@@ -1126,14 +1153,15 @@ for x in kontakty:
     for kk5 in [kk5 for kk5 in x if kk5.startswith('_')]:
         del x[kk5]
 verdikty = {}
-for i in panel_vse:          # и убираемые – на случай, если по ней появятся действия и её оставят
+for i in (panel_vse if VERDIKT_VSEM else ()):   # и убираемые – на случай, если по ней появятся действия и её оставят
     v = SVP.get(i)
     if v:
         verdikty[i] = verdikt_polya(dict(v, verdikt_norm=v.get('verdikt')))
 for i in vybor:
     verdikty[i] = verdikt_polya(SK[i])
 plan = {'vremya': time.strftime('%Y%m%d-%H%M%S'), 'cel': CEL, 'ubrat': UBRAT, 'prodavcy': prodavec, 'dom': DOM, 'fio': FIO,
-        'baza': BAZA, 'baza_opisanie': BAZA_OPIS,
+        'baza': BAZA, 'baza_opisanie': BAZA_OPIS, 'data': DATA, 'assigned_by': ASSIGNED_BY,
+        'verdikt_tolko_novym': not VERDIKT_VSEM, 'uspeshnye_meyer_inn': sorted(USP_MEYER),
         'kompanii': list(kompanii.values()), 'kontakty': kontakty, 'lyudi': lyudi, 'istochniki': istochniki,
         'holding_chlen': holding_chlen, 'novye_kolonki': NOVYE_KOLONKI_COMPANY, 'verdikty': verdikty,
         'stupeni': {i: {'tier': POSLE[i]['tier'], 'score': POSLE[i]['score'], 'ball': POSLE[i]['ball']} for i in vybor},
