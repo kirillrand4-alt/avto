@@ -325,6 +325,10 @@ R21_STARO = '''        for zn, s in sorted(sch.items(), key=lambda x: (-x[1]["ot
 R21_NOVO = '''        for zn, s in sorted(sch.items(), key=((lambda x: _fixV_segm_klyuch(x[0])) if pole == "segment"   # fixV
                                               else (lambda x: (-x[1]["otmecheno"], x[0])))):
 '''
+R22_STARO = '''        with sales.connect() as conn:
+            for sql in ("SELECT MIN(created_at) FROM activity_log",'''
+R22_NOVO = '''        with sales.connect(bez_teni=True) as conn:   # fixV: «всё время» – с первого дня панели, как у админа
+            for sql in ("SELECT MIN(created_at) FROM activity_log",'''
 P1_STARO = '''    vse_stroki = [z for z in po.values() if z["aktiven"]]
 '''
 P1_NOVO = P1_STARO + '''    from app.services import centro_sales as _cs_fixV     # fixV: у руководителя – только его команда
@@ -374,6 +378,7 @@ PRAVKI = [
     ('R', 'сегменты по номеру (доп. ОКВЭД)', R19_STARO, R19_NOVO, 'fixV'),
     ('R', 'сегменты по номеру (счётчики)', R20_STARO, R20_NOVO, 'fixV'),
     ('R', 'сегменты по номеру (статистика)', R21_STARO, R21_NOVO, 'fixV'),
+    ('R', '«всё время» с первого дня панели', R22_STARO, R22_NOVO, 'fixV'),
     ('P', 'блок дня: строки команды', P1_STARO, P1_NOVO, 'fixV'),
     ('H', 'шапка: ссылка Статистика', H1_STARO, H1_NOVO, 'user.rop'),
     ('H', 'шапка: подпись руководителя', H2_STARO, H2_NOVO, 'user.rop'),
@@ -979,7 +984,8 @@ def proverit(koren_app, papka, metka, vyvod, s_do=True):
         vyvod.append('----- снимок «после» и проверки руководителей (%s)\n' % koren_app + v1)
         good = good and g1
         podnovit_zamok()
-        if good and s_do:
+        if g1 is not None and s_do and os.path.exists(os.path.join(papka, 'fixV-snimok-do-%s.json' % metka)) \
+                and os.path.exists(os.path.join(papka, 'fixV-snimok-posle-%s.json' % metka)):
             raz = sravnit(papka, 'do-' + metka, 'posle-' + metka)
             vyvod.append('----- админ и 9 продавцов «до/после»: РАСХОЖДЕНИЙ %d %s' % (len(raz), raz))
             good = good and not raz
