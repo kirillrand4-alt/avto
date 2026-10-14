@@ -53,6 +53,9 @@ for р in c.execute("SELECT id, event_ts, mailbox_id, detail_json FROM events WH
         continue
     if МАШИНА.search(от) or re.search(r"(?i)auto|автоответ|out of office|отпуск|недоставл|delivery|уведомлен", тема):
         св["машина/автоответ"] += 1
+        if "--vse" in sys.argv and "id.yandex" not in от:   # фильтр ловит и людей с mail.ru/yandex.ru — показать глазами
+            print("  [маш] #%d %s | от %s | %s | %s" % (р["id"], str(р["event_ts"])[:16], от[:45], тема[:40],
+                  re.sub(r"\s+", " ", str(д.get("snippet") or ""))[:110]))
         continue
     св["ЧЕЛОВЕК БЕЗ ЛИДА"] += 1
     print("#%d %s %s | от %s | %s | %s" % (р["id"], str(р["event_ts"])[:16], р["mailbox_id"], от[:45], тема[:40],
