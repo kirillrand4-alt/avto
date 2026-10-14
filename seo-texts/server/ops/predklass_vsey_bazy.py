@@ -29,7 +29,8 @@ from concurrent.futures import ThreadPoolExecutor
 os.environ.setdefault("PROVIDER_THINKING_FIELD", "omit")
 ЖУРНАЛ = r"C:\sender\_ops\predklass-vsey-bazy.jsonl"
 if "--zapusk" in sys.argv:
-    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"], cwd=r"C:\sender",
+    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"]
+                         + (["--vne-grupp"] if "--vne-grupp" in sys.argv else []), cwd=r"C:\sender",
                          stdout=io.open(r"C:\sender\_ops\predklass-vsey-bazy.log", "w"), stderr=subprocess.STDOUT,
                          creationflags=0x00000008 | 0x00000200)
     time.sleep(8)
@@ -74,6 +75,20 @@ for inn, имя, ex in c.execute("SELECT inn, company_name, extra_json FROM reci
         continue
     видели.add(inn)
     фирмы.append((inn, имя or ""))
+# ВНЕ ГРУПП (владелец 14.10: «да» на предкласс по базе с паспортами — под
+# рассылку КЦ). Все ИНН с адресом (recipients + обогащение), у которых ещё нет
+# вердикта направления; без паспорта отсеются ниже, как и в основном режиме.
+if "--vne-grupp" in sys.argv:
+    _e = sqlite3.connect(r"C:\sender\enrich.db", timeout=30)
+    _есть_верд = {str(r[0]) for r in _e.execute("SELECT inn FROM companies WHERE verdikt_napr IS NOT NULL")}
+    _имя = {str(r[0]): r[1] for r in _e.execute("SELECT inn, name FROM companies")}
+    _инн = {str(r[0]) for r in c.execute("SELECT DISTINCT inn FROM recipients WHERE inn IS NOT NULL AND email LIKE '%@%'")}
+    _инн |= {str(r[0]) for r in _e.execute("SELECT DISTINCT inn FROM emails WHERE email LIKE '%@%'")}
+    for inn in sorted(_инн):
+        inn = "".join(ч for ч in inn if ч.isdigit())
+        if inn and inn not in видели and inn not in готово and inn not in _есть_верд:
+            видели.add(inn)
+            фирмы.append((inn, _имя.get(inn) or ""))
 print("фирм к решению: %d (уже решено %d)" % (len(фирмы), len(готово)))
 if "--rabota" not in sys.argv:
     print("=== ПРЕДКЛАСС ВСЕЙ БАЗЫ: СУХОЙ ПРОГОН ===")
@@ -128,7 +143,7 @@ def пачка(кусок):
         if инн and н:
             записи.append({"inn": инн, "napr": н, "istochnik": "предкласс",
                            "rusprom": "не покупатель" if н == "никуда" else None,
-                           "pochemu": "предклассификатор по паспорту (вся база 13.10)"})
+                           "pochemu": "предклассификатор по паспорту (%s)" % ("вне групп 14.10" if "--vne-grupp" in sys.argv else "вся база 13.10")})
     with замок:
         вб.obnovit(записи)
         with io.open(ЖУРНАЛ, "a", encoding="utf-8") as ж:
@@ -139,6 +154,6 @@ def пачка(кусок):
 
 
 куски = [с_паспортом[i:i + 12] for i in range(0, len(с_паспортом), 12)]
-with ThreadPoolExecutor(3) as пул:
+with ThreadPoolExecutor(6 if "--vne-grupp" in sys.argv else 3) as пул:
     list(пул.map(пачка, куски))
 print("готово: пачек %d" % len(куски))
