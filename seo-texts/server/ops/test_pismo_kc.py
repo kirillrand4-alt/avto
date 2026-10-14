@@ -4,7 +4,7 @@
 _ops/test-pismo-kc.json. Кандидаты: вердикт «кц», нет активной сделки КЦ,
 самый подробный паспорт и выручка от 100 млн.
 
-    test_pismo_kc.py [n=1]
+    test_pismo_kc.py [n=1] [skip=0]
 """
 import io
 import json
@@ -23,7 +23,9 @@ from sender.config import Config  # noqa: E402
 from sender.sdelki_napr import blok  # noqa: E402
 from sender.store import Store  # noqa: E402
 
-N = int(dict(а.split("=", 1) for а in sys.argv[1:] if "=" in а).get("n", "1"))
+_А = dict(а.split("=", 1) for а in sys.argv[1:] if "=" in а)
+N = int(_А.get("n", "1"))
+SKIP = int(_А.get("skip", "0"))
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 q = build_ai_quota(store, cfg)
@@ -73,7 +75,7 @@ for x in канд:
         были.add(о)
         выбор.append(x)
 итог = []
-for поля, в, rid, inn in выбор[:N]:
+for поля, в, rid, inn in выбор[SKIP:SKIP + N]:
     rec = store.get_recipient(rid)
     req = q._request(rec)
     req["target_division"] = "kc"
@@ -82,8 +84,12 @@ for поля, в, rid, inn in выбор[:N]:
         q._add_ideas_generic([req])
     except Exception as ex:  # noqa: BLE001
         print("идеи не раздались:", str(ex)[:80])
-    res = AiLetterGen(caller, facts_by_division={"kc": load_facts(division="kc")}, best_of=1,
-                      checker=caller).generate([req])
+    try:
+        res = AiLetterGen(caller, facts_by_division={"kc": load_facts(division="kc")}, best_of=1,
+                          checker=caller).generate([req])
+    except Exception as ex:  # noqa: BLE001
+        print("\n=== %s | сбой генерации: %s" % (rec.company_name, str(ex)[:120]))
+        continue
     L = res.ok.get(0)
     брак = res.rejected.get(0)
     черн = res.drafts.get(0) if hasattr(res, "drafts") else None
