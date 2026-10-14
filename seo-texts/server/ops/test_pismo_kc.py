@@ -64,8 +64,16 @@ def caller(prompt, *a, **k):
     return "".join(b.text for b in m.content if getattr(b, "type", "") == "text")
 
 
+# разные отрасли: лучший кандидат каждой отрасли книги
+сег = {str(i): s_ for i, s_ in c.execute("SELECT inn, segment FROM recipients WHERE extra_json LIKE '%Россия 9000%'")}
+выбор, были = [], set()
+for x in канд:
+    о = сег.get(x[3]) or "?"
+    if о not in были:
+        были.add(о)
+        выбор.append(x)
 итог = []
-for поля, в, rid, inn in канд[:N]:
+for поля, в, rid, inn in выбор[:N]:
     rec = store.get_recipient(rid)
     req = q._request(rec)
     req["target_division"] = "kc"
