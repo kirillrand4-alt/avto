@@ -34,13 +34,55 @@ os.environ.setdefault("PROVIDER_THINKING_FIELD", "omit")
 if "--hod" in sys.argv:
     з = [json.loads(с) for с in io.open(ЖУР, encoding="utf-8")] if os.path.exists(ЖУР) else []
     print("проверено: %d; ответы: %s" % (len(з), dict(Counter(x["meyer"] for x in з))))
-    for x in [x for x in з if x["meyer"] == "да"][:25]:
+    for x in [x for x in з if x["meyer"] == "да"][-int(os.environ.get("HOD_N", "25")):]:
         print("   + %s %s — %s" % (x["inn"], x.get("имя", "")[:30], x.get("почему", "")[:80]))
     try:
         print("лог: " + io.open(ЛОГ, encoding="utf-8", errors="replace").read()[-300:])
     except Exception:  # noqa: BLE001
         pass
     print("=== MEYER ИЗ КЦ: ХОД ===")
+    sys.exit(0)
+
+ЩЕБЕНЬ = re.compile(r"щеб|песок|песк|пгс|гравий|гравия|асфальт|бутов|бетон|строительн\w* камн|фракци|инертн|дробильно|гранит|металлолом|лом[аы]? |скрап|дозатор", re.I)
+
+if "--stop" in sys.argv or "--otkat-shcheben" in sys.argv:
+    у = subprocess.run(["powershell", "-NoProfile", "-Command",
+                        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*meyer_iz_kc.py*--rabota*' }"
+                        " | ForEach-Object { Stop-Process -Id $_.ProcessId -Force; $_.ProcessId }"],
+                       capture_output=True, text=True, timeout=60).stdout.split()
+    print("остановлено: %s" % (у or "не шло"))
+if "--otkat-shcheben" in sys.argv:
+    # Владелец 14.10: «щебень не нужен». «да» по строительному нерудному
+    # откатываем: вердикт обратно «кц», метку обзвона — какой была; в журнале
+    # строка становится «нет» (повторно не спрашиваем).
+    import sqlite3 as _sq
+    ew = _sq.connect(r"C:\sender\enrich.db", timeout=60)
+    o = _sq.connect(r"C:\sender\obzvon-index.db", timeout=60)
+    стр = [json.loads(с) for с in io.open(ЖУР, encoding="utf-8")]
+    n = 0
+    for з in стр:
+        if з["meyer"] == "да" and ЩЕБЕНЬ.search(з.get("почему", "") + " " + з.get("что", "")) \
+                and not re.search(r"кварц|стекл|каолин|шпат|доломит|сол[ьи]|мрамор|тко|вторсыр", з.get("почему", ""), re.I):
+            ew.execute("UPDATE companies SET verdikt_napr='кц', verdikt_istochnik='предкласс', "
+                       "verdikt_pochemu='откат 14.10: строительный щебень/песок не Meyer' "
+                       "WHERE inn=? AND verdikt_istochnik='перепроверка meyer 14.10'", (з["inn"],))
+            if "было_метка" in з:
+                o.execute("UPDATE obzvon SET division=? WHERE inn=?", (з["было_метка"], з["inn"]))
+            з["meyer"], з["откат"] = "нет", "щебень"
+            n += 1
+    ew.commit()
+    o.commit()
+    with io.open(ЖУР + ".tmp", "w", encoding="utf-8") as ж:
+        for з in стр:
+            ж.write(json.dumps(з, ensure_ascii=False) + "\n")
+        ж.flush()
+        os.fsync(ж.fileno())
+    os.replace(ЖУР + ".tmp", ЖУР)
+    print("откачено щебня/песка: %d из %d «да»" % (n, n + sum(1 for з in стр if з["meyer"] == "да")))
+    print("=== MEYER ИЗ КЦ: ОТКАТ ===")
+    sys.exit(0)
+if "--stop" in sys.argv:
+    print("=== MEYER ИЗ КЦ: СТОП ===")
     sys.exit(0)
 
 if "--zapusk" in sys.argv:
@@ -89,9 +131,14 @@ import gen_provider  # noqa: E402
   землями от тысячи гектаров; семеноводство;
 - орехи, сухофрукты, ягоды, овощи, кофе, специи, чай;
 - пластик: переработка во флексу/дроблёнку/гранулу, производители гранулы, компаундов,
-  мастербатчей, ПЭТ-преформ на вторичных хлопьях;
-- стеклобой; нерудные минералы: кварц, известняк, соль, каолин, полевой шпат, мрамор; щепа,
-  пеллеты; сортировка ТКО и вторсырья.
+  мастербатчей, ПЭТ-преформ на вторичных хлопьях; производители изделий (плёнка, трубы, тара,
+  профиль, литьё), которые берут вторичное сырьё или дробят свой брак и возвращают дроблёнку в
+  производство - там сортируют по цвету и убирают посторонние включения;
+- стеклобой; нерудные минералы как СЫРЬЁ для дальнейшей переработки: кварц, кварцевый песок
+  для стекла, известняк для извести и химии, доломит, соль, каолин, полевой шпат, мрамор;
+  щепа, пеллеты; сортировка ТКО и вторсырья.
+- СТРОИТЕЛЬНЫЙ щебень, песок, ПГС, гравий, бутовый камень, асфальт и бетон - НЕТ (владелец
+  14.10: «щебень не нужен»), даже если карьер известняковый, а щебень сортируют по фракциям.
 РЕНТГЕН (контроль посторонних включений в готовом упакованном пищевом продукте): мясо и
 птица, молочка, кондитерка, снеки, хлеб, готовая еда, консервы, замороженные полуфабрикаты.
 
