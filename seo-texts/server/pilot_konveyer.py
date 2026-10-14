@@ -19,6 +19,12 @@ DIR = r'C:\sender\server'
 НАБОР = os.environ.get('POISK_NABOR', 'pilot')  # для полного прогона — свой набор (meyer7 и т.п.)
 СТАТУС = os.path.join(DIR, НАБОР + '-konveyer.json')
 # 09.10: + сайты по названию для компаний из каталогов (после отбора) и проверка доп. ОКВЭД по сайту (после обхода)
+# 14.10, база КЦ: KC_CEL=kc — содержательное из kc_cel; сайт по названию (pilot_sayty_dobor) у КЦ не ищем (владелец:
+# «не пытайся искать сайт по названию компании, исходим из поисковых запросов»)
+ЦЕЛЬ = os.environ.get('KC_CEL') or 'meyer'
+if ЦЕЛЬ == 'kc':  # отбор: без добора компаний реестра и без поиска сайта по названию
+    os.environ.setdefault('PILOT_LIMIT_SAYTA', '0')
+    os.environ.setdefault('PILOT_LIMIT_REESTR', '0')
 ВСЕ_ШАГИ = ['poisk_razbor.py', 'pilot_otbor.py', 'pilot_sayty_dobor.py', 'kc_kontakty.py', 'kc_dorazmetka.py', 'pilot_dop_proverka.py',
             'pilot_pasport.py', 'kc_audit.py', 'kc_audit2.py', 'kc_sayt_proverka.py', 'kc_oproverzhenie.py', 'kc_glubokiy_vhod.py',
             'kc_agent_glubokiy.py', 'kc_agent_glubokiy.py:хвост', 'kc_agent_pereproverka.py']
@@ -87,7 +93,7 @@ def main():
         статус(o)
         time.sleep(60)
     o.pop('ждём', None)
-    env = dict(os.environ, KC_NABOR=НАБОР, POISK_NABOR=НАБОР, KC_CEL='meyer', POISK_NE_ZHDAT='1',
+    env = dict(os.environ, KC_NABOR=НАБОР, POISK_NABOR=НАБОР, KC_CEL=ЦЕЛЬ, POISK_NE_ZHDAT='1',
                POISK_CHECKO_MINUT='40', KC_AGENT_OT=os.environ.get('KC_AGENT_OT', '500e6'),
                KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT=os.environ.get('KC_ZAKUPKI_OT', '1e9'),
                KC_POTOKOV_SHAGA=os.environ.get('KC_POTOKOV_SHAGA', '24'), KC_AGENT_POTOKOV=os.environ.get('KC_AGENT_POTOKOV', '30'),
@@ -102,6 +108,8 @@ def main():
         if модель == 'нет':
             continue
         файл, _, режим = шаг.partition(':')
+        if ЦЕЛЬ == 'kc' and файл == 'pilot_sayty_dobor.py':
+            continue
         env_шага = dict(env, PROVIDER_MODEL=модель)
         if режим == 'хвост':
             env_шага['KC_AGENT_OT'] = os.environ.get('KC_AGENT_OT_HVOST', '120e6')  # сделанных Sol агент пропустит сам
@@ -169,7 +177,7 @@ class Волны:
     def __init__(self):
         self.o = {'начало': time.strftime('%Y-%m-%d %H:%M'), 'режим': 'волны', 'шаги': {}, 'фон': {}, 'волна': 0}
         self.фон = {}
-        self.env = dict(os.environ, KC_NABOR=НАБОР, POISK_NABOR=НАБОР, KC_CEL='meyer', POISK_NE_ZHDAT='1',
+        self.env = dict(os.environ, KC_NABOR=НАБОР, POISK_NABOR=НАБОР, KC_CEL=ЦЕЛЬ, POISK_NE_ZHDAT='1',
                         POISK_CHECKO_MINUT='40', KC_AGENT_OT=os.environ.get('KC_AGENT_OT', '500e6'),
                         KC_BEZ_CHECKO='1', KC_ZAKUPKI_OT=os.environ.get('KC_ZAKUPKI_OT', '1e9'),
                         KC_POTOKOV_SHAGA=os.environ.get('KC_POTOKOV_SHAGA', '24'),
@@ -199,6 +207,8 @@ class Волны:
 
     def пуск(self, шаг, фоном=False):
         """-> код возврата (блокирующий) | 'фон' | 'занят'."""
+        if ЦЕЛЬ == 'kc' and шаг == 'pilot_sayty_dobor.py':
+            return 0
         if self.занят(шаг):
             self.o['шаги'].setdefault(шаг, {})['пропуск'] = 'уже идёт %s' % time.strftime('%H:%M')
             self.статус()

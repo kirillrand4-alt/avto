@@ -28,6 +28,8 @@ import re
 import sys
 
 DIR = os.path.dirname(os.path.abspath(__file__))
+# 14.10, база КЦ: каталог запросов набора (kc-zaprosy — запросы этапа 0 КЦ); рейтинга отдачи у КЦ нет — всем 0,5
+КАТ = os.environ.get('POISK_KATALOG', 'meyer-zaprosy')
 НЕПИЩ = {'провайдер-%02d' % i for i in range(16, 25)} | {'сессия-2'}
 КОСВЕННЫЕ = ('тендеры', 'вакансии_признак', 'кейсы_поставщиков', 'реестры', 'выставки_и_союзы', 'операторы_поиска',
              'инвестпроекты')
@@ -41,7 +43,7 @@ def полный():
     на 3 региона. Яндекс — 3 страницы у шаблонов (у «намерения» — 1), Google — 1 страница; плюс замеры: Яндекс стр. 4–5
     на 100 шаблонах «тип × регион», Google стр. 2 на 300 шаблонах. Запросы про рыбу выкинуты."""
     random.seed(18)
-    к = [з for з in json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'katalog.json'), encoding='utf-8'))['записи']
+    к = [з for з in json.load(open(os.path.join(DIR, КАТ, 'katalog.json'), encoding='utf-8'))['записи']
          if з['это_запрос'] and not РЫБА.search(з['запрос'])]
     РР = ['Краснодарский край', 'Свердловская область', 'Минская область']
     КОД = {'Краснодарский край': 'K', 'Свердловская область': 'S', 'Минская область': 'M', '': 'X'}
@@ -78,7 +80,7 @@ def вся_страна(набор, стр_я=3, стр_g=1):
     from poisk_zaprosy import РЕГИОНЫ  # 87 регионов РФ
     РБ = ['Минская область', 'Брестская область', 'Витебская область', 'Гомельская область', 'Гродненская область',
           'Могилёвская область', 'Минск']
-    к = [з for з in json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'katalog.json'), encoding='utf-8'))['записи']
+    к = [з for з in json.load(open(os.path.join(DIR, КАТ, 'katalog.json'), encoding='utf-8'))['записи']
          if з['это_запрос'] and not РЫБА.search(з['запрос'])]
     задачи = []
     for з in к:
@@ -117,9 +119,10 @@ def экономный(набор, шаблонов=600, google_шаблонов
     from poisk_zaprosy import РЕГИОНЫ
     РБ = ['Минская область', 'Брестская область', 'Витебская область', 'Гомельская область', 'Гродненская область',
           'Могилёвская область', 'Минск']
-    ранг = json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'pilot-rang-vse.json'), encoding='utf-8'))
+    п_р = os.path.join(DIR, КАТ, 'pilot-rang-vse.json')
+    ранг = json.load(open(п_р, encoding='utf-8')) if os.path.exists(п_р) else []
     отдача = {r[0]: r[1] / max(1, r[2]) for r in ранг}
-    к = [з for з in json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'katalog.json'), encoding='utf-8'))['записи']
+    к = [з for з in json.load(open(os.path.join(DIR, КАТ, 'katalog.json'), encoding='utf-8'))['записи']
          if з['это_запрос'] and not РЫБА.search(з['запрос'])]
 
     def ключ(з):
@@ -181,7 +184,7 @@ def проба(набор, задач=1500):
 
 def main():
     random.seed(8)
-    к = [з for з in json.load(open(os.path.join(DIR, 'meyer-zaprosy', 'katalog.json'), encoding='utf-8'))['записи']
+    к = [з for з in json.load(open(os.path.join(DIR, КАТ, 'katalog.json'), encoding='utf-8'))['записи']
          if з['это_запрос']]
 
     def непищ(з):

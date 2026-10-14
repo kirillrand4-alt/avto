@@ -18,6 +18,8 @@ from openpyxl import Workbook, load_workbook
 
 import kc_pochty as KP
 import meyer_lesenka as ML
+if os.environ.get('KC_CEL') == 'kc':  # 14.10, база КЦ: лесенка КЦ (главмех/энергетик → главинженер → снабжение…)
+    import kc_cel as ML  # noqa: F811
 import ploshchadki as PL
 import sayt_po_nazvaniyu as SN
 from kc_xlsx import ГОРЯЧАЯ, лист, отличительные, хост
