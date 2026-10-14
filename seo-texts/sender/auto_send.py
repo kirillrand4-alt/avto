@@ -341,11 +341,29 @@ class AutoSendLoop:
             _пр = str(review.get("reason") or "").lower()
             _копия = ("копия на второй адрес" in _пр
                       or "повтор разрешён" in _пр or "повтор разрешен" in _пр)
-            флаги = self.store.sent_flags(
-                emails=[почта] if почта else None,
-                inns=None if _копия else ([инн] if инн else None)) or {}
-            след = флаги.get(почта) or (
-                {} if _копия else (флаги.get(инн) or {}))
+            # ПОВТОР ОТ MEYER ПО ПРАВИЛУ ВЛАДЕЛЬЦА 13.10 (после письма КЦ, или
+            # новый паспорт и прошло 30 дней; компания не отвечала). Очередь
+            # такое письмо пропускает (confirm._povtor_razreshen), а здесь оно
+            # снималось как «уже писали»: за 14.10 так ушло ~90 одобренных
+            # писем. Решаем тем же правилом по последней отправке на адрес
+            # или компанию; сработало — заслон «уже писали» не применяем.
+            if not _копия:
+                with suppress(Exception):
+                    _посл = self.store.last_contact(email=почта or None,
+                                                    inn=инн or None)
+                    if _посл:
+                        from sender.confirm import ConfirmSend
+                        if ConfirmSend(self.config, self.store)._povtor_razreshen(
+                                почта, _посл):
+                            _копия = None   # повтор разрешён: не проверяем вовсе
+            if _копия is None:
+                след = {}
+            else:
+                флаги = self.store.sent_flags(
+                    emails=[почта] if почта else None,
+                    inns=None if _копия else ([инн] if инн else None)) or {}
+                след = флаги.get(почта) or (
+                    {} if _копия else (флаги.get(инн) or {}))
             if след.get("ever"):
                 self.store.mark_skipped(
                     m.id, "auto_send:уже писали "
