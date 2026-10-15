@@ -62,3 +62,11 @@ print("\n1519: паспорт", dict(п)); print("выручка", dict(в))
 print("ОКВЭД(2 знака): кол-во | годных ранее по этому классу у Meyer")
 for g,v in о.most_common(15): print("  %s %5d | %d/%d" % (g, v, ок_да[g], ок_всего[g]))
 print("ВСЕГО годных у Meyer ранее: %d/%d" % (sum(ок_да.values()), sum(ок_всего.values())))
+
+б = Counter()
+for inn in ост:
+    name, rev, okv = инфо.get(inn) or ("",None,"")
+    if not okv:
+        б["нет компании в enrich" if inn not in инфо else ("выручка есть" if rev else "выручки нет")] += 1
+        б["ИНН 10 знаков (юрлицо)" if len(inn)==10 else "ИНН 12 (ИП)" if len(inn)==12 else "ИНН иной: %d" % len(inn)] += 1
+print("без ОКВЭД:", dict(б))
