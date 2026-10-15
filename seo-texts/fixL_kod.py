@@ -110,13 +110,16 @@ def _fixL_otvetstvennyy(owner: str) -> dict:
             bid = int(m.get("bitrix_id") or 0)
         except (TypeError, ValueError):
             bid = 0
+        fio = str(m.get("fio") or _fio_dlya_shablona(owner))
         if bid:
-            return {"id": bid, "fio": str(m.get("fio") or _fio_dlya_shablona(owner)),
-                    "rezhim": "менеджер компании"}
-        rezhim = "у менеджера %s нет Bitrix ID в настройке – тестовый ответственный" % owner
-    else:
-        rezhim = "тестовый режим: все лиды на одного ответственного"
-    return {"id": int(n.get("test_id") or 7981), "fio": str(n.get("test_fio") or ""), "rezhim": rezhim}
+            return {"id": bid, "fio": fio, "rezhim": "menedzher", "tekst": "%s (Bitrix id %s)" % (fio, bid)}
+        # владелец 15.10: нет ID – понятная ошибка, лид не отправляется (на тестового не подменяем)
+        return {"id": 0, "fio": fio, "rezhim": "net_id",
+                "tekst": "у менеджера %s (%s) нет Bitrix ID в настройке – лид не отправится, сообщите администратору"
+                         % (fio, owner)}
+    tid, tfio = int(n.get("test_id") or 7981), str(n.get("test_fio") or "")
+    return {"id": tid, "fio": tfio, "rezhim": "test",
+            "tekst": "%s (Bitrix id %s) – тестовый режим: все лиды на одного ответственного" % (tfio, tid)}
 
 
 def _fixL_ensure(conn) -> None:
@@ -418,7 +421,7 @@ def fixL_dannye(request: Request, inn: str = "", user=Depends(current_user)):
         "tolko_chtenie": {
             "istochnik": "%s (%s)" % (n.get("source_nazv"), n.get("source_id")),
             "stadiya": "%s (%s)" % (n.get("status_nazv"), n.get("status_id")),
-            "otvetstvennyy": "%s (Bitrix id %s) – %s" % (otv["fio"], otv["id"], otv["rezhim"]),
+            "otvetstvennyy": otv["tekst"],
             "torguyushchaya": "Нет (оба поля «Торгующая компания?»)",
             "menedzher": _fio_dlya_shablona(owner),
         },
@@ -508,6 +511,9 @@ def fixL_sozdat_lid(
         return _fixL_otvet(422, ok=False, oshibka="Выберите группу товара (MEYER)")
     if len(comments) > 20000 or len(comment) > 5000:
         return _fixL_otvet(422, ok=False, oshibka="Слишком длинный комментарий")
+    if not _fixL_otvetstvennyy(owner)["id"]:
+        return _fixL_otvet(422, ok=False, oshibka="Лид не отправлен: %s. «Взял в работу» не сохранён."
+                           % _fixL_otvetstvennyy(owner)["tekst"])
     with _FIXL_ZAMKI_Z:
         zamok = _FIXL_ZAMKI.setdefault(inn, _threading_fixL.Lock())
     if not zamok.acquire(blocking=False):
@@ -1141,6 +1147,22 @@ def test(koren, kat, sales_db, metka, polnyy):
             o = get(login, '/centro/bitrix-lid/dannye', inn=inn)
             return o, (o.json() if o.status_code == 200 else {})
 
+        def novaya(login):
+            est_bl = bool(baza("SELECT 1 FROM sqlite_master WHERE name='bitrix_lid'"))
+            for i in novye.get(login, []):
+                if not baza('SELECT 1 FROM company_state WHERE inn=?', i) and not (
+                        est_bl and baza('SELECT 1 FROM bitrix_lid WHERE inn=?', i)):
+                    return i
+            return ''
+
+        def ozhid(owner):
+            """Ожидаемый ответственный по текущей настройке (test – test_id; menedzher – ID менеджера компании)."""
+            n_ = rcs._fixL_nastroyki()
+            if n_.get('otvetstvennyy') == 'menedzher':
+                return int(((n_.get('menedzhery') or {}).get(owner) or {}).get('bitrix_id') or 0)
+            return int(n_.get('test_id') or 7981)
+        print('      режим ответственного: %s' % rcs._fixL_nastroyki().get('otvetstvennyy'))
+
         # Тульская: предзаполнение (как увидит meyer9) и права
         o, d = polya_formy('meyer9', TULSKAYA)
         ok(o.status_code == 200, 'meyer9: данные окна для %s – %s' % (TULSKAYA, o.status_code))
@@ -1151,8 +1173,9 @@ def test(koren, kat, sales_db, metka, polnyy):
         print('      блоки: %s' % [b['nazv'] for b in d.get('bloki') or []])
         ok(p.get('title', '').endswith('(обзвон Meyer)') and p.get('gruppa') == '11797' and 'inn=%s' % TULSKAYA in p.get('comments', ''),
            'название «… (обзвон Meyer)», группа «Рентгены», ссылка на карточку в комментарии')
-        ok('7981' in (d.get('tolko_chtenie') or {}).get('otvetstvennyy', ''), 'ответственный – 7981 (тестовый режим)')
-        ok(len(d.get('bloki') or []) >= 4 and d.get('lidy') == [], 'блоки справа есть, прежних лидов нет')
+        ok(('Bitrix id %s)' % ozhid('meyer9')) in (d.get('tolko_chtenie') or {}).get('otvetstvennyy', ''),
+           'строка «Ответственный»: %s' % (d.get('tolko_chtenie') or {}).get('otvetstvennyy'))
+        ok(len(d.get('bloki') or []) >= 4, 'блоки справа есть (прежних лидов по %s в базе: %d)' % (TULSKAYA, len(d.get('lidy') or [])))
         # правки владельца 15.10: ФИО/должность/телефон/почта пустые, короткий комментарий, «Контакты» и «Номера»
         ok(all(p.get(k) == '' for k in ('fio', 'phone', 'email')) and not any(k in p for k in ('last_name', 'name', 'second_name', 'post')),
            '«ФИО, должность», телефон, почта при открытии пустые; одно поле «ФИО, должность»')
@@ -1203,60 +1226,59 @@ def test(koren, kat, sales_db, metka, polnyy):
         o = post('meyer9', '/centro/bitrix-lid', forma(d, inn=TULSKAYA, title='  '))
         ok(o.status_code == 422 and len(ZAGL['vyzovy']) == n0, 'пустое название – %s' % o.status_code)
 
-        # успех (meyer9, Тульская – на копии базы; поля, которые уйдут в Битрикс)
-        z_t = next((z for z in d.get('kontakty') or [] if len(z['fio'].split()) == 3), {'fio': 'Иванов Иван Иванович', 'dolzhnost': 'директор'})
+        # успех (meyer9, компания без отметок и лидов – на копии базы; поля, которые уйдут в Битрикс)
+        TT = novaya('meyer9')
+        _, dT = polya_formy('meyer9', TT)
+        pT = dT.get('polya') or {}
+        print('      компания для потока «создать / повтор»: %s' % TT)
+        z_t = next((z for z in dT.get('kontakty') or [] if len(z['fio'].split()) == 3), {'fio': 'Иванов Иван Иванович', 'dolzhnost': 'директор'})
         fio_t = z_t['fio'] + (', ' + z_t['dolzhnost'] if z_t.get('dolzhnost') else '')
-        o = post('meyer9', '/centro/bitrix-lid', forma(d, inn=TULSKAYA, title='ТЕСТ — ' + p.get('title', ''),
+        o = post('meyer9', '/centro/bitrix-lid', forma(dT, inn=TT, title='ТЕСТ — ' + pT.get('title', ''),
                                                        comment='проверка fixL на копии', fio=fio_t, phone='+7 495 000-00-00'))
         j = o.json() if o.headers.get('content-type', '').startswith('application/json') else {}
-        ok(o.status_code == 200 and j.get('ok') and j.get('sohraneno') and j.get('kartochka') == PUT + '/centro?call_status=v_rabote&inn=' + TULSKAYA,
+        ok(o.status_code == 200 and j.get('ok') and j.get('sohraneno') and j.get('kartochka') == PUT + '/centro?call_status=v_rabote&inn=' + TT,
            'meyer9: лид создан (заглушка) – %s %s' % (o.status_code, j))
-        t = get('meyer9', '/centro', inn=TULSKAYA)
+        t = get('meyer9', '/centro', inn=TT)
         print('      карточка без вкладки после «Взял в работу»: %s (так и было в панели; окно ведёт во вкладку «Взял в работу»)' % t.status_code)
         f = ZAGL['vyzovy'][-1][1]['fields'] if ZAGL['vyzovy'] else {}
         print('      поля crm.lead.add: %s' % json.dumps({k: (maska(v) if k == 'PHONE' else (v[:200] if isinstance(v, str) else v))
                                                          for k, v in f.items()}, ensure_ascii=False))
-        ok(f.get('SOURCE_ID') == '149' and f.get('STATUS_ID') == 'NEW' and f.get('ASSIGNED_BY_ID') == 7981
-           and f.get('UF_CRM_61B6C14B0E2A1') == '11198' and f.get('UF_CRM_1639366376') == '5880' and f.get('UF_CRM_1711628077') == '11797'
-           and '<a href="https://parsercompressor.online/obzvon-meyer/centro?inn=%s">' % TULSKAYA in f.get('COMMENTS', '')
-           and f.get('TITLE', '').startswith('ТЕСТ — '), 'поля лида: источник 149, NEW, 7981, «Торгующая?» = Нет×2, группа, ссылка')
+        ok(f.get('SOURCE_ID') == '149' and f.get('STATUS_ID') == 'NEW' and f.get('ASSIGNED_BY_ID') == ozhid('meyer9')
+           and f.get('UF_CRM_61B6C14B0E2A1') == '11198' and f.get('UF_CRM_1639366376') == '5880' and f.get('UF_CRM_1711628077') == pT.get('gruppa')
+           and '<a href="https://parsercompressor.online/obzvon-meyer/centro?inn=%s">' % TT in f.get('COMMENTS', '')
+           and f.get('TITLE', '').startswith('ТЕСТ — '), 'поля лида: источник 149, NEW, ответственный %s,' % ozhid('meyer9') + ' «Торгующая?» = Нет×2, группа, ссылка')
         ok(f.get('NAME') == fio_t and ', ' in fio_t and not any(k in f for k in ('LAST_NAME', 'SECOND_NAME', 'POST')),
            '«ФИО, должность» целиком в NAME («%s»); LAST_NAME, SECOND_NAME, POST не заполняются' % f.get('NAME'))
-        st = baza('SELECT * FROM company_state WHERE inn=?', TULSKAYA)
-        km = baza('SELECT * FROM company_comment WHERE inn=? ORDER BY id DESC LIMIT 1', TULSKAYA)
-        al = baza("SELECT * FROM activity_log WHERE inn=? AND action='call_saved' ORDER BY id DESC LIMIT 1", TULSKAYA)
-        bl = baza('SELECT * FROM bitrix_lid WHERE inn=?', TULSKAYA)
+        st = baza('SELECT * FROM company_state WHERE inn=?', TT)
+        km = baza('SELECT * FROM company_comment WHERE inn=? ORDER BY id DESC LIMIT 1', TT)
+        al = baza("SELECT * FROM activity_log WHERE inn=? AND action='call_saved' ORDER BY id DESC LIMIT 1", TT)
+        bl = baza('SELECT * FROM bitrix_lid WHERE inn=?', TT)
         lid1 = str(j.get('lead_id'))
         ok(len(st) == 1 and st[0]['call_result'] == 'v_rabote' and st[0]['username'] == 'meyer9', '«Взял в работу» сохранён: %s' % st)
         ok(km and 'проверка fixL на копии' in km[0]['body'] and ('№' + lid1) in km[0]['body'] and km[0]['username'] == 'meyer9',
            'комментарий записан: %s' % (km[0]['body'] if km else None))
         ok(al and '"v_rabote"' in al[0]['payload_json'], 'лента: call_saved v_rabote')
         ok(len(bl) == 1 and bl[0]['status'] == 'ok' and bl[0]['lead_id'] == lid1 and bl[0]['v_rabote_sohraneno'] == 1
-           and bl[0]['otvetstvennyy_id'] == 7981 and bl[0]['kto'] == 'meyer9', 'запись о лиде: %s' % bl)
+           and bl[0]['otvetstvennyy_id'] == ozhid('meyer9') and bl[0]['kto'] == 'meyer9', 'запись о лиде: %s' % bl)
         for login in ('meyer9', adminy[0]) + tuple(r['username'] for r in ropy if r['gorod'].strip().casefold() == gorod.get('meyer9', '').strip().casefold()):
-            t = get(login, '/centro', inn=TULSKAYA, call_status='v_rabote')
+            t = get(login, '/centro', inn=TT, call_status='v_rabote')
             ok(t.status_code == 200 and 'class="fixL-lid-stroka"' in t.text and ('Лид в Битриксе №%s' % lid1) in t.text
                and 'crm/lead/details/%s/' % lid1 in t.text,
                '%s: в карточке строка «Лид в Битриксе №%s →» (%s)' % (login, lid1, t.status_code))
         # повтор: без подтверждения – 409, с подтверждением – второй лид
         n0 = len(ZAGL['vyzovy'])
-        o = post('meyer9', '/centro/bitrix-lid', forma(d, inn=TULSKAYA))
+        o = post('meyer9', '/centro/bitrix-lid', forma(dT, inn=TT))
         j = o.json() if o.status_code in (200, 409) else {}
         ok(o.status_code == 409 and j.get('nuzhno_podtverzhdenie') and len(ZAGL['vyzovy']) == n0 and len(j.get('lidy') or []) == 1,
            'повтор без подтверждения – %s, окно показывает прежний лид' % o.status_code)
-        _, d2 = polya_formy('meyer9', TULSKAYA)
+        _, d2 = polya_formy('meyer9', TT)
         ok(len(d2.get('lidy') or []) == 1, 'окно: «уже заводили» (%d)' % len(d2.get('lidy') or []))
-        o = post('meyer9', '/centro/bitrix-lid', forma(d, inn=TULSKAYA, povtor='1'))
+        o = post('meyer9', '/centro/bitrix-lid', forma(dT, inn=TT, povtor='1'))
         j = o.json() if o.status_code == 200 else {}
-        ok(o.status_code == 200 and j.get('ok') and len(baza("SELECT 1 FROM bitrix_lid WHERE inn=? AND status='ok'", TULSKAYA)) == 2,
+        ok(o.status_code == 200 and j.get('ok') and len(baza("SELECT 1 FROM bitrix_lid WHERE inn=? AND status='ok'", TT)) == 2,
            'повтор с подтверждением – второй лид %s' % j.get('lead_id'))
 
         # ошибка Битрикса и «Повторить»
-        def novaya(login):
-            for i in novye.get(login, []):
-                if not baza('SELECT 1 FROM company_state WHERE inn=?', i):
-                    return i
-            return ''
         i2 = novaya('meyer2')
         o, d2 = polya_formy('meyer2', i2)
         for rezhim, slovo in (('oshibka', 'Битрикс не создал лид'), ('isklyuchenie', 'Битрикс недоступен')):
@@ -1284,8 +1306,9 @@ def test(koren, kat, sales_db, metka, polnyy):
            'старое окно (ФИО и должность раздельно) – склеено в NAME: «%s»' % f.get('NAME'))
         st = baza('SELECT username, call_result FROM company_state WHERE inn=?', i3)
         km = baza('SELECT username FROM company_comment WHERE inn=? ORDER BY id DESC LIMIT 1', i3)
-        ok(o.status_code == 200 and st == [{'username': 'meyer4', 'call_result': 'v_rabote'}] and km and km[0]['username'] == adminy[0],
-           'админ по компании meyer4 %s: %s, состояние %s' % (i3, o.status_code, st))
+        ok(o.status_code == 200 and st == [{'username': 'meyer4', 'call_result': 'v_rabote'}] and km and km[0]['username'] == adminy[0]
+           and f.get('ASSIGNED_BY_ID') == ozhid('meyer4'),
+           'админ по компании meyer4 %s: %s, состояние %s, ответственный %s' % (i3, o.status_code, st, f.get('ASSIGNED_BY_ID')))
         # настройка «menedzher» (только на stage: свой data\)
         if os.path.normcase(koren) != os.path.normcase(KOREN):
             put_n = str(rcs._FIXL_NASTROYKI)
@@ -1295,8 +1318,33 @@ def test(koren, kat, sales_db, metka, polnyy):
             _, d4 = polya_formy('meyer5', i4)
             o = post('meyer5', '/centro/bitrix-lid', forma(d4, inn=i4))
             f = ZAGL['vyzovy'][-1][1]['fields']
-            ok(o.status_code == 200 and f.get('ASSIGNED_BY_ID') == 4757 and 'Козлов' in (d4.get('tolko_chtenie') or {}).get('otvetstvennyy', ''),
-               'настройка «menedzher»: ответственный – Bitrix ID менеджера (meyer5 → %s)' % f.get('ASSIGNED_BY_ID'))
+            ot4 = (d4.get('tolko_chtenie') or {}).get('otvetstvennyy', '')
+            ok(o.status_code == 200 and f.get('ASSIGNED_BY_ID') == 4757 and ot4 == 'Козлов Андрей (Bitrix id 4757)',
+               'настройка «menedzher»: meyer5 → %s, в окне «%s»' % (f.get('ASSIGNED_BY_ID'), ot4))
+            for login in PRODAVCY:
+                i_ = (novye.get(login) or [''])[0]
+                _, dd = polya_formy(login, i_)
+                ot = (dd.get('tolko_chtenie') or {}).get('otvetstvennyy', '')
+                zh = '%s (Bitrix id %s)' % (NASTROYKI_TEKST['menedzhery'][login]['fio'], NASTROYKI_TEKST['menedzhery'][login]['bitrix_id'])
+                ok(ot == zh and 'тестов' not in ot, '«menedzher», %s %s: «%s»' % (login, i_, ot))
+            i5 = novaya('meyer4')
+            _, d5 = polya_formy(adminy[0], i5)
+            o = post(adminy[0], '/centro/bitrix-lid', forma(d5, inn=i5, fio='Сидоров Сидор, главный механик'))
+            f = ZAGL['vyzovy'][-1][1]['fields']
+            ok(o.status_code == 200 and f.get('ASSIGNED_BY_ID') == 12373 and 'Волков' in (d5.get('tolko_chtenie') or {}).get('otvetstvennyy', ''),
+               '«menedzher», админ за meyer4 (%s): ответственный %s' % (i5, f.get('ASSIGNED_BY_ID')))
+            bez = dict(NASTROYKI_TEKST, otvetstvennyy='menedzher',
+                       menedzhery={k: v for k, v in NASTROYKI_TEKST['menedzhery'].items() if k != 'meyer3'})
+            json.dump(bez, io.open(put_n, 'w', encoding='utf-8'), ensure_ascii=False)
+            i6 = novaya('meyer3')
+            _, d6 = polya_formy('meyer3', i6)
+            n0 = len(ZAGL['vyzovy'])
+            o = post('meyer3', '/centro/bitrix-lid', forma(d6, inn=i6, comment='не должно сохраниться'))
+            j = o.json() if o.headers.get('content-type', '').startswith('application/json') else {}
+            ok(o.status_code == 422 and 'нет Bitrix ID' in (j.get('oshibka') or '') and len(ZAGL['vyzovy']) == n0
+               and not baza('SELECT 1 FROM company_state WHERE inn=?', i6)
+               and 'нет Bitrix ID' in (d6.get('tolko_chtenie') or {}).get('otvetstvennyy', ''),
+               'нет ID у meyer3: %s «%s», Битрикс не вызван, ничего не сохранено' % (o.status_code, j.get('oshibka')))
             os.remove(put_n)
         # ничего похожего на вебхук в ответах
         sekret = ''
@@ -1304,7 +1352,7 @@ def test(koren, kat, sales_db, metka, polnyy):
             sekret = rcs._FIXL_VEBHUK.read_text(encoding='utf-8').strip()
         except OSError:
             pass
-        t_all = get('meyer9', '/centro', inn=TULSKAYA).text + json.dumps(polya_formy('meyer9', TULSKAYA)[1], ensure_ascii=False)
+        t_all = get('meyer9', '/centro', inn=TT, call_status='v_rabote').text + json.dumps(polya_formy('meyer9', TULSKAYA)[1], ensure_ascii=False)
         ok('/rest/' not in t_all and (not sekret or sekret not in t_all), 'в разметке и ответах нет ссылки вебхука')
         for login in (adminy[0], 'meyer9', 'meyer2') + tuple(r['username'] for r in ropy[:1]):
             o3 = get(login, '/centro/stats')
@@ -1312,6 +1360,48 @@ def test(koren, kat, sales_db, metka, polnyy):
         print('   вызовов заглушки: %d (настоящий Битрикс не вызывался)' % len(ZAGL['vyzovy']))
     print('ПЛОХИХ ПРОВЕРОК: %d' % plohih[0])
     return plohih[0]
+
+
+def otvetstvennye(koren, kat, sales_db, ozhid_rezhim):
+    """Только GET: окно лида у компаний 9 менеджеров (и у админа за meyer4) – строка «Ответственный»."""
+    sys.path.insert(0, KOREN)
+    import zapusk  # noqa: F401
+    sys.path.insert(0, koren)
+    import logging
+    import warnings
+    warnings.filterwarnings('ignore')
+    logging.disable(logging.CRITICAL)
+    for k in ('CENTRO_SALES_DB', 'PARK_OCHERED_SALES_DB'):
+        os.environ[k] = sales_db
+    for k in ('CENTRIFUGAL_DB', 'CENTRO_DB', 'PARK_OCHERED_DB'):
+        os.environ[k] = kat
+    from app.api import routes_centro_sales as rcs
+    from app.obzvon import create_app
+    from fastapi.testclient import TestClient
+    vnutr = next(z for z in vars(create_app()).values() if hasattr(z, 'routes') and hasattr(z, 'dependency_overrides'))
+    s = sqlite3.connect('file:%s?mode=ro' % sales_db, uri=True)
+    nazn = {}
+    for r in s.execute('SELECT inn, username FROM company_assignment ORDER BY inn'):
+        nazn.setdefault(r[1], []).append(str(r[0]))
+    admin = s.execute("SELECT username FROM users WHERE role='admin' AND is_active=1 ORDER BY id").fetchone()[0]
+    s.close()
+    n = rcs._fixL_nastroyki()
+    plohih = 0
+    print('   настройка: otvetstvennyy=%s' % n.get('otvetstvennyy'))
+    with TestClient(vnutr) as kl:
+        for login in PRODAVCY + [admin]:
+            vl = login if login in PRODAVCY else 'meyer4'
+            inn = (nazn.get(vl) or [''])[0]
+            h = {'Cookie': '%s=%s' % (rcs.COOKIE, rcs._token(login, int(time.time()) + 3600))}
+            o = kl.get(PUT + '/centro/bitrix-lid/dannye', params={'inn': inn}, headers=h, follow_redirects=False)
+            ot = (o.json().get('tolko_chtenie') or {}).get('otvetstvennyy', '') if o.status_code == 200 else ''
+            m = NASTROYKI_TEKST['menedzhery'][vl]
+            zh = ('%s (Bitrix id %s)' % (m['fio'], m['bitrix_id'])) if ozhid_rezhim == 'menedzher' else None
+            g = o.status_code == 200 and (ot == zh if zh else 'тестовый режим' in ot)
+            plohih += not g
+            print('   %s %-11s компания %s (%s): «Ответственный» = «%s»' % ('ОК ' if g else 'ПЛОХО', login, inn, vl, ot))
+    print('ПЛОХИХ ПРОВЕРОК: %d' % plohih)
+    return plohih
 
 
 def venv(*argi):
@@ -1428,6 +1518,45 @@ def sdelat_stage(novye, izm):
     zapisat(os.path.join(STAGE, 'app'), novye, izm)
 
 
+def pereklyuchit_na_menedzherov(papka, vyvod):
+    """Владелец 15.10: «раскатывай с реальными менеджерами». Настройка ответственного test -> menedzher; прежнее
+    значение – в журнал (дроп) и в копию; ID сверяются с bitrix_polzovateli_meyer.json; проверка GET-окнами."""
+    ozhid_id = {k: v['bitrix_id'] for k, v in NASTROYKI_TEKST['menedzhery'].items()}
+    staroe_t = io.open(NASTROYKI, encoding='utf-8').read() if os.path.exists(NASTROYKI) else ''
+    staroe = json.loads(staroe_t) if staroe_t.strip() else {}
+    if os.path.exists(NASTROYKI):
+        shutil.copy2(NASTROYKI, os.path.join(papka, os.path.basename(NASTROYKI)))
+    kogda = time.strftime('%Y-%m-%d %H:%M:%S')
+    kogda_utc = time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime())
+    zh = {'chto': 'fixL: ответственный лидов из панели Meyer – с тестового на менеджера компании',
+          'kogda_server': kogda, 'kogda_utc': kogda_utc, 'fajl': NASTROYKI,
+          'bylo_otvetstvennyy': staroe.get('otvetstvennyy', 'test (файла не было)'), 'bylo_fajl_celikom': staroe_t,
+          'kak_vernut': 'в %s поставить "otvetstvennyy": "%s" (панель перечитывает файл на каждом лиде, перезапуск не нужен)'
+                        % (NASTROYKI, staroe.get('otvetstvennyy', 'test')), 'kopiya': papka}
+    put_zh = os.path.join(DROP, 'fixL-nastroyki-zhurnal-%s.json' % VREMYA)
+    io.open(put_zh, 'w', encoding='utf-8').write(json.dumps(zh, ensure_ascii=False, indent=1))
+    nov = dict(staroe or NASTROYKI_TEKST)
+    est = {k: int((v or {}).get('bitrix_id') or 0) for k, v in (nov.get('menedzhery') or {}).items()}
+    if est != ozhid_id:
+        vyvod.append('ID менеджеров в настройке РАСХОДИЛИСЬ (%s) – поставлены по bitrix_polzovateli_meyer.json' % est)
+        nov['menedzhery'] = NASTROYKI_TEKST['menedzhery']
+    else:
+        vyvod.append('ID менеджеров в настройке совпадают с bitrix_polzovateli_meyer.json: %s' % est)
+    nov['otvetstvennyy'] = 'menedzher'
+    io.open(NASTROYKI, 'w', encoding='utf-8').write(json.dumps(nov, ensure_ascii=False, indent=1))
+    vyvod.append('ОТВЕТСТВЕННЫЙ ПЕРЕКЛЮЧЁН на менеджеров: %s (сервер), %s UTC; было «%s»; журнал – дроп %s'
+                 % (kogda, kogda_utc, zh['bylo_otvetstvennyy'], os.path.basename(put_zh)))
+    tk, ts = kopii_baz(papka, 'otv')
+    g, v = venv('--otvetstvennye', KOREN, tk, ts, 'menedzher')
+    ubrat(tk, ts)
+    vyvod.append('----- окно лида на живом коде (только GET, копии баз): строка «Ответственный»\n' + v[-3000:])
+    if not g:
+        if staroe_t:
+            io.open(NASTROYKI, 'w', encoding='utf-8').write(staroe_t)
+        vyvod.append('ПРОВЕРКА НЕ ПРОШЛА – настройка возвращена как была («%s»)' % zh['bylo_otvetstvennyy'])
+    return g
+
+
 def vernut_svoi(papka, izm, novye):
     for k_ in izm:
         dst = os.path.join(APP, *FAJLY[k_].split('/'))
@@ -1437,6 +1566,10 @@ def vernut_svoi(papka, izm, novye):
         elif k_ == 'L' and os.path.exists(dst):
             os.remove(dst)
 
+
+if '--otvetstvennye' in sys.argv:
+    i = sys.argv.index('--otvetstvennye')
+    raise SystemExit(1 if otvetstvennye(*sys.argv[i + 1:i + 5]) else 0)
 
 if '--test' in sys.argv:
     i = sys.argv.index('--test')
@@ -1473,6 +1606,7 @@ if '--suho' in sys.argv:
 if '--primenit' in sys.argv:
     vzyat_zamok('fixL (лид в Битрикс из карточки: код и шаблоны)')
     vyvod = []
+    kod_ok = False
     try:
         teksty = prochitat(APP)
         novye, zh, vse_ok = nalozhit(teksty)
@@ -1523,6 +1657,7 @@ if '--primenit' in sys.argv:
                 vyvod.append('ПОСЛЕ ЗАПИСИ ПЛОХО – свои файлы возвращены из %s' % PAPKA)
             else:
                 vyvod.append('ПРИМЕНЕНО: %s; копия прежних файлов: %s' % (', '.join(FAJLY[k_] for k_ in izm), PAPKA))
+                kod_ok = True
         elif izm:
             ostanovit()
             zapisat(APP, novye, izm)
@@ -1537,8 +1672,16 @@ if '--primenit' in sys.argv:
                 vyvod.append('ПОСЛЕ ЗАПИСИ ПЛОХО – свои файлы возвращены из %s, перезапуск, вход: %s' % (PAPKA, kod2))
             else:
                 vyvod.append('ПРИМЕНЕНО: %s; копия прежних файлов: %s' % (', '.join(FAJLY[k_] for k_ in izm), PAPKA))
+                kod_ok = True
         else:
             vyvod.append('правки кода уже стоят – файлы не меняю')
+            kod_ok = True
+        if '--menedzher' in sys.argv:
+            podnovit_zamok()
+            if kod_ok:
+                pereklyuchit_na_menedzherov(PAPKA, vyvod)
+            else:
+                vyvod.append('код не записан – ответственного НЕ переключаю')
         t = '\n'.join(vyvod)
         io.open(os.path.join(DROP, 'fixL-kod-primenit-%s.txt' % VREMYA), 'w', encoding='utf-8').write(t)
         print(t[-5500:])
