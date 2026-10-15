@@ -108,3 +108,11 @@ if '--sozdat' in sys.argv:
     print('прочитан обратно:', g.get('error') or {x: r.get(x) for x in ('TITLE', 'STATUS_ID', 'SOURCE_ID', 'ASSIGNED_BY_ID',
                                                                         'COMPANY_TITLE', 'POST', 'UF_CRM_1711628077')})
     print('заполнено полей: %d (%s)' % (len(f), ', '.join(sorted(f))))
+
+if '--udalit' in sys.argv:
+    # только ТЕСТОВЫЙ лид, созданный этим скриптом (владелец 15.10: «попробуй удалить, но только этот»)
+    lid = sys.argv[sys.argv.index('--udalit') + 1]
+    if lid != '379865':
+        raise SystemExit('удалять можно только тестовый лид 379865')
+    o = vyzov('crm.lead.delete', id=lid)
+    print('УДАЛЕНИЕ ЛИДА %s: %s' % (lid, 'ОШИБКА %s %s' % (o.get('error'), o.get('error_description')) if o.get('error') else ('ок' if o.get('result') else o)))
