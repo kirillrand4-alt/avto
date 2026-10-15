@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # 14.10, база КЦ: полный прогон, поиск набора kc1t. Лог kc1t_poisk_*.log — по нему конвейер ждёт «готово».
-# PILOT_REZERV 150 ₽ — остаток баланса xmlriver на агентов; поиск встанет, если баланс дойдёт до него (пополнить и перезапустить — резюм).
+# 15.10 владелец: «жги баланс полностью» — PILOT_REZERV 3 ₽ (было 150) — остаток баланса xmlriver на агентов; поиск встанет, если баланс дойдёт до него (пополнить и перезапустить — резюм).
 # поиск ~51 ₽ по расчёту; при 315 ₽ поиск встанет, потратив ~71 ₽ — остаток лимита сайтам по названию и агентам).
 import json, os, subprocess, sys, time
 DIR = r'C:\sender\server'
@@ -13,7 +13,7 @@ p = subprocess.Popen([python, '-u', os.path.join(DIR, 'pilot_poisk.py')],
                      cwd=DIR, creationflags=0x08 | 0x200, stdin=subprocess.DEVNULL,
                      stdout=выход, stderr=subprocess.STDOUT, close_fds=False,
                      env=dict(os.environ, POISK_NABOR=НАБОР, KC_NABOR=НАБОР, POISK_REGIONY_SVERKI='все', KC_CEL='kc',
-                              PILOT_REZERV=os.environ.get('PILOT_REZERV', '150')))
+                              PILOT_REZERV=os.environ.get('PILOT_REZERV', '3')))
 выход.close()
 time.sleep(90)
 o = {'pid': p.pid, 'лог': os.path.basename(ЛОГ)}

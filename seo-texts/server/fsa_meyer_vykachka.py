@@ -16,6 +16,8 @@ import fsa_pilot_orehi as F  # noqa: E402  (вход, запрос — рабо�
 ДРОП = r'C:\seostat\drop\drop-storage'
 # 15.10: 6 слов за 13,5 ч (зерно/пшеница — сотни тысяч деклараций) -> 238 слов заняли бы недели: окно с 2023 г. и 6 потоков
 С_ДАТЫ = datetime.date(int(os.environ.get('FSA_S_GODA', '2023')), 1, 1)
+# 15.10, владелец согласен на облегчённый режим: по основе — последние 1000 (без дробления окон)
+ЛЕГКО = os.environ.get('FSA_LEGKO', '1') == '1'
 ПОТОКОВ = int(os.environ.get('FSA_POTOKOV', '2'))  # 6 потоков — 429 Too Many Requests
 _лок = threading.Lock()
 ПОЛЯ = ('id', 'declNumber', 'declDate', 'declEndDate', 'idStatus', 'applicantType', 'applicantInn', 'applicantName', 'manufacterInn',
@@ -80,7 +82,7 @@ def окно(С, сл, d1, d2, готовые, декл_ид):
         дописать(ОКНА, {'ключ': ключ, 'всего': 0, 'новых': 0, 'нет_слова': 1})
         готовые.add(ключ)
         return
-    if всего >= 1000 and d2 > d1:
+    if всего >= 1000 and d2 > d1 and not ЛЕГКО:
         mid = d1 + (d2 - d1) // 2
         окно(С, сл, d1, mid, готовые, декл_ид)
         окно(С, сл, mid + datetime.timedelta(days=1), d2, готовые, декл_ид)
