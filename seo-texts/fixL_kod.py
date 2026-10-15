@@ -66,6 +66,7 @@ _FIXL_NASTROYKI = _FIXL_DATA / "bitrix-lid-nastroyki.json"
 _FIXL_PORTAL = "https://bitrix-po22.ru"
 _FIXL_PANEL = "https://parsercompressor.online" + BP + "/centro?inn="
 _FIXL_PO_UMOLCHANIYU = {
+    "vklyucheno": True,                 # владелец 15.10: false – кнопки и окна нет, эндпоинты 404 (без перезапуска)
     "otvetstvennyy": "test",            # test | menedzher
     "test_id": 7981,
     "test_fio": "Баданина Ксения",
@@ -164,7 +165,19 @@ def fixL_lidy(inn) -> list:
 templates.env.globals["fixL_lidy"] = fixL_lidy
 
 
+def fixL_vkl() -> bool:
+    """Выключатель «Завести лид в Битрикс» (настройка vklyucheno, читается на каждый запрос). Строки о заведённых
+    лидах в карточке от него не зависят."""
+    v = _fixL_nastroyki().get("vklyucheno", True)
+    return v if isinstance(v, bool) else str(v).strip().lower() not in ("0", "false", "net", "нет", "")
+
+
+templates.env.globals["fixL_vkl"] = fixL_vkl
+
+
 def _fixL_dostup(user: dict, inn: str) -> tuple:
+    if not fixL_vkl():
+        raise HTTPException(404, "Заведение лидов из панели выключено")
     if user.get("rop") or user.get("role") not in ("admin", "sales"):
         raise HTTPException(403, "Руководителю отдела продаж – только просмотр")
     inn = sales.normalize_inn(inn)
@@ -592,7 +605,7 @@ def fixL_sozdat_lid(
 SHABLON_LID = r'''{# fixL-bitrix-lid (15.10): окно «Завести лид в Битрикс» – подпункт у «Взял в работу». Только менеджер (своя компания) и админ;
    руководителю отдела продаж окна нет. Поля заполняет сервер (/centro/bitrix-lid/dannye), правятся; «Создать лид» –
    /centro/bitrix-lid: crm.lead.add и сохранение «Взял в работу» тем же путём, что обычная отметка. #}
-{% if fixL_lidy is defined and company and user and user.role in ('admin', 'sales') and not user.rop %}
+{% if fixL_vkl is defined and fixL_vkl() and company and user and user.role in ('admin', 'sales') and not user.rop %}
 <div class="fixL-okno" id="fixL-okno" hidden data-bp="{{ base_path }}" data-inn="{{ company.inn }}" data-qs="{{ query_string }}">
   <div class="fixL-fon" data-zakryt></div>
   <div class="fixL-dialog" role="dialog" aria-modal="true" aria-labelledby="fixL-zag">
@@ -919,12 +932,16 @@ MARKER_R = '# ===== fixL-bitrix-lid (15.10)'
 KONEC_R = '# ===== /fixL-bitrix-lid ====='
 
 C1_STARO = '''<li class="rez-punkt" data-value="{{ value }}" data-label="{{ label }}" role="menuitem">{{ label }}</li>'''
-C1_NOVO = ('''{% if value == 'v_rabote' and fixL_lidy is defined and user.role in ('admin', 'sales') and not user.rop %}'''
-           '''{# fixL-bitrix-lid: подпункт «Завести лид в Битрикс» (обычный клик – «Взял в работу», как прежде) #}'''
-           '''<li class="rez-punkt est-pod fixL-vrab" data-value="{{ value }}" data-label="{{ label }}" role="menuitem" aria-haspopup="true">'''
-           '''<span>{{ label }}</span><span class="rez-strelka">▸</span><ul class="rez-pod" role="menu">'''
-           '''<li class="rez-punkt fixL-lid-punkt" role="menuitem">Завести лид в Битрикс</li></ul></li>{% else %}'''
-           + C1_STARO + '''{% endif %}''')
+_C1_TELO = ('''{# fixL-bitrix-lid: подпункт «Завести лид в Битрикс» (обычный клик – «Взял в работу», как прежде) #}'''
+            '''<li class="rez-punkt est-pod fixL-vrab" data-value="{{ value }}" data-label="{{ label }}" role="menuitem" aria-haspopup="true">'''
+            '''<span>{{ label }}</span><span class="rez-strelka">▸</span><ul class="rez-pod" role="menu">'''
+            '''<li class="rez-punkt fixL-lid-punkt" role="menuitem">Завести лид в Битрикс</li></ul></li>{% else %}'''
+            + C1_STARO + '''{% endif %}''')
+# первая версия (до выключателя, 15.10 утро) – на живом файле обновляется на месте
+C1_NOVO_V1 = '''{% if value == 'v_rabote' and fixL_lidy is defined and user.role in ('admin', 'sales') and not user.rop %}''' + _C1_TELO
+# владелец 15.10: «убери кнопку создания лида пока что» – выключатель vklyucheno в настройке
+C1_NOVO = ('''{% if value == 'v_rabote' and fixL_vkl is defined and fixL_vkl() and user.role in ('admin', 'sales') '''
+           '''and not user.rop %}''' + _C1_TELO)
 C2_STARO = '''<section class="card work-card">'''
 C2_NOVO = ('''<section class="card work-card">{# fixL-bitrix-lid: заведённые лиды компании #}'''
            '''{% if fixL_lidy is defined and company %}{% for _лид in fixL_lidy(company.inn) %}'''
@@ -934,9 +951,10 @@ C2_NOVO = ('''<section class="card work-card">{# fixL-bitrix-lid: заведён
            '''{% endfor %}{% endif %}''')
 C3_STARO = '''{% if user.role == 'admin' %}</details>{% endif %}'''
 C3_NOVO = C3_STARO + '''{% include '_fixL_bitrix_lid.html' %}'''
-PRAVKI = [('C', 'меню результата: подпункт у «Взял в работу»', C1_STARO, C1_NOVO),
-          ('C', 'карточка: строка «Лид в Битриксе №…»', C2_STARO, C2_NOVO),
-          ('C', 'карточка: окно лида (include)', C3_STARO, C3_NOVO)]
+# (ключ, имя, якорь, новое, прежние версии «нового»: обновляются на месте; якорь входит в них – поэтому они раньше)
+PRAVKI = [('C', 'меню результата: подпункт у «Взял в работу» (с выключателем)', C1_STARO, C1_NOVO, [C1_NOVO_V1]),
+          ('C', 'карточка: строка «Лид в Битриксе №…»', C2_STARO, C2_NOVO, []),
+          ('C', 'карточка: окно лида (include)', C3_STARO, C3_NOVO, [])]
 
 TABLICA = ("CREATE TABLE IF NOT EXISTS bitrix_lid (id INTEGER PRIMARY KEY, inn TEXT NOT NULL, lead_id TEXT NOT NULL DEFAULT '', "
            "kto TEXT NOT NULL, kogda TEXT NOT NULL, state_user TEXT NOT NULL DEFAULT '', otvetstvennyy_id INTEGER, "
@@ -981,11 +999,16 @@ def nalozhit(teksty):
     else:
         novye['R'] = t.rstrip('\r\n') + nl_kak_v(t, '\n' + BLOK_ROUTES.rstrip('\n') + '\n')
         zh.append('[ок] routes_centro_sales.py: блок fixL в конец файла')
-    for kl, imya, staro, novo in PRAVKI:
+    for kl, imya, staro, novo, prezhnie in PRAVKI:
         t = novye[kl]
         st, nv = nl_kak_v(t, staro), nl_kak_v(t, novo)
         if t.count(nv) == 1:
             zh.append('[уже] ' + imya)
+            continue
+        pr = next((nl_kak_v(t, p) for p in prezhnie if t.count(nl_kak_v(t, p)) == 1), None)
+        if pr:
+            novye[kl] = t.replace(pr, nv, 1)
+            zh.append('[ок] %s – прежняя версия обновлена на месте' % imya)
             continue
         n = t.count(st)
         if n != 1:
@@ -1346,6 +1369,36 @@ def test(koren, kat, sales_db, metka, polnyy):
                and 'нет Bitrix ID' in (d6.get('tolko_chtenie') or {}).get('otvetstvennyy', ''),
                'нет ID у meyer3: %s «%s», Битрикс не вызван, ничего не сохранено' % (o.status_code, j.get('oshibka')))
             os.remove(put_n)
+            # выключатель (владелец 15.10: «убери кнопку создания лида пока что»)
+            json.dump(dict(NASTROYKI_TEKST, otvetstvennyy='menedzher', vklyucheno=False), io.open(put_n, 'w', encoding='utf-8'),
+                      ensure_ascii=False)
+            ok(not rcs.fixL_vkl(), 'vklyucheno=false читается без перезапуска')
+            for login in proverit:
+                o1 = get(login, '/centro')
+                # компании, которые этот же прогон на копии уже перевёл во «Взял в работу», открываются в своей вкладке
+                vk = {'call_status': 'v_rabote'} if kartochki[login] and baza(
+                    "SELECT 1 FROM company_state WHERE inn=? AND call_result='v_rabote'", kartochki[login]) else {}
+                o2 = get(login, '/centro', inn=kartochki[login], **vk) if kartochki[login] else None
+                o3 = get(login, '/centro/stats')
+                kody = {'glavnaya': o1.status_code, 'kartochka': o2.status_code if o2 is not None else None, 'stats': o3.status_code}
+                tk_ = o2.text if o2 is not None else ''
+                ok(kody == sn[login] and not any(x in tk_ for x in ('fixL-lid-punkt', 'fixL-vrab', 'id="fixL-okno"', 'Завести лид в Битрикс', 'fixL-mob')),
+                   'выключено, %s: %s (как было %s), подпункта, окна и скрипта окна нет' % (login, kody, sn[login]))
+            n0 = len(ZAGL['vyzovy'])
+            o, _ = polya_formy('meyer9', TT)
+            o2 = post('meyer9', '/centro/bitrix-lid', forma(dT, inn=TT, povtor='1'))
+            o3 = post(adminy[0], '/centro/bitrix-lid', forma(dT, inn=TT, povtor='1'))
+            ok(o.status_code == 404 and o2.status_code == 404 and o3.status_code == 404 and len(ZAGL['vyzovy']) == n0,
+               'выключено: данные окна %s, создание %s (админ %s), Битрикс не вызван' % (o.status_code, o2.status_code, o3.status_code))
+            i7 = novaya('meyer2')
+            o = post('meyer2', '/centro/save', {'inn': i7, 'call_result': 'v_rabote', 'comment': 'обычное сохранение при выключенном fixL'})
+            ok(o.status_code == 303 and baza("SELECT 1 FROM company_state WHERE inn=? AND call_result='v_rabote'", i7),
+               'выключено: обычное «Взял в работу» (meyer2 %s) – %s, сохранено' % (i7, o.status_code))
+            t = get('meyer9', '/centro', inn=TT, call_status='v_rabote')
+            ok(t.status_code == 200 and 'class="fixL-lid-stroka"' in t.text and 'fixL-lid-punkt' not in t.text,
+               'выключено: строка «Лид в Битриксе №…» у компании с лидом остаётся')
+            os.remove(put_n)
+            ok(rcs.fixL_vkl(), 'файл убран – снова включено (умолчание)')
         # ничего похожего на вебхук в ответах
         sekret = ''
         try:
@@ -1402,6 +1455,91 @@ def otvetstvennye(koren, kat, sales_db, ozhid_rezhim):
             print('   %s %-11s компания %s (%s): «Ответственный» = «%s»' % ('ОК ' if g else 'ПЛОХО', login, inn, vl, ot))
     print('ПЛОХИХ ПРОВЕРОК: %d' % plohih)
     return plohih
+
+
+def vykl_proverka(koren, kat, sales_db, snimok_do):
+    """Только GET, живой код, копии баз: при vklyucheno=false у админа, менеджеров и руководителей подпункта и окна нет,
+    коды главной/карточки/статистики – как в снимке «до», данные окна – 404."""
+    sys.path.insert(0, KOREN)
+    import zapusk  # noqa: F401
+    sys.path.insert(0, koren)
+    import logging
+    import warnings
+    warnings.filterwarnings('ignore')
+    logging.disable(logging.CRITICAL)
+    for k in ('CENTRO_SALES_DB', 'PARK_OCHERED_SALES_DB'):
+        os.environ[k] = sales_db
+    for k in ('CENTRIFUGAL_DB', 'CENTRO_DB', 'PARK_OCHERED_DB'):
+        os.environ[k] = kat
+    from app.api import routes_centro_sales as rcs
+    from app.obzvon import create_app
+    from fastapi.testclient import TestClient
+    vnutr = next(z for z in vars(create_app()).values() if hasattr(z, 'routes') and hasattr(z, 'dependency_overrides'))
+    do = json.load(io.open(snimok_do, encoding='utf-8')) if os.path.exists(snimok_do) else {}
+    s = sqlite3.connect('file:%s?mode=ro' % sales_db, uri=True)
+    nazn = {}
+    for r in s.execute('SELECT inn, username FROM company_assignment ORDER BY inn'):
+        nazn.setdefault(r[1], []).append(str(r[0]))
+    lyudi = [tuple(r) for r in s.execute("SELECT username, role, COALESCE(gorod,'') FROM users WHERE is_active=1 ORDER BY id")]
+    s.close()
+    adminy = [u for u, r, g in lyudi if r == 'admin'][:1]
+    ropy = [(u, g) for u, r, g in lyudi if r == 'rop']
+    plohih = 0
+    g_ = rcs.fixL_vkl()
+    plohih += g_
+    print('   %s настройка vklyucheno: %s' % ('ПЛОХО' if g_ else 'ОК ', g_))
+    with TestClient(vnutr) as kl:
+        for login in adminy + PRODAVCY + [u for u, g in ropy]:
+            if login in PRODAVCY:
+                inn = (nazn.get(login) or [''])[0]
+            elif login in adminy:
+                inn = (nazn.get('meyer1') or [''])[0]
+            else:
+                g = dict(ropy)[login].strip().casefold()
+                kom = [p for p in PRODAVCY if any(u == p and gg.strip().casefold() == g for u, r, gg in lyudi)]
+                inn = (nazn.get(kom[0]) or [''])[0] if kom else ''
+            h = {'Cookie': '%s=%s' % (rcs.COOKIE, rcs._token(login, int(time.time()) + 3600))}
+            o1 = kl.get(PUT + '/centro', headers=h, follow_redirects=False)
+            o2 = kl.get(PUT + '/centro', params={'inn': inn}, headers=h, follow_redirects=False)
+            o3 = kl.get(PUT + '/centro/stats', headers=h, follow_redirects=False)
+            o4 = kl.get(PUT + '/centro/bitrix-lid/dannye', params={'inn': inn}, headers=h, follow_redirects=False)
+            kody = {'glavnaya': o1.status_code, 'kartochka': o2.status_code, 'stats': o3.status_code}
+            net = not any(x in o2.text for x in ('fixL-lid-punkt', 'fixL-vrab', 'id="fixL-okno"', 'Завести лид в Битрикс'))
+            g = net and o4.status_code == 404 and (kody == do.get(login) if do.get(login) else o1.status_code == 200 and o2.status_code == 200)
+            plohih += not g
+            print('   %s %-20s %s (до: %s), подпункта/окна нет: %s, данные окна: %s' % (
+                'ОК ' if g else 'ПЛОХО', login, kody, do.get(login), net, o4.status_code))
+    print('ПЛОХИХ ПРОВЕРОК: %d' % plohih)
+    return plohih
+
+
+def vyklyuchit(papka, vyvod, snimok_do):
+    """Владелец 15.10: «убери кнопку создания лида из панели пока что» – vklyucheno=false (код не удаляется)."""
+    staroe_t = io.open(NASTROYKI, encoding='utf-8').read() if os.path.exists(NASTROYKI) else ''
+    staroe = json.loads(staroe_t) if staroe_t.strip() else {}
+    if os.path.exists(NASTROYKI):
+        shutil.copy2(NASTROYKI, os.path.join(papka, 'bitrix-lid-nastroyki-do-vykl.json'))
+    kogda, kogda_utc = time.strftime('%Y-%m-%d %H:%M:%S'), time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime())
+    zh = {'chto': 'fixL: «Завести лид в Битрикс» выключено (vklyucheno=false), код на месте', 'kogda_server': kogda,
+          'kogda_utc': kogda_utc, 'fajl': NASTROYKI, 'bylo_vklyucheno': staroe.get('vklyucheno', 'нет ключа (= включено)'),
+          'bylo_fajl_celikom': staroe_t,
+          'kak_vklyuchit': 'в %s поставить "vklyucheno": true (перезапуск не нужен)' % NASTROYKI}
+    put_zh = os.path.join(DROP, 'fixL-vykl-zhurnal-%s.json' % VREMYA)
+    io.open(put_zh, 'w', encoding='utf-8').write(json.dumps(zh, ensure_ascii=False, indent=1))
+    nov = dict(staroe or NASTROYKI_TEKST)
+    nov['vklyucheno'] = False
+    io.open(NASTROYKI, 'w', encoding='utf-8').write(json.dumps(nov, ensure_ascii=False, indent=1))
+    vyvod.append('ВЫКЛЮЧЕНО «Завести лид в Битрикс»: %s (сервер), %s UTC; было vklyucheno=%s; otvetstvennyy=%s; журнал – дроп %s'
+                 % (kogda, kogda_utc, zh['bylo_vklyucheno'], nov.get('otvetstvennyy'), os.path.basename(put_zh)))
+    tk, ts = kopii_baz(papka, 'vykl')
+    g, v = venv('--vykl-proverka', KOREN, tk, ts, snimok_do)
+    ubrat(tk, ts)
+    vyvod.append('----- выключено: живой код, только GET, копии баз\n' + v[-3500:])
+    if not g:
+        if staroe_t:
+            io.open(NASTROYKI, 'w', encoding='utf-8').write(staroe_t)
+        vyvod.append('ПРОВЕРКА НЕ ПРОШЛА – настройка возвращена как была')
+    return g
 
 
 def venv(*argi):
@@ -1567,6 +1705,10 @@ def vernut_svoi(papka, izm, novye):
             os.remove(dst)
 
 
+if '--vykl-proverka' in sys.argv:
+    i = sys.argv.index('--vykl-proverka')
+    raise SystemExit(1 if vykl_proverka(*sys.argv[i + 1:i + 5]) else 0)
+
 if '--otvetstvennye' in sys.argv:
     i = sys.argv.index('--otvetstvennye')
     raise SystemExit(1 if otvetstvennye(*sys.argv[i + 1:i + 5]) else 0)
@@ -1682,6 +1824,12 @@ if '--primenit' in sys.argv:
                 pereklyuchit_na_menedzherov(PAPKA, vyvod)
             else:
                 vyvod.append('код не записан – ответственного НЕ переключаю')
+        if '--vyklyuchit' in sys.argv:
+            podnovit_zamok()
+            if kod_ok:
+                vyklyuchit(PAPKA, vyvod, os.path.join(PAPKA, 'fixL-snimok-do-stage-%s.json' % VREMYA))
+            else:
+                vyvod.append('код не записан – выключатель НЕ трогаю')
         t = '\n'.join(vyvod)
         io.open(os.path.join(DROP, 'fixL-kod-primenit-%s.txt' % VREMYA), 'w', encoding='utf-8').write(t)
         print(t[-5500:])
