@@ -24,7 +24,8 @@ try:
     from sender.sdelki_napr import blok
 except Exception: blok = None
 сч, вид, ост = Counter(), set(), []
-for inn, ex in c.execute("SELECT inn, extra_json FROM recipients WHERE inn IS NOT NULL"):
+рид_по = {}
+for rid0, inn, ex in c.execute("SELECT id, inn, extra_json FROM recipients WHERE inn IS NOT NULL ORDER BY id"):
     inn = str(inn)
     if "Россия 9000" not in str(ex or "") or inn in вид or напр.get(inn) != "мейер": continue
     вид.add(inn)
@@ -40,7 +41,7 @@ for inn, ex in c.execute("SELECT inn, extra_json FROM recipients WHERE inn IS NO
     elif blok and blok(c, inn, "meyer"): k = "сделка Meyer в работе"
     else:
         k = "не генерировали (вне порций / упёрлись в порог цены)"
-        ост.append(inn)
+        ост.append(inn); рид_по[inn] = rid0
     сч[k] += 1
 print("всего с вердиктом мейер:", len(вид))
 for k, v in сч.most_common(): print("%6d  %s" % (v, k))
@@ -70,3 +71,7 @@ for inn in ост:
         б["нет компании в enrich" if inn not in инфо else ("выручка есть" if rev else "выручки нет")] += 1
         б["ИНН 10 знаков (юрлицо)" if len(inn)==10 else "ИНН 12 (ИП)" if len(inn)==12 else "ИНН иной: %d" % len(inn)] += 1
 print("без ОКВЭД:", dict(б))
+
+кр = sorted([i for i in ост if float((инфо.get(i) or ("",0))[1] or 0) >= 50e6], key=lambda i: -float(инфо[i][1] or 0))[:400]
+json.dump([рид_по[i] for i in кр], io.open(r"C:\sender\_ops\spisok-meyer-9000-50mln.json", "w"))
+print("список Meyer от 50 млн:", len(кр))
