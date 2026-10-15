@@ -5,7 +5,7 @@
 # в базу уже закинули, в ФСА контакты дополнительные есть, просто не прогонять классификацию по ним» — отметка «уже в базе».
 # Всё durable на сервере (fsync, резюм по окнам и карточкам): fsa-meyer-decl.jsonl, fsa-meyer-okna.jsonl,
 # fsa-meyer-kontakty.jsonl; итог fsa-meyer-izg.jsonl + дроп. Лог: fsa_meyer_*.log.
-import datetime, io, json, os, re, sqlite3, sys, time
+import datetime, io, json, os, re, sqlite3, sys, threading, time
 DIR = r'C:\sender\server'
 sys.path.insert(0, DIR); sys.path.insert(0, r'C:\sender')
 import fsa_pilot_orehi as F  # noqa: E402  (вход, запрос — рабочий клиент pub.fsa.gov.ru)
@@ -14,7 +14,10 @@ import fsa_pilot_orehi as F  # noqa: E402  (вход, запрос — рабо�
 КОНТ = os.path.join(DIR, 'fsa-meyer-kontakty.jsonl')
 ИТОГ = os.path.join(DIR, 'fsa-meyer-izg.jsonl')
 ДРОП = r'C:\seostat\drop\drop-storage'
-С_ДАТЫ = datetime.date(2020, 1, 1)
+# 15.10: 6 слов за 13,5 ч (зерно/пшеница — сотни тысяч деклараций) -> 238 слов заняли бы недели: окно с 2023 г. и 6 потоков
+С_ДАТЫ = datetime.date(int(os.environ.get('FSA_S_GODA', '2023')), 1, 1)
+ПОТОКОВ = int(os.environ.get('FSA_POTOKOV', '6'))
+_лок = threading.Lock()
 ПОЛЯ = ('id', 'declNumber', 'declDate', 'declEndDate', 'idStatus', 'applicantType', 'applicantInn', 'applicantName', 'manufacterInn',
         'manufacterName', 'manufacterOgrn', 'manufacterAddress', 'manufacterType', 'productFullName', 'productOrig',
         'productIdentificationTrademark')
@@ -25,7 +28,7 @@ def п(*a):
 
 
 def дописать(путь, x):
-    with io.open(путь, 'a', encoding='utf-8') as f:
+    with _лок, io.open(путь, 'a', encoding='utf-8') as f:
         f.write(json.dumps(x, ensure_ascii=False) + '\n')
         f.flush()
         os.fsync(f.fileno())
@@ -73,9 +76,10 @@ def окно(С, сл, d1, d2, готовые, декл_ид):
     for page in range(10):
         it = (С.стр(сл, d1, d2, page).get('items') or []) if всего else []
         for x in it:
-            if x.get('id') in декл_ид:
-                continue
-            декл_ид.add(x.get('id'))
+            with _лок:
+                if x.get('id') in декл_ид:
+                    continue
+                декл_ид.add(x.get('id'))
             y = {k: x.get(k) for k in ПОЛЯ}
             y['слово'] = сл
             дописать(ДЕКЛ, y)
@@ -94,12 +98,25 @@ def main():
     декл = {x['id']: x for x in читать(ДЕКЛ) if x.get('id')}
     декл_ид = set(декл)
     п('слов', len(слова), '| окон уже', len(готовые), '| деклараций уже', len(декл))
-    С = Сессия()
     сегодня = datetime.date.today()
-    for k, сл in enumerate(слова, 1):
+    сессии = threading.local()
+    # верхние окна первого запуска: «слово|2020-01-01|<дата запуска>» записывается в журнал окон после всех подокон
+    готовые_верх = [г for г in готовые if г.count('|') == 2 and '|2020-01-01|' in г]
+    сегодня_старт = ''
+
+    def слово(kс):
+        k, сл = kс
+        if not hasattr(сессии, 'С'):
+            сессии.С = Сессия()
+        if сл + '|2020-01-01|2026-10-14' in готовые_верх or сл + '|2020-01-01|2026-10-15' in готовые_верх:
+            return  # слово уже пройдено целиком в первом запуске (окно с 2020 г.)
         до = len(декл_ид)
-        окно(С, сл, С_ДАТЫ, сегодня, готовые, декл_ид)
-        п('слово %d/%d «%s»: +%d, всего %d, %.0f мин' % (k, len(слова), сл, len(декл_ид) - до, len(декл_ид), (time.time() - t0) / 60))
+        окно(сессии.С, сл, С_ДАТЫ, сегодня, готовые, декл_ид)
+        п('слово %d/%d «%s»: всего %d, %.0f мин' % (k, len(слова), сл, len(декл_ид), (time.time() - t0) / 60))
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(ПОТОКОВ) as ex:
+        list(ex.map(слово, enumerate(слова, 1)))
+    С = Сессия()
     # изготовители РФ
     декл = {x['id']: x for x in читать(ДЕКЛ) if x.get('id')}
     изг = {}
