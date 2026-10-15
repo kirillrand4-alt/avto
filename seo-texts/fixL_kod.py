@@ -194,44 +194,100 @@ def _fixL_mob(x: dict) -> bool:
     return x.get("vid_nomera") == "мобильный" or _fixL_s(x.get("phone_type")) == "мобильный"
 
 
-def _fixL_luchshiy_lpr(kontakty: list, skrytye: dict) -> dict:
-    """Лучший ЛПР карточки: первое лицо / тех. ЛПР (уровни 1–3) с мобильным, затем по уровню."""
-    tel = [x for x in kontakty if x.get("kind") == "phone" and _fixL_s(x.get("value"))
-           and x.get("value") not in skrytye and not _fixL_s(x.get("chuzhoy_istochnik"))]
-
-    def zam(x):
-        return 1 if re.search(r"(?i)заместител|\bзам\.|помощник|и\.\s?о\.", x.get("position") or "") else 0
-
-    s_fio = [x for x in tel if x.get("lpr") and _fixL_s(x.get("person"))]
-    if s_fio:
-        return min(s_fio, key=lambda x: (0 if int(x.get("uroven") or 9) <= 3 and _fixL_mob(x) else 1,
-                                         int(x.get("uroven") or 9), zam(x), 0 if _fixL_mob(x) else 1,
-                                         tel.index(x)))
-    verh = [x for x in tel if x.get("lpr")] or [x for x in tel if x.get("has_role")] or tel
-    return verh[0] if verh else {}
+def _fixL_zam(dolzh) -> int:
+    return 1 if re.search(r"(?i)заместител|\bзам\.|помощник|и\.\s?о\.", dolzh or "") else 0
 
 
-def _fixL_lpr_polya(c: dict, kontakty: list, skrytye: dict) -> dict:
-    """ЛПР для полей лида: лучший ЛПР с ФИО и номером; если такого нет – руководитель из реквизитов
-    («Фамилия Имя Отчество (должность, с …)») или ЛПР «спросить у приёмной», а номер – лучший из карточки
-    с честной подписью, чей он."""
-    x = _fixL_luchshiy_lpr(kontakty, skrytye)
-    tel = _fixL_s(x.get("value"))
-    if x.get("lpr") and _fixL_s(x.get("person")):
-        return {"fio": _fixL_s(x.get("person")), "dolzhnost": _fixL_s(x.get("position")), "tel": tel,
-                "mob": _fixL_mob(x), "opis": "ЛПР"}
-    fio = dolzh = ""
-    otkuda = ""
+def _fixL_podpis(x: dict) -> str:
+    """Подпись номера, как в карточке: вид · чей («мобильный · ЛПР: первое лицо», «рабочий · приёмная, не ЛПР»)."""
+    vid = _fixL_s(x.get("vid_nomera")) or _fixL_s(x.get("phone_type"))
+    chuzh = _fixL_s(x.get("chuzhoy_istochnik"))
+    if chuzh:
+        rol = "с сайта другого юрлица: %s" % chuzh
+    elif x.get("lpr"):
+        rol = "ЛПР" + ((": " + _fixL_s(x.get("rol_vid"))) if _fixL_s(x.get("rol_vid")) else "")
+    else:
+        rol = (_fixL_s(x.get("nomer_ne_lichnyy")) or _fixL_s(x.get("rol_vid")) or "без роли") + ", не ЛПР"
+    return " · ".join(z for z in (vid, rol) if z)
+
+
+def _fixL_lyudi(c: dict, kontakty: list, lyudi: list, skrytye: dict) -> list:
+    """Люди карточки для кнопок «Контакты»: с ФИО, ЛПР первыми (по уровню), затем руководитель из реквизитов,
+    затем остальные. У каждого – лучший номер (мобильный раньше) с подписью и почта."""
+    po: dict = {}
+    poryadok: list = []
+
+    def vzyat(fio, dolzh):
+        k = catalog._kl_fio(fio) or fio.casefold()
+        if k not in po:
+            po[k] = {"fio": fio, "dolzhnost": dolzh, "tel": "", "tel_podpis": "", "email": "", "lpr": 0,
+                     "uroven": 99, "otkuda": "", "_mob": False}
+            poryadok.append(k)
+        z = po[k]
+        if len(fio) > len(z["fio"]):
+            z["fio"] = fio
+        if dolzh and not z["dolzhnost"]:
+            z["dolzhnost"] = dolzh
+        return z
+    for x in kontakty:
+        fio = _fixL_s(x.get("person"))
+        if not fio:
+            continue
+        kind = x.get("kind")
+        if kind == "phone" and x.get("value") in skrytye:
+            continue
+        z = vzyat(fio, _fixL_s(x.get("position")))
+        if x.get("lpr") and not _fixL_s(x.get("chuzhoy_istochnik")):
+            z["lpr"] = 1
+            z["uroven"] = min(z["uroven"], int(x.get("uroven") or 9))
+        if kind == "phone" and _fixL_s(x.get("value")):
+            mob = _fixL_mob(x)
+            if not z["tel"] or (mob and not z["_mob"]):
+                z["tel"], z["tel_podpis"], z["_mob"] = _fixL_s(x.get("value")), _fixL_podpis(x), mob
+        elif kind == "email" and _fixL_s(x.get("value")) and not z["email"]:
+            z["email"] = _fixL_s(x.get("value"))
+        elif kind == "sprosit" and not z["tel"]:
+            z["tel_podpis"] = "без номера: спросить у приёмной"
+    for p in lyudi:
+        fio = _fixL_s(p.get("person"))
+        if not fio or p.get("privyazka_snyata"):
+            continue
+        z = vzyat(fio, _fixL_s(p.get("position")))
+        if p.get("lpr"):
+            z["lpr"] = 1
+            z["uroven"] = min(z["uroven"], 9)
+        if not z["email"] and _fixL_s(p.get("email")):
+            z["email"] = _fixL_pervoe(p.get("email"))
+        tel = _fixL_s(p.get("phone"))
+        if tel and not z["tel"] and tel not in skrytye:
+            z["tel"], z["tel_podpis"] = tel, "номер из списка людей карточки"
     m = re.match(r"^\s*([^()]+?)\s*\(([^,()]+)", _fixL_s(c.get("direktor")))
     if m:
-        fio, dolzh, otkuda = m.group(1).strip(), m.group(2).strip(), "руководитель из реквизитов"
-    else:
-        sp = next((y for y in kontakty if y.get("kind") == "sprosit" and _fixL_s(y.get("person"))), None)
-        if sp:
-            fio, dolzh, otkuda = _fixL_s(sp.get("person")), _fixL_s(sp.get("position")), "ЛПР без номера – спросить у приёмной"
-    chey = "ЛПР" if x.get("lpr") else (_fixL_s(x.get("nomer_ne_lichnyy")) or _fixL_s(x.get("rol_vid")) or "без роли")
-    return {"fio": fio, "dolzhnost": dolzh, "tel": tel, "mob": _fixL_mob(x) if x else False,
-            "opis": otkuda, "tel_opis": ("%s%s" % (chey, "" if x.get("lpr") else ", не ЛПР")) if tel else ""}
+        fio = m.group(1).strip()
+        k = catalog._kl_fio(fio) or fio.casefold()
+        if k in po:
+            po[k]["otkuda"] = po[k]["otkuda"] or "руководитель и по реквизитам"
+        else:
+            z = vzyat(fio, m.group(2).strip())
+            z.update({"lpr": 1, "uroven": 50, "otkuda": "из реквизитов"})
+    spisok = [po[k] for k in poryadok]
+    spisok.sort(key=lambda z: (0 if z["lpr"] else 1, z["uroven"] if z["lpr"] else 0, _fixL_zam(z["dolzhnost"]),
+                               0 if z["tel"] else 1, 0 if z["_mob"] else 1, poryadok.index(
+                                   catalog._kl_fio(z["fio"]) or z["fio"].casefold())))
+    return [{k: v for k, v in z.items() if not k.startswith("_") and k != "uroven"} for z in spisok[:60]]
+
+
+def _fixL_nomera(kontakty: list, skrytye: dict) -> list:
+    """Все номера компании (как в карточке: ЛПР сверху, затем остальные) с видом и подписью, чей номер."""
+    out, bylo = [], set()
+    for x in kontakty:
+        tel = _fixL_s(x.get("value"))
+        if x.get("kind") != "phone" or not tel or tel in skrytye or tel in bylo:
+            continue
+        bylo.add(tel)
+        chey = ", ".join(z for z in (_fixL_s(x.get("person")), _fixL_s(x.get("position"))) if z)
+        out.append({"tel": tel, "podpis": _fixL_podpis(x), "chey": chey, "lpr": 1 if x.get("lpr") else 0})
+    return out[:80]
 
 
 def _fixL_gruppa(c: dict) -> str:
@@ -288,18 +344,6 @@ def _fixL_bloki(c: dict, kontakty: list, skrytye: dict, user: dict, inn: str) ->
         if _fixL_s(c.get("meyer_verdikt_dokaz")):
             t += "\nДоказательство: " + _fixL_s(c.get("meyer_verdikt_dokaz"))[:800]
         bloki.append({"nazv": "Почему покупатель Meyer", "tekst": t})
-    n = 0
-    for x in kontakty:
-        if n >= 15:
-            break
-        if x.get("kind") != "phone" or x.get("value") in skrytye or not x.get("has_role"):
-            continue
-        fio, dol = _fixL_s(x.get("person")), _fixL_s(x.get("position") or x.get("role"))
-        vid = _fixL_s(x.get("vid_nomera"))
-        chast = ", ".join(z for z in (fio, dol) if z) or _fixL_s(x.get("rol_vid")) or "номер"
-        bloki.append({"nazv": "ЛПР: " + chast, "lpr": 1,
-                      "tekst": "%s: %s%s" % (chast, _fixL_s(x.get("value")), (" (%s)" % vid) if vid else "")})
-        n += 1
     rekv = sobrat([("ИНН", inn), ("Руководитель", c.get("direktor")), ("Адрес", c.get("adres")),
                    ("Выручка", ("%s%s" % (_fixL_dengi(c.get("vyruchka_rub")),
                                           (" (%s)" % _fixL_s(c.get("fin_god"))) if _fixL_s(c.get("fin_god")) else ""))
@@ -341,11 +385,10 @@ def fixL_dannye(request: Request, inn: str = "", user=Depends(current_user)):
     except catalog.CentroDbUnavailable:
         kontakty = []
     skrytye = sales.hidden_for(inn).get("phone") or {}
-    lpr = _fixL_lpr_polya(c, kontakty, skrytye)
-    chasti = lpr["fio"].split()
-    pochta = next((_fixL_s(x.get("value")) for x in kontakty if x.get("kind") == "email"
-                   and _fixL_s(x.get("value")) and not _fixL_s(x.get("chuzhoy_istochnik"))), "") \
-        or _fixL_pervoe(c.get("pochta"))
+    try:
+        lyudi = catalog.persons(inn)
+    except catalog.CentroDbUnavailable:
+        lyudi = []
     nazv = _fixL_s(c.get("predpriyatie")) or inn
     verd = _fixL_s(c.get("meyer_verdikt"))
     kom = ["ИНН %s" % inn]
@@ -354,11 +397,6 @@ def fixL_dannye(request: Request, inn: str = "", user=Depends(current_user)):
             "да" if verd == "покупатель" else verd,
             (" – " + _fixL_s(c.get("meyer_verdikt_napravlenie"))) if _fixL_s(c.get("meyer_verdikt_napravlenie")) else "",
             (". " + _fixL_s(c.get("meyer_verdikt_pochemu"))) if _fixL_s(c.get("meyer_verdikt_pochemu")) else ""))
-    if lpr["fio"]:
-        kom.append("ЛПР%s: %s" % ((" (%s)" % lpr["opis"]) if lpr["opis"] != "ЛПР" else "",
-                                  ", ".join(z for z in (lpr["fio"], lpr["dolzhnost"]) if z)))
-    if lpr["tel"]:
-        kom.append("Телефон: %s%s" % (lpr["tel"], (" (%s)" % lpr["tel_opis"]) if lpr.get("tel_opis") else ""))
     kom.append("Карточка в панели: %s%s" % (_FIXL_PANEL, inn))
     otv = _fixL_otvetstvennyy(owner)
     n = _fixL_nastroyki()
@@ -366,13 +404,14 @@ def fixL_dannye(request: Request, inn: str = "", user=Depends(current_user)):
         "inn": inn,
         "polya": {
             "title": "%s (обзвон Meyer)" % nazv, "company_title": nazv,
-            "last_name": chasti[0] if chasti else "", "name": chasti[1] if len(chasti) > 1 else "",
-            "second_name": " ".join(chasti[2:]), "post": lpr["dolzhnost"],
-            "phone": lpr["tel"], "email": pochta, "web": _fixL_pervoe(c.get("sayt")),
+            # владелец 15.10: ФИО, должность, телефон, почта – пустые; выбор кнопками «Контакты» / «Номера»
+            "fio": "", "post": "", "phone": "", "email": "", "web": _fixL_pervoe(c.get("sayt")),
             "address": _fixL_s(c.get("adres")), "region": _fixL_s(c.get("region")),
             "gruppa": _fixL_gruppa(c), "comments": "\n".join(kom),
         },
         "gruppy": _FIXL_GRUPPY,
+        "kontakty": _fixL_lyudi(c, kontakty, lyudi, skrytye),
+        "nomera": _fixL_nomera(kontakty, skrytye),
         "bloki": _fixL_bloki(c, kontakty, skrytye, user, inn),
         "lidy": fixL_lidy(inn),
         "tolko_chtenie": {
@@ -444,7 +483,8 @@ def fixL_sozdat_lid(
     request: Request,
     inn: str = Form(...),
     title: str = Form(""), company_title: str = Form(""),
-    last_name: str = Form(""), name: str = Form(""), second_name: str = Form(""), post: str = Form(""),
+    fio: str = Form(""), post: str = Form(""),
+    last_name: str = Form(""), name: str = Form(""), second_name: str = Form(""),   # старые окна (до 15.10)
     phone: str = Form(""), email: str = Form(""), web: str = Form(""),
     address: str = Form(""), region: str = Form(""), gruppa: str = Form(""), comments: str = Form(""),
     comment: str = Form(""), next_contact_at: str = Form(""), povtor: str = Form(""),
@@ -473,8 +513,9 @@ def fixL_sozdat_lid(
         cifry = re.sub(r"\D", "", tel)
         polya = {
             "TITLE": title[:255], "COMPANY_TITLE": company_title.strip()[:255],
-            "LAST_NAME": last_name.strip()[:100], "NAME": name.strip()[:100],
-            "SECOND_NAME": second_name.strip()[:100], "POST": post.strip()[:255],
+            # владелец 15.10: «Имя» в Битриксе показывало только имя – ФИО целиком в NAME, фамилия/отчество пустые
+            "NAME": (fio.strip() or " ".join(z.strip() for z in (last_name, name, second_name) if z.strip()))[:150],
+            "POST": post.strip()[:255],
             "ADDRESS": address.strip()[:1000], "UF_CRM_68B688D287BE4": region.strip()[:255],
             "UF_CRM_1711628077": gruppa, "COMMENTS": _fixL_html(comments.strip()),
             "SOURCE_ID": str(n.get("source_id") or "149"), "SOURCE_DESCRIPTION": "Панель обзвона Meyer",
@@ -548,11 +589,9 @@ SHABLON_LID = r'''{# fixL-bitrix-lid (15.10): окно «Завести лид �
         <div class="fixL-polya" hidden>
           <label class="shir">Название лида<input name="title" maxlength="255"></label>
           <label class="shir">Название компании<input name="company_title" maxlength="255"></label>
-          <label>Фамилия<input name="last_name" maxlength="100"></label>
-          <label>Имя<input name="name" maxlength="100"></label>
-          <label>Отчество<input name="second_name" maxlength="100"></label>
+          <label>ФИО<input name="fio" maxlength="150" placeholder="выберите справа в «Контактах» или впишите"></label>
           <label>Должность<input name="post" maxlength="255"></label>
-          <label>Телефон<input name="phone" maxlength="60"></label>
+          <label>Телефон<input name="phone" maxlength="60" placeholder="«Контакты» или «Номера» справа"></label>
           <label>E-mail<input name="email" maxlength="200"></label>
           <label>Сайт<input name="web" maxlength="300"></label>
           <label>Регион<input name="region" maxlength="255"></label>
@@ -576,7 +615,11 @@ SHABLON_LID = r'''{# fixL-bitrix-lid (15.10): окно «Завести лид �
         </div>
       </form>
       <aside class="fixL-bloki">
-        <p class="fixL-bloki-zag">Дописать в поле, где стоял курсор (по умолчанию – в комментарий):</p>
+        <p class="fixL-bloki-zag"><b>Контакты</b> – клик заменяет ФИО, должность, телефон и почту (нет номера или почты – поле не трогается):</p>
+        <div class="fixL-spisok fixL-kontakty"></div>
+        <p class="fixL-bloki-zag"><b>Номера</b> – клик заменяет только телефон:</p>
+        <div class="fixL-spisok fixL-nomera"></div>
+        <p class="fixL-bloki-zag"><b>Дописать</b> в поле, где стоял курсор (по умолчанию – в комментарий):</p>
         <div class="fixL-bloki-spisok"></div>
       </aside>
     </div>
@@ -621,6 +664,18 @@ SHABLON_LID = r'''{# fixL-bitrix-lid (15.10): окно «Завести лид �
 .fixL-blok.lpr{border-left:3px solid #2f9e62}
 .fixL-blok small{display:block;color:#6b7a8f;font-size:11px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fixL-blok.vstavlen{background:#e8f6ee}
+.fixL-spisok{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;min-width:0;max-height:30vh;overflow-y:auto;overscroll-behavior:contain;padding-right:2px}
+.fixL-spisok .fixL-pusto{margin:0;font-size:12px;color:#6b7a8f}
+.fixL-kn{display:block;width:100%;min-width:0;box-sizing:border-box;text-align:left;font:inherit;font-size:13px;border:1px solid #c9d2dd;background:#fff;border-radius:6px;padding:5px 8px;cursor:pointer;color:#16233a}
+.fixL-kn:hover{background:#eef0fb;border-color:#9fb0d8}
+.fixL-kn.lpr{border-left:3px solid #2f9e62}
+.fixL-kn.vybran{background:#e8f6ee;border-color:#9bd3b3}
+.fixL-kn b{font-weight:600}
+.fixL-kn span,.fixL-kn small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fixL-kn span{font-size:12px;color:#3d4b60}
+.fixL-kn small{font-size:11px;color:#6b7a8f}
+.fixL-kn b .fixL-metka{display:inline-block;margin-left:4px;font-size:10px;padding:0 4px;border-radius:3px;background:#fff3cd;color:#7a5b00;vertical-align:1px}
+.fixL-polya .fixL-zameneno{background:#fff9db}
 body.fixL-otkryto{overflow:hidden}
 .fixL-mob{margin:0;font-size:13px;grid-column:1/-1}
 .fixL-mob[hidden]{display:none}
@@ -695,6 +750,7 @@ body.fixL-otkryto{overflow:hidden}
         if (rk) komm.value = komm.value + '\nКомментарий менеджера: ' + rk;
         var t = d.tolko_chtenie || {};
         forma.querySelectorAll('[data-t]').forEach(function (dd) { dd.textContent = t[dd.dataset.t] || '–'; });
+        stroitKontakty(d.kontakty || [], d.nomera || []);
         spisok.innerHTML = '';
         (d.bloki || []).forEach(function (b) {
           var kn = document.createElement('button');
@@ -710,6 +766,54 @@ body.fixL-otkryto{overflow:hidden}
         posl = komm; komm.classList.add('fixL-posl');
       })
       .catch(function () { zagr.textContent = 'Нет связи с панелью – закройте окно и попробуйте ещё раз.'; });
+  }
+  /* «Контакты» и «Номера»: клик ЗАМЕНЯЕТ значения полей (не дописывает) */
+  function postavit(imya, znach) {
+    var el = forma.elements[imya];
+    if (!el) return;
+    el.value = znach || '';
+    el.classList.add('fixL-zameneno');
+    setTimeout(function () { el.classList.remove('fixL-zameneno'); }, 1200);
+  }
+  function knopka(klass, stroki, naKlik) {
+    var kn = document.createElement('button');
+    kn.type = 'button'; kn.className = 'fixL-kn ' + klass;
+    stroki.forEach(function (s, i) {
+      if (!s || !s[0]) return;
+      var el = document.createElement(i === 0 ? 'b' : (s[1] || 'span'));
+      el.textContent = s[0];
+      if (i === 0 && s[2]) { var m = document.createElement('span'); m.className = 'fixL-metka'; m.textContent = s[2]; kn.appendChild(el); el.appendChild(m); return; }
+      kn.appendChild(el);
+    });
+    kn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    kn.addEventListener('click', function () {
+      kn.parentNode.querySelectorAll('.vybran').forEach(function (x) { x.classList.remove('vybran'); });
+      kn.classList.add('vybran'); naKlik();
+    });
+    return kn;
+  }
+  function stroitKontakty(lyudi, nomera) {
+    var sk = okno.querySelector('.fixL-kontakty'), sn = okno.querySelector('.fixL-nomera');
+    sk.innerHTML = ''; sn.innerHTML = '';
+    lyudi.forEach(function (z) {
+      sk.appendChild(knopka(z.lpr ? 'lpr' : '', [
+        [z.fio, '', z.otkuda || ''],
+        [z.dolzhnost, 'span'],
+        [z.tel ? (z.tel + (z.tel_podpis ? ' · ' + z.tel_podpis : '')) : (z.tel_podpis || 'номера нет'), 'small'],
+        [z.email, 'small']
+      ], function () {
+        postavit('fio', z.fio); postavit('post', z.dolzhnost);
+        if (z.tel) postavit('phone', z.tel);
+        if (z.email) postavit('email', z.email);
+      }));
+    });
+    nomera.forEach(function (n) {
+      sn.appendChild(knopka(n.lpr ? 'lpr' : '', [
+        [n.tel, ''], [n.podpis, 'span'], [n.chey, 'small']
+      ], function () { postavit('phone', n.tel); }));
+    });
+    if (!lyudi.length) sk.innerHTML = '<p class="fixL-pusto">Людей с ФИО в карточке нет.</p>';
+    if (!nomera.length) sn.innerHTML = '<p class="fixL-pusto">Номеров в карточке нет.</p>';
   }
   forma.addEventListener('focusin', function (e) {
     var el = e.target;
@@ -733,7 +837,7 @@ body.fixL-otkryto{overflow:hidden}
     var povt = forma.querySelector('input[name=povtor]');
     if (nuzhnoPodtv && !(povt && povt.checked)) { pokazatOsh('Лид уже заводили – отметьте «Да, завести ещё один лид» или закройте окно.'); return; }
     var fd = new URLSearchParams();
-    ['title', 'company_title', 'last_name', 'name', 'second_name', 'post', 'phone', 'email', 'web', 'region', 'address', 'gruppa', 'comments']
+    ['title', 'company_title', 'fio', 'post', 'phone', 'email', 'web', 'region', 'address', 'gruppa', 'comments']
       .forEach(function (k) { fd.set(k, forma.elements[k].value); });
     fd.set('inn', inn);
     fd.set('comment', rabKomm());
@@ -797,6 +901,7 @@ body.fixL-otkryto{overflow:hidden}
 {% endif %}
 '''
 MARKER_R = '# ===== fixL-bitrix-lid (15.10)'
+KONEC_R = '# ===== /fixL-bitrix-lid ====='
 
 C1_STARO = '''<li class="rez-punkt" data-value="{{ value }}" data-label="{{ label }}" role="menuitem">{{ label }}</li>'''
 C1_NOVO = ('''{% if value == 'v_rabote' and fixL_lidy is defined and user.role in ('admin', 'sales') and not user.rop %}'''
@@ -847,7 +952,14 @@ def nalozhit(teksty):
     zh, ok = [], True
     t = novye['R']
     if MARKER_R in t:
-        zh.append('[уже] routes_centro_sales.py: блок fixL')
+        nachalo = t.index(MARKER_R)
+        konec = t.index(KONEC_R, nachalo) + len(KONEC_R)
+        nov = nl_kak_v(t, BLOK_ROUTES.strip('\n'))
+        if t[nachalo:konec] == nov:
+            zh.append('[уже] routes_centro_sales.py: блок fixL')
+        else:
+            novye['R'] = t[:nachalo] + nov + t[konec:]
+            zh.append('[ок] routes_centro_sales.py: блок fixL заменён новой версией')
     elif not t.strip():
         zh.append('[НЕТ ФАЙЛА] routes_centro_sales.py')
         ok = False
@@ -1032,6 +1144,36 @@ def test(koren, kat, sales_db, metka, polnyy):
            'название «… (обзвон Meyer)», группа «Рентгены», ссылка на карточку в комментарии')
         ok('7981' in (d.get('tolko_chtenie') or {}).get('otvetstvennyy', ''), 'ответственный – 7981 (тестовый режим)')
         ok(len(d.get('bloki') or []) >= 4 and d.get('lidy') == [], 'блоки справа есть, прежних лидов нет')
+        # правки владельца 15.10: ФИО/должность/телефон/почта пустые, короткий комментарий, «Контакты» и «Номера»
+        ok(all(p.get(k) == '' for k in ('fio', 'post', 'phone', 'email')) and not any(k in p for k in ('last_name', 'name', 'second_name')),
+           'ФИО, должность, телефон, почта при открытии пустые; одно поле ФИО')
+        ok('Реквизиты' not in p.get('comments', '') and 'Телефон' not in p.get('comments', '') and 'ЛПР' not in p.get('comments', '')
+           and 'ИНН %s' % TULSKAYA in p.get('comments', '') and 'Покупатель Meyer' in p.get('comments', ''),
+           'комментарий короткий: ИНН, «Покупатель Meyer», ссылка (без реквизитов и номеров)')
+        kt, nm = d.get('kontakty') or [], d.get('nomera') or []
+        print('      контакты %s: %s' % (TULSKAYA, json.dumps([dict(z, tel=maska(z.get('tel'))) for z in kt], ensure_ascii=False)))
+        print('      номера %s: %s' % (TULSKAYA, json.dumps([dict(z, tel=maska(z.get('tel'))) for z in nm], ensure_ascii=False)))
+        ok(any(z.get('otkuda') == 'из реквизитов' for z in kt) and len(nm) >= 1 and all(z.get('podpis') for z in nm),
+           'Тульская: руководитель «из реквизитов» в «Контактах», номера с подписью')
+        ok(not any(z['nazv'].startswith('ЛПР:') for z in d.get('bloki') or []), 'блоков «ЛПР: …» больше нет (их место – «Контакты»)')
+        # компания с несколькими людьми и номерами
+        kk = sqlite3.connect('file:%s?mode=ro' % kat, uri=True)
+        kand = [r[0] for r in kk.execute(
+            "SELECT inn FROM contact WHERE kind='phone' GROUP BY inn HAVING COUNT(DISTINCT CASE WHEN COALESCE(TRIM(person),'')<>'' "
+            "THEN person END) >= 3 AND COUNT(*) >= 5 ORDER BY inn")]
+        kk.close()
+        vlad = {i: u for u in nazn for i in nazn[u]}
+        mn = next((i for i in kand if i in vlad and vlad[i] in PRODAVCY), '')
+        if mn:
+            o, dm = polya_formy(vlad[mn], mn)
+            kt, nm = dm.get('kontakty') or [], dm.get('nomera') or []
+            lpr_snachala = all(not (not a['lpr'] and b['lpr']) for a, b in zip(kt, kt[1:]))
+            print('      %s (%s): людей %d, номеров %d; первые: %s' % (mn, vlad[mn], len(kt), len(nm), json.dumps(
+                [dict(z, tel=maska(z.get('tel'))) for z in kt[:4]] + [dict(z, tel=maska(z.get('tel'))) for z in nm[:4]], ensure_ascii=False)))
+            ok(o.status_code == 200 and len(kt) >= 2 and len(nm) >= 3 and lpr_snachala and all(z.get('podpis') for z in nm)
+               and all(z.get('fio') for z in kt), 'много людей и номеров (%s): кнопки контактов %d, номеров %d, ЛПР первыми' % (mn, len(kt), len(nm)))
+        else:
+            ok(False, 'нет компании с несколькими людьми и номерами для проверки')
         for login, zhdu in (('meyer1', 404), (adminy[0], 200)):
             o, _ = polya_formy(login, TULSKAYA)
             ok(o.status_code == zhdu, '%s: данные окна чужой/любой компании – %s (ждём %s)' % (login, o.status_code, zhdu))
@@ -1053,8 +1195,10 @@ def test(koren, kat, sales_db, metka, polnyy):
         ok(o.status_code == 422 and len(ZAGL['vyzovy']) == n0, 'пустое название – %s' % o.status_code)
 
         # успех (meyer9, Тульская – на копии базы; поля, которые уйдут в Битрикс)
+        fio_t = next((z['fio'] for z in d.get('kontakty') or [] if len(z['fio'].split()) == 3), 'Иванов Иван Иванович')
         o = post('meyer9', '/centro/bitrix-lid', forma(d, inn=TULSKAYA, title='ТЕСТ — ' + p.get('title', ''),
-                                                       comment='проверка fixL на копии'))
+                                                       comment='проверка fixL на копии', fio=fio_t, post='генеральный директор',
+                                                       phone='+7 495 000-00-00'))
         j = o.json() if o.headers.get('content-type', '').startswith('application/json') else {}
         ok(o.status_code == 200 and j.get('ok') and j.get('sohraneno') and j.get('kartochka') == PUT + '/centro?call_status=v_rabote&inn=' + TULSKAYA,
            'meyer9: лид создан (заглушка) – %s %s' % (o.status_code, j))
@@ -1067,6 +1211,8 @@ def test(koren, kat, sales_db, metka, polnyy):
            and f.get('UF_CRM_61B6C14B0E2A1') == '11198' and f.get('UF_CRM_1639366376') == '5880' and f.get('UF_CRM_1711628077') == '11797'
            and '<a href="https://parsercompressor.online/obzvon-meyer/centro?inn=%s">' % TULSKAYA in f.get('COMMENTS', '')
            and f.get('TITLE', '').startswith('ТЕСТ — '), 'поля лида: источник 149, NEW, 7981, «Торгующая?» = Нет×2, группа, ссылка')
+        ok(f.get('NAME') == fio_t and 'LAST_NAME' not in f and 'SECOND_NAME' not in f and f.get('POST') == 'генеральный директор',
+           'ФИО целиком в NAME («%s»), LAST_NAME и SECOND_NAME не заполняются' % f.get('NAME'))
         st = baza('SELECT * FROM company_state WHERE inn=?', TULSKAYA)
         km = baza('SELECT * FROM company_comment WHERE inn=? ORDER BY id DESC LIMIT 1', TULSKAYA)
         al = baza("SELECT * FROM activity_log WHERE inn=? AND action='call_saved' ORDER BY id DESC LIMIT 1", TULSKAYA)
