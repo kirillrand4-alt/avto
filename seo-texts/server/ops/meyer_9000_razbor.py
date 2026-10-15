@@ -75,3 +75,9 @@ print("без ОКВЭД:", dict(б))
 кр = sorted([i for i in ост if float((инфо.get(i) or ("",0))[1] or 0) >= 50e6], key=lambda i: -float(инфо[i][1] or 0))[:400]
 json.dump([рид_по[i] for i in кр], io.open(r"C:\sender\_ops\spisok-meyer-9000-50mln.json", "w"))
 print("список Meyer от 50 млн:", len(кр))
+
+остальные = [i for i in ост if i not in set(кр)]
+остальные.sort(key=lambda i: -float((инфо.get(i) or ("",0))[1] or 0))
+for n in range(0, len(остальные), 400):
+    json.dump([рид_по[i] for i in остальные[n:n+400]], io.open(r"C:\sender\_ops\spisok-meyer-9000-ch%d.json" % (n // 400 + 1), "w"))
+print("остальные Meyer:", len(остальные), "порций:", (len(остальные) + 399) // 400)
