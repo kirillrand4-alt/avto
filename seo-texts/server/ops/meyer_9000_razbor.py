@@ -23,7 +23,7 @@ for ф in sorted(glob.glob(r"C:\sender\_ops\gen-*.jsonl")):
 try:
     from sender.sdelki_napr import blok
 except Exception: blok = None
-сч, вид = Counter(), set()
+сч, вид, ост = Counter(), set(), []
 for inn, ex in c.execute("SELECT inn, extra_json FROM recipients WHERE inn IS NOT NULL"):
     inn = str(inn)
     if "Россия 9000" not in str(ex or "") or inn in вид or напр.get(inn) != "мейер": continue
@@ -38,7 +38,27 @@ for inn, ex in c.execute("SELECT inn, extra_json FROM recipients WHERE inn IS NO
              else "брак: линза/технолог" if ("линз" in т or "технолог" in т) else "брак: гейт текста")
     elif not [a for a in адр.get(inn, ()) if a not in мёртв]: k = "нет живого адреса"
     elif blok and blok(c, inn, "meyer"): k = "сделка Meyer в работе"
-    else: k = "не генерировали (вне порций / упёрлись в порог цены)"
+    else:
+        k = "не генерировали (вне порций / упёрлись в порог цены)"
+        ост.append(inn)
     сч[k] += 1
 print("всего с вердиктом мейер:", len(вид))
 for k, v in сч.most_common(): print("%6d  %s" % (v, k))
+
+# разбор 1519 нетронутых
+пасп = {str(r[0]): len(r[1] or "") for r in e.execute("SELECT inn, facts_json FROM site_facts")}
+инфо = {str(r[0]): r[1:] for r in e.execute("SELECT inn, name, revenue_rub, okved FROM companies")}
+ок_всего, ок_да = Counter(), Counter()
+for inn,(ок,т) in ген.items():
+    if напр.get(inn)=="мейер":
+        g=str((инфо.get(inn) or (0,0,""))[2] or "")[:2]; ок_всего[g]+=1; ок_да[g]+= bool(ок)
+п, в, о = Counter(), Counter(), Counter()
+for inn in ост:
+    L = пасп.get(inn, 0); п["паспорт нет" if not L else "паспорт тонкий (<600)" if L<600 else "паспорт норм"] += 1
+    name, rev, okv = инфо.get(inn) or ("",0,"")
+    r=float(rev or 0)/1e6; в["<50 млн" if r<50 else "50-300" if r<300 else "300-1000" if r<1000 else ">1 млрд"]+=1
+    о[str(okv or "")[:2]]+=1
+print("\n1519: паспорт", dict(п)); print("выручка", dict(в))
+print("ОКВЭД(2 знака): кол-во | годных ранее по этому классу у Meyer")
+for g,v in о.most_common(15): print("  %s %5d | %d/%d" % (g, v, ок_да[g], ок_всего[g]))
+print("ВСЕГО годных у Meyer ранее: %d/%d" % (sum(ок_да.values()), sum(ок_всего.values())))
