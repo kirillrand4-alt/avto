@@ -405,7 +405,8 @@ def fixL_dannye(request: Request, inn: str = "", user=Depends(current_user)):
         "polya": {
             "title": "%s (обзвон Meyer)" % nazv, "company_title": nazv,
             # владелец 15.10: ФИО, должность, телефон, почта – пустые; выбор кнопками «Контакты» / «Номера»
-            "fio": "", "post": "", "phone": "", "email": "", "web": _fixL_pervoe(c.get("sayt")),
+            # 15.10 (2): «ФИО, должность» – одно поле (должность Битрикс в лиде не показывает)
+            "fio": "", "phone": "", "email": "", "web": _fixL_pervoe(c.get("sayt")),
             "address": _fixL_s(c.get("adres")), "region": _fixL_s(c.get("region")),
             "gruppa": _fixL_gruppa(c), "comments": "\n".join(kom),
         },
@@ -474,6 +475,15 @@ def _fixL_zapis(inn, lead_id, user, owner, otv, status, oshibka, nazvanie) -> in
         return int(cur.lastrowid)
 
 
+def _fixL_imya(fio, dolzh, last_name="", name="", second_name="") -> str:
+    """NAME лида: «ФИО, должность». Старое окно шлёт ФИО и должность (или фамилию/имя/отчество) раздельно – склеиваем."""
+    f = _fixL_s(fio) or " ".join(_fixL_s(z) for z in (last_name, name, second_name) if _fixL_s(z))
+    dl = _fixL_s(dolzh)
+    if dl and dl.casefold() not in f.casefold():
+        f = ", ".join(z for z in (f, dl) if z)
+    return f[:255]
+
+
 def _fixL_otvet(kod: int, **d):
     return _JSONResponse_fixL(status_code=kod, content=d)
 
@@ -483,7 +493,7 @@ def fixL_sozdat_lid(
     request: Request,
     inn: str = Form(...),
     title: str = Form(""), company_title: str = Form(""),
-    fio: str = Form(""), post: str = Form(""),
+    fio: str = Form(""), post: str = Form(""), dolzhnost: str = Form(""),   # post/dolzhnost – старые окна
     last_name: str = Form(""), name: str = Form(""), second_name: str = Form(""),   # старые окна (до 15.10)
     phone: str = Form(""), email: str = Form(""), web: str = Form(""),
     address: str = Form(""), region: str = Form(""), gruppa: str = Form(""), comments: str = Form(""),
@@ -513,9 +523,9 @@ def fixL_sozdat_lid(
         cifry = re.sub(r"\D", "", tel)
         polya = {
             "TITLE": title[:255], "COMPANY_TITLE": company_title.strip()[:255],
-            # владелец 15.10: «Имя» в Битриксе показывало только имя – ФИО целиком в NAME, фамилия/отчество пустые
-            "NAME": (fio.strip() or " ".join(z.strip() for z in (last_name, name, second_name) if z.strip()))[:150],
-            "POST": post.strip()[:255],
+            # владелец 15.10: «Имя» в Битриксе показывало только имя, должность Битрикс не показывает –
+            # одно поле «ФИО, должность» целиком в NAME; LAST_NAME, SECOND_NAME, POST не заполняются
+            "NAME": _fixL_imya(fio, post or dolzhnost, last_name, name, second_name),
             "ADDRESS": address.strip()[:1000], "UF_CRM_68B688D287BE4": region.strip()[:255],
             "UF_CRM_1711628077": gruppa, "COMMENTS": _fixL_html(comments.strip()),
             "SOURCE_ID": str(n.get("source_id") or "149"), "SOURCE_DESCRIPTION": "Панель обзвона Meyer",
@@ -589,8 +599,7 @@ SHABLON_LID = r'''{# fixL-bitrix-lid (15.10): окно «Завести лид �
         <div class="fixL-polya" hidden>
           <label class="shir">Название лида<input name="title" maxlength="255"></label>
           <label class="shir">Название компании<input name="company_title" maxlength="255"></label>
-          <label>ФИО<input name="fio" maxlength="150" placeholder="выберите справа в «Контактах» или впишите"></label>
-          <label>Должность<input name="post" maxlength="255"></label>
+          <label class="shir">ФИО, должность<input name="fio" maxlength="255" placeholder="выберите справа в «Контактах» или впишите: Иванов Иван Иванович, главный инженер"></label>
           <label>Телефон<input name="phone" maxlength="60" placeholder="«Контакты» или «Номера» справа"></label>
           <label>E-mail<input name="email" maxlength="200"></label>
           <label>Сайт<input name="web" maxlength="300"></label>
@@ -615,7 +624,7 @@ SHABLON_LID = r'''{# fixL-bitrix-lid (15.10): окно «Завести лид �
         </div>
       </form>
       <aside class="fixL-bloki">
-        <p class="fixL-bloki-zag"><b>Контакты</b> – клик заменяет ФИО, должность, телефон и почту (нет номера или почты – поле не трогается):</p>
+        <p class="fixL-bloki-zag"><b>Контакты</b> – клик заменяет «ФИО, должность», телефон и почту (нет номера или почты – поле не трогается):</p>
         <div class="fixL-spisok fixL-kontakty"></div>
         <p class="fixL-bloki-zag"><b>Номера</b> – клик заменяет только телефон:</p>
         <div class="fixL-spisok fixL-nomera"></div>
@@ -802,7 +811,7 @@ body.fixL-otkryto{overflow:hidden}
         [z.tel ? (z.tel + (z.tel_podpis ? ' · ' + z.tel_podpis : '')) : (z.tel_podpis || 'номера нет'), 'small'],
         [z.email, 'small']
       ], function () {
-        postavit('fio', z.fio); postavit('post', z.dolzhnost);
+        postavit('fio', z.dolzhnost ? z.fio + ', ' + z.dolzhnost : z.fio);
         if (z.tel) postavit('phone', z.tel);
         if (z.email) postavit('email', z.email);
       }));
@@ -837,7 +846,7 @@ body.fixL-otkryto{overflow:hidden}
     var povt = forma.querySelector('input[name=povtor]');
     if (nuzhnoPodtv && !(povt && povt.checked)) { pokazatOsh('Лид уже заводили – отметьте «Да, завести ещё один лид» или закройте окно.'); return; }
     var fd = new URLSearchParams();
-    ['title', 'company_title', 'fio', 'post', 'phone', 'email', 'web', 'region', 'address', 'gruppa', 'comments']
+    ['title', 'company_title', 'fio', 'phone', 'email', 'web', 'region', 'address', 'gruppa', 'comments']
       .forEach(function (k) { fd.set(k, forma.elements[k].value); });
     fd.set('inn', inn);
     fd.set('comment', rabKomm());
@@ -1145,8 +1154,8 @@ def test(koren, kat, sales_db, metka, polnyy):
         ok('7981' in (d.get('tolko_chtenie') or {}).get('otvetstvennyy', ''), 'ответственный – 7981 (тестовый режим)')
         ok(len(d.get('bloki') or []) >= 4 and d.get('lidy') == [], 'блоки справа есть, прежних лидов нет')
         # правки владельца 15.10: ФИО/должность/телефон/почта пустые, короткий комментарий, «Контакты» и «Номера»
-        ok(all(p.get(k) == '' for k in ('fio', 'post', 'phone', 'email')) and not any(k in p for k in ('last_name', 'name', 'second_name')),
-           'ФИО, должность, телефон, почта при открытии пустые; одно поле ФИО')
+        ok(all(p.get(k) == '' for k in ('fio', 'phone', 'email')) and not any(k in p for k in ('last_name', 'name', 'second_name', 'post')),
+           '«ФИО, должность», телефон, почта при открытии пустые; одно поле «ФИО, должность»')
         ok('Реквизиты' not in p.get('comments', '') and 'Телефон' not in p.get('comments', '') and 'ЛПР' not in p.get('comments', '')
            and 'ИНН %s' % TULSKAYA in p.get('comments', '') and 'Покупатель Meyer' in p.get('comments', ''),
            'комментарий короткий: ИНН, «Покупатель Meyer», ссылка (без реквизитов и номеров)')
@@ -1195,10 +1204,10 @@ def test(koren, kat, sales_db, metka, polnyy):
         ok(o.status_code == 422 and len(ZAGL['vyzovy']) == n0, 'пустое название – %s' % o.status_code)
 
         # успех (meyer9, Тульская – на копии базы; поля, которые уйдут в Битрикс)
-        fio_t = next((z['fio'] for z in d.get('kontakty') or [] if len(z['fio'].split()) == 3), 'Иванов Иван Иванович')
+        z_t = next((z for z in d.get('kontakty') or [] if len(z['fio'].split()) == 3), {'fio': 'Иванов Иван Иванович', 'dolzhnost': 'директор'})
+        fio_t = z_t['fio'] + (', ' + z_t['dolzhnost'] if z_t.get('dolzhnost') else '')
         o = post('meyer9', '/centro/bitrix-lid', forma(d, inn=TULSKAYA, title='ТЕСТ — ' + p.get('title', ''),
-                                                       comment='проверка fixL на копии', fio=fio_t, post='генеральный директор',
-                                                       phone='+7 495 000-00-00'))
+                                                       comment='проверка fixL на копии', fio=fio_t, phone='+7 495 000-00-00'))
         j = o.json() if o.headers.get('content-type', '').startswith('application/json') else {}
         ok(o.status_code == 200 and j.get('ok') and j.get('sohraneno') and j.get('kartochka') == PUT + '/centro?call_status=v_rabote&inn=' + TULSKAYA,
            'meyer9: лид создан (заглушка) – %s %s' % (o.status_code, j))
@@ -1211,8 +1220,8 @@ def test(koren, kat, sales_db, metka, polnyy):
            and f.get('UF_CRM_61B6C14B0E2A1') == '11198' and f.get('UF_CRM_1639366376') == '5880' and f.get('UF_CRM_1711628077') == '11797'
            and '<a href="https://parsercompressor.online/obzvon-meyer/centro?inn=%s">' % TULSKAYA in f.get('COMMENTS', '')
            and f.get('TITLE', '').startswith('ТЕСТ — '), 'поля лида: источник 149, NEW, 7981, «Торгующая?» = Нет×2, группа, ссылка')
-        ok(f.get('NAME') == fio_t and 'LAST_NAME' not in f and 'SECOND_NAME' not in f and f.get('POST') == 'генеральный директор',
-           'ФИО целиком в NAME («%s»), LAST_NAME и SECOND_NAME не заполняются' % f.get('NAME'))
+        ok(f.get('NAME') == fio_t and ', ' in fio_t and not any(k in f for k in ('LAST_NAME', 'SECOND_NAME', 'POST')),
+           '«ФИО, должность» целиком в NAME («%s»); LAST_NAME, SECOND_NAME, POST не заполняются' % f.get('NAME'))
         st = baza('SELECT * FROM company_state WHERE inn=?', TULSKAYA)
         km = baza('SELECT * FROM company_comment WHERE inn=? ORDER BY id DESC LIMIT 1', TULSKAYA)
         al = baza("SELECT * FROM activity_log WHERE inn=? AND action='call_saved' ORDER BY id DESC LIMIT 1", TULSKAYA)
@@ -1268,7 +1277,11 @@ def test(koren, kat, sales_db, metka, polnyy):
         # админ за менеджера
         i3 = novaya('meyer4')
         _, d3 = polya_formy(adminy[0], i3)
-        o = post(adminy[0], '/centro/bitrix-lid', forma(d3, inn=i3, comment='админ за менеджера'))
+        o = post(adminy[0], '/centro/bitrix-lid', forma(d3, inn=i3, comment='админ за менеджера',
+                                                        fio='Петров Пётр Петрович', dolzhnost='главный инженер'))
+        f = ZAGL['vyzovy'][-1][1]['fields'] if ZAGL['vyzovy'] else {}
+        ok(f.get('NAME') == 'Петров Пётр Петрович, главный инженер' and 'POST' not in f,
+           'старое окно (ФИО и должность раздельно) – склеено в NAME: «%s»' % f.get('NAME'))
         st = baza('SELECT username, call_result FROM company_state WHERE inn=?', i3)
         km = baza('SELECT username FROM company_comment WHERE inn=? ORDER BY id DESC LIMIT 1', i3)
         ok(o.status_code == 200 and st == [{'username': 'meyer4', 'call_result': 'v_rabote'}] and km and km[0]['username'] == adminy[0],
