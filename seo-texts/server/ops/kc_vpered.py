@@ -6,7 +6,10 @@
 import sqlite3
 from datetime import datetime, timedelta, timezone
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
-т = (datetime.now(timezone.utc) - timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S")
+# раньше САМОГО раннего письма в расписании (а не «сейчас минус минута»:
+# у Meyer срок 06:00, и «сейчас минус минута» ставило КЦ за ними)
+_мин = c.execute("SELECT min(scheduled_at) FROM messages WHERE status='scheduled' AND campaign_id!=15").fetchone()[0]
+т = (datetime.fromisoformat(str(_мин)[:19]) - timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S")
 with c:
     n = c.execute("UPDATE messages SET scheduled_at=? WHERE campaign_id=15 AND status='scheduled' "
                   "AND scheduled_at<=?", (т, (datetime.now(timezone.utc) + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S"))).rowcount
