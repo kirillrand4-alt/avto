@@ -26,6 +26,7 @@ from sender.store import Store  # noqa: E402
 _А = dict(а.split("=", 1) for а in sys.argv[1:] if "=" in а)
 N = int(_А.get("n", "1"))
 SKIP = int(_А.get("skip", "0"))
+ГРУППА = _А.get("gruppa", "Россия 9000")
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 q = build_ai_quota(store, cfg)
@@ -34,7 +35,7 @@ e = sqlite3.connect(r"C:\sender\enrich.db", timeout=30)
 верд = {str(r[0]): (r[1], r[2]) for r in e.execute("SELECT inn, verdikt_napr, verdikt_istochnik FROM companies")}
 выр = {str(r[0]): r[1] or 0 for r in e.execute("SELECT inn, revenue_rub FROM companies")}
 группа = {}
-for rid, inn in c.execute("SELECT id, inn FROM recipients WHERE extra_json LIKE '%Россия 9000%'"):
+for rid, inn in c.execute("SELECT id, inn FROM recipients WHERE extra_json LIKE ?", ('%' + ГРУППА + '%',)):
     группа.setdefault(str(inn), rid)
 св = Counter((верд.get(i) or (None, None))[0] or "нет вердикта" for i in группа)
 ист = Counter((верд.get(i) or (None, None))[1] for i in группа if (верд.get(i) or (None,))[0] == "кц")
@@ -43,7 +44,7 @@ print("из них «кц» по источнику решения: %s" % dict(�
 
 канд = []
 for inn, rid in группа.items():
-    if (верд.get(inn) or (None,))[0] != "кц" or blok(c, inn, "kc"):
+    if (ГРУППА == "Россия 9000" and (верд.get(inn) or (None,))[0] != "кц") or blok(c, inn, "kc"):
         continue
     if float(выр.get(inn) or 0) < 1e8:
         continue
@@ -67,7 +68,7 @@ def caller(prompt, *a, **k):
 
 
 # разные отрасли: лучший кандидат каждой отрасли книги
-сег = {str(i): s_ for i, s_ in c.execute("SELECT inn, segment FROM recipients WHERE extra_json LIKE '%Россия 9000%'")}
+сег = {str(i): s_ for i, s_ in c.execute("SELECT inn, segment FROM recipients WHERE extra_json LIKE ?", ('%' + ГРУППА + '%',))}
 выбор, были = [], set()
 for x in канд:
     о = сег.get(x[3]) or "?"
