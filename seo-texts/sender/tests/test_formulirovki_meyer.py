@@ -41,11 +41,10 @@ def test_bez_prosby_ne_prohodit():
 
 def test_pul_v_pravilah_meyer():
     п = AI.RULES_BY_DIVISION["meyer"]
-    assert "с кем лучше связаться" in п
-    assert "контакт коллеги" in п
-    assert "отдела качества" in п
-    assert "контролю посторонних включений" in п
-    assert "тестовую сортировку" in п
+    # канон редактора 15.10: просьба о контакте и банк вопросов
+    assert "буду благодарен за контакт" in п
+    assert "Рассматриваете ли оснащение" in п
+    assert "испытания на образцах" in п
 
 
 def test_pul_ne_popal_v_kc():
