@@ -11,7 +11,7 @@ import sqlite3
 import sys
 import time
 
-ИМЯ = "КЦ тест — КЦ"
+ИМЯ = sys.argv[sys.argv.index("--imya") + 1] if "--imya" in sys.argv else "КЦ тест — КЦ"
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
 c.row_factory = sqlite3.Row
 есть = c.execute("SELECT id FROM campaigns WHERE name=?", (ИМЯ,)).fetchone()
@@ -19,7 +19,7 @@ if есть:
     print("уже есть: id %d" % есть[0])
     print("=== КАМПАНИЯ КЦ ТЕСТ ===")
     sys.exit(0)
-об = dict(c.execute("SELECT * FROM campaigns WHERE id=14").fetchone())
+об = dict(c.execute("SELECT * FROM campaigns WHERE id=?", (15 if "--imya" in sys.argv else 14,)).fetchone())
 print("образец 14:", об["name"], об["status"], об["provider_pool"], об["config_json"])
 for k in (10,):
     р = c.execute("SELECT id,name,status,provider_pool,config_json FROM campaigns WHERE id=?", (k,)).fetchone()
@@ -37,7 +37,7 @@ with c:
                      json.dumps(конф, ensure_ascii=False), т, об["started_at"] and т, т))
     нов = cur.lastrowid
     кол = [r[1] for r in c.execute("PRAGMA table_info(sequence_steps)") if r[1] != "id"]
-    for шаг in c.execute("SELECT * FROM sequence_steps WHERE campaign_id=14").fetchall():
+    for шаг in c.execute("SELECT * FROM sequence_steps WHERE campaign_id=?", (об["id"],)).fetchall():
         д = dict(шаг)
         д["campaign_id"] = нов
         c.execute("INSERT INTO sequence_steps (%s) VALUES (%s)" % (",".join(кол), ",".join("?" * len(кол))),

@@ -30,7 +30,7 @@ c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
 c.row_factory = sqlite3.Row
 ряды = [dict(r) for r in c.execute(
     "SELECT id, inn, email, recipient_id, message_id, campaign_id, panel_json, body, subject FROM confirm_reviews "
-    "WHERE campaign_id=15 AND status='pending' ORDER BY id")]
+    "WHERE campaign_id IN (15, 16) AND status='pending' ORDER BY id")]
 итог = Counter()
 for r in ряды:
     if ШАБЛОН.search(r["body"] or "") or re.search(r"(?i)до\s+конца\s+года", r["subject"] or ""):
