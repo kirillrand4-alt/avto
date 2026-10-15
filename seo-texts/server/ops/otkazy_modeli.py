@@ -1,37 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Отказы модели («I can't…») в журнале 9000: цена, повторяемость по компании."""
-import io
-import json
+"""Сколько денег уходит на брак, и отдельно — на отказы модели писать письмо. По журналам gen-*.jsonl. Только чтение."""
+import glob, io, json, os
 from collections import Counter, defaultdict
-по_комп = defaultdict(list)
-цена = []
-for с in io.open(r"C:\sender\_ops\gen-rossiya-9000.jsonl", encoding="utf-8", errors="replace"):
-    try:
-        z = json.loads(с)
-    except Exception:  # noqa: BLE001
-        continue
-    отказ = "I can" in json.dumps(z.get("брак") or [], ensure_ascii=False)
-    по_комп[z.get("inn") or z.get("имя")].append((z.get("день"), отказ, bool(z.get("ок")), z.get("имя"), z.get("сегмент") or z.get("отрасль")))
-    if отказ:
-        ст = 0.0
-        for к, v in z.items():
-            if "цена" in к or "стоим" in к or к in ("usd", "$"):
-                try:
-                    ст = float(v)
-                except Exception:  # noqa: BLE001
-                    pass
-        цена.append(ст)
-всего_отк = sum(1 for v in по_комп.values() for x in v if x[1])
-комп_с_отк = [k for k, v in по_комп.items() if any(x[1] for x in v)]
-повтор = [k for k in комп_с_отк if sum(1 for x in по_комп[k] if x[1]) > 1]
-потом_ок = [k for k in комп_с_отк if any(x[2] for x in по_комп[k])]
-print("отказов всего: %d, компаний: %d, отказали >1 раза: %d, потом всё же ОК: %d"
-      % (всего_отк, len(комп_с_отк), len(повтор), len(потом_ок)))
-print("цена отказа (по полю журнала): среднее $%.3f" % (sum(цена) / len(цена) if цена else 0))
-print("ключи записи: %s" % ",".join(sorted({к for v in [json.loads(с) for с in io.open(r"C:\sender\_ops\gen-rossiya-9000.jsonl", encoding="utf-8", errors="replace").read().splitlines()[-3:]] for к in v})))
-дни = Counter(x[0] for v in по_комп.values() for x in v if x[1])
-print("по дням: %s" % dict(дни))
-for k in комп_с_отк[-12:]:
-    print("   %s | попыток %d | отказов %d | ок %s" % (по_комп[k][-1][3], len(по_комп[k]),
-          sum(1 for x in по_комп[k] if x[1]), any(x[2] for x in по_комп[k])))
-print("=== ОТКАЗЫ ===")
+def вид(т):
+    т = т.lower()
+    if "i can" in т or "i won" in т or "нет json" in т or "упал" in т: return "отказ/сбой модели"
+    if "не покупатель" in т: return "не покупатель"
+    if "линз" in т or "технолог" in т or "скептик" in т: return "линза"
+    if "очеред" in т or "message_id" in т: return "не встало в очередь"
+    return "гейт текста"
+for ф in sorted(glob.glob(r"C:\sender\_ops\gen-*.jsonl"), key=os.path.getmtime)[-8:]:
+    n, д, ок, отк_пр = Counter(), defaultdict(float), [0, 0.0], Counter()
+    for s in io.open(ф, encoding="utf-8", errors="replace"):
+        if '"итог"' not in s: continue
+        try: z = json.loads(s)
+        except ValueError: continue
+        ц = float(z.get("цена_$") or 0)
+        if z.get("ок"): ок[0] += 1; ок[1] += ц; continue
+        т = "; ".join(map(str, z.get("брак") or []))
+        к = вид(т); n[к] += 1; д[к] += ц
+        if к == "отказ/сбой модели": отк_пр[т[:70]] += 1
+    всего = ок[1] + sum(д.values())
+    if not всего: continue
+    print("== %s: годных %d за $%.0f, всего $%.0f" % (os.path.basename(ф), ок[0], ок[1], всего))
+    for к in n: print("   %-22s %4d писем  $%6.1f  (%.0f%% денег)" % (к, n[к], д[к], 100 * д[к] / всего))
+    for k, v in отк_пр.most_common(3): print("      %3d  %s" % (v, k))
