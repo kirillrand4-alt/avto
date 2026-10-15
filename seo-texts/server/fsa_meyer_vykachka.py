@@ -16,7 +16,7 @@ import fsa_pilot_orehi as F  # noqa: E402  (вход, запрос — рабо�
 ДРОП = r'C:\seostat\drop\drop-storage'
 # 15.10: 6 слов за 13,5 ч (зерно/пшеница — сотни тысяч деклараций) -> 238 слов заняли бы недели: окно с 2023 г. и 6 потоков
 С_ДАТЫ = datetime.date(int(os.environ.get('FSA_S_GODA', '2023')), 1, 1)
-ПОТОКОВ = int(os.environ.get('FSA_POTOKOV', '6'))
+ПОТОКОВ = int(os.environ.get('FSA_POTOKOV', '2'))  # 6 потоков — 429 Too Many Requests
 _лок = threading.Lock()
 ПОЛЯ = ('id', 'declNumber', 'declDate', 'declEndDate', 'idStatus', 'applicantType', 'applicantInn', 'applicantName', 'manufacterInn',
         'manufacterName', 'manufacterOgrn', 'manufacterAddress', 'manufacterType', 'productFullName', 'productOrig',
@@ -57,7 +57,14 @@ class Сессия:
                                                                          'translated': False}],
                                                      'regDate': {'minDate': d1.isoformat(), 'maxDate': d2.isoformat()}},
                 'columnsSort': [{'column': 'declDate', 'sort': 'DESC'}]}
-        return F.запрос(self.H2, '/api/v1/rds/common/declarations/get', тело) or {}
+        # 15.10: при 429/сбое не отдавать пустой ответ — иначе окно записывалось бы «всего 0» и терялось
+        for пауза in (60, 120, 300, 600, 900):
+            d = F.запрос(self.H2, '/api/v1/rds/common/declarations/get', тело)
+            if d is not None:
+                return d
+            time.sleep(пауза)
+            self.H2, self.t = F.вход(), time.time()
+        raise RuntimeError('ФСА не отвечает: %s %s %s' % (сл, d1, d2))
 
 
 def окно(С, сл, d1, d2, готовые, декл_ид):
@@ -106,6 +113,7 @@ def main():
 
     def слово(kс):
         k, сл = kс
+        time.sleep(k % ПОТОКОВ * 7)
         if not hasattr(сессии, 'С'):
             сессии.С = Сессия()
         if сл + '|2020-01-01|2026-10-14' in готовые_верх or сл + '|2020-01-01|2026-10-15' in готовые_верх:
