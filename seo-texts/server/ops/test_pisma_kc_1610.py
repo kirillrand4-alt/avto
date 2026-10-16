@@ -45,7 +45,7 @@ def caller(prompt, *a, **k):
 
 
 итог, были = [], set()
-for метка, rx, мин_выр in [о for о in ОТРАСЛИ if len(sys.argv) < 2 or sys.argv[1] in о[0]]:
+for метка, rx, мин_выр in [о for о in ОТРАСЛИ if len(sys.argv) < 2 or any(x in о[0] for x in sys.argv[1].split(","))]:
     канд = []
     for rid, inn, сег in c.execute("SELECT id, inn, segment FROM recipients WHERE extra_json LIKE '%Россия 9000%' OR extra_json LIKE '%КЦ тест%'"):
         inn = str(inn)
