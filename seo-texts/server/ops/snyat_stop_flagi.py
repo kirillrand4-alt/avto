@@ -32,7 +32,10 @@ for rid, email, pj in c.execute(
     флаги, оставить = p.get("stop_flags") or [], []
     for f in флаги:
         k = f.get("code") if isinstance(f, dict) else ""
-        if k == "site_mismatch" and сайт and сайт == str(email or "").lower().split("@")[-1]:
+        # --vse-site: владелец 16.10 «все контакты собраны с сайтов самих
+        # компаний» — site_mismatch снимаем у всех.
+        if k == "site_mismatch" and ("--vse-site" in sys.argv
+                                     or (сайт and сайт == str(email or "").lower().split("@")[-1])):
             итог[k] += 1
             continue
         if k == "recent_contact":
