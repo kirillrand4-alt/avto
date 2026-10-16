@@ -3,9 +3,9 @@
     brak_meyer_posl.py [N=954]"""
 import io, json, re, sys
 from collections import Counter
-N = int(sys.argv[1]) if len(sys.argv) > 1 else 954
+N = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else 954
 ит, отсев = [], []
-for s in io.open(r"C:\sender\_ops\gen-rossiya-9000.jsonl", encoding="utf-8", errors="replace"):
+for s in io.open(next((a.split("=",1)[1] for a in sys.argv if a.startswith("zhurnal=")), r"C:\sender\_ops\gen-rossiya-9000.jsonl"), encoding="utf-8", errors="replace"):
     if '"итог"' in s or "предкласс_отсев" in s:
         try: z = json.loads(s)
         except ValueError: continue
