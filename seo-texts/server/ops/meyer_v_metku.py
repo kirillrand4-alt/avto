@@ -11,10 +11,6 @@ import sys
 import time
 
 sys.path.insert(0, r"C:\sender")
-from sender.config import Config  # noqa: E402
-from sender.confirm import ConfirmSend  # noqa: E402
-from sender.store import Store  # noqa: E402
-from sender.suppression import Suppression  # noqa: E402
 
 ЖУРНАЛ = r"C:\sender\_ops\meyer-v-metku.jsonl"
 o = sqlite3.connect(r"C:\sender\obzvon-index.db", timeout=60)
@@ -25,16 +21,12 @@ if "--otkat" in sys.argv:
             o.execute("UPDATE obzvon SET division=? WHERE inn=?", (z["bylo"], z["inn"]))
     print("откат сделан")
     sys.exit()
-cfg = Config.load(r"C:\sender\sender.yaml")
-st = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
-cs = ConfirmSend(cfg, st, Suppression(st))
+c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
 инн = set()
-for r in cs.pending(limit=100000):
-    if (r.get("kind") or "outbound") == "reply":
-        continue
-    why = cs._division_blocked(r) or ""
-    if "кампания meyer" in why and r.get("inn"):
-        инн.add(str(r["inn"]))
+for (i,) in c.execute("SELECT DISTINCT inn FROM confirm_reviews WHERE status='pending' AND campaign_id IN (14, 11, 8) AND inn IS NOT NULL"):
+    row = o.execute("SELECT division FROM obzvon WHERE inn=?", (str(i),)).fetchone()
+    if row and "meyer" not in str(row[0] or ""):
+        инн.add(str(i))
 print("карточек Meyer под гейтом, компаний:", len(инн))
 if "--primenit" in sys.argv and инн:
     т = time.strftime("%Y-%m-%dT%H:%M:%S")
