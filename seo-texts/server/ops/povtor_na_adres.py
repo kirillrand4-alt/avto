@@ -59,6 +59,6 @@ rid = store.upsert_recipient(RecipientIn(email=адрес, domain=адрес.spl
 mid, _ = store.enqueue_message(MessageIn(idempotency_key="povtor-%d-%s" % (МИД, адрес), campaign_id=с["campaign_id"],
                                          recipient_id=rid, sequence_step_id=с["sequence_step_id"],
                                          scheduled_at=datetime.now(timezone.utc)), status="scheduled")
-рез = живой.send(store.get_message(int(mid)), RenderedMessage(subject=str(с["subject"]), body=str(с["body_rendered"])),
+рез = живой.send(store.get_message(int(mid)), RenderedMessage(subject=str(с["subject"]), body=str(с["body_rendered"]).split("\n\nС уважением,")[0]),
                  с["mailbox_id"], manual=True, to_email=адрес)
 print("УШЛО:", адрес, "<-", с["mailbox_id"], "| письмо", mid, "| rfc", str(getattr(рез, "rfc_message_id", ""))[:60])
