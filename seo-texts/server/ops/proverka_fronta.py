@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Что реально отдаёт панель: index.html, имя бандла, есть ли в нём perepiska, заголовки кэша; и статусы лидов в базе."""
 import glob, os, re, sqlite3, urllib.request
-for порт in (8000, 8080, 8787, 5000, 80):
+for порт in (8091,):
     try:
         r = urllib.request.urlopen("http://127.0.0.1:%d/" % порт, timeout=5)
         h = r.read().decode("utf-8", "replace"); break
