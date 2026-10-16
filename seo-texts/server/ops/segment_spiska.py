@@ -3,7 +3,7 @@
 import io, json, sqlite3, sys
 from collections import Counter
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
-рид = json.load(io.open(r"C:\sender\_ops\spisok-kc-iz-9000.json"))
+рид = json.load(io.open(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("spisok=")), r"C:\sender\_ops\spisok-kc-iz-9000.json")))
 сч = Counter(c.execute("SELECT segment FROM recipients WHERE id=?", (r,)).fetchone()[0] for r in рид)
 print(сч.most_common(10))
 на = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--na=")), None)

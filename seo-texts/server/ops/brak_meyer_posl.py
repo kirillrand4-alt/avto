@@ -40,3 +40,16 @@ if "--spisok" in sys.argv:
     рид = sorted({z["recipient_id"] for z in плохие if z.get("recipient_id")})
     json.dump(рид, io.open(r"C:\sender\_ops\spisok-meyer-brak-1610.json", "w"))
     print("список повтора:", len(рид))
+
+if "--spiski-dobor" in sys.argv:
+    кц, мей = set(), set()
+    for z in плохие:
+        т = "; ".join(map(str, z.get("брак") or [])).lower()
+        r = z.get("recipient_id")
+        if not r: continue
+        if "переставить на kc" in т: кц.add(r)
+        elif "не покупатель" in т: continue
+        else: мей.add(r)
+    json.dump(sorted(кц), io.open(r"C:\sender\_ops\spisok-kc-iz-meyer-brak.json", "w"))
+    json.dump(sorted(мей), io.open(r"C:\sender\_ops\spisok-meyer-brak-2.json", "w"))
+    print("списки: КЦ", len(кц), "Meyer повтор", len(мей))
