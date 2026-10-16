@@ -35,3 +35,8 @@ for k, v in сч.most_common():
     print("\n%4d  %s" % (v, k))
     for p in прим[k][:4]: print("      - " + p)
 # что внутри «прочее» и «редактор» — частые первые слова
+
+if "--spisok" in sys.argv:
+    рид = sorted({z["recipient_id"] for z in плохие if z.get("recipient_id")})
+    json.dump(рид, io.open(r"C:\sender\_ops\spisok-meyer-brak-1610.json", "w"))
+    print("список повтора:", len(рид))
