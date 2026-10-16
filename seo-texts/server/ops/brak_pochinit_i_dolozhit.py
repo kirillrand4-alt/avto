@@ -38,9 +38,12 @@ from sender.confirm import ConfirmSend                          # noqa: E402
 from sender.store import Store                                  # noqa: E402
 from sender.suppression import Suppression                      # noqa: E402
 
-ЖУРНАЛ = r"C:\sender\_ops\gen-partiya-935.jsonl"
-КАМПАНИЯ = {"kc": 10, "meyer": 11}
-КЛАСТЬ = "--класть" in sys.argv
+ЖУРНАЛ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("zhurnal=")),
+              r"C:\sender\_ops\gen-partiya-935.jsonl")
+def _арг(к, по):
+    return next((a.split("=", 1)[1] for a in sys.argv if a.startswith(к + "=")), по)
+КАМПАНИЯ = {"kc": int(_арг("camp_kc", 10)), "meyer": int(_арг("camp_meyer", 11))}
+КЛАСТЬ = "--класть" in sys.argv or "--klast" in sys.argv
 ПОТОЛОК = 400
 
 cfg = Config.load(r"C:\sender\sender.yaml")
@@ -53,6 +56,19 @@ cs = ConfirmSend(cfg, store, Suppression(store))
 # Берём ПОСЛЕДНЮЮ запись по ИНН: письмо могли переписать удачно позже.
 последний = {}
 если_ок = set()
+# ВСЕ ЖУРНАЛЫ (16.10): брак из одного журнала мог выйти годным в другом
+# (перегенерация пишет в новый журнал) - такой компании второе письмо не кладём.
+import glob as _glob                                            # noqa: E402
+for _ф in _glob.glob(r"C:\sender\_ops\gen-*.jsonl"):
+    for _s in io.open(_ф, encoding="utf-8", errors="replace"):
+        if '"ок": true' not in _s:
+            continue
+        try:
+            _z = json.loads(_s)
+        except Exception:                                       # noqa: BLE001
+            continue
+        if _z.get("ок") and _z.get("review_id"):
+            если_ок.add(str(_z.get("inn") or ""))
 if os.path.exists(ЖУРНАЛ):
     for s in io.open(ЖУРНАЛ, encoding="utf-8"):
         try:
