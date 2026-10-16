@@ -11,6 +11,18 @@ c.row_factory = sqlite3.Row
 писали = defaultdict(set)
 for em, st in c.execute("SELECT lower(r.email), m.status FROM messages m JOIN recipients r ON r.id=m.recipient_id"):
     писали[em].add(st)
+# письма, написанные руками из веб-почты/панели: события reply_sent (кому) и send_log
+for (dj,) in c.execute("SELECT detail_json FROM events WHERE event_type IN ('reply_sent','manual_reply','manual_sent')"):
+    try: d = json.loads(dj or "{}")
+    except ValueError: continue
+    for a in АДР.findall(json.dumps(d.get("komu") or d.get("to") or d.get("kому") or "", ensure_ascii=False) + " " + str(d.get("cc") or "")):
+        писали[a.lower()].add("sent")
+# адрес сам нам отвечал (smtp.mail / From в заголовках ответа) — переписка с ним была
+for (dj,) in c.execute("SELECT detail_json FROM events WHERE event_type IN ('reply','reply_auto')"):
+    for a in re.findall(r"smtp\.mail=([\w.+-]+@[\w.-]+)", dj or ""):
+        писали[a.lower()].add("sent")
+for (em,) in c.execute("SELECT lower(email) FROM send_log WHERE outcome='sent'"):
+    писали[em].add("sent")
 выдали = {}
 for r in c.execute("SELECT id, email, company_name, need, status FROM leads"):
     сам = str(r["email"] or "").lower()
