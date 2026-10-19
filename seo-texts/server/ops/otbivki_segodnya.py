@@ -1,45 +1,23 @@
-# -*- coding: utf-8 -*-
-"""Из чего сегодняшние отбивки: мёртвый ящик, политика или домен."""
-import json
-import sqlite3
-import time
+import json, re, sqlite3, time
 from collections import Counter
-БАЗА = r"C:\sender\sender.db"
-ДЕНЬ = time.strftime("%Y-%m-%d")
-c = sqlite3.connect("file:%s?mode=ro" % БАЗА, uri=True, timeout=60)
-c.row_factory = sqlite3.Row
-по_вердикту, по_ящику, по_домену = Counter(), Counter(), Counter()
-примеры = {}
-всего = 0
-for r in c.execute("SELECT e.id, e.mailbox_id, e.detail_json, r.email "
-                   "  FROM events e LEFT JOIN recipients r ON r.id=e.recipient_id "
-                   " WHERE e.event_type='bounce' AND e.event_ts LIKE ?",
-                   (ДЕНЬ + "%",)):
-    всего += 1
-    try:
-        d = json.loads(r["detail_json"] or "{}")
-    except Exception:
-        d = {}
-    dsn = d.get("dsn") if isinstance(d.get("dsn"), dict) else {}
-    в = str(dsn.get("verdict") or d.get("verdict") or "—")
-    по_вердикту[в] += 1
-    по_ящику[str(r["mailbox_id"] or "—")] += 1
-    почта = str(r["email"] or "")
-    по_домену[почта.split("@")[-1].lower() if "@" in почта else "—"] += 1
-    диаг = str(dsn.get("diagnostic") or d.get("snippet") or "").replace("\n", " ")
-    примеры.setdefault(в, диаг[:150])
-print("отбивок за %s: %d" % (ДЕНЬ, всего))
-print("\nпо вердикту:")
-for к, v in по_вердикту.most_common():
-    print("  %-14s %4d   %s" % (к, v, примеры.get(к, "")[:110]))
-print("\nпо нашему ящику (топ-10):")
-for к, v in по_ящику.most_common(10):
-    print("  %-42s %d" % (к, v))
-print("\nпо домену получателя (топ-10):")
-for к, v in по_домену.most_common(10):
-    print("  %-28s %d" % (к, v))
-отпр = c.execute("SELECT COUNT(*) FROM events WHERE event_type='sent' "
-                 "  AND event_ts LIKE ?", (ДЕНЬ + "%",)).fetchone()[0]
-print("\nотправлено сегодня: %d, BR = %.2f%%"
-      % (отпр, 100.0 * всего / отпр if отпр else 0))
-c.close()
+c = sqlite3.connect(r"C:\sender\sender.db")
+от = time.strftime("%Y-%m-%d", time.gmtime())
+проба = {str(e).lower(): v for e, v in c.execute("SELECT email, verdict FROM addr_probe")}
+отпр = Counter(); сч = Counter(); по_ящ = Counter(); прим = {}
+for (mb,) in c.execute("SELECT mailbox_id FROM messages WHERE status='sent' AND sent_at>=?", (от,)):
+    отпр["КЦ" if "ompressor" in str(mb) else "Meyer"] += 1
+for mb, dj, em, ts, et in c.execute("SELECT e.mailbox_id, e.detail_json, r.email, e.event_ts, e.event_type FROM events e LEFT JOIN recipients r ON r.id=e.recipient_id WHERE e.event_type IN ('bounce','failed') AND e.event_ts>=?", (от,)):
+    d = json.loads(dj or "{}"); dsn = d.get("dsn") or {}
+    диаг = str(dsn.get("diagnostic") or d.get("error") or "")
+    к = ("спам" if re.search(r"(?i)spam|спам|5\.7\.1", диаг) else "нет ящика" if re.search(r"(?i)no such|unknown|not exist|не существ|5\.1\.1|mailbox unavailable|недоступ", диаг)
+         else "переполнен" if re.search(r"(?i)quota|full|переполн|5\.2\.2", диаг) else "политика/релей" if re.search(r"(?i)relay|policy|not permitted|blocked|reject", диаг) else "прочее")
+    напр = "КЦ" if "ompressor" in str(mb) else "Meyer"
+    сч[(напр, к, проба.get(str(em or "").lower(), "не проверен"))] += 1; по_ящ[(напр, str(mb))] += 1
+    прим.setdefault((напр, к), (em, диаг[:150]))
+f = c.execute("SELECT m.mailbox_id, m.last_error FROM messages m WHERE m.status='failed' AND m.updated_at>=?", (от,)).fetchall()
+print("отправлено сегодня:", dict(отпр))
+print("отбивок (события):", sum(сч.values()))
+for k, v in sorted(сч.items(), key=lambda x: -x[1]): print("  %3d %s" % (v, k))
+print("примеры:"); [print("  ", k, v) for k, v in прим.items()]
+print("ящики с отбивками:", по_ящ.most_common(8))
+print("сообщений failed сегодня:", len(f), Counter(re.sub(r"\d{6,}.*", "", str(e or ""))[:70] for _, e in f).most_common(5))
