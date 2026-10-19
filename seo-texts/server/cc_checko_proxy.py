@@ -54,7 +54,7 @@ class Прокси:
     def get(self, url):
         for попытка in range(4):
             with self.лок:
-                пауза = 3.0 - (time.time() - self.последний)
+                пауза = getattr(self, 'пауза', 3.0) - (time.time() - self.последний)
                 if пауза > 0:
                     time.sleep(пауза)
                 self.последний = time.time()
@@ -67,7 +67,7 @@ class Прокси:
                             urllib.request.urlopen(self.ротация, timeout=40).read()
                         except Exception:  # noqa: BLE001
                             pass
-                        time.sleep(25)
+                        time.sleep(getattr(self, 'пауза_429', 25))
                         continue
                     return e.code, ''
                 except Exception as e:  # noqa: BLE001

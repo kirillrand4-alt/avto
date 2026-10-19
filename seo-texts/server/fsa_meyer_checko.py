@@ -96,10 +96,20 @@ def main():
     прокси = [CP.Прокси(x) for x in json.load(open(os.path.join(DIR, 'checko-proxies.json')))]
     # 19.10: замер — медленные/рвущие ответ прокси (16 с, IncompleteRead) держали потоки: 37 карточек в минуту на 10 потоках.
     # Берём только быстрые (ответ до 5 с), и у каждого потока СВОЙ прокси (раньше потоки сталкивались на одном и ждали паузу 3 с)
+    # 19.10, через час работы checko стал отвечать 429 почти всем IP при шаге 3 с: шаг на IP — CHECKO_PAUZA (8 с),
+    # прокси без ссылки ротации после 429 остывают дольше; 429 при проверке — прокси живой, просто остывает
     живые = []
     for x in прокси:
+        x.пауза = float(os.environ.get('CHECKO_PAUZA', '8'))
+        x.пауза_429 = 25 if x.ротация else 120
         t_ = time.time()
-        if x.get('https://checko.ru/')[0] == 200 and time.time() - t_ < 5:
+        try:
+            код = x.op.open(CP.urllib.request.Request('https://checko.ru/', headers=CP.H), timeout=10).status
+        except CP.urllib.error.HTTPError as e:
+            код = e.code
+        except Exception:  # noqa: BLE001
+            код = None
+        if код in (200, 429) and time.time() - t_ < 5:
             живые.append(x)
     п('прокси живых', len(живые), 'из', len(прокси), '| к проходу', len(очередь), '| уже есть (DaData/checko)', len(уже),
       '| с почтой', sum(1 for z in изг if приоритет(z)[0] == 0))

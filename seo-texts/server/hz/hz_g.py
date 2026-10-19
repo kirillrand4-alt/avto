@@ -11,8 +11,10 @@
 #   событие: signaly-*-1709, sobytiya-1709, vygruzka-sobytiy.json, 3s_proekt_uliki (+3s_proekty), SIPR-ZAYAVITELI-INN.
 #   патент: VAZHNOE-3s-PATENTY (без «слабого запроса»). оборудование: park-snimok.db (не ЭПБ), atlas_copco.db/fakty.
 # Стоп-лист фактов: OTSEV-*, OTZYV-*, VAZHNOE-3s-MUSOR-*, VAZHNOE-3s-SVERNUTO-*, мусор FAKTY-s-priznakom-musora. Не стопим
-# причины, которые говорят лишь «не центробежная / не воздух / поршневая-винтовая / газ» — для обзвона это всё равно машина.
-import collections, csv, io, json, os, re, sqlite3, sys, time, urllib.parse
+# причины, которые говорят лишь «не центробежная / не воздух / поршневая-винтовая / газ» — для обзвона это всё равно машина;
+# для ЭПБ не стопим и «нет слова машины» (словарь центробежного проекта не знает ВРУ, адсорберы, ресиверы), описание ЭПБ — текст
+# самого заключения. Перезапуск идемпотентен: выход пишется целиком заново (tmp + fsync + replace).
+import collections, csv, html, io, json, os, re, sqlite3, time, urllib.parse
 csv.field_size_limit(10 ** 9)
 D = r'C:\seostat\drop\drop-storage'
 HZ = r'C:\sender\server\hz'
@@ -84,10 +86,30 @@ def инн(v):
     return v if v in У else ''
 
 
+РАЗРЫВ = [(re.compile(r'([А-ЯЁа-яё]{2,}) (ого|ому|ой|ая|ое|ые|ых|ым|ыми|ую|ий)\b', re.I), r'\1\2'),
+          (re.compile(r'\b(компрессор|кислород|азот|аргон|ресивер|генератор|осушител|нагнетател|газ) (а|ов|ы|у|ом|ами|ах|ей|я|ю|ем)\b', re.I), r'\1\2'),
+          (re.compile(r'\b(установк|станци|воздуходувк|газодувк|поставк) (а|и|у|е|ой|ами|ах|ам|ий|ям|ях)\b', re.I), r'\1\2'),
+          (re.compile(r'\b(турбо) (компрессор)', re.I), r'\1\2')]
+
+
 def чисто(s, n=None):
-    s = re.sub(r'\s+', ' ', str(s or '').replace('&quot;', '"').replace('&amp;', '&')).strip()
+    s = re.sub(r'\s+', ' ', html.unescape(html.unescape(str(s or '')))).strip()
+    for р, з in РАЗРЫВ:
+        s = р.sub(з, s)
     s = s.replace('—', '-').replace('–', '-')
     return s[:n] if n else s
+
+
+ОПФ = [('ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ', 'ООО'), ('ЗАКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО', 'ЗАО'), ('ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО', 'ОАО'),
+       ('ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО', 'ПАО'), ('НЕПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО', 'АО'), ('АКЦИОНЕРНОЕ ОБЩЕСТВО', 'АО'),
+       ('ФЕДЕРАЛЬНОЕ ГОСУДАРСТВЕННОЕ УНИТАРНОЕ ПРЕДПРИЯТИЕ', 'ФГУП'), ('МУНИЦИПАЛЬНОЕ УНИТАРНОЕ ПРЕДПРИЯТИЕ', 'МУП')]
+
+
+def орг(s):
+    s = чисто(s)
+    for a, b in ОПФ:
+        s = re.sub(a, b, s, flags=re.I)
+    return s
 
 
 def обрез(s, n=300):
@@ -205,7 +227,10 @@ def собрать_стоп():
             в_стоп(i, u, т, п, 'FAKTY-s-priznakom-musora.csv')
 
 
-def стоп(i, url, текст):
+БЕЗ_СЛОВА = re.compile(r'нет (ни одного )?слова машины')
+
+
+def стоп(i, url, текст, эпб=False):
     for u in ([url] if isinstance(url, str) else url):
         if not u:
             continue
@@ -214,6 +239,8 @@ def стоп(i, url, текст):
             целая = 'monitor-pb.ru/conclusion/' in u
             т = норм_текст(текст, 40)
             for тт, причина in зап:
+                if эпб and БЕЗ_СЛОВА.search(причина):
+                    continue
                 if целая or not тт or not т or тт == т or тт in норм_текст(текст, 400):
                     return причина
     return None
@@ -312,9 +339,15 @@ def эпб_файлы():
 
 # ---------- park-snimok.db ----------
 ОБОР = {}
+ЭПБ_СПИСОК = []
 СОСТ = {'эксплуатирует': 'эксплуатирует', 'закупка': 'закупка', 'сервис': 'сервис/ремонт', 'покупает машину': 'покупает',
         'покупает ГАЗ': 'покупает газ', 'планирует': 'планирует закупку', 'арендует': 'арендует', 'продаёт (дилер)': 'продаёт (дилер)',
         'узел': 'узел/запчасти', 'неясно': 'упоминание'}
+
+
+def руб(v):
+    v = чисто(v)
+    return '{:,.0f} руб.'.format(float(v)).replace(',', ' ') if re.match(r'^\d+(\.\d+)?$', v) else v
 
 
 def вес_ссылки(u):
@@ -336,6 +369,9 @@ def номер_закупки(url, dedup=''):
     м = re.search(r'regNumber=(\d{11,19})', url or '')
     if м:
         return м.group(1)
+    м = re.search(r'search=(\d{11}|\d{19})', url or '')
+    if м:
+        return м.group(1)
     м = re.search(r'tender\.pro/(?:api/)?tender/(\d+)', url or '')
     if м:
         return 'tender.pro ' + м.group(1)
@@ -346,10 +382,17 @@ def номер_закупки(url, dedup=''):
     return 'tender.pro ' + м.group(1) if м else ''
 
 
+ОБОР_ИНД = {}
+
+
 def обор_добавить(i, файл, url, номер, дт, описание, текст):
-    к = (i, номер or норм_url(url) or норм_текст(описание, 80))
+    ключи = [(i, x) for x in (номер, норм_url(url), 'т:' + норм_текст(текст, 60)) if x and x != 'т:']
+    поиск = ключи[:2] if номер else ключи
+    к = next((ОБОР_ИНД[x] for x in поиск if x in ОБОР_ИНД), ключи[0])
+    for x in ключи:
+        ОБОР_ИНД.setdefault(x, к)
     з = ОБОР.get(к)
-    if з is None or (len(описание) > len(з['описание']) and вес_ссылки(url) <= вес_ссылки(з['ссылка'])):
+    if з is None or (not з['ссылка'] and url) or (len(описание) > len(з['описание']) and url and вес_ссылки(url) <= вес_ссылки(з['ссылка'])):
         ОБОР[к] = {'inn': i, 'тип': 'оборудование', 'дата': дата(дт), 'описание': описание, 'ссылка': url, 'номер': номер,
                    'источник_файл': файл, '_текст': текст}
         СТАТ['оборудование строк: ' + файл] += 1
@@ -381,6 +424,11 @@ def снимок():
         марка = машина_из(f['marka'] if (f['marka'] or '').lower() not in (f['model'] or '').lower() else '', f['model'])
         маш = машина_из(f['tip'], марка, ('зав.№ ' + f['zavodskoy_nomer']) if f['zavodskoy_nomer'] else '')
         эпб = [u for u, _ in ссылки if 'monitor-pb.ru/conclusion/' in u]
+        if not эпб and any('monitor-pb' in u for u, _ in ссылки) and номер_эпб(f['pochemu']):
+            эпб = ['']
+        if not эпб and any('monitor-pb' in u for u, _ in ссылки):
+            ЭПБ_СПИСОК.append((i, дата(f['data_fakta']), маш, чисто(f['chto_naydeno']), [u for u, _ in ссылки if 'monitor-pb' in u][0]))
+            continue
         if эпб:
             м = re.search(r'вывод:\s*([^,;|]+)', f['pochemu'] or '')
             эпб_добавить(i, 'park-snimok.db', f['pochemu'], эпб[0], f['data_fakta'], '', маш, м.group(1) if м else '', f['srok_do'], '', '',
@@ -389,9 +437,8 @@ def снимок():
         url, ист = ссылки[0]
         текст = чисто(f['chto_naydeno'])
         текст = re.sub(r'\s+(машина|компрессора)$', '', текст)
-        сумма = чисто(f['summa'])
-        if re.match(r'^\d+(\.\d+)?$', сумма):
-            сумма = '{:,.0f} руб.'.format(float(сумма)).replace(',', ' ')
+        текст = re.sub(r'\.?\s*кто это:.*$', '', текст)
+        сумма = руб(f['summa'])
         оп = '%s: %s; «%s»%s%s%s' % (СОСТ.get(f['sostoyanie'], f['sostoyanie'] or 'упоминание'), маш or f['tip'], обрез(текст, 170),
                                      ('; сумма ' + сумма) if сумма else '', ('; ' + ист) if ист else '',
                                      ('; ' + f['data_fakta']) if f['data_fakta'] and not дата(f['data_fakta']) else '')
@@ -418,17 +465,46 @@ def атлас():
             continue
         url = чисто(f['ssylka'])
         оп = 'Atlas Copco%s, %s: «%s»%s' % ((' ' + чисто(f['model'])) if f['model'] else '', ТИП.get(f['tip_fakta'], f['tip_fakta']),
-                                           обрез(текст, 200), ('; сумма ' + чисто(f['summa'])) if f['summa'] else '')
+                                           обрез(текст, 200), ('; сумма ' + руб(f['summa'])) if f['summa'] else '')
         if 'monitor-pb.ru/conclusion/' in url:
             эпб_добавить(i, 'atlas_copco.db', '', url, f['data_fakta'], '', 'Atlas Copco ' + чисто(f['model']), '', '', '', '', текст)
             continue
         обор_добавить(i, 'atlas_copco.db', url, номер_закупки(url, f['dedup']), f['data_fakta'], обрез(оп), текст)
 
 
+def эпб_без_номера():
+    по_дате = collections.defaultdict(list)
+    for з in ЭПБ.values():
+        по_дате[(з['inn'], з['дата'])].append(з)
+    out = []
+    for i, дт, маш, текст, url in ЭПБ_СПИСОК:
+        тт = норм_текст(текст, 40)
+        кк = ключ_машины(текст)
+        те = по_дате.get((i, дт), [])
+        if any(тт and тт in норм_текст(з['объект'] + ' ' + з['текст'], 2000) or
+               (кк and all(к in норм_текст(з['объект'] + ' ' + з['текст'] + ' ' + ' '.join(з['машины']), 2000) for к in кк)) for з in те) or len(те) == 1:
+            СТАТ['ЭПБ без номера: дубль заключения'] += 1
+            continue
+        if стоп(i, url, текст, эпб=True):
+            СТОП_ПРИЧИНЫ['ЭПБ без номера: стоп'] += 1
+            continue
+        оп = 'ЭПБ%s (номер заключения не сохранён; см. перечень заключений эксплуатанта): %s' % (
+            (' от ' + '.'.join(reversed(дт.split('-')))) if дт else '', обрез(текст, 170))
+        if маш and not all(к in норм_текст(текст, 2000) for к in ключ_машины(маш) or ['-']):
+            оп += '; ' + обрез(маш, 60)
+        out.append({'inn': i, 'тип': 'ЭПБ', 'дата': дт, 'описание': обрез(оп), 'ссылка': url, 'номер': '', 'источник_файл': 'park-snimok.db'})
+        СТАТ['ЭПБ без номера: выдано'] += 1
+    return out
+
+
+def ключ_машины(м):
+    return [норм_текст(т, 30) for т in re.findall(r'\S+', м) if re.search(r'\d', т) and норм_текст(т, 30)]
+
+
 def эпб_выдать():
     out = []
     for з in ЭПБ.values():
-        причина = стоп(з['inn'], sorted(з['урлы']), з['объект'] or з['текст'])
+        причина = стоп(з['inn'], sorted(з['урлы']), з['объект'] or з['текст'], эпб=True)
         if not причина and з['объект']:
             причина = СТОП_ТЕКСТ.get((з['inn'], норм_текст(з['объект'], 200)))
         if причина:
@@ -437,10 +513,13 @@ def эпб_выдать():
         url = з['url'] or ('https://monitor-pb.ru/conclusion/' + urllib.parse.quote(з['номер']) if НОМЕР_ЭПБ.fullmatch(з['номер'] or '') else '')
         объект = з['объект'] or з['текст']
         объект = re.sub(r'^Заключение экспертизы промышленной безопасности\s*(No|№)?\s*', '', объект, flags=re.I)
+        объект = re.sub(r'^\W*техническ\w+ устройств\w*,? применяем\w+ на опасном производственном объекте\W*Объект экспертизы\W*', '', объект,
+                        flags=re.I)
+        объект = re.sub(r'^[\d/-]{6,}\s+(?=на )', '', объект)
         части = ['ЭПБ%s%s' % ((' № ' + з['номер']) if з['номер'] else '', (' от ' + '.'.join(reversed(з['дата'].split('-')))) if з['дата'] else '')]
         if объект:
             части[0] += ': ' + обрез(объект, 150)
-        if з['машины']:
+        if з['машины'] and not объект:
             части.append(обрез(', '.join(з['машины'][:3]), 80))
         if з['вывод']:
             части.append('вывод: ' + з['вывод'])
@@ -469,6 +548,9 @@ def опо():
             м = re.search(r'(А\d{2}-\d{5}-\d{4})', чисто(имя_оп) + ' ' + чисто(цит))
             рег = м.group(1) if м else ''
         к = (i, рег or норм_текст(имя_оп, 60))
+        цит = чисто(цит)
+        if цит and not re.match(r'[А-ЯЁA-Z«"(№0-9]', цит):
+            цит = цит.split(' ', 1)[1] if ' ' in цит else ''
         оп = 'ОПО «%s»%s%s%s%s' % (обрез(имя_оп, 120), (', %s класс опасности' % класс) if чисто(класс) else '', (', рег.№ ' + рег) if рег else '',
                                    '; назван в заключении ЭПБ' if 'monitor-pb' in (url or '') else '', (': «%s»' % обрез(цит, 110)) if чисто(цит) else '')
         стар = out.get(к)
@@ -504,6 +586,7 @@ def егрз():
             м = re.search(r'(\d{2}-\d-\d-\d-\d{6}-\d{4})', объект or '')
             номер = м.group(1) if м else ''
         объект = re.sub(r'\.?\s*Заключение \d{2}-\d-\d-\d-\d{6}-\d{4} от \d{4}-\d{2}-\d{2}\.?', '.', чисто(объект)).strip(' .')
+        объект = re.sub(r'^"(.*)"$', r'\1', объект)
         к = (i, номер or норм_url(url))
         if not к[1]:
             return
@@ -512,7 +595,7 @@ def егрз():
         if чисто(вид):
             оп += '; ' + чисто(вид, 60)
         if чисто(проект) and чисто(проект).lower() != 'none':
-            оп += '; проектировщик ' + обрез(проект, 70)
+            оп += '; проектировщик ' + обрез(орг(проект), 70)
         if чисто(квт) and чисто(квт).lower() != 'none':
             оп += '; оценка компрессора ~%s кВт' % чисто(квт)
         стар = out.get(к)
@@ -524,7 +607,8 @@ def егрз():
     for имя in ('PROIZVODSTVA-RAZOBRANO.jsonl', 'PORTFEL-RAZOBRANO.jsonl', 'EGRZ-NASHA-TEMA-2.jsonl'):
         for r in строки(имя):
             if str(r.get('klass') or '').startswith('отсеяно'):
-                СТАТ['ЕГРЗ отсеяно: ' + имя] += 1
+                if инн(r.get('zastroyshchik_inn')):
+                    СТАТ['ЕГРЗ отсеяно: ' + имя] += 1
                 continue
             доб(инн(r.get('zastroyshchik_inn')), имя, r.get('nomer_zaklyucheniya'), r.get('ssylka'), r.get('data'), r.get('obekt'), r.get('vyvod'),
                 r.get('vid_dokumenta') if 'Проектная документация' not in (r.get('vid_dokumenta') or '') else '', r.get('proektirovshchik'))
@@ -553,7 +637,7 @@ def события():
         url = чисто(url)
         оп = '%s: %s' % (чисто(тип) or 'событие', обрез(что, 200))
         if чисто(сумма) and чисто(сумма).lower() != 'none' and норм_текст(сумма, 20) not in норм_текст(что, 300):
-            оп += '; сумма ' + обрез(сумма, 60)
+            оп += '; сумма ' + обрез(руб(сумма), 80)
         if чисто(стадия):
             оп += '; стадия: ' + re.sub(r'^\d+\.?\s*', '', чисто(стадия))
         if увер == 'low':
@@ -584,7 +668,8 @@ def события():
     вг = json.load(io.open(os.path.join(D, 'vygruzka-sobytiy.json'), encoding='utf-8'))
     for x in вг.get('события') or []:
         if x.get('suspect') in (1, '1', True):
-            СТАТ['событие suspect: vygruzka'] += 1
+            if инн(x.get('inn')):
+                СТАТ['событие suspect: vygruzka'] += 1
             continue
         доб(инн(x.get('inn')), 'vygruzka-sobytiy.json', x.get('event_type'), x.get('what'), x.get('sum'), x.get('стадия'), x.get('source_url'),
             x.get('ts'), x.get('inn_conf'))
@@ -602,8 +687,9 @@ def события():
         i = инн(r.get('inn'))
         if not i or (r.get('zayavitel_somnitelen') or '').strip() not in ('', '0', 'нет', 'False'):
             continue
-        что = 'заявитель в %s: проект «%s», прирост %s МВт%s, %s кВ, год ввода %s, центр питания %s; документ %s, стр. %s' % (
-            чисто(r.get('istochnik')) or 'СиПР', чисто(r.get('proekt')), чисто(r.get('uvelichenie_MVt_chislo')),
+        что = 'заявитель в %s: %sприрост %s МВт%s, %s кВ, год ввода %s, центр питания %s; документ %s, стр. %s' % (
+            чисто(r.get('istochnik')) or 'СиПР', ('проект «%s», ' % чисто(r.get('proekt'))) if чисто(r.get('proekt')) else '',
+            чисто(r.get('uvelichenie_MVt_chislo')),
             (' (было %s)' % чисто(r.get('ranee_MVt_chislo'))) if чисто(r.get('ranee_MVt_chislo')) else '', чисто(r.get('napryazhenie_kV')),
             чисто(r.get('god_vvoda_syroj') or r.get('god_chislo')), чисто(r.get('centr_pitaniya'), 70), чисто(r.get('fajl')), чисто(r.get('stranica')))
         к = (i, 'sipr', чисто(r.get('fajl')), чисто(r.get('stranica')), чисто(r.get('nomer_v_tablice')))
@@ -644,7 +730,7 @@ def main():
     эпб_файлы()
     снимок()
     атлас()
-    всё = эпб_выдать() + [{k: v for k, v in x.items() if not k.startswith('_')} for x in ОБОР.values()] + опо() + егрз() + события() + патенты()
+    всё = эпб_выдать() + эпб_без_номера() + [{k: v for k, v in x.items() if not k.startswith('_')} for x in ОБОР.values()] + опо() + егрз() + события() + патенты()
     всё.sort(key=lambda x: (x['inn'], x['тип'], x['дата']))
     tmp = ВЫХ + '.tmp'
     with io.open(tmp, 'w', encoding='utf-8') as f:

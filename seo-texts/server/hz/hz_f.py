@@ -51,10 +51,10 @@ def дд(iso):
 
 
 def сумма(s):
-    s = (s or '').replace('\xa0', ' ').replace('₽', '').strip()
-    if not s:
+    m = re.match(r'\s*(\d[\d\s\xa0]*(?:[.,]\d{1,2})?)', s or '')
+    if not m:
         return ''
-    t = re.sub(r'[^\d,.]', '', s)
+    t = re.sub(r'[^\d,.]', '', m.group(1))
     if ',' in t:
         t = t.replace('.', '').replace(',', '.')
     try:
@@ -105,10 +105,11 @@ def ключи_ссылки(u):
     m = re.search(r'tektorg\.ru/market/procedures/(\d+)', u)
     if m:
         к.add(('ТЭК-Торг', m.group(1)))
-    m = re.search(r'guid=([0-9a-f-]{20,})', u)
-    if m:
-        к.add(('guid', m.group(1)))
     return к
+
+
+def ключ_плана(u, текст):
+    return ('план-текст', (u or '').split('&')[0], норм(текст))
 
 
 def норм(s):
@@ -116,7 +117,7 @@ def норм(s):
 
 
 def добавить(инн, тип, файл, ключи, ссылка='', номер='', дата_='', площадка='', роль='', предмет='', сумма_='', способ='',
-             стадия='', доп='', лот=False, дата_в_оп=True, тихо=False):
+             стадия='', доп='', лот=False, дата_в_оп=True, тихо=False, только_индекс=()):
     ключи = {k for k in ключи if k}
     if re.fullmatch(r'[\d\s()№.,-]*(?:лот\s*№?\s*\d+)?[\s()]*', предмет or '', re.I):
         предмет = ''
@@ -156,7 +157,7 @@ def добавить(инн, тип, файл, ключи, ссылка='', но
             e['доп'].append(доп)
         if файл not in e['файлы']:
             e['файлы'].append(файл)
-    for k in ключи:
+    for k in ключи | set(только_индекс):
         ИНДЕКС[(инн, k)] = e
         e['ключи'].add(k)
     return e
@@ -406,7 +407,8 @@ def факты_файл():
         план = ист.startswith('план закупки')
         д = дата(r['data'])
         мес = '' if д else (r['data'].strip() if re.fullmatch(r'\d{2}\.\d{4}', r['data'].strip()) else '')
-        добавить(i, 'план закупки' if план else 'закупка', ф, ключи_ссылки(u), ссылка=u, дата_=д, площадка=ИСТ_ФАКТЫ[ист],
+        добавить(i, 'план закупки' if план else 'закупка', ф, {ключ_плана(u, т)} if план else ключи_ссылки(u), ссылка=u, дата_=д,
+                 площадка=ИСТ_ФАКТЫ[ист],
                  роль=СОСТ.get(r['sostoyanie'].strip(), ''), предмет=т,
                  доп=('план. размещение %s' % мес) if мес else '', тихо=True)
     for i, ист, т in только_площадка:
@@ -436,20 +438,35 @@ def планы():
         if r['okpd2'].strip():
             доп.append('ОКПД2 %s' % r['okpd2'].strip())
         н = '%s поз. %s' % (r['plan_reg_nomer'].strip(), r['nomer_pozicii'].strip()) if r['plan_reg_nomer'].strip() else ''
-        e = добавить(i, 'план закупки', ф, ключи_ссылки(r['ssylka']) | ({('план', н)} if н else set()), ссылка=r['ssylka'].strip(),
-                     номер=н, дата_=дата(r['data_razmeshcheniya']), площадка='план закупки ЕИС (223-ФЗ)', роль='заказчик',
-                     предмет=пред, сумма_=сумма(r['summa']), способ=('способ: ' + чист(r['sposob_zakupki'])) if чист(r['sposob_zakupki']) else '',
-                     доп=', '.join(доп), тихо=True)
-        if н and н != e['номер'] and 'есть в нескольких версиях плана' not in e['доп']:
-            e['доп'].append('есть в нескольких версиях плана')
+        тк = {ключ_плана(r['ssylka'], r['predmet']), ключ_плана(r['ssylka'], r['predmet_bez_proekta'])}
+        сп = чист(r['sposob_zakupki'])
+        добавить(i, 'план закупки', ф, {('план', н)} if н else тк, только_индекс=тк, ссылка=r['ssylka'].strip(),
+                 номер=н, дата_=дата(r['data_razmeshcheniya']), площадка='план закупки ЕИС (223-ФЗ)', роль='заказчик',
+                 предмет=пред, сумма_=сумма(r['summa']), способ=('способ: ' + сп) if сп else '', доп=', '.join(доп), тихо=True)
 
 
 ДА = re.compile(r'закуп|тендер|tender|zakup|purchas|поставщик|postav|supplier|снабжени|потребност', re.I)
 НЕТ = re.compile(r'конкурс|konkurs|теплоснаб|водоснаб|vodosnab|teplosnab|heat-supply|ипотек|mortgage|покупк|дистриб|distrib|'
                  r'выбор|vybor|день поставщика|omskportal|zakupki\.gov|zakup-metall|zakup-lom|закуп металла|закуп\w* лом|'
-                 r'лома\b|оптов|krupniy-opt', re.I)
+                 r'лома\b|оптов|krupniy-opt|nashikh-postavshchikov|наших поставщиков', re.I)
+САЙТ_ЧУЖОЙ = {('4240009967', 'pkspskov.ru'), ('4220025150', 'vdk.ru')}
 МЕТКИ = {'gpb': 'ЭТП ГПБ', 'rts': 'РТС-тендер', 'eis': 'ЕИС', 'sber': 'Сбербанк-АСТ', 'roseltorg': 'Росэлторг',
          'tektorg': 'ТЭК-Торг', 'b2b': 'B2B-Center', 'fabrikant': 'Фабрикант', 'tenderpro': 'Tender.pro'}
+
+
+def имя_раздела(u, a, т):
+    путь = unquote(urlsplit(u).path)
+    if a and not a.startswith('path:') and len(a) < 8 and т and ДА.search(т) and len(т) <= 30:
+        и = т
+    elif a and not a.startswith('path:') and (ДА.search(a) or len(a) >= 8):
+        и = a
+    elif т and ДА.search(т):
+        и = т
+    else:
+        и = '' if a.startswith('path:') else a
+    if not и:
+        return 'по адресу %s' % путь
+    return и if ДА.search(и) else '%s (%s)' % (и, путь)
 
 
 def сайты():
@@ -473,10 +490,15 @@ def сайты():
                     continue
                 if re.search(r'/news|novost|novosti', u, re.I) and not re.search(r'закуп|тендер', a + ' ' + т, re.I):
                     continue
+                if re.match(r'\d{1,2}\.\d{2}\.\d{4}', a):
+                    continue
                 h = urlsplit(u).netloc.lower().replace('www.', '')
+                if (i, h) in САЙТ_ЧУЖОЙ:
+                    СЧ['сайт другой организации, пропуск'] += 1
+                    continue
                 г = по_хосту.setdefault(h, {'стр': collections.OrderedDict(), 'метки': set(), 'лоты': 0})
                 if k not in г['стр']:
-                    г['стр'][k] = (u, a if len(a) >= 8 and not a.startswith('path:') else (т or a))
+                    г['стр'][k] = (u, имя_раздела(u, a, т))
                 for m in (p.get('marks') or {}):
                     г['метки'].add(МЕТКИ.get(m, m))
                 г['лоты'] = max(г['лоты'], int(p.get('lots') or 0))
@@ -488,7 +510,8 @@ def сайты():
                     хост = h.encode().decode('idna') if 'xn--' in h else h
                 except UnicodeError:
                     хост = h
-                пред = 'на сайте %s есть раздел «%s»' % (хост, (назв[0] if назв else unquote(urlsplit(u0).path))[:80])
+                н0 = (назв[0] if назв else 'по адресу ' + unquote(urlsplit(u0).path))[:80]
+                пред = 'на сайте %s есть раздел %s' % (хост, н0 if н0.startswith('по адресу') else '«%s»' % н0)
                 доп = []
                 if len(назв) > 1:
                     доп.append('подразделы: ' + '; '.join(назв[1:])[:120])
