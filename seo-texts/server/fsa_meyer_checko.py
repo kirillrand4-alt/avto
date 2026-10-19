@@ -60,6 +60,7 @@ def разобрать(html):
     з['статус'] = м.group(1) if м else ''
     ок = CP.окведы(т)
     з['оквэд'] = ок[0] if ок else ''
+    з['оквэд_все'] = ок[:40]  # основной + дополнительные (блок «Виды деятельности» карточки)
     з['выручка'], з['выручка_год'] = CP.выручка(т)
     м = РУК.search(т)
     з['руководитель'] = (м.group(2) if м else '')
@@ -80,7 +81,7 @@ def main():
         if y.get('инн'):
             отсев[y['инн']] = y.get('ответ')
     уже = {y['инн'] for y in читать(os.path.join(DIR, 'fsa-meyer-dadata.jsonl')) if y.get('инн') and y.get('статус')}
-    уже |= {y['inn'] for y in читать(ВЫХ) if y.get('inn') and y.get('итог') == 'ok'}
+    уже |= {y['inn'] for y in читать(ВЫХ) if y.get('inn') and y.get('итог') == 'ok' and 'оквэд_все' in y}
     конт = {y['инн']: y for y in читать(os.path.join(DIR, 'fsa-meyer-kontakty2.jsonl')) if y.get('инн')}
     изг = [z for z in читать(os.path.join(DIR, 'fsa-meyer-izg.jsonl')) if z.get('инн') and отсев.get(z['инн']) != 'нет'
            and z['инн'] not in уже]
