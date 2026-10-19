@@ -9,7 +9,7 @@
 Вход (папка): hz-univers.jsonl (вселенная: ФНС доходы 2025 + база обзвона), hz-profil-*.jsonl, hz-telefony-*.jsonl,
 hz-fakty-*.jsonl — выгрузки hz_f/hz_g/hz_t/hz_p.py.
 
-    python3 hz_sborka.py <папка с jsonl> <out.xlsx>
+    python3 hz_sborka.py <папка с jsonl> <out.xlsx> [выгрузки сделок Битрикса .csv …]
 """
 import collections
 import glob
@@ -20,7 +20,7 @@ import re
 import sys
 
 import openpyxl
-from openpyxl.styles import Alignment, Font
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 ОТРАСЛИ = [  # (префикс ОКВЭД, отрасль)
@@ -101,8 +101,21 @@ def тип_тел(t):
     return 'мобильный' if t.startswith('+79') else 'городской'
 
 
-def main(папка, выход):
+def битрикс(файлы):
+    """Выгрузки сделок Битрикса (DEAL_ID;…;ВОРОНКА;…;СТАДИЯ;СТАТУС;АКТИВНА;…;INN) -> {ИНН: [сделки]}."""
+    import csv
+    сд = collections.defaultdict(list)
+    for ф in файлы:
+        for x in csv.DictReader(io.open(ф, encoding='utf-8-sig'), delimiter=';'):
+            инн = re.sub(r'\D', '', x.get('INN') or '')
+            if инн:
+                сд[инн].append(x)
+    return сд
+
+
+def main(папка, выход, *файлы_битрикса):
     ун = {x['inn']: x for x in jl(os.path.join(папка, 'hz-univers.jsonl'))}
+    бx = битрикс(файлы_битрикса)
     проф = collections.defaultdict(list)
     for x in все(папка, 'hz-profil-*.jsonl'):
         if x.get('inn') in ун:
@@ -204,6 +217,13 @@ def main(папка, выход):
             р['Тел. %d: кто' % (k + 1)] = ', '.join(v for v in (n.get('фио'), n.get('должность') or n.get('роль')) if v) if n else ''
             р['Тел. %d: источник' % (k + 1)] = n.get('источники', '') if n else ''
             р['Тел. %d: ссылка' % (k + 1)] = n.get('ссылка', '') if n else ''
+        дд = бx.get(инн, [])
+        акт = [x for x in дд if (x.get('АКТИВНА') or '').strip().lower() == 'да']
+        сц = [x for x in акт if 'СЦ' in (x.get('ВОРОНКА') or '')]
+        опис = lambda x: '№%s %s: %s (%s)' % (x['DEAL_ID'], x.get('ВОРОНКА', ''), x.get('СТАДИЯ', ''), x.get('DATE_CREATE', ''))  # noqa: E731
+        р['Битрикс: есть контакт'] = ('да (%d сделок)' % len(дд)) if дд else ''
+        р['Активная сделка СЦ'] = '; '.join(опис(x) for x in сц[:3])
+        р['Битрикс: активные сделки'] = '; '.join(опис(x) for x in акт[:4])
         р['_номера'], р['_факты'] = номера, фф
         if 'ликвид' in str(статус).lower() or 'банкрот' in str(статус).lower() or 'прекрат' in str(статус).lower():
             р['Причина'] = 'статус: %s' % статус
@@ -230,6 +250,8 @@ def main(папка, выход):
 
     wb = openpyxl.Workbook()
     ж = Font(bold=True)
+    КРАСНЫЙ = PatternFill('solid', fgColor='FFC7CE')
+    КРАСНЫЙ_ШРИФТ = Font(color='9C0006')
     ws = wb.active
     ws.title = 'Сводка'
     ws.append(['База холодного прозвона: Кемеровская, Томская, Омская обл. — 8 отраслей, доход 2025 от 100 млн'])
@@ -249,6 +271,10 @@ def main(папка, выход):
     ws.append(['  с закупками', sum(1 for r in строки if r['Закупок'])])
     ws.append(['  с ЭПБ/ОПО', sum(1 for r in строки if r['ЭПБ/ОПО'])])
     ws.append(['  со сделкой/клиенты', sum(1 for r in строки if r['Сделка/клиент'])])
+    if бx:
+        ws.append(['  есть контакт в Битриксе (по ИНН, выгрузки КЦ+СЦ и Meyer)', sum(1 for r in строки if r['Битрикс: есть контакт'])])
+        ws.append(['  активная сделка у СЦ — строки красным', sum(1 for r in строки if r['Активная сделка СЦ'])])
+        ws.append(['  любая активная сделка', sum(1 for r in строки if r['Битрикс: активные сделки'])])
     ws.append([])
     for назв, сп in (('Без телефона (отрасль подходит)', без_тел), ('ОКВЭД не найден в собранных данных', без_отрасли),
                      ('Не из 8 отраслей', не_та_отрасль), ('Адрес в другом регионе', чужой_регион),
@@ -256,7 +282,7 @@ def main(папка, выход):
         ws.append([назв + ' — отдельный лист', len(сп)])
     ws.column_dimensions['A'].width = 80
 
-    поля = ['Название', 'ИНН', 'Регион', 'Отрасль', 'ОКВЭД основной', 'Доход 2025 (ФНС), руб', 'Выручка (другие источники)',
+    поля = ['Название', 'ИНН', 'Битрикс: есть контакт', 'Активная сделка СЦ', 'Битрикс: активные сделки', 'Регион', 'Отрасль', 'ОКВЭД основной', 'Доход 2025 (ФНС), руб', 'Выручка (другие источники)',
             'Статус', 'Руководитель', 'Телефон 1', 'Тел. 1: кто', 'Тел. 1: источник', 'Тел. 1: ссылка', 'Телефон 2', 'Тел. 2: кто',
             'Тел. 2: источник', 'Тел. 2: ссылка', 'Телефон 3', 'Тел. 3: кто', 'Тел. 3: источник', 'Тел. 3: ссылка', 'Телефонов',
             'Мобильных', 'Сделка/клиент', 'Закупок', 'ЭПБ/ОПО', 'ЕГРЗ/события', 'Декларации ФСА/Цербер',
@@ -270,6 +296,10 @@ def main(папка, выход):
             c.font = ж
         for r in сп:
             w.append([r.get(k, '') for k in пп])
+            if r.get('Активная сделка СЦ'):  # владелец 19.10: активная сделка у СЦ — строка красным
+                for c in w[w.max_row]:
+                    c.fill = КРАСНЫЙ
+                    c.font = КРАСНЫЙ_ШРИФТ
         w.freeze_panes = 'C2'
         for n, k in enumerate(пп, 1):
             w.column_dimensions[get_column_letter(n)].width = 60 if k.startswith('Ключевые') else 18
@@ -315,4 +345,4 @@ def main(папка, выход):
 
 
 if __name__ == '__main__':
-    main(*sys.argv[1:3])
+    main(*sys.argv[1:])
