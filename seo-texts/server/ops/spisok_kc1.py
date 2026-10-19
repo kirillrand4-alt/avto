@@ -3,7 +3,7 @@
 Только направление КЦ (сегмент «кц» или target_division=kc), с ИНН. Порядок:
 сначала адреса с вердиктом пробы «есть», потом непроверенные, потом «принимает
 всё»/«неясно»; мёртвые — вон. Внутри — по выручке, крупные раньше.
-Пишет _ops/spisok-kc1.json (id получателей)."""
+Пишет _ops/spisok-kc1.json (id получателей). spisok_kc1.py [сколько первых]."""
 import io
 import json
 import sqlite3
@@ -32,6 +32,9 @@ for rid, em, inn, seg, ex in c.execute("SELECT id, email, inn, segment, extra_js
     сч["вердикт: " + (в or "не проверен")] += 1
     ряды.append((ранг.get(в, 1), -выр.get(str(inn), 0), rid))
 ряды.sort()
+import sys
+if len(sys.argv) > 1:
+    ряды = ряды[:int(sys.argv[1])]  # срез: отбор драйвера идёт ~0,15 с на компанию
 json.dump([r[2] for r in ряды], io.open(r"C:\sender\_ops\spisok-kc1.json", "w"))
 print("в списке:", len(ряды))
 for k, v in сч.most_common():
