@@ -32,10 +32,14 @@ except Exception:  # noqa: BLE001
 ГРУППА = "КЦ-1"
 ИСТОЧНИК = "kc-1-pochta"
 ПРИМЕНИТЬ = "--primenit" in sys.argv
-ФАЙЛ = r"C:\seostat\drop\drop-storage\kc1-zaliv.json"
+ФАЙЛ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("fayl=")), r"C:\seostat\drop\drop-storage\kc1-zaliv.json")
 ЖУРНАЛ = r"C:\sender\_ops\kc1-zaliv.jsonl"
 
-строки = json.load(io.open(ФАЙЛ, encoding="utf-8"))
+_д = json.load(io.open(ФАЙЛ, encoding="utf-8"))
+# kc1-lesenka.json (владелец 19.10: «для всех всю лесенку добавь, основной = лучший»):
+# {"главные": [...как в kc1-zaliv...], "запас": [{inn, email, role, fio, dolzh, url}, ...]}
+строки = _д["главные"] if isinstance(_д, dict) else _д
+запас = _д.get("запас", []) if isinstance(_д, dict) else []
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=120)
 e = sqlite3.connect(r"C:\sender\enrich.db", timeout=120)
 есть = {str(r[0]).lower(): (r[1], r[2]) for r in c.execute("SELECT email, id, extra_json FROM recipients")}
@@ -76,6 +80,18 @@ for z in строки:
                 "activity": "; ".join(x for x in (z.get("produkciya"), z.get("oborud")) if x) or None}
         обог.append({k: v for k, v in поля.items() if v and k in кол_обог})
         сч["компания в обогащение"] += 1
+кол_адр = {r[1] for r in e.execute("PRAGMA table_info(emails)")}
+есть_адр = {(str(r[0]), str(r[1]).lower()) for r in e.execute("SELECT inn, email FROM emails")}
+запас_нов = []
+for a in запас:
+    ключ = (str(a["inn"]), a["email"])
+    if ключ in есть_адр:
+        continue
+    есть_адр.add(ключ)
+    п = {"inn": a["inn"], "email": a["email"], "role": (a.get("role") or "") + (" | " + a["dolzh"] if a.get("dolzh") else ""),
+         "source": "kc-1-pochta", "source_url": a.get("url")}
+    запас_нов.append({k: v for k, v in п.items() if v and k in кол_адр})
+сч["запасной адрес лесенки в обогащение"] = len(запас_нов)
 print("строк в файле:", len(строки))
 for k, v in сч.most_common():
     print("   %-36s %6d" % (k, v))
@@ -126,6 +142,14 @@ for i in range(0, len(обог), 200):
             e.execute("INSERT OR IGNORE INTO companies (%s) VALUES (%s)" % (",".join(п), ",".join("?" * len(п))),
                       list(п.values()))
     пачкой(e, _о)
+for i in range(0, len(запас_нов), 300):
+    кус = запас_нов[i:i + 300]
+
+    def _з():
+        for п in кус:
+            e.execute("INSERT OR IGNORE INTO emails (%s) VALUES (%s)" % (",".join(п), ",".join("?" * len(п))),
+                      list(п.values()))
+    пачкой(e, _з)
 ж.flush()
 os.fsync(ж.fileno())
 ж.close()
