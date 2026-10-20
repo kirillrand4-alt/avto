@@ -20,13 +20,13 @@ cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 q = build_ai_quota(store, cfg)
 e = sqlite3.connect(r"C:\sender\enrich.db")
-выр = {str(r[0]): r[1] for r in e.execute("SELECT inn, revenue_rub FROM companies WHERE revenue_rub>=1e9")}
+выр = {str(r[0]): r[1] for r in e.execute("SELECT inn, revenue_rub FROM companies WHERE revenue_rub>=5e8")}
 нашли = {}
 for rid in json.load(io.open(r"C:\sender\_ops\spisok-kc1.json")):
     rec = store.get_recipient(rid)
     inn = str(getattr(rec, "inn", "") or "")
     em = str(getattr(rec, "email", "") or "").strip().lower()
-    if inn in выр and sum(map(ord, em)) % 2 not in нашли:
+    if inn in выр and float(выр[inn] or 0) < 1e9 and sum(map(ord, em)) % 2 not in нашли:
         нашли[sum(map(ord, em)) % 2] = rec
     if len(нашли) == 2:
         break
@@ -35,4 +35,4 @@ for чёт, rec in sorted(нашли.items()):
     print("ключи:", sorted(req), sorted((req.get("extra") or {}))[:40])
     print("==== ИНН", req.get("inn"), "чётный" if чёт == 0 else "нечётный", "| revenue в extra:", (req.get("extra") or {}).get("revenue"))
     блок = A._recipient_block(0, req, "kc")
-    print("ВСТАВКА ЕСТЬ" if "ФРАЗА О СЕБЕ" in блок else "вставки нет")
+    print([s for s in блок.splitlines() if "ФРАЗА О СЕБЕ" in s] or "вставки нет", "| ОКВЭД", req.get("okved"))
