@@ -16,7 +16,7 @@ import io, json, os, re, shutil, subprocess, sys, threading, time, urllib.parse,
 from concurrent.futures import ThreadPoolExecutor
 DIR = r'C:\sender\server'
 ДРОП = r'C:\seostat\drop\drop-storage'
-if '--vnutri' not in sys.argv:
+if __name__ == '__main__' and '--vnutri' not in sys.argv:
     лог = os.path.join(DIR, 'fsa_deshevo_%s.log' % time.strftime('%d%m-%H%M'))
     with open(лог, 'wb') as в:
         p = subprocess.Popen([sys.executable, '-u', os.path.join(DIR, '_fsa_deshevo.py'), '--vnutri'], cwd=DIR,
@@ -224,8 +224,9 @@ def волна500():
     V.досбор('fsa500')
 
 
-т = threading.Thread(target=волна500)
-т.start()
-main()
-т.join()
-п('ДЁШЕВО: ГОТОВО')
+if __name__ == '__main__':  # 20.10: модуль импортирует _fsa_noch (проверка ИНН на сайте, поиск)
+    т = threading.Thread(target=волна500)
+    т.start()
+    main()
+    т.join()
+    п('ДЁШЕВО: ГОТОВО')
