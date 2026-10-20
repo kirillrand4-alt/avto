@@ -1,61 +1,39 @@
 # -*- coding: utf-8 -*-
-"""Входящие ответы за сегодня: кто ответил, о чём, и ответили ли ему.
-
-Владелец: «сегодня один ответ был про 2 компрессора, мы ему написали,
-посмотри ответил ли он». Ищем ответ по тексту, дальше разворачиваем ВЕСЬ
-разговор с этой компанией по времени: наши письма, их ответы, наши ответы.
-"""
-import json
-import re
+"""Ответы за последние N часов (по умолч. 24): события reply/reply_auto по
+кампаниям и ящикам, лиды, созданные за то же время, и входящие, которые не
+привязались к письму. Только чтение.  otvety_segodnya.py [N]"""
+import sqlite3
 import sys
-from datetime import datetime, timezone
+from collections import Counter
+from datetime import datetime, timedelta
 
-sys.path.insert(0, r"C:\sender")
-from sender.config import Config                                       # noqa: E402
-from sender.store import Store                                         # noqa: E402
-
-ИСКАТЬ = sys.argv[1] if len(sys.argv) > 1 else "компрессор"
-ДНЕЙ = int(next((a for a in sys.argv[1:] if a.isdigit()), "1"))
-
-cfg = Config.load(r"C:\sender\sender.yaml")
-store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
-
-
-def _текст(s, лимит=400):
-    s = re.sub(r"<[^>]+>", " ", str(s or ""))
-    s = re.sub(r"\s+", " ", s).strip()
-    return s[:лимит]
-
-
-print(f"== входящие ответы за последние {ДНЕЙ} дн. ==")
-with store._lock:
-    события = store._conn.execute(
-        "SELECT e.id, e.event_type, e.event_ts, e.recipient_id, e.mailbox_id, "
-        "       e.detail_json, r.email, r.company_name, r.inn "
-        "FROM events e LEFT JOIN recipients r ON r.id=e.recipient_id "
-        "WHERE e.event_type IN ('reply','reply_auto') "
-        "AND date(e.event_ts) >= date('now', ?) "
-        "ORDER BY e.event_ts", (f"-{ДНЕЙ} day",)).fetchall()
-
-print(f"всего ответов: {len(события)}")
-совпали = []
-for e in события:
-    d = {}
-    try:
-        d = json.loads(e["detail_json"] or "{}")
-    except Exception:                                                  # noqa: BLE001
-        pass
-    тело = _текст(d.get("body") or d.get("text") or d.get("snippet") or "")
-    тема = _текст(d.get("subject") or "", 90)
-    метка = f"{str(e['event_ts'])[11:16]} {e['company_name'] or '—'} <{e['email']}>"
-    print(f"\n  [{e['event_type']}] {метка}")
-    if тема:
-        print(f"     тема: {тема}")
-    if тело:
-        print(f"     текст: {тело[:260]}")
-    if ИСКАТЬ.lower() in (тело + " " + тема).lower():
-        совпали.append(e)
-
-print(f"\n== содержат «{ИСКАТЬ}»: {len(совпали)} ==")
-for e in совпали:
-    print(f"  recipient_id={e['recipient_id']} {e['company_name']} <{e['email']}>")
+N = int(sys.argv[1]) if len(sys.argv) > 1 else 24
+от = (datetime.utcnow() - timedelta(hours=N)).strftime("%Y-%m-%dT%H:%M:%S")
+c = sqlite3.connect(r"C:\sender\sender.db")
+кам = {r[0]: r[1] for r in c.execute("SELECT id, name FROM campaigns")}
+таб = {r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+print("с", от, "UTC")
+сч = Counter()
+for et, cid, mid in c.execute("SELECT ev.event_type, COALESCE(ev.campaign_id, m.campaign_id), ev.message_id FROM events ev "
+                              "LEFT JOIN messages m ON m.id=ev.message_id WHERE ev.event_type IN ('reply','reply_auto') AND ev.event_ts>=?", (от,)):
+    сч[(et, кам.get(cid, cid))] += 1
+print("события ответов по кампаниям:")
+for k, v in sorted(сч.items(), key=lambda x: -x[1]):
+    print("  %-11s %-32s %4d" % (k[0], str(k[1])[:32], v))
+if "leads" in таб:
+    кол = {r[1] for r in c.execute("PRAGMA table_info(leads)")}
+    тс = next((k for k in ("created_at", "ts", "first_reply_at", "updated_at") if k in кол), None)
+    if тс:
+        print("лиды за период по виду:", dict(c.execute("SELECT reply_kind, COUNT(*) FROM leads WHERE %s>=? GROUP BY reply_kind" % тс, (от,)).fetchall()))
+        print("лиды за период по статусу:", dict(c.execute("SELECT status, COUNT(*) FROM leads WHERE %s>=? GROUP BY status" % тс, (от,)).fetchall()))
+for т in ("inbound", "inbound_messages", "inbox", "replies", "mail_in"):
+    if т in таб:
+        кол = [r[1] for r in c.execute("PRAGMA table_info(%s)" % т)]
+        print("таблица", т, кол[:15])
+        тс = next((k for k in ("received_at", "ts", "created_at", "date") if k in кол), None)
+        if тс:
+            print("  за период:", c.execute("SELECT COUNT(*) FROM %s WHERE %s>=?" % (т, тс), (от,)).fetchone()[0])
+            if "matched" in кол or "message_id" in кол:
+                к = "matched" if "matched" in кол else "message_id"
+                print("  не привязано к письму:", c.execute("SELECT COUNT(*) FROM %s WHERE %s>=? AND (%s IS NULL OR %s=0)" % (т, тс, к, к), (от,)).fetchone()[0])
+print("все типы событий за период:", dict(c.execute("SELECT event_type, COUNT(*) FROM events WHERE event_ts>=? GROUP BY event_type", (от,)).fetchall()))
