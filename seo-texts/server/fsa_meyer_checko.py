@@ -94,6 +94,12 @@ def main():
         return (0 if почта else 1 if тел else 2, len(z['инн']) != 10, -(z.get('деклараций') or 0))
     изг.sort(key=приоритет)
     очередь = [z['инн'] for z in изг]
+    # 20.10, владелец: «сначала из ФНС, потом чеко» — свой список ИНН (дроп CHECKO_VHOD): уникальные Meyer без выручки ни в
+    # checko, ни в ФНС; DaData-статус тут не повод пропускать — нужна выручка
+    if os.environ.get('CHECKO_VHOD'):
+        ок = {y['inn'] for y in читать(ВЫХ) if y.get('inn') and y.get('итог') == 'ok' and 'оквэд_все' in y}
+        очередь = [i for i in json.load(open(os.path.join(r'C:\seostat\drop\drop-storage', os.environ['CHECKO_VHOD']),
+                                             encoding='utf-8')) if i not in ок]
     прокси = [CP.Прокси(x) for x in json.load(open(os.path.join(DIR, 'checko-proxies.json')))]
     # 19.10: замер — медленные/рвущие ответ прокси (16 с, IncompleteRead) держали потоки: 37 карточек в минуту на 10 потоках.
     # Берём только быстрые (ответ до 5 с), и у каждого потока СВОЙ прокси (раньше потоки сталкивались на одном и ждали паузу 3 с)
