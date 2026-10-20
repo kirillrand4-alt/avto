@@ -34,9 +34,10 @@ import os
 import sys
 from collections import Counter
 
-ЖУРНАЛ = r"C:\sender\_ops\gen-partiya-935.jsonl"
+ЖУРНАЛ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("zhurnal=")),
+              r"C:\sender\_ops\gen-partiya-935.jsonl")
 ПРИЗНАК = ("credit wallet quota insufficient", "HTTP 403")
-СНИМАТЬ = "--снять" in sys.argv
+СНИМАТЬ = "--снять" in sys.argv or "--snyat" in sys.argv
 
 
 def _403(z) -> bool:

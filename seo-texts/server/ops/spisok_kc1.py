@@ -29,6 +29,9 @@ for rid, em, inn, seg, ex in c.execute("SELECT id, email, inn, segment, extra_js
     в = проба.get(str(em).lower(), "")
     if в in ("нет ящика", "нет MX"):
         сч["мёртв по пробе (лесенка подменит в драйвере)"] += 1
+    if в in ("неясно", "отказ пробе"):
+        сч["вон: «%s» (владелец 20.10: такие с отправки снимаем)" % в] += 1
+        continue
     сч["вердикт: " + (в or "не проверен")] += 1
     ряды.append((ранг.get(в, 1), -выр.get(str(inn), 0), rid))
 ряды.sort()

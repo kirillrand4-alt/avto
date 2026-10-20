@@ -30,7 +30,7 @@ import time
 журнал = r"C:\sender\_ops\gen-kc1-avgust.jsonl"
 лог = r"C:\sender\_ops\gen-kc1-avgust.log"
 арг = [sys.executable, r"C:\sender\server\ops\partiya_gen_avgust.py",
-       сколько, "10800", "kc", "0",
+       сколько, os.environ.get("GEN_LIMIT_SEC") or (sys.argv[7] if len(sys.argv) > 7 else "10800"), "kc", "0",
        "gruppa=КЦ-1", "camp_kc=17", "zhurnal=" + журнал,
        "threads=" + потоков, "spisok=C:\\sender\\_ops\\spisok-kc1.json",
        "revenue=0", "model=" + модель, "porog=" + порог] + доп_арг + флаги
