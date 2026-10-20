@@ -1854,6 +1854,20 @@ def _recipient_block(i: int, rec: dict, division: str = 'kc',
     size = str(ex.get('company_size') or '').strip() or company_size(ex.get('revenue'))
     if size in SIZE_TONE:
         lines.append(f"РАЗМЕР: {SIZE_TONE[size]}")
+    # ВАРИАНТ 4 (владелец 20.10): крупным (выручка от 1 млрд) — намёк на масштаб
+    # одной вставкой во фразу о себе, и только ПОЛОВИНЕ (чётная сумма кодов
+    # символов адреса — ИНН в запросе нет; разбор: variant4_razbor.py), вторая
+    # половина крупных — контроль без вставки. Остальным — чистый август.
+    try:
+        _выр4 = float(str(ex.get('revenue') or rec.get('revenue') or 0).replace(' ', '').replace(',', '.'))
+    except (TypeError, ValueError):
+        _выр4 = 0.0
+    _адр4 = str(rec.get('email') or '').strip().lower()
+    if division == 'kc' and _выр4 >= 1e9 and _адр4 and sum(map(ord, _адр4)) % 2 == 0:
+        lines.append("ФРАЗА О СЕБЕ (крупное предприятие, обязательно ДОСЛОВНО): «Я веду "
+                     "направление компрессорного оборудования в Компрессор Центре - в том "
+                     "числе центробежные машины и станции под ключ для крупных "
+                     "производств.» Других слов о компании не добавляй.")
     if mode == 'NEWS':
         lines.append(f"НОВОСТЬ: {ex.get('news_object')} | город: {ex.get('city')}"
                      + (f" | месяц: {ex['news_month']}" if ex.get('news_month') else ''))
