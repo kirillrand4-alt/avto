@@ -83,8 +83,9 @@ def main():
     уже = {y['инн'] for y in читать(os.path.join(DIR, 'fsa-meyer-dadata.jsonl')) if y.get('инн') and y.get('статус')}
     уже |= {y['inn'] for y in читать(ВЫХ) if y.get('inn') and y.get('итог') == 'ok' and 'оквэд_все' in y}
     конт = {y['инн']: y for y in читать(os.path.join(DIR, 'fsa-meyer-kontakty2.jsonl')) if y.get('инн')}
+    # 20.10, владелец: «у ИП нет данных в чеко, там нет пользы» — только юрлица (ИНН 10 цифр)
     изг = [z for z in читать(os.path.join(DIR, 'fsa-meyer-izg.jsonl')) if z.get('инн') and отсев.get(z['инн']) != 'нет'
-           and z['инн'] not in уже]
+           and z['инн'] not in уже and len(z['инн']) == 10]
 
     def приоритет(z):
         к = конт.get(z['инн']) or {}
