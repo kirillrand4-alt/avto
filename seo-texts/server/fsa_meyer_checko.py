@@ -126,6 +126,12 @@ def main():
                 инн = очередь.pop(0)
             px = живые[k % len(живые)]
             код, html = px.get('https://checko.ru/search?query=%s' % инн)
+            # 20.10: ИНН ИП (12 цифр) ведёт на страницу физлица /person/<ИНН>; карточка ИП — по ссылке /entrepreneur/<…ОГРНИП>
+            # (37 тыс. ИП первого прохода записались «не найдена»)
+            if код == 200 and html and '/person/' in (re.search(r'<link rel="canonical" href="([^"]+)"', html) or [''])[0]:
+                ип = re.findall(r'href="(/entrepreneur/[a-z0-9-]*\d{15})"', html)
+                if ип:
+                    код, html = px.get('https://checko.ru' + ип[0])
             з = {'inn': инн, 'код': код}
             if код == 200 and html:
                 try:
