@@ -40,7 +40,9 @@ for rid, email, pj in c.execute(
             continue
         if k == "recent_contact":
             m = re.search(r"(\d{4}-\d{2}-\d{2})", f.get("label") or "")
-            if m and (date.today() - date.fromisoformat(m.group(1))).days > 30:
+            # --vse-recent: владелец 20.10 «что держит 137 писем? сделай что бы
+            # пропустило» — recent_contact снимаем у всех, без 30-дневного порога.
+            if "--vse-recent" in sys.argv or (m and (date.today() - date.fromisoformat(m.group(1))).days > 30):
                 итог[k] += 1
                 continue
         оставить.append(f)
