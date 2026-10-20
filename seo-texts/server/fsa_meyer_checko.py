@@ -102,6 +102,9 @@ def main():
     # checko, ни в ФНС; DaData-статус тут не повод пропускать — нужна выручка
     if os.environ.get('CHECKO_VHOD'):
         ок = {y['inn'] for y in читать(ВЫХ) if y.get('inn') and y.get('итог') == 'ok' and 'оквэд_все' in y}
+        # CHECKO_ZANOVO=1 — карточку перечитать ради кандидата в сайт (поле «сайт_кандидат» появилось 20.10)
+        if os.environ.get('CHECKO_ZANOVO') == '1':
+            ок = {y['inn'] for y in читать(ВЫХ) if y.get('inn') and y.get('итог') == 'ok' and 'сайт_кандидат' in y}
         очередь = [i for i in json.load(open(os.path.join(r'C:\seostat\drop\drop-storage', os.environ['CHECKO_VHOD']),
                                              encoding='utf-8')) if i not in ок]
     прокси = [CP.Прокси(x) for x in json.load(open(os.path.join(DIR, 'checko-proxies.json')))]

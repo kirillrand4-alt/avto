@@ -13,7 +13,7 @@ import json, os, shutil, subprocess, sys, threading, time
 DIR = r'C:\sender\server'
 ДРОП = r'C:\seostat\drop\drop-storage'
 ПИТОН_ПАНЕЛИ = r'C:\Program Files\Python311\python.exe'
-if '--vnutri' not in sys.argv:
+if __name__ == '__main__' and '--vnutri' not in sys.argv:
     лог = os.path.join(DIR, 'fsa_volny_%s.log' % time.strftime('%d%m-%H%M'))
     with open(лог, 'wb') as в:
         p = subprocess.Popen([sys.executable, '-u', os.path.join(DIR, '_fsa_volny.py'), '--vnutri'], cwd=DIR,
@@ -121,17 +121,18 @@ def агенты(волна):
         п('копия', repr(e)[:80])
 
 
-п('жду волну fsa500')
-while идёт('_pusk_fsa500.py') or идёт('KC_NABOR=fsa500'):
-    time.sleep(120)
-try:
-    shutil.copyfile(os.path.join(DIR, 'fsa500-glubokiy.jsonl'), os.path.join(ДРОП, 'fsa500-glubokiy.jsonl'))
-except Exception as e:  # noqa: BLE001
-    п('копия fsa500', repr(e)[:80])
-п('волна fsa500 закончена: агентов', len(читать(os.path.join(DIR, 'fsa500-glubokiy.jsonl'))))
-т = threading.Thread(target=досбор, args=('fsa500',))
-т.start()
-агенты('fsa120')
-т.join()
-досбор('fsa120')
-п('ВОЛНЫ ГОТОВЫ')
+if __name__ == '__main__':  # 20.10: модуль импортирует _fsa_deshevo (досбор, запуск) — без побочных запусков
+    п('жду волну fsa500')
+    while идёт('_pusk_fsa500.py') or идёт('KC_NABOR=fsa500'):
+        time.sleep(120)
+    try:
+        shutil.copyfile(os.path.join(DIR, 'fsa500-glubokiy.jsonl'), os.path.join(ДРОП, 'fsa500-glubokiy.jsonl'))
+    except Exception as e:  # noqa: BLE001
+        п('копия fsa500', repr(e)[:80])
+    п('волна fsa500 закончена: агентов', len(читать(os.path.join(DIR, 'fsa500-glubokiy.jsonl'))))
+    т = threading.Thread(target=досбор, args=('fsa500',))
+    т.start()
+    агенты('fsa120')
+    т.join()
+    досбор('fsa120')
+    п('ВОЛНЫ ГОТОВЫ')
