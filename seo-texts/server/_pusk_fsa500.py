@@ -18,7 +18,10 @@ if '--vnutri' not in sys.argv:
     sys.exit(0)
 shutil.copyfile(os.path.join(ДРОП, 'fsa500-spisok.json'), os.path.join(DIR, 'fsa500-spisok.json'))
 env = dict(os.environ, KC_NABOR='fsa500', KC_CEL='meyer', PROVIDER_MODEL='gpt-6-sol', KC_AGENT_POTOKOV='30',
-           KC_XML_KANALOV='4', KC_AGENT_XML_MIN='60', KC_MODEL_PARALLEL='30', PYTHONIOENCODING='utf-8')
+           KC_XML_KANALOV='4',
+           # 20.10, владелец: «запускай, пополню позже» — на 55 ₽ идём до остатка 5 ₽; после пополнения перезапуск продолжит
+           # (сделанные пропускаются, «вслепую и пусто» переделываются)
+           KC_AGENT_XML_MIN=os.environ.get('FSA500_XML_MIN', '5'), KC_MODEL_PARALLEL='30', PYTHONIOENCODING='utf-8')
 t0 = time.time()
 print(time.strftime('%d.%m %H:%M:%S'), 'старт агентов fsa500', flush=True)
 # свой лог агентам (вывод агентов виден в итоге запуска; 20.10 первый пуск молча встал на балансе xmlriver < 60 ₽)
