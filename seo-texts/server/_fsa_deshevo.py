@@ -35,13 +35,32 @@ import meyer_nalichie as MN  # noqa: E402
 ВОЛНА = 'fsa120'
 ВЫХ = os.path.join(DIR, ВОЛНА + '-sayt-inn.jsonl')
 _лок = threading.Lock()
-СПРАВОЧНИКИ = re.compile(r'rusprofile|checko|list-org|zachestnyibiznes|sbis|saby|spark-interfax|audit-it|e-ecolog|rbc\.ru|'
-                         r'kontur|vbankcenter|ogrn|egrul|nalog|synapsenet|orgpage|yell|2gis|zoon|spravker|avito|hh\.ru|'
-                         r'vk\.com|ok\.ru|t\.me|youtube|wikipedia|prima-inform|globas|credinform|b2b|tiu\.ru|pulscen|'
-                         r'companium|rusprofile|ofdata|fek\.ru|bfo|kartoteka|bizly|esphere|xn--|torgi|zakupki|gov\.ru|'
-                         r'yandex|google|mail\.ru|dzen|sravni|moneyman|rating|reestr|spravochnik|catalog|katalog', re.I)
-ССЫЛКИ = re.compile(r'href="([^"#]+)"[^>]*>([^<]{0,60})', re.I)
-НУЖНЫЕ = re.compile(r'контакт|реквизит|о компании|о нас|about|contact|rekvizit|company|kompan|o-nas|o_nas|info', re.I)
+# 20.10, ревизия (№6): справочник — только по ХОСТУ (раньше подстрока по всему URL: «ok.ru» резал omskblok.ru, «t.me» —
+# любые *time*, «xn--» — все .рф в punycode); плюс площадки мини-сайтов и найденные ревизией каталоги
+СПРАВОЧНИКИ = re.compile(r'(^|\.)(rusprofile|checko|list-org|zachestnyibiznes|sbis|saby|spark-interfax|audit-it|e-ecolog|rbc|'
+                         r'kontur|vbankcenter|ogrn|egrul|nalog|synapsenet|orgpage|yell|2gis|zoon|spravker|avito|hh|vk|ok|'
+                         r't|youtube|wikipedia|prima-inform|globas|credinform|b2b-center|tiu|pulscen|all\.biz|flagma|companium|'
+                         r'ofdata|bizly|esphere|torgi|zakupki|yandex|google|mail|dzen|sravni|tbank|datanewton|meatinfo|'
+                         r'agroserver|o-zavodah|sledi|kartoteka|bfo|fek|rating-ru|spr|catalog|katalog)\.[a-zа-я.]+$', re.I)
+# ссылки в любых кавычках, текст ссылки — с вложенными тегами
+ССЫЛКИ = re.compile(r"""href\s*=\s*["']([^"'#]+)["'][^>]*>(.{0,300}?)</a""", re.I | re.S)
+НУЖНЫЕ = re.compile(r'контакт|реквизит|о компании|о нас|политик|конфиденц|about|contact|kontakt|rekvizit|requisit|politik|'
+                    r'privacy|policy|company|kompan|o-nas|o_nas|info', re.I)
+ПАРКОВКА = re.compile(r'домен продаётся|домен продается|shopuri|this domain is for sale|reg\.ru/domain|парковка домена', re.I)
+
+
+def _приоритет(u, т):
+    s = u + ' ' + т
+    for k, шаблон in enumerate((r'реквизит|rekvizit|requisit', r'политик|конфиденц|politik|privacy|policy',
+                                r'контакт|contact|kontakt')):
+        if re.search(шаблон, s, re.I):
+            return k
+    return 3
+
+
+def хост(u):
+    h = (urllib.parse.urlsplit(u if '//' in u else 'http://' + u).hostname or '').lower()
+    return h[4:] if h.startswith('www.') else h
 
 
 def п(*a):
@@ -56,31 +75,61 @@ def записать(з):
             os.fsync(f.fileno())
 
 
-def инн_на_сайте(сайт, инн):
-    """Главная + до 5 страниц «контакты/реквизиты/о компании»: где стоит ИНН компании (адрес страницы) или ''."""
+ЧУЖОЙ_ИНН = re.compile(r'ИНН[^\d]{0,15}(\d{10}|\d{12})(?!\d)', re.I)
+
+
+def проверить(сайт, инн, телефоны=(), страница=''):
+    """Найденная в выдаче страница (если есть) или главная + до 6 страниц по приоритету: реквизиты > политика > контакты >
+    о компании. -> {'стр', 'как': 'ИНН' | 'телефон checko', 'чужой_инн'}. Ревизия 20.10 (№6): ИНН виден лишь на ~22%
+    настоящих сайтов — второй уровень: телефон с карточки checko на сайте («вероятный», дальше опровергатели Luna);
+    парковки доменов отсеиваются; чужой ИНН — «сайт группы?»."""
+    out = {'стр': '', 'как': '', 'чужой_инн': ''}
     if not сайт:
-        return '', 0
+        return out
     база = сайт if сайт.startswith('http') else 'https://' + сайт
-    ст, html, *_ = MN.скачать(база)
-    if not ст.startswith('ok') or not html:
-        ст, html, *_ = MN.скачать(база.replace('https://', 'http://'))
-        if not ст.startswith('ok') or not html:
-            return '', 0
-    шаблон = re.compile(r'(?<!\d)%s(?!\d)' % инн)
-    if шаблон.search(html):
-        return база, 1
-    дом = MN.домен(база)
-    урлы = []
-    for u, т in ССЫЛКИ.findall(html):
-        if НУЖНЫЕ.search(u + ' ' + т):
-            полный = urllib.parse.urljoin(база + '/', u)
-            if MN.домен(полный) == дом and полный not in урлы:
-                урлы.append(полный)
-    for u in урлы[:5]:
-        ст, h, *_ = MN.скачать(u)
-        if ст.startswith('ok') and h and шаблон.search(h):
-            return u, 1 + урлы.index(u) + 1
-    return '', 1 + min(5, len(урлы))
+    свой = re.compile(r'(?<!\d)%s(?!\d)' % инн)
+    тт = {re.sub(r'\D', '', x)[-10:] for x in телефоны or () if len(re.sub(r'\D', '', x)) >= 10}
+    чужие, тел_стр = [], ['']
+
+    def смотреть(u, h):
+        if свой.search(h):
+            return True
+        чужие.extend(x for x in ЧУЖОЙ_ИНН.findall(h) if x != инн)
+        if тт and not тел_стр[0] and any(x in re.sub(r'\D', '', h) for x in тт):
+            тел_стр[0] = u
+        return False
+    html, u = '', ''
+    for u in ([страница] if страница else []) + [база, база.replace('https://', 'http://')]:
+        ст, html, *_ = MN.скачать(u)
+        if ст.startswith('ok') and html:
+            break
+        html = ''
+    if not html or ПАРКОВКА.search(html[:20000]):
+        return out
+    if смотреть(u, html):
+        return dict(out, стр=u, как='ИНН')
+    дом = хост(u)
+    корень = дом.split('.', 1)[-1] if дом.count('.') > 1 else дом
+    урлы = set()
+    for v, т in ССЫЛКИ.findall(html):
+        т = re.sub(r'<[^>]+>', ' ', т)
+        if НУЖНЫЕ.search(v + ' ' + т):
+            полный = urllib.parse.urljoin(u, v.strip())
+            if хост(полный).endswith(корень):
+                урлы.add((_приоритет(v, т), полный))
+    for _, v in sorted(урлы)[:6]:
+        ст, h, *_ = MN.скачать(v)
+        if ст.startswith('ok') and h and смотреть(v, h):
+            return dict(out, стр=v, как='ИНН')
+    if тел_стр[0]:
+        return dict(out, стр=тел_стр[0], как='телефон checko')
+    return dict(out, чужой_инн=max(set(чужие), key=чужие.count) if чужие else '')
+
+
+def инн_на_сайте(сайт, инн):
+    """Старый интерфейс: (страница с ИНН | '', 0)."""
+    r = проверить(сайт, инн)
+    return (r['стр'] if r['как'] == 'ИНН' else ''), 0
 
 
 _бал = {'t': 0, 'v': None}
@@ -113,37 +162,62 @@ def поиск(q):
         if 'перезапрос' in xml or 'аняты все' in xml or 'свободных каналов' in xml:
             time.sleep(3 + 3 * попытка)
             continue
+        # 20.10, ревизия: ответ-ошибка (кончились деньги и т.п.) — не «пустая выдача»
+        if '<error' in xml or '&lt;error' in xml:
+            return None
         return [re.sub(r'<[^>]+>', '', u).strip() for u in re.findall(r'<url>(.*?)</url>', xml, re.S)][:10]
     return None
 
 
 def одна(к, чк):
     инн = к['inn']
-    пробовали, как = [], ''
-    кандидаты = [(к.get('сайт') or '', 'декларация / домен почты'), ((чк.get(инн) or {}).get('сайт_кандидат') or '', 'checko')]
-    for сайт, откуда in кандидаты:
-        if сайт and MN.домен(сайт) not in пробовали:
-            пробовали.append(MN.домен(сайт))
-            стр, n = инн_на_сайте(сайт, инн)
-            if стр:
-                return записать({'inn': инн, 'сайт': сайт, 'как': откуда, 'страница_с_инн': стр, 'проверено': пробовали,
-                                 'запрос': False})
+    пробовали = []
+    тел = (чк.get(инн) or {}).get('телефоны') or []
+    сост = {'вероятный': None, 'группа': None}
+
+    def пробовать(сайт, откуда, страница):
+        r = проверить(сайт, инн, тел, страница)
+        if r['как'] == 'ИНН':
+            return {'inn': инн, 'сайт': хост(сайт) or сайт, 'как': откуда, 'страница_с_инн': r['стр'], 'проверено': пробовали}
+        if r['как'] == 'телефон checko' and not сост['вероятный']:
+            сост['вероятный'] = {'inn': инн, 'сайт': хост(сайт) or сайт, 'как': откуда + ' (вероятный: телефон checko на сайте)',
+                                 'страница_с_инн': r['стр'], 'вероятный': True, 'проверено': пробовали}
+        if r['чужой_инн'] and not сост['группа']:
+            сост['группа'] = {'сайт_группы': хост(сайт) or сайт, 'чужой_инн': r['чужой_инн'], 'как_группы': откуда}
+        return None
+    for сайт, откуда in ((к.get('сайт') or '', 'декларация / домен почты'),
+                         ((чк.get(инн) or {}).get('сайт_кандидат') or '', 'checko')):
+        if сайт and хост(сайт) not in пробовали:
+            пробовали.append(хост(сайт))
+            з = пробовать(сайт, откуда, '')
+            if з:
+                return записать(dict(з, запрос=False))
+    # 20.10, ревизия: вероятный сайт или сайт группы уже есть — запрос xmlriver не тратим
+    if сост['вероятный']:
+        return записать(dict(сост['вероятный'], запрос=False, **(сост['группа'] or {})))
+    if сост['группа']:
+        return записать(dict({'inn': инн, 'сайт': '', 'как': 'сайт группы? (чужой ИНН)', 'проверено': пробовали,
+                              'запрос': False}, **сост['группа']))
     if not xml_ok():
         return записать({'inn': инн, 'сайт': '', 'как': 'xmlriver кончился', 'проверено': пробовали, 'запрос': False})
     урлы = поиск('ИНН %s официальный сайт' % инн)
     if урлы is None:
         return записать({'inn': инн, 'сайт': '', 'как': 'поиск не ответил', 'проверено': пробовали, 'запрос': True})
-    домены = []
+    выбор = []
     for u in урлы:
-        д = MN.домен(u)
-        if д and not СПРАВОЧНИКИ.search(u) and д not in пробовали and д not in домены:
-            домены.append(д)
-    for д in домены[:3]:
+        д = хост(u)
+        if д and not СПРАВОЧНИКИ.search(д) and д not in пробовали and д not in [x[0] for x in выбор]:
+            выбор.append((д, u if '//' in u else 'http://' + u))
+    for д, u in выбор[:3]:
         пробовали.append(д)
-        стр, n = инн_на_сайте(д, инн)
-        if стр:
-            return записать({'inn': инн, 'сайт': д, 'как': 'поиск «ИНН + официальный сайт»', 'страница_с_инн': стр,
-                             'проверено': пробовали, 'запрос': True})
+        з = пробовать(д, 'поиск «ИНН + официальный сайт»', u)
+        if з:
+            return записать(dict(з, запрос=True))
+    if сост['вероятный']:
+        return записать(dict(сост['вероятный'], запрос=True))
+    if сост['группа']:
+        return записать(dict({'inn': инн, 'сайт': '', 'как': 'сайт группы? (чужой ИНН)', 'проверено': пробовали,
+                              'запрос': True}, **сост['группа']))
     записать({'inn': инн, 'сайт': '', 'как': 'ИНН ни на одном кандидате', 'проверено': пробовали, 'запрос': True})
 
 
@@ -173,8 +247,13 @@ def main():
         if y.get('inn') and y.get('итог') == 'ok':
             чк[y['inn']] = y
     п('checko готов: кандидатов в сайт', sum(1 for i in порядок if (чк.get(i) or {}).get('сайт_кандидат')))
-    уже = set(V.читать(ВЫХ)) if os.path.exists(ВЫХ) else set()
-    очередь = [сп[i] for i in порядок if i not in уже]
+    # 20.10, ревизия: «сбой», «поиск не ответил», «xmlriver кончился» после перезапуска — повторить
+    уже = {i for i, x in V.читать(ВЫХ).items() if x.get('сайт') or x.get('как') in ('ИНН ни на одном кандидате', 'сайт группы? (чужой ИНН)')}
+    # 20.10, ревизия (№2): неуникальные (найдены поиском в любом разделе, глубокий поиск был, сосед по группе найден
+    # поиском), конкуренты, снятые владельцем ОКВЭД — не трогаем
+    искл = set(json.load(io.open(os.path.join(ДРОП, 'fsa-isklyuchit.json'), encoding='utf-8')))
+    очередь = [сп[i] for i in порядок if i not in уже and i not in искл]
+    п('очередь проверки', len(очередь), '| исключено ревизией', len(set(порядок) & искл))
     n = [0]
 
     def шаг(к):
@@ -189,7 +268,7 @@ def main():
     with ThreadPoolExecutor(12) as ex:
         list(ex.map(шаг, очередь))
     рез = V.читать(ВЫХ)
-    подтв = {i: x for i, x in рез.items() if x.get('сайт')}
+    подтв = {i: x for i, x in рез.items() if x.get('сайт') and i not in искл}
     п('ИНН на сайте подтверждён', len(подтв), 'из', len(рез), '| запросов xmlriver', sum(1 for x in рез.values() if x.get('запрос')))
     shutil.copyfile(ВЫХ, os.path.join(ДРОП, ВОЛНА + '-sayt-inn.jsonl'))
     набор = ВОЛНА + 's'
@@ -214,6 +293,8 @@ def main():
 
 
 def волна500():
+    if os.path.exists(os.path.join(DIR, 'fsa500p-pasport.jsonl')):  # 20.10: досбор fsa500p уже сделан (перезапуск)
+        return
     п('жду агентов fsa500')
     while V.идёт('_pusk_fsa500.py'):
         time.sleep(120)

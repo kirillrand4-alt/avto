@@ -28,7 +28,10 @@ sys.path.insert(0, r'C:\sender')
 os.chdir(DIR)
 ОБЩЕЕ = {'KC_CEL': 'meyer', 'POISK_REGIONY_SVERKI': 'все', 'PILOT_VOLNY': '1', 'KC_EC': '1', 'KC_EC_XML_OT': '5e8',
          'KC_EC_BEZ_MODELI': '1', 'KC_LIMIT_MIN': '25', 'KC_POTOKOV': '32', 'KC_MODEL_PARALLEL': '24', 'KC_PROTSESSOV': '4',
-         'PILOT_MODEL': 'gpt-6-luna', 'PROVIDER_FALLBACK_CHEAP': 'gpt-5.6-luna', 'PYTHONIOENCODING': 'utf-8'}
+         'PILOT_MODEL': 'gpt-6-luna', 'PROVIDER_FALLBACK_CHEAP': 'gpt-5.6-luna', 'PYTHONIOENCODING': 'utf-8',
+         # 20.10, ревизия: checko уже свежий (а обход дёргал бы общие прокси и ротацию); ЕИС в обходе — только от 1 млрд,
+         # остальное добирает kc_zakupki_dobor (как в pilot_konveyer)
+         'KC_BEZ_CHECKO': '1', 'KC_ZAKUPKI_OT': '1e9'}
 
 
 def п(*a):

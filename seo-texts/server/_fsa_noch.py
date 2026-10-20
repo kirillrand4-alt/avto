@@ -31,7 +31,6 @@ import _fsa_deshevo as D  # noqa: E402
 import meyer_nalichie as MN  # noqa: E402
 
 _лок = threading.Lock()
-ЧУЖОЙ_ИНН = re.compile(r'ИНН[^\d]{0,15}(\d{10}|\d{12})(?!\d)', re.I)
 ШАГИ = (('kc_kontakty.py', {}), ('kc_doizvlech.py', {}), ('kc_doizvlech_pochty.py', {}), ('kc_skrytye.py', {'KC_SKRYTYE_PROBA': '0'}),
         ('kc_doobhod.py', {}), ('kc_zakupki_dobor.py', {'KC_ZAKUPKI_DOBOR_OT': '120e6', 'KC_ZAKUPKI_POTOKOV': '4'}),
         ('kc_dorazmetka.py', {}), ('kc_audit.py', {}), ('kc_oproverzhenie.py', {}), ('pilot_pasport.py', {}))
@@ -42,7 +41,8 @@ def п(*a):
 
 
 def конвейер(набор, цель, шаги=ШАГИ):
-    env = dict(os.environ, **V.ОБЩЕЕ, POISK_NABOR=набор, KC_NABOR=набор, PROVIDER_MODEL='gpt-6-luna', KC_CEL=цель)
+    # 20.10, ревизия: KC_CEL есть в V.ОБЩЕЕ — подменяем внутри (иначе TypeError «multiple values for KC_CEL»)
+    env = dict(os.environ, **dict(V.ОБЩЕЕ, KC_CEL=цель), POISK_NABOR=набор, KC_NABOR=набор, PROVIDER_MODEL='gpt-6-luna')
     for файл, доп in шаги:
         питон = V.ПИТОН_ПАНЕЛИ if файл == 'pilot_pasport.py' and os.path.exists(V.ПИТОН_ПАНЕЛИ) else sys.executable
         t0 = time.time()
@@ -56,60 +56,37 @@ def конвейер(набор, цель, шаги=ШАГИ):
             п('копия', набор + ф, repr(e)[:80])
 
 
-def проверить(сайт, инн):
-    """-> (страница с нашим ИНН | '', чужой ИНН на сайте | '')."""
-    if not сайт:
-        return '', ''
-    база = сайт if сайт.startswith('http') else 'https://' + сайт
-    ст, html, *_ = MN.скачать(база)
-    if not ст.startswith('ok') or not html:
-        ст, html, *_ = MN.скачать(база.replace('https://', 'http://'))
-        if not ст.startswith('ok') or not html:
-            return '', ''
-    свой = re.compile(r'(?<!\d)%s(?!\d)' % инн)
-    чужие = []
-    страницы = [(база, html)]
-    дом = MN.домен(база)
-    урлы = []
-    for u, т in D.ССЫЛКИ.findall(html):
-        if D.НУЖНЫЕ.search(u + ' ' + т):
-            полный = urllib.parse.urljoin(база + '/', u)
-            if MN.домен(полный) == дом and полный not in урлы:
-                урлы.append(полный)
-    for u, h in страницы:
-        if свой.search(h):
-            return u, ''
-        чужие += [x for x in ЧУЖОЙ_ИНН.findall(h) if x != инн]
-    for u in урлы[:5]:
-        ст, h, *_ = MN.скачать(u)
-        if ст.startswith('ok') and h:
-            if свой.search(h):
-                return u, ''
-            чужие += [x for x in ЧУЖОЙ_ИНН.findall(h) if x != инн]
-    return '', (max(set(чужие), key=чужие.count) if чужие else '')
-
-
 def проход_базы(набор, чк):
     сп = json.load(io.open(os.path.join(ДРОП, набор + '-spisok.json'), encoding='utf-8'))['компании']
     вых = os.path.join(DIR, набор + '-sayt-inn.jsonl')
-    уже = set(V.читать(вых))
-    очередь = sorted((к for i, к in сп.items() if i not in уже), key=lambda к: -(к.get('выручка') or 0))
+    уже = {i for i, x in V.читать(вых).items() if x.get('сайт') or x.get('как') in ('ИНН ни на одном кандидате', 'кандидатов нет',
+                                                                                     'сайт группы? (чужой ИНН)')}
+    искл = set(json.load(io.open(os.path.join(ДРОП, 'fsa-isklyuchit.json'), encoding='utf-8')))  # ревизия №2
+    очередь = sorted((к for i, к in сп.items() if i not in уже and i not in искл), key=lambda к: -(к.get('выручка') or 0))
     n = [0]
 
     def одна(к):
         инн = к['inn']
         з = {'inn': инн, 'сайт': '', 'проверено': [], 'запрос': False}
+        тел = (чк.get(инн) or {}).get('телефоны') or []
         try:
+            # 20.10, ревизия (№6): общая проверка D.проверить — ИНН / телефон checko (вероятный) / чужой ИНН (сайт группы?)
             for сайт, откуда in ((к.get('сайт') or '', 'декларация / домен почты'), ((чк.get(инн) or {}).get('сайт_кандидат') or '', 'checko')):
-                if сайт and MN.домен(сайт) not in з['проверено']:
-                    з['проверено'].append(MN.домен(сайт))
-                    стр, чужой = проверить(сайт, инн)
-                    if стр:
-                        з.update(сайт=сайт, как=откуда, страница_с_инн=стр)
+                if сайт and D.хост(сайт) not in з['проверено']:
+                    з['проверено'].append(D.хост(сайт))
+                    r = D.проверить(сайт, инн, тел)
+                    if r['как'] == 'ИНН':
+                        з.update(сайт=D.хост(сайт), как=откуда, страница_с_инн=r['стр'], вероятный=False)
                         break
-                    if чужой and not з.get('сайт_группы'):
-                        з.update(сайт_группы=сайт, чужой_инн=чужой, как_группы=откуда)
-            з.setdefault('как', 'ИНН ни на одном кандидате' if з['проверено'] else 'кандидатов нет')
+                    if r['как'] == 'телефон checko' and not з.get('вер'):
+                        з['вер'] = (D.хост(сайт), откуда + ' (вероятный: телефон checko на сайте)', r['стр'])
+                    if r['чужой_инн'] and not з.get('сайт_группы'):
+                        з.update(сайт_группы=D.хост(сайт), чужой_инн=r['чужой_инн'], как_группы=откуда)
+            вер = з.pop('вер', None)
+            if not з['сайт'] and вер:
+                з.update(сайт=вер[0], как=вер[1], страница_с_инн=вер[2], вероятный=True)
+            з.setdefault('как', 'сайт группы? (чужой ИНН)' if з.get('сайт_группы') else
+                         'ИНН ни на одном кандидате' if з['проверено'] else 'кандидатов нет')
         except Exception as e:  # noqa: BLE001
             з['как'] = 'сбой ' + repr(e)[:100]
         with _лок:
@@ -123,7 +100,7 @@ def проход_базы(набор, чк):
     with ThreadPoolExecutor(16) as ex:
         list(ex.map(одна, очередь))
     рез = V.читать(вых)
-    подтв = {i: x for i, x in рез.items() if x.get('сайт') and i in сп}
+    подтв = {i: x for i, x in рез.items() if x.get('сайт') and i in сп and i not in искл}
     п(набор, 'ИНН на сайте подтверждён', len(подтв), '| сайт группы?', sum(1 for x in рез.values() if x.get('сайт_группы') and not x.get('сайт')),
       '| всего', len(рез))
     shutil.copyfile(вых, os.path.join(ДРОП, набор + '-sayt-inn.jsonl'))
@@ -137,7 +114,14 @@ def проход_базы(набор, чк):
 def ветка_a():
     сп = json.load(io.open(os.path.join(ДРОП, 'fsa120-spisok.json'), encoding='utf-8'))['компании']
     рез = V.читать(os.path.join(DIR, 'fsa120-sayt-inn.jsonl'))
-    нб = {i: к for i, к in сп.items() if (к.get('выручка') or 0) >= 1e9 and not (рез.get(i) or {}).get('сайт')}
+    # 20.10, ревизия: если дешёвая проверка не прошла всю волну, Sol получил бы и тех, чей сайт подтверждается бесплатно
+    готово = {i for i, x in рез.items() if x.get('сайт') or x.get('как') in ('ИНН ни на одном кандидате', 'сайт группы? (чужой ИНН)')}
+    искл0 = set(json.load(io.open(os.path.join(ДРОП, 'fsa-isklyuchit.json'), encoding='utf-8')))
+    if len(готово | (set(сп) & искл0)) < 0.95 * len(сп):
+        п('A: проверка «ИНН на сайте» прошла не всю волну (%d из %d) — Sol-агентов не запускаю' % (len(готово), len(сп)))
+        return
+    искл = set(json.load(io.open(os.path.join(ДРОП, 'fsa-isklyuchit.json'), encoding='utf-8')))  # ревизия №2
+    нб = {i: к for i, к in сп.items() if (к.get('выручка') or 0) >= 1e9 and not (рез.get(i) or {}).get('сайт') and i not in искл}
     п('A: от 1 млрд без подтверждённого сайта -> Sol-агенты', len(нб))
     if not нб:
         return
@@ -147,7 +131,7 @@ def ветка_a():
             json.dump(данные, f, ensure_ascii=False)
     V.агенты('fsa1000')
     V.досбор('fsa1000')
-    конвейер('fsa1000p', 'meyer', (('kc_zakupki_dobor.py', {'KC_ZAKUPKI_DOBOR_OT': '120e6', 'KC_ZAKUPKI_POTOKOV': '4'}),))
+    конвейер('fsa1000p', 'meyer', (('kc_zakupki_dobor.py', {'KC_ZAKUPKI_DOBOR_OT': '120e6', 'KC_ZAKUPKI_POTOKOV': '4'}), ('kc_dorazmetka.py', {})))
 
 
 def ветка_b():
@@ -187,7 +171,7 @@ def main():
     п('_fsa_deshevo закончен')
     for н in ('fsa500p', 'fsa120s'):
         if os.path.exists(os.path.join(DIR, н + '-kontakty.jsonl')):
-            конвейер(н, 'meyer', (('kc_zakupki_dobor.py', {'KC_ZAKUPKI_DOBOR_OT': '120e6', 'KC_ZAKUPKI_POTOKOV': '4'}),))
+            конвейер(н, 'meyer', (('kc_zakupki_dobor.py', {'KC_ZAKUPKI_DOBOR_OT': '120e6', 'KC_ZAKUPKI_POTOKOV': '4'}), ('kc_dorazmetka.py', {})))
     тa = threading.Thread(target=ветка_a)
     тa.start()
     ветка_b()
