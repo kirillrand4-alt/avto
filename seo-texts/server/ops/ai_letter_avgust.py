@@ -3146,6 +3146,24 @@ def _kontsovka_kc(текст: str) -> str:
     return _прибрать(текст + '\n\n' + KONTSOVKA)
 
 
+# ПРОСЬБА О КОНТАКТЕ КОЛЛЕГИ (владелец 20.10, фраза из писем Meyer): одной
+# строкой перед строкой отказа, ТОЛЬКО в письмах без имени в обращении — в
+# именном письме мы пишем конкретному человеку. Просим контакт, а не пересылку:
+# ответ с именем приходит к нам («этими вопросами занимается тех служба»).
+# Если своя просьба переслать/дать контакт у письма уже есть — не дублируем.
+PROSBA_KONTAKTA = ('Если вопрос не к вам, буду благодарен за контакт коллеги - '
+                   'обращусь напрямую.')
+_ПРОСЬБА_ЕСТЬ_RE = re.compile(r'(?i)перешл|переслат|передайте|перенаправ|контакт коллеги|не к вам')
+
+
+def _prosba_kontakta_kc(текст: str) -> str:
+    if not текст or PROSBA_KONTAKTA in текст or KONTSOVKA not in текст:
+        return текст
+    if _imennoe_privetstvie(текст) or _ПРОСЬБА_ЕСТЬ_RE.search(текст):
+        return текст
+    return текст.replace(KONTSOVKA, PROSBA_KONTAKTA + '\n\n' + KONTSOVKA, 1)
+
+
 def zashit_kontsovku(body: str, division: str = 'meyer') -> str:
     """Привести концовку письма к канону НАПРАВЛЕНИЯ. Идемпотентно.
 
@@ -3172,7 +3190,7 @@ def zashit_kontsovku(body: str, division: str = 'meyer') -> str:
     if not текст:
         return body
     if str(division or '').startswith('kc'):
-        return _kontsovka_kc(текст)
+        return _prosba_kontakta_kc(_kontsovka_kc(текст))
     if not _СТАРЫЙ_ОТКАЗ_RE.search(текст):
         return _прибрать(текст)          # строки отказа нет — только отступы
 
