@@ -12,6 +12,8 @@ py_compile, при сбое откат всех файлов этого прог
                п.3-бэк (ручка /confirm/counts)
   okved        п.4: ОКВЭД -> оборудование картой в памяти (company_card.py)
   bez-equip    п.5: не подбирать подсказку «оборудование по ОКВЭД» в очереди (app.py)
+  indeksy      п.6: три индекса confirm_reviews в init_schema (store.py);
+               строятся при старте службы, --otkat делает DROP INDEX
   front-sverka собрать НЕТРОНУТЫЙ фронт во временную папку и сравнить с тем,
                что раздаёт служба (нет ли в исходниках чужих невыкаченных правок)
   front        п.3-фронт: client.ts + Layout.tsx, сборка vite во временную
@@ -280,6 +282,19 @@ CARD = путь("company_card.py")
 """),
 ]
 
+# ---- п.6: store.py — индексы confirm_reviews для ленты лидов (владелец «делай») ----
+ИНДЕКСЫ_П6 = ("ix_confirm_message", "ix_confirm_kind_status", "ix_confirm_inn")
+ПРАВКИ_INDEKSY = [
+    (STORE, f"{М}/п6-indeksy", """CREATE INDEX IF NOT EXISTS ix_confirm_status ON confirm_reviews(status, id);
+""", f"""CREATE INDEX IF NOT EXISTS ix_confirm_status ON confirm_reviews(status, id);
+-- {М}/п6-indeksy: лента лидов (dialog_thread по message_id, poslednie_otvety
+-- по kind+status, поиск по ИНН) перебирала всю confirm_reviews.
+CREATE INDEX IF NOT EXISTS ix_confirm_message ON confirm_reviews(message_id);
+CREATE INDEX IF NOT EXISTS ix_confirm_kind_status ON confirm_reviews(kind, status);
+CREATE INDEX IF NOT EXISTS ix_confirm_inn ON confirm_reviews(inn);
+"""),
+]
+
 ПРАВКИ_FRONT = [
     (CLIENT, f"{М}/п3-client", '''  confirmGet(id: number): Promise<ConfirmReview> {
 ''', f'''  // {М}/п3-client: только счётчики очереди — для бейджа в меню
@@ -430,7 +445,7 @@ def otkat():
     в тех же файлах (соседняя сессия) при этом сохраняются — бэкап целиком
     не накатываем."""
     тексты = {}
-    for ф, маркер, якорь, новое in ПРАВКИ_PY + ПРАВКИ_OKVED + ПРАВКИ_BEZ_EQUIP + ПРАВКИ_FRONT:
+    for ф, маркер, якорь, новое in ПРАВКИ_PY + ПРАВКИ_OKVED + ПРАВКИ_BEZ_EQUIP + ПРАВКИ_INDEKSY + ПРАВКИ_FRONT:
         if not os.path.exists(ф):
             continue
         т = тексты.get(ф) or читать(ф)
@@ -455,6 +470,15 @@ def otkat():
     if бб:
         shutil.copytree(бб[0], DIST, dirs_exist_ok=True)
         print(f"  dist <- {os.path.basename(бб[0])} (копированием поверх)")
+    база = os.environ.get("USKORENIE_DB", r"C:\sender\sender.db")
+    if os.path.exists(база):
+        import sqlite3 as _sq
+        c = _sq.connect(база, timeout=30)
+        for и in ИНДЕКСЫ_П6:
+            c.execute(f"DROP INDEX IF EXISTS {и}")
+            print(f"  DROP INDEX IF EXISTS {и}")
+        c.commit()
+        c.close()
     print("  ОТКАТ СДЕЛАН — нужен Restart-Service SenderPanel -Force")
 
 
@@ -469,6 +493,8 @@ def main():
         применить(ПРАВКИ_OKVED, компилировать=True)
     elif режим == "bez-equip":
         применить(ПРАВКИ_BEZ_EQUIP, компилировать=True)
+    elif режим == "indeksy":
+        применить(ПРАВКИ_INDEKSY, компилировать=True)
     elif режим == "front-sverka":
         front_sverka()
     elif режим == "front":
