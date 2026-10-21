@@ -119,7 +119,8 @@ def ветка_a():
     итоговые = ('ИНН ни на одном кандидате', 'сайт группы? (чужой ИНН)')
     искл = set(json.load(io.open(os.path.join(ДРОП, 'fsa-isklyuchit.json'), encoding='utf-8')))  # ревизия №2
     нб = {i: к for i, к in сп.items() if (к.get('выручка') or 0) >= 1e9 and i not in искл
-          and not (рез.get(i) or {}).get('сайт') and (рез.get(i) or {}).get('как') in итоговые}
+          and not (рез.get(i) or {}).get('сайт') and ((рез.get(i) or {}).get('как') in итоговые
+                                                   or str((рез.get(i) or {}).get('как', '')).startswith('агрегатор'))}  # 21.10: «сайт» был справочником
     п('A: от 1 млрд без подтверждённого сайта -> Sol-агенты', len(нб))
     if not нб:
         return

@@ -17,7 +17,7 @@ os.chdir(DIR)
 import _fsa_volny as V  # noqa: E402
 набор = 'fsa120s'
 env = dict(os.environ, **dict(V.ОБЩЕЕ, KC_CEL='meyer'), POISK_NABOR=набор, KC_NABOR=набор, PROVIDER_MODEL='gpt-6-luna')
-for файл, доп in (('kc_oproverzhenie.py', {'KC_POTOKOV_SHAGA': '24'}), ('pilot_pasport.py', {'PASPORT_POTOKOV': '16'})):
+for файл, доп in (('kc_oproverzhenie.py', {'KC_POTOKOV_SHAGA': '48', 'KC_MODEL_PARALLEL': '48'}), ('pilot_pasport.py', {'PASPORT_POTOKOV': '16'})):
     питон = V.ПИТОН_ПАНЕЛИ if файл == 'pilot_pasport.py' and os.path.exists(V.ПИТОН_ПАНЕЛИ) else sys.executable
     t0 = time.time()
     pr, лог = V.запуск(файл, dict(env, **доп), набор + '_' + файл[:-3], питон)
