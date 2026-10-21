@@ -173,15 +173,38 @@ def одно(z):
              f"=== ПИСЬМО id=1\nКОМПАНИЯ: {z.get('имя')}\n"
              f"ТЕМА: {z.get('тема_брака')}\n{z.get('тело_брака')}")
     тема, тело, посл = "", "", None
+    _прич = " ".join(str(x) for x in (z.get("брак") or [])).lower()
+    if "финал не" in _прич and not any(с in _прич for с in ("израсходован", "канцелярит", "оборот", "зачин")):
+        # Сломана только концовка — модель не нужна: концовку пришивает код.
+        тема = str(z.get("тема_брака") or "")
+        тело = zashit_kontsovku(str(z.get("тело_брака") or "").rstrip() + "\n\nС уважением,", "kc")
+        куски = None
     # Три попытки: модель иногда отдаёт битый JSON (кавычки в тексте письма).
-    for _п in range(3):
+    for _п in range(0 if тело else 3):
         try:
-            m = GP._raw_stream([{"role": "user", "content": куски}], МОДЕЛЬ, 1500,
-                               thinking=False, system=СИСТЕМА)
+            # Модель на этом шлюзе любит рассуждать вслух и съедает весь потолок
+            # (21.10: 196 сбоев — рассуждение вместо JSON). Потолок выше, усилие low,
+            # и прямой запрет рассуждать в самом запросе.
+            m = GP._raw_stream([{"role": "user", "content": куски + "\n\nОТВЕТЬ ТОЛЬКО JSON, БЕЗ РАССУЖДЕНИЙ И ПОЯСНЕНИЙ."}],
+                               МОДЕЛЬ, 4000, thinking=False, effort="low", system=СИСТЕМА)
             т = m if isinstance(m, str) else "".join(
                 getattr(b, "text", "") for b in getattr(m, "content", []) or [])
-            j = __import__("re").search(r"\{.*\}", т, __import__("re").S)
-            d = json.loads(j.group(0)) if j else {}
+            # Берём ПОСЛЕДНИЙ разбираемый JSON: модель иногда сначала пересказывает
+            # формат ответа ({"pisma":[...]} с многоточиями), жадный поиск склеивал
+            # пересказ с ответом.
+            d = {}
+            for _нач in reversed([_м.start() for _м in __import__("re").finditer(r'\{"pisma"', т)]):
+                _кон = т.rfind("}")
+                while _кон > _нач:
+                    try:
+                        d = json.loads(т[_нач:_кон + 1], strict=False)
+                        break
+                    except Exception:                            # noqa: BLE001
+                        _кон = т.rfind("}", _нач, _кон)
+                if d:
+                    break
+            if not d:
+                raise ValueError("нет разбираемого JSON")
             L = (d.get("pisma") or [{}])[0]
             тема = str(L.get("subject") or z.get("тема_брака") or "").strip()
             тело = str(L.get("body") or "").strip()
@@ -191,6 +214,11 @@ def одно(z):
                 break
         except Exception as ex:                                  # noqa: BLE001
             посл = ex
+            try:
+                with замок, io.open(r"C:\sender\_ops\dopisat-kc1-sboi.txt", "a", encoding="utf-8") as _ф:
+                    _ф.write("==== %s %s\n%s\n" % (rid, type(ex).__name__, str(locals().get("т", ""))[:1500]))
+            except Exception:                                    # noqa: BLE001
+                pass
     if not тело:
         with замок:
             итоги[f"сбой модели: {type(посл).__name__ if посл else 'пусто'}"] += 1
