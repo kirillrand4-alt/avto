@@ -31,7 +31,10 @@ os.chdir(DIR)
          'PILOT_MODEL': 'gpt-6-luna', 'PROVIDER_FALLBACK_CHEAP': 'gpt-5.6-luna', 'PYTHONIOENCODING': 'utf-8',
          # 20.10, ревизия: checko уже свежий (а обход дёргал бы общие прокси и ротацию); ЕИС в обходе — только от 1 млрд,
          # остальное добирает kc_zakupki_dobor (как в pilot_konveyer)
-         'KC_BEZ_CHECKO': '1', 'KC_ZAKUPKI_OT': '1e9'}
+         'KC_BEZ_CHECKO': '1', 'KC_ZAKUPKI_OT': '1e9',
+         # 21.10, владелец: «раньше они же быстрее ходили» — pilot_konveyer сам ставит шагам 24 потока (KC_POTOKOV_SHAGA:
+         # опровергатели, роли, аудит; PASPORT_POTOKOV: паспорт), здесь их не было — шаги шли по умолчанию 10 и 8 потоков
+         'KC_POTOKOV_SHAGA': '24', 'PASPORT_POTOKOV': '24', 'POISK_NE_ZHDAT': '1'}
 
 
 def п(*a):

@@ -163,17 +163,19 @@ def ветка_b():
 
 
 def main():
-    п('жду _fsa_deshevo')
+    # 21.10, владелец: «это же можно делать параллельно» — ветка B (checko + ИНН на сайте по всей базе) не зависит от второй
+    # волны: прокси checko сейчас свободны. Стартует сразу; закупки и Sol (ветка A) — после _fsa_deshevo, как раньше
+    тb = threading.Thread(target=ветка_b)
+    тb.start()
+    п('жду _fsa_deshevo (для закупок и ветки A)')
     while V.идёт('_fsa_deshevo.py'):
         time.sleep(180)
     п('_fsa_deshevo закончен')
     for н in ('fsa500p', 'fsa120s'):
         if os.path.exists(os.path.join(DIR, н + '-kontakty.jsonl')):
             конвейер(н, 'meyer', (('kc_zakupki_dobor.py', {'KC_ZAKUPKI_DOBOR_OT': '120e6', 'KC_ZAKUPKI_POTOKOV': '4'}), ('kc_dorazmetka.py', {})))
-    тa = threading.Thread(target=ветка_a)
-    тa.start()
-    ветка_b()
-    тa.join()
+    ветка_a()
+    тb.join()
     п('НОЧЬ: ГОТОВО')
 
 
