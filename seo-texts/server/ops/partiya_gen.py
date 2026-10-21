@@ -386,7 +386,10 @@ def _следующий_живой(rid, inn, мёртвый):
         import sqlite3 as _sq
         _cx = _sq.connect(r"C:\sender\enrich.db", timeout=30)
         _к = _cx.execute("SELECT site FROM companies WHERE inn=?", (inn,)).fetchone()
-        сайт = str((_к and _к[0]) or "").lower().replace("www.", "").split("/")[0]
+        # «https://site.ru/» — схему срезаем: без этого «сайт» был «https:», и
+        # ни один запасной адрес не совпадал с доменом (21.10: 227 мёртвых —
+        # 0 замен, хотя у 71 компании живой запасной на своём домене был).
+        сайт = str((_к and _к[0]) or "").lower().split("//")[-1].replace("www.", "").split("/")[0]
         if not сайт or сайт in _ПУБЛИЧНЫЕ:
             return None
         лучшие = []

@@ -7,6 +7,7 @@
 import io
 import json
 import sqlite3
+import sys
 
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
 e = sqlite3.connect(r"C:\sender\enrich.db", timeout=60)
@@ -50,11 +51,20 @@ for rid, em, inn, seg, ex in c.execute("SELECT id, email, inn, segment, extra_js
         сч["вон: «%s» (владелец 20.10: такие с отправки снимаем)" % в] += 1
         continue
     сч["вердикт: " + (в or "не проверен")] += 1
-    ряды.append((ранг.get(в, 1), -выр.get(str(inn), 0), rid))
+    # ПРИОРИТЕТ (владелец 21.10, «вот тем, кто на скрине»): выручка от 100 млн
+    # ИЛИ адрес — главный механик/энергетик, главный инженер, руководитель,
+    # начальник производства. С ключом --prioritet в список идут только они.
+    _в = выр.get(str(inn), 0) or float(x.get("revenue_rub") or 0) if str(x.get("revenue_rub") or "").replace(".", "").isdigit() else выр.get(str(inn), 0)
+    _ст = str(x.get("stupen") or "").lower()
+    _приор = _в >= 1e8 or any(s in _ст for s in ("механик", "энергетик", "главный инженер", "техдиректор", "руководитель", "начальник производства", "цеха"))
+    if "--prioritet" in sys.argv and not _приор:
+        сч["вне приоритета (--prioritet)"] += 1
+        continue
+    ряды.append((ранг.get(в, 1), -_в, rid))
 ряды.sort()
-import sys
-if len(sys.argv) > 1:
-    ряды = ряды[:int(sys.argv[1])]  # срез: отбор драйвера идёт ~0,15 с на компанию
+_срез = [a for a in sys.argv[1:] if a.isdigit()]
+if _срез:
+    ряды = ряды[:int(_срез[0])]  # срез: отбор драйвера идёт ~0,15 с на компанию
 json.dump([r[2] for r in ряды], io.open(r"C:\sender\_ops\spisok-kc1.json", "w"))
 print("в списке:", len(ряды))
 for k, v in сч.most_common():
