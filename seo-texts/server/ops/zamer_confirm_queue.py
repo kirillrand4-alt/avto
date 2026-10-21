@@ -197,13 +197,27 @@ def вызвать():
 # ---------- 3. полный вызов ручки ----------------------------------------- #
 print(f"\n=== 2. ПОЛНЫЙ ВЫЗОВ /confirm/queue limit={LIMIT} order={ORDER} "
       f"division={DIV} ===")
+_pr1 = cProfile.Profile()
 for прогон in (1, 2):
     сброс()
     _on[0] = True
     t0 = time.perf_counter()
+    if прогон == 1:
+        _pr1.enable()
     res = вызвать()
+    if прогон == 1:
+        _pr1.disable()
     dt = time.perf_counter() - t0
     _on[0] = False
+    if прогон == 1:
+        печать_sql("ПЕРВЫЙ (холодный) прогон", 12)
+        _s1 = io.StringIO()
+        pstats.Stats(_pr1, stream=_s1).sort_stats("cumulative").print_stats(40)
+        print("--- cProfile ПЕРВОГО прогона (cumulative) ---")
+        for line in _s1.getvalue().splitlines():
+            if line.strip() and ("sender" in line or "ncalls" in line
+                                 or "sqlite" in line or "{" in line):
+                print("  " + line.replace(r"C:\sender\sender" + "\\", "")[:200])
     import json as _j
     размер = len(_j.dumps(res, ensure_ascii=False, default=str))
     print(f"прогон {прогон}: {dt*1000:.0f} мс, писем в ответе "

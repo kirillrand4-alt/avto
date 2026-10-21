@@ -10,6 +10,7 @@ py_compile, при сбое откат всех файлов этого прог
   py           п.1 (кэш проверки ящиков на один запрос очереди),
                п.2 (кэш карт получателей, TTL 45 с + сброс при записи),
                п.3-бэк (ручка /confirm/counts)
+  okved        п.4: ОКВЭД -> оборудование картой в памяти (company_card.py)
   front-sverka собрать НЕТРОНУТЫЙ фронт во временную папку и сравнить с тем,
                что раздаёт служба (нет ли в исходниках чужих невыкаченных правок)
   front        п.3-фронт: client.ts + Layout.tsx, сборка vite во временную
@@ -48,6 +49,7 @@ CONFIRM = путь("confirm.py")
 STORE = путь("store.py")
 CLIENT = путь("web", "src", "api", "client.ts")
 LAYOUT = путь("web", "src", "components", "Layout.tsx")
+CARD = путь("company_card.py")
 
 # ---------------------------------------------------------------- правки .py
 ПРАВКИ_PY = [
@@ -196,6 +198,72 @@ LAYOUT = путь("web", "src", "components", "Layout.tsx")
             if cur.rowcount == 0:
                 raise StoreError(f"recipient not found: {{recipient_id}}")
 '''),
+]
+
+# ---- п.4: company_card.py — ОКВЭД -> оборудование из памяти, а не LIKE-скан ----
+ПРАВКИ_OKVED = [
+    (CARD, f"{М}/п4-karta", """    def equip_for_okved(self, okved: object) -> str:
+        \"\"\"Канонический текст «Оборудование по основному ОКВЭД» для кода.
+""", f"""    def _karta_okved(self):
+        \"\"\"{М}/п4-karta: префикс ОКВЭД -> первый equip_by_okved, одним проходом.
+
+        equip_for_okved искал `okved_main LIKE 'код%' LIMIT 1` — индекса под
+        такой LIKE нет, и каждый промах читал всю базу обзвона (161 тыс.
+        строк, ~0,4 с; код режется 25.62.1 -> 25.62 -> 25, до трёх сканов).
+        Очередь подтверждения звала это на каждое письмо вне базы обзвона:
+        холодный показ очереди 8,7 с из 8,9. Карта строится один раз на
+        процесс тем же порядком (rowid), что видел LIMIT 1: для каждого
+        префикса — запись строки с наименьшим rowid. None — не удалось,
+        тогда работает прежний запрос.
+        \"\"\"
+        карта = self.__dict__.get("_okved_karta")
+        if карта is not None:
+            return карта
+        import threading as _th
+        лок = self.__dict__.setdefault("_okved_lok", _th.Lock())
+        with лок:
+            карта = self.__dict__.get("_okved_karta")
+            if карта is not None:
+                return карта
+            try:
+                первые: dict = {{}}
+                for r in self._cx.execute(
+                        "SELECT okved_main, equip_by_okved FROM obzvon "
+                        "WHERE COALESCE(equip_by_okved,'')<>'' ORDER BY rowid"):
+                    ok = str(r[0] or "")
+                    if ok not in первые:
+                        первые[ok] = r[1]
+                карта = {{}}
+                for ok, eq in первые.items():   # порядок вставки = порядок rowid
+                    for i in range(1, len(ok) + 1):
+                        карта.setdefault(ok[:i], eq)
+            except Exception:  # noqa: BLE001 - без карты работает прежний LIKE
+                return None
+            self._okved_karta = карта
+            return карта
+
+    def equip_for_okved(self, okved: object) -> str:
+        \"\"\"Канонический текст «Оборудование по основному ОКВЭД» для кода.
+"""),
+    (CARD, f"{М}/п4-poisk", """        код = str(okved or "").strip().split()[0] if str(okved or "").strip() else ""
+        while код:
+            row = self._cx.execute(
+                "SELECT equip_by_okved FROM obzvon "
+                "WHERE okved_main LIKE ? AND COALESCE(equip_by_okved,'')<>'' "
+                "LIMIT 1", (код + "%",)).fetchone()
+            текст = (row["equip_by_okved"] or "").strip() if row else ""
+""", f"""        код = str(okved or "").strip().split()[0] if str(okved or "").strip() else ""
+        карта = self._karta_okved()  # {М}/п4-poisk
+        while код:
+            if карта is not None:
+                текст = str(карта.get(код) or "").strip()
+            else:
+                row = self._cx.execute(
+                    "SELECT equip_by_okved FROM obzvon "
+                    "WHERE okved_main LIKE ? AND COALESCE(equip_by_okved,'')<>'' "
+                    "LIMIT 1", (код + "%",)).fetchone()
+                текст = (row["equip_by_okved"] or "").strip() if row else ""
+"""),
 ]
 
 ПРАВКИ_FRONT = [
@@ -348,7 +416,7 @@ def otkat():
     в тех же файлах (соседняя сессия) при этом сохраняются — бэкап целиком
     не накатываем."""
     тексты = {}
-    for ф, маркер, якорь, новое in ПРАВКИ_PY + ПРАВКИ_FRONT:
+    for ф, маркер, якорь, новое in ПРАВКИ_PY + ПРАВКИ_OKVED + ПРАВКИ_FRONT:
         if not os.path.exists(ф):
             continue
         т = тексты.get(ф) or читать(ф)
@@ -383,6 +451,8 @@ def main():
         otkat()
     elif режим == "py":
         применить(ПРАВКИ_PY, компилировать=True)
+    elif режим == "okved":
+        применить(ПРАВКИ_OKVED, компилировать=True)
     elif режим == "front-sverka":
         front_sverka()
     elif режим == "front":
