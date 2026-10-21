@@ -69,13 +69,27 @@ def хвост(лог, n=400):
     return open(лог, encoding='utf-8', errors='replace').read()[-n:].replace('\n', ' | ')
 
 
+def _агрегатор(сайт):
+    import re as _re
+    import urllib.parse as _up
+    h = (_up.urlsplit(сайт if '//' in сайт else 'http://' + сайт).hostname or '').lower()
+    h = h[4:] if h.startswith('www.') else h
+    try:
+        агр = set(json.load(open(os.path.join(ДРОП, 'fsa-agregatory.json'), encoding='utf-8')))
+    except Exception:  # noqa: BLE001
+        агр = set()
+    return h in агр or bool(_re.search(r'(^|\.)(rusprofile|checko|list-org|zachestnyibiznes|sbis|saby|audit-it|e-ecolog|xfirm|'
+                                        r'star-pro|1prime|svoefermerstvo|tochka|klerk|tenderguru|kontur|spark-interfax)\.', h))
+
+
 def досбор(волна):
     """Сайты, подтверждённые агентами волны -> набор <волна>p: обход + паспорт."""
     сп = json.load(open(os.path.join(DIR, волна + '-spisok.json'), encoding='utf-8'))['компании']
     нов = {}
     for инн, x in читать(os.path.join(DIR, волна + '-glubokiy.jsonl')).items():
         сайт = (x.get('сайт_завода') if x.get('сайт_завода_чей') else '') or (x.get('сайт_холдинга') if x.get('холдинг_подтверждён') else '')
-        if сайт and инн in сп:
+        # 21.10: сайт-справочник (агрегатор) — не сайт компании
+        if сайт and инн in сп and not _агрегатор(сайт):
             нов[инн] = dict(сп[инн], сайт=сайт, сайт_откуда='агент глубокого поиска: ' + (x.get('сайт_завода_чей') or 'сайт холдинга'))
     набор = волна + 'p'
     with open(os.path.join(DIR, набор + '-spisok.json'), 'w', encoding='utf-8') as f:
