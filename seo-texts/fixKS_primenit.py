@@ -170,7 +170,10 @@ def _fixKS_dannye(params) -> dict:
             "SELECT id, inn, username, action, payload_json, created_at FROM activity_log ORDER BY created_at, id")]
     finally:
         conn.close()
-    prodavcy = sorted(u for u, x in lyudi.items() if x["role"] == "sales" and x["aktiven"])
+    # В статистику попадают только продавцы с назначенными компаниями: у кого очередь опустела (0 назначений),
+    # в таблице не показываем (владелец 21.10: «убери юзера 3 из статистики»). Вход и аккаунт при этом целы.
+    _s_naznach = {str(x.get("username") or "") for x in naznach.values()}
+    prodavcy = sorted(u for u, x in lyudi.items() if x["role"] == "sales" and x["aktiven"] and u in _s_naznach)
 
     sob = []
     for r in zhurnal:
