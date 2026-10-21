@@ -11,6 +11,7 @@ py_compile, при сбое откат всех файлов этого прог
                п.2 (кэш карт получателей, TTL 45 с + сброс при записи),
                п.3-бэк (ручка /confirm/counts)
   okved        п.4: ОКВЭД -> оборудование картой в памяти (company_card.py)
+  bez-equip    п.5: не подбирать подсказку «оборудование по ОКВЭД» в очереди (app.py)
   front-sverka собрать НЕТРОНУТЫЙ фронт во временную папку и сравнить с тем,
                что раздаёт служба (нет ли в исходниках чужих невыкаченных правок)
   front        п.3-фронт: client.ts + Layout.tsx, сборка vite во временную
@@ -266,6 +267,19 @@ CARD = путь("company_card.py")
 """),
 ]
 
+# ---- п.5: app.py — подсказку «оборудование по ОКВЭД» в очереди не подбираем ----
+ПРАВКИ_BEZ_EQUIP = [
+    (APP, f"{М}/п5-bez-equip", """                if (isinstance(comp, dict) and not comp.get("equip_needed")
+                        and cards is not None and getattr(cards, "active", False)
+""", f"""                # {М}/п5-bez-equip: владелец 21.10 — подсказку «оборудование
+                # по ОКВЭД» для компаний вне базы обзвона в очереди НЕ подбираем
+                # («туда особо никто не смотрит»), а подбор стоил скан базы
+                # обзвона на письмо. Гейт направлений этим не пользуется.
+                if (False and isinstance(comp, dict) and not comp.get("equip_needed")
+                        and cards is not None and getattr(cards, "active", False)
+"""),
+]
+
 ПРАВКИ_FRONT = [
     (CLIENT, f"{М}/п3-client", '''  confirmGet(id: number): Promise<ConfirmReview> {
 ''', f'''  // {М}/п3-client: только счётчики очереди — для бейджа в меню
@@ -416,7 +430,7 @@ def otkat():
     в тех же файлах (соседняя сессия) при этом сохраняются — бэкап целиком
     не накатываем."""
     тексты = {}
-    for ф, маркер, якорь, новое in ПРАВКИ_PY + ПРАВКИ_OKVED + ПРАВКИ_FRONT:
+    for ф, маркер, якорь, новое in ПРАВКИ_PY + ПРАВКИ_OKVED + ПРАВКИ_BEZ_EQUIP + ПРАВКИ_FRONT:
         if not os.path.exists(ф):
             continue
         т = тексты.get(ф) or читать(ф)
@@ -453,6 +467,8 @@ def main():
         применить(ПРАВКИ_PY, компилировать=True)
     elif режим == "okved":
         применить(ПРАВКИ_OKVED, компилировать=True)
+    elif режим == "bez-equip":
+        применить(ПРАВКИ_BEZ_EQUIP, компилировать=True)
     elif режим == "front-sverka":
         front_sverka()
     elif режим == "front":
