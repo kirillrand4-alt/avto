@@ -34,7 +34,9 @@ for имя, данные in (('fsa120L-spisok.json', {'компании': нб, 
         json.dump(данные, f, ensure_ascii=False)
 shutil.copyfile(os.path.join(ДРОП, 'fsa120L-spisok.json'), os.path.join(DIR, 'fsa120L-spisok.json'))
 env = dict(os.environ, KC_NABOR='fsa120L', KC_CEL='meyer', PROVIDER_MODEL='gpt-6-luna', PROVIDER_FALLBACK_CHEAP='gpt-5.6-luna',
-           KC_MODEL_POSLEDNIY='', KC_AGENT_POTOKOV='30', KC_XML_KANALOV='4', KC_AGENT_XML_MIN='1', KC_MODEL_PARALLEL='30',
+           # 21.10, владелец «Луну уже не ускорить?»: у аккаунта xmlriver ~15 каналов (проба: 4 у агентов + 11 свободных),
+           # агенты брали 4 — 2 компании/мин; 12 каналов и 50 агентов (Luna дешёвая), 3 канала — запас прочим скриптам
+           KC_MODEL_POSLEDNIY='', KC_AGENT_POTOKOV='50', KC_XML_KANALOV='12', KC_AGENT_XML_MIN='1', KC_MODEL_PARALLEL='50',
            PYTHONIOENCODING='utf-8')
 t0 = time.time()
 pr, лог = V.запуск('kc_agent_glubokiy.py', env, 'fsa120L_agenty')
