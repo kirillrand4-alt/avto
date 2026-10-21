@@ -70,9 +70,7 @@ def main():
     набор = 'fsa120t'
     with open(os.path.join(DIR, набор + '-spisok.json'), 'w', encoding='utf-8') as f:
         json.dump({'компании': нов, 'снято': {}, 'ниже_порога': {}, 'на_решение': {}}, f, ensure_ascii=False)
-    # шаги конвейера fsa120s ещё могут идти — ждём, чтобы не делить модель/ЕИС на два набора сразу
-    while V.идёт('_fsa_deshevo.py'):
-        time.sleep(120)
+    # 21.10, владелец: параллельно — не ждём конвейер fsa120s (свой набор и свои файлы)
     env = dict(os.environ, **dict(V.ОБЩЕЕ, KC_CEL='meyer'), POISK_NABOR=набор, KC_NABOR=набор, PROVIDER_MODEL='gpt-6-luna')
     for файл, доп in ШАГИ:
         питон = V.ПИТОН_ПАНЕЛИ if файл == 'pilot_pasport.py' and os.path.exists(V.ПИТОН_ПАНЕЛИ) else sys.executable

@@ -141,9 +141,13 @@ def ветка_b():
     with open(os.path.join(ДРОП, 'fsavse-inn.json'), 'w', encoding='utf-8') as f:
         json.dump(порядок, f)
     п('B: checko заново (кандидат в сайт) по базе без сайта', len(порядок))
-    pr, лог = V.запуск('fsa_meyer_checko.py', dict(os.environ, CHECKO_VHOD='fsavse-inn.json', CHECKO_ZANOVO='1',
-                                                    PYTHONIOENCODING='utf-8'), 'fsavse_checko')
-    pr.wait()
+    # 21.10: при перезапуске оркестратора отсоединённый checko продолжает работать — второй не запускаем, ждём его
+    if V.идёт('fsa_meyer_checko.py'):
+        п('B: checko уже идёт — жду его')
+    else:
+        pr, лог = V.запуск('fsa_meyer_checko.py', dict(os.environ, CHECKO_VHOD='fsavse-inn.json', CHECKO_ZANOVO='1',
+                                                        PYTHONIOENCODING='utf-8'), 'fsavse_checko')
+        pr.wait()
     time.sleep(60)
     while V.идёт('fsa_meyer_checko.py'):
         time.sleep(120)
@@ -163,19 +167,21 @@ def ветка_b():
 
 
 def main():
-    # 21.10, владелец: «это же можно делать параллельно» — ветка B (checko + ИНН на сайте по всей базе) не зависит от второй
-    # волны: прокси checko сейчас свободны. Стартует сразу; закупки и Sol (ветка A) — после _fsa_deshevo, как раньше
-    тb = threading.Thread(target=ветка_b)
-    тb.start()
-    п('жду _fsa_deshevo (для закупок и ветки A)')
+    # 21.10, владелец: «параллельно что-то уже можешь начинать?» — ветка B (вся база), ветка A (Sol от 1 млрд: проверка
+    # «ИНН на сайте» второй волны уже закончена) и закупки fsa500p — сразу; закупки fsa120s — после её опровергателей и
+    # паспорта (шаг дописывает fsa120s-kontakty.jsonl, который они читают)
+    ЗАК = (('kc_zakupki_dobor.py', {'KC_ZAKUPKI_DOBOR_OT': '120e6', 'KC_ZAKUPKI_POTOKOV': '4'}), ('kc_dorazmetka.py', {}))
+    тт = [threading.Thread(target=ветка_b), threading.Thread(target=ветка_a),
+          threading.Thread(target=конвейер, args=('fsa500p', 'meyer', ЗАК))]
+    for т in тт:
+        т.start()
+    п('жду _fsa_deshevo (опровергатели и паспорт fsa120s) для закупок fsa120s')
     while V.идёт('_fsa_deshevo.py'):
         time.sleep(180)
-    п('_fsa_deshevo закончен')
-    for н in ('fsa500p', 'fsa120s'):
-        if os.path.exists(os.path.join(DIR, н + '-kontakty.jsonl')):
-            конвейер(н, 'meyer', (('kc_zakupki_dobor.py', {'KC_ZAKUPKI_DOBOR_OT': '120e6', 'KC_ZAKUPKI_POTOKOV': '4'}), ('kc_dorazmetka.py', {})))
-    ветка_a()
-    тb.join()
+    if os.path.exists(os.path.join(DIR, 'fsa120s-kontakty.jsonl')):
+        конвейер('fsa120s', 'meyer', ЗАК)
+    for т in тт:
+        т.join()
     п('НОЧЬ: ГОТОВО')
 
 
