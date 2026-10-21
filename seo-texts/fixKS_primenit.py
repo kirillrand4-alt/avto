@@ -1170,10 +1170,11 @@ def stadiya() -> bool:
             sd = os.path.join(STAGE, 'db', '%s-sales-%s.db' % (konf, imya))
             shutil.copy(snimok, sd)
             env = {x: v for x, v in os.environ.items() if not x.startswith(('CENTRO', 'PARK_', 'OBZVON', 'CENTRIFUGAL'))}
-            env.update(PYTHONIOENCODING='utf-8', PYTHONPATH=k, OBZVON_ROOT_PATH=PUT[konf], CENTRO_SALES_DB=sd,
+            env.update(PYTHONIOENCODING='utf-8', PYTHONHASHSEED='0', PYTHONPATH=k, OBZVON_ROOT_PATH=PUT[konf], CENTRO_SALES_DB=sd,
                        CENTRIFUGAL_DB=kat, CENTRO_DB=kat, PARK_OCHERED_SALES_DB=sd, PARK_OCHERED_DB=kat,
                        PARK_PANEL_DB=os.path.join(STAGE, 'db', 'net-park.db'), CENTRO_SESSION_SECRET='x' * 40)
             vyh = os.path.join(STAGE, '%s-%s.json' % (konf, imya))
+            # PYTHONHASHSEED: главная строит список регионов из set – без него порядок <option> у каждого процесса свой
             procy.append((konf, imya, vyh, subprocess.Popen(
                 [VENV, os.path.abspath(__file__), '--proverka', k, konf, vyh], cwd=k, env=env,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)))
