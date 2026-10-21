@@ -15,6 +15,20 @@ e = sqlite3.connect(r"C:\sender\enrich.db", timeout=60)
 ранг = {"есть": 0, "": 1, "принимает всё": 2, "неясно": 2}
 ряды = []
 from collections import Counter
+# ПОВТОР КЦ <30 ДНЕЙ — ВОН ИЗ СПИСКА (владелец 21.10: «почему такие в генерацию
+# попадают?»). Заслон панели (_povtor_razreshen) смотрит на extra.division
+# получателя, а у компаний из «Россия 9000» там осталось «meyer» — прошлое письмо
+# КЦ он считал «другим направлением» и пропускал. Здесь — по факту отправок:
+# ИНН или адрес, которому письмо КЦ ушло меньше 30 дней назад, не берём.
+from datetime import datetime, timedelta
+_гр = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%S")
+_кц_камп = {r[0] for r in c.execute("SELECT id, name FROM campaigns") if r[0] in (1, 5, 6, 9, 10) or "КЦ" in str(r[1] or "")}
+_недавно_инн, _недавно_адр = set(), set()
+for _i, _e, _cid in c.execute("SELECT inn, lower(email), campaign_id FROM send_log WHERE outcome='sent' AND ts>=?", (_гр,)):
+    if _cid in _кц_камп:
+        if _i:
+            _недавно_инн.add(str(_i))
+        _недавно_адр.add(_e)
 сч = Counter()
 for rid, em, inn, seg, ex in c.execute("SELECT id, email, inn, segment, extra_json FROM recipients WHERE extra_json LIKE '%КЦ-1%'"):
     x = json.loads(ex or "{}")
@@ -25,6 +39,9 @@ for rid, em, inn, seg, ex in c.execute("SELECT id, email, inn, segment, extra_js
         continue
     if not inn:
         сч["без ИНН"] += 1
+        continue
+    if str(inn) in _недавно_инн or str(em).lower() in _недавно_адр:
+        сч["письмо КЦ этой компании <30 дней (повтор)"] += 1
         continue
     в = проба.get(str(em).lower(), "")
     if в in ("нет ящика", "нет MX"):
