@@ -179,7 +179,7 @@ def main(предел=None):
         if предел:
             break
     уже = готовые()
-    shutil.copyfile(ВЫХ, os.path.join(ДРОП, 'fsa-klass3.jsonl'))
+    shutil.copyfile(ВЫХ, os.path.join(ДРОП, os.path.basename(ВЫХ)))  # 21.10: имя по выходу (перепрогон — свой файл)
     сч = {}
     for y in уже.values():
         сч[y['класс']] = сч.get(y['класс'], 0) + 1
