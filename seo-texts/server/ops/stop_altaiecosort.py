@@ -12,7 +12,7 @@ from sender.suppression import Suppression  # noqa: E402
 
 cfg = Config.load(r"C:\sender\sender.yaml")
 s = Suppression(Store(cfg.get("service.db_path", r"C:\sender\sender.db")))
-П = "владелец 21.10: Алтай Эко Сорт — холодные не писать"
-print("ИНН 2222857382:", s.add_inn("2222857382", П, source="owner"))
-print("osort@mail.ru:", s.add_email("osort@mail.ru", П, source="owner"))
-print("altaiecosort.com:", s.add_domain("altaiecosort.com", П, source="owner"))
+П = "manual"  # владелец 21.10: Алтай Эко Сорт — холодные не писать
+print("ИНН 2222857382:", s.add_inn("2222857382", П, source="владелец 21.10: Алтай Эко Сорт"))
+print("osort@mail.ru:", s.add_email("osort@mail.ru", П, source="владелец 21.10: Алтай Эко Сорт"))
+print("altaiecosort.com:", s.add_domain("altaiecosort.com", П, source="владелец 21.10: Алтай Эко Сорт"))
