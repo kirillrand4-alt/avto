@@ -1070,7 +1070,7 @@ def main(D, M, м7_xlsx, путь_meyer, путь_кц, выход, путь_к�
             ряд(w3, [r.get(k) for k in ЦШ], 'красн' if акт.get(r['ИНН']) else '')
         цк = [r for r in рц['конт'] if str(r.get('ИНН / УНП') or '') in цс and str(r.get('ИНН / УНП') or '') not in наши]
         if цк:
-            w4 = wb.create_sheet('Цербер: контакты')
+            w4 = wb.create_sheet('Цербер контакты')
             ЦКШ = [k for k in КШ if k in цк[0]] or list(цк[0].keys())
             шапка(w4, ЦКШ, [P.ШИРИНЫ.get(k, 18) for k in ЦКШ], len(цк))
             for r in цк:
