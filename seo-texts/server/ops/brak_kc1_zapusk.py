@@ -22,5 +22,5 @@ for z in x:
     п = re.sub(r"\d+ слов", "N слов", п)
     сч[п.strip()[:70]] += 1
 print("запуск с", старт, "| попыток", len(x), "| годных", sum(1 for z in x if z.get("ок")), "| брак", len(x) - sum(1 for z in x if z.get("ок")))
-for k, v in сч.most_common(12):
+for k, v in сч.most_common(40):
     print("  %4d  %s" % (v, k))
