@@ -43,3 +43,12 @@ for тег, инны in д.items():
     print("=====", тег, len(инны))
     for к, v in сч.items():
         print("  %-34s %s" % (к, dict(sorted(v.items()))))
+
+
+# Новые (нет в панели, не писали, не лид) — список ИНН на дроп для заливки
+# (владелец 22.10: «Ярус А 1319 мейер запускай»).
+новые = {тег: [inn for inn in инны if inn not in лиды and inn not in получ and not писали.get(inn) and inn not in вработе]
+         for тег, инны in д.items()}
+r = requests.put(У + "/fsa-v4-novye.json", data=json.dumps(новые).encode(),
+                 headers={"X-Drop-Token": os.environ.get("DROP_TOKEN", "")}, timeout=120)
+print("новые на дроп:", {k: len(v) for k, v in новые.items()}, r.status_code)
