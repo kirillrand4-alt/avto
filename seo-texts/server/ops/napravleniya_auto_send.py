@@ -14,8 +14,16 @@ Meyer со своими свободными ящиками ждал пауз К
 skip_campaigns); другое направление идёт дальше. Лимиты ящиков, пейсинг,
 окно получателя и все заслоны — без изменений.
 
-Правка двух файлов по якорям: бэкап .bak-napr-<время>, py_compile обоих,
-откат обоих при любом сбое. --otkat — вернуть оба из последних бэкапов.
+Плюс (владелец 22.10: «паузы между отправками рандомнее», «90-150 секунд
+рандом»): пауза ящика между письмами — не ровно send_pacing.min_interval_sec
+(90), а случайная от 90 до send_pacing.random_max_sec (по умолчанию 150), своя
+на каждое письмо (от ящика и времени его прошлого письма, без хранения). И в
+одном проходе отправщика — не больше 4 писем на направление: ящики не стреляют
+в одну секунду (22.10 в 12:31:00–12:31:12 четыре ящика КЦ ушли залпом, следом —
+отказы Яндекса «подозрение на спам» и пауза всего КЦ).
+
+Правка трёх файлов по якорям: бэкап .bak-napr-<время>, py_compile всех,
+откат всех при любом сбое. --otkat — вернуть все из последних бэкапов.
 После применения нужен Restart-Service SenderPanel -Force.
     napravleniya_auto_send.py [--primenit | --otkat] [--koren=<папка>]"""
 import glob
@@ -29,6 +37,8 @@ import time
 КОРЕНЬ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--koren=")), r"C:\sender\sender")
 STORE = os.path.join(КОРЕНЬ, "store.py")
 AUTO = os.path.join(КОРЕНЬ, "auto_send.py")
+SENDER = os.path.join(КОРЕНЬ, "sender.py")
+НА_НАПРАВЛЕНИЕ = 4
 МЕТКА = "НАПРАВЛЕНИЯ-22.10"
 
 ПРАВКИ = {
@@ -64,7 +74,9 @@ AUTO = os.path.join(КОРЕНЬ, "auto_send.py")
         # Общая партия по scheduled_at доставалась тому, кто раньше в очереди:
         # 22.10 КЦ съедал её целиком, и Meyer со свободными ящиками за час
         # отправил 2 письма из 112 одобренных. Теперь у КЦ, Meyer и «прочего»
-        # по batch на проход; набравшее партию направление выходит из выборки.
+        # по своей партии на проход; набравшее её направление выходит из выборки.
+        # 22.10 владелец: не залпом — в проходе не больше 4 писем на направление.
+        на_напр = min(self.batch, 4)
         напр_камп = self._napravleniya_kampaniy()
         по_напр: dict = {}
         набрано: set = set()
@@ -92,7 +104,7 @@ AUTO = os.path.join(КОРЕНЬ, "auto_send.py")
          """            for m in claimed:
                 нап = напр_камп.get(getattr(m, "campaign_id", None), "прочее")
                 разобранные.add(m.id)
-                if по_напр.get(нап, 0) >= self.batch:
+                if по_напр.get(нап, 0) >= на_напр:
                     # Партия этого направления набрана: письмо (уже 'sending')
                     # вернуть в очередь, его кампании в проходе больше не брать.
                     набрано |= {к for к, н in напр_камп.items() if н == нап}
@@ -109,7 +121,7 @@ AUTO = os.path.join(КОРЕНЬ, "auto_send.py")
          """                    out["failed"] += 1
                 if out["sent"] > было:
                     по_напр[нап] = по_напр.get(нап, 0) + 1
-            if out["sent"] >= self.batch * всего_напр:
+            if out["sent"] >= на_напр * всего_напр:
                 break
         if out["released"] and not out["sent"]:"""),
         ("""    def _send_one(self, m: Any, win: dict, now: datetime, out: dict) -> None:""",
@@ -129,10 +141,29 @@ AUTO = os.path.join(КОРЕНЬ, "auto_send.py")
 
     def _send_one(self, m: Any, win: dict, now: datetime, out: dict) -> None:"""),
     ],
+    SENDER: [
+        ("""            min_gap = 90 if raw_gap is None else int(raw_gap)
+            if (now - last_sent_at).total_seconds() < min_gap:""",
+         """            min_gap = 90 if raw_gap is None else int(raw_gap)
+            # СЛУЧАЙНАЯ ПАУЗА (НАПРАВЛЕНИЯ-22.10, владелец: «паузы между
+            # отправками рандомнее», «90-150 секунд рандом»). Ровные 90 с
+            # синхронизировали ящики в залп; теперь у каждого письма своя пауза
+            # от min_interval_sec до random_max_sec — от ящика и времени его
+            # прошлого письма, так что хранить ничего не нужно.
+            try:
+                верх = int(self.config.get("send_pacing.random_max_sec", 150) or 0)
+            except Exception:  # noqa: BLE001
+                верх = 0
+            if верх > min_gap > 0:
+                import hashlib
+                зерно = hashlib.md5(("%s|%s" % (mailbox_id, last_sent_at.isoformat())).encode()).digest()
+                min_gap += int.from_bytes(зерно[:4], "big") % (верх - min_gap + 1)
+            if (now - last_sent_at).total_seconds() < min_gap:"""),
+    ],
 }
 
 if "--otkat" in sys.argv:
-    for п in (STORE, AUTO):
+    for п in (STORE, AUTO, SENDER):
         б = sorted(glob.glob(п + ".bak-napr-*"))
         if б:
             shutil.copy2(б[-1], п)
@@ -140,7 +171,7 @@ if "--otkat" in sys.argv:
     print("=== НАПРАВЛЕНИЯ: ОТКАТ (нужен Restart-Service SenderPanel -Force) ===")
     sys.exit(0)
 
-тексты = {п: io.open(п, encoding="utf-8").read() for п in (STORE, AUTO)}
+тексты = {п: io.open(п, encoding="utf-8").read() for п in (STORE, AUTO, SENDER)}
 if all(МЕТКА in т for т in тексты.values()):
     print("=== НАПРАВЛЕНИЯ: УЖЕ БЫЛО ===")
     sys.exit(0)
