@@ -14,7 +14,7 @@ _буф = io.StringIO()
 _печ = print
 print = lambda *a, **k: _печ(*a, file=_буф, **k)  # noqa: E731
 
-ГР = {"c10": "ФСА v4 C проба"}.get(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("gruppa=")), "c10"))
+ГР = {"c10": "ФСА v4 C проба", "c11b": "ФСА v4 C проба 2"}.get(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("gruppa=")), "c10"))
 ЖУР = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("zhurnal=")), r"C:\sender\_ops\gen-v4c-proba.jsonl")
 c = sqlite3.connect(r"C:\sender\sender.db")
 брак = {}
