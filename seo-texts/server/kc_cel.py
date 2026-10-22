@@ -170,8 +170,9 @@ import re
 # Лесенка КЦ
 НИКОГДА = None
 ПО_РОЛИ = {
-    'Механик / энергетик / ремонт': 1, 'Техдиректор / главный инженер': 2, 'Закупки / снабжение': 3,
-    'Производство': 4, 'Технолог': 5, 'Руководитель': 6, 'Коммерция / ВЭД': 7, 'Прочее': 9,
+    # 22.10, владелец (скрин сводки КО, стрелки 3↔4): начальник производства/цеха — раньше снабжения
+    'Механик / энергетик / ремонт': 1, 'Техдиректор / главный инженер': 2, 'Производство': 3,
+    'Закупки / снабжение': 4, 'Технолог': 5, 'Руководитель': 6, 'Коммерция / ВЭД': 7, 'Прочее': 9,
     'Общий номер / приёмная': 8, 'Качество / лаборатория': 10, 'Обогащение / горное': 10,
     'Агрономия / семеноводство': 10, 'Хранение / элеватор / склад': 10, 'Закупки сырья / товара': 10,
     'Продажи': НИКОГДА, 'Кадры': НИКОГДА, 'Финансы / бухгалтерия': НИКОГДА,
@@ -187,8 +188,8 @@ _ЯЩИК = (
     (re.compile(r'^(press|pr|smi|media|reklama|marketing|market|smm|ur|jur|legal|yurist)\d*$'), НИКОГДА),
     (re.compile(r'^(hotline|anticor\w*|antikor\w*|doverie|ethics|compliance|sb|security|bezopasnost)\d*$'), НИКОГДА),
     (re.compile(r'^(gi|glinzh|glavinzh|engineer|ingener|tehdir|tech|teh|ogm|oge|meh|energ\w*|remont)\d*$'), 1),
-    (re.compile(r'^(snab|snabzhenie|zakup\w*|tender\w*|purchase|procurement|omts)\d*$'), 3),
-    (re.compile(r'^(proizv|proizvodstvo|production|prod|ceh|tseh)\d*$'), 4),
+    (re.compile(r'^(snab|snabzhenie|zakup\w*|tender\w*|purchase|procurement|omts)\d*$'), 4),
+    (re.compile(r'^(proizv|proizvodstvo|production|prod|ceh|tseh)\d*$'), 3),
     (re.compile(r'^(tehnolog|technolog|tech?nolog\w*|gl\.?tehnolog)\d*$'), 5),
     (re.compile(r'^(ved|export|import|commerce|kommerc\w*|kd)\d*$'), 7),
     (re.compile(r'^(info|office|mail|post|priem\w*|secretar\w*|reception|contact|kontakt|inbox|admin|general|gen|dir|'
@@ -199,8 +200,8 @@ _ЯЩИК = (
 БЕСПЛАТНЫЕ = ('mail.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'yandex.ru', 'ya.ru', 'yandex.by', 'gmail.com', 'rambler.ru',
               'internet.ru', 'icloud.com', 'outlook.com', 'tut.by', 'hotmail.com')
 
-НАЗВАНИЕ = {1: 'главный механик / главный энергетик', 2: 'главный инженер / техдиректор', 3: 'снабжение / закупки',
-            4: 'начальник производства / цеха', 5: 'технолог', 6: 'руководитель', 7: 'коммерция / ВЭД',
+НАЗВАНИЕ = {1: 'главный механик / главный энергетик', 2: 'главный инженер / техдиректор', 3: 'начальник производства / цеха',
+            4: 'снабжение / закупки', 5: 'технолог', 6: 'руководитель', 7: 'коммерция / ВЭД',
             8: 'общий ящик', 9: 'прочее (именной)', 10: 'качество / обогащение / агрономия / хранение / закупки сырья'}
 
 
@@ -257,7 +258,7 @@ def название(ст):
 if __name__ == '__main__':
     assert ступень('Кадры', почта='kadry@x.ru') is None
     assert ступень('Общий номер / приёмная', почта='buh@x.ru') is None
-    assert ступень('Общий номер / приёмная', почта='snab@x.ru') == 3
+    assert ступень('Общий номер / приёмная', почта='snab@x.ru') == 4
     assert ступень('Механик / энергетик / ремонт', почта='meh@x.ru') == 1
     assert ступень('', почта='info@x.ru') == 8 and ступень('', почта='sales@x.ru') is None
     assert ступень('Руководитель', должность='Генеральный директор') == 6
