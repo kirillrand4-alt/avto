@@ -38,7 +38,13 @@ def найти(к, ключ=None):
     # сохраняем с пометкой «поиск: false» для сравнения, в работу не берём
     for заход in range(3):
         рез = _один(з)
-        if рез.get('поиск') or рез['ошибка'].startswith('HTTP'):
+        # без groundingMetadata, но с источниками и верными ИНН (проба: 7 из 8) — шлюз, видимо, сам подмешивает выдачу в
+        # запрос (promptTokenCount 600–3200 при промпте ~550): берём, помечаем «поиск: по источникам»
+        if рез.get('поиск') or (рез['ответ'] and (рез['ответ'].get('источники') or [])):
+            if not рез.get('поиск'):
+                рез['поиск'] = 'по источникам'
+            break
+        if рез['ошибка'].startswith('HTTP 4') and not рез['ошибка'].startswith('HTTP 429'):
             break
     рез['заходов'] = заход + 1
     рез['сек'] = round(time.time() - t0, 1)
@@ -49,13 +55,13 @@ def _один(з):
     рез = {'ответ': None, 'поиск': False, 'запросы': [], 'источников': 0, 'токены': None, 'ошибка': ''}
     for попытка in range(3):
         try:
-            d = json.loads(urllib.request.urlopen(з, timeout=180).read().decode('utf-8', 'replace'))
+            d = json.loads(urllib.request.urlopen(з, timeout=300).read().decode('utf-8', 'replace'))
             break
         except urllib.error.HTTPError as e:
             рез['ошибка'] = 'HTTP %s %s' % (e.code, e.read()[:200])
         except Exception as e:  # noqa: BLE001
             рез['ошибка'] = repr(e)[:200]
-        time.sleep(10 * (попытка + 1))
+        time.sleep(20 * (попытка + 1))  # 524 Cloudflare шлюза при 24 потоках — ждём
     else:
         return рез
     рез['ошибка'] = ''
@@ -90,5 +96,5 @@ if __name__ == '__main__':
             f.flush()
             os.fsync(f.fileno())
         print(к['ключ'], р['сек'], 'с', 'поиск' if р.get('поиск') else 'БЕЗ поиска', 'заходов', р.get('заходов'), (р['ответ'] or {}).get('инн'), р['ошибка'][:60], flush=True)
-    with ThreadPoolExecutor(int(os.environ.get('GEMINI_POTOKOV', '24'))) as ex:
+    with ThreadPoolExecutor(int(os.environ.get('GEMINI_POTOKOV', '10'))) as ex:
         list(ex.map(одна, [к for к in кк if к['ключ'] not in уже]))
