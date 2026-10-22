@@ -23,7 +23,7 @@ import json, os, re, sys, threading, time, urllib.error, urllib.request
 {{"инн": null, "сайт": null, "сайт_группы": null, "телефоны": [], "почты": [], "руководитель": {{"фио": null, "должность": null}}, "лпр": [{{"фио": "", "должность": "", "телефон": null, "почта": null}}], "выручка": {{"руб": null, "год": null}}, "источники": []}}'''
 
 
-def найти(к, ключ=None, таймаут=150):
+def найти(к, ключ=None):
     """к: {'имя', 'регион', 'инн'?, 'сайт'?} -> {'ответ': dict|None, 'запросы', 'источников', 'токены', 'сек', 'ошибка'}"""
     ключ = ключ or os.environ['PROVIDER_API_KEY']
     текст = ПР.format(имя=к['имя'], рег=к.get('регион') or '—', инн=('\nИНН: %s.' % к['инн']) if к.get('инн') else '',
@@ -32,10 +32,24 @@ def найти(к, ключ=None, таймаут=150):
     з = urllib.request.Request('%s/v1beta/models/%s:generateContent' % (БАЗА, МОДЕЛЬ), data=json.dumps(тело).encode(),
                                headers={'x-goog-api-key': ключ, 'Authorization': 'Bearer ' + ключ,
                                         'Content-Type': 'application/json', 'User-Agent': 'curl/8.5.0'})
-    t0, рез = time.time(), {'ответ': None, 'запросы': [], 'источников': 0, 'токены': None, 'ошибка': ''}
+    t0 = time.time()
+    # 22.10, проба 80: часть ответов приходит без groundingMetadata (85–110 с, много «размышлений») — похоже, шлюз раздаёт
+    # запросы на разные апстримы, и не все выполняют поиск. Такой ответ повторяем (до 3 раз); последний без поиска —
+    # сохраняем с пометкой «поиск: false» для сравнения, в работу не берём
+    for заход in range(3):
+        рез = _один(з)
+        if рез.get('поиск') or рез['ошибка'].startswith('HTTP'):
+            break
+    рез['заходов'] = заход + 1
+    рез['сек'] = round(time.time() - t0, 1)
+    return рез
+
+
+def _один(з):
+    рез = {'ответ': None, 'поиск': False, 'запросы': [], 'источников': 0, 'токены': None, 'ошибка': ''}
     for попытка in range(3):
         try:
-            d = json.loads(urllib.request.urlopen(з, timeout=таймаут).read().decode('utf-8', 'replace'))
+            d = json.loads(urllib.request.urlopen(з, timeout=180).read().decode('utf-8', 'replace'))
             break
         except urllib.error.HTTPError as e:
             рез['ошибка'] = 'HTTP %s %s' % (e.code, e.read()[:200])
@@ -43,26 +57,22 @@ def найти(к, ключ=None, таймаут=150):
             рез['ошибка'] = repr(e)[:200]
         time.sleep(10 * (попытка + 1))
     else:
-        рез['сек'] = round(time.time() - t0, 1)
         return рез
     рез['ошибка'] = ''
     c = (d.get('candidates') or [{}])[0]
     г = c.get('groundingMetadata') or {}
-    рез.update(запросы=г.get('webSearchQueries') or [], источников=len(г.get('groundingChunks') or []),
-               токены=d.get('usageMetadata'), сек=round(time.time() - t0, 1))
+    рез.update(поиск=bool(г), запросы=г.get('webSearchQueries') or [], источников=len(г.get('groundingChunks') or []),
+               токены=d.get('usageMetadata'))
     ответ = ''.join(p.get('text', '') for p in (c.get('content') or {}).get('parts') or [])
-    if not г:
-        рез['ошибка'] = 'нет groundingMetadata (поиск не выполнялся) — ответ не берём'
-        рез['сырой'] = ответ[:300]
-        return рез
     m = re.search(r'\{.*\}', ответ, re.S)
     try:
         рез['ответ'] = json.loads(m.group(0)) if m else None
     except ValueError:
         рез['ошибка'] = 'ответ не JSON'
         рез['сырой'] = ответ[:300]
+    if not г:
+        рез['ошибка'] = (рез['ошибка'] + '; ' if рез['ошибка'] else '') + 'нет groundingMetadata (поиск не подтверждён)'
     return рез
-
 
 if __name__ == '__main__':
     from concurrent.futures import ThreadPoolExecutor
@@ -79,6 +89,6 @@ if __name__ == '__main__':
             f.write(json.dumps(dict(р, ключ=к['ключ']), ensure_ascii=False) + '\n')
             f.flush()
             os.fsync(f.fileno())
-        print(к['ключ'], р['сек'], 'с', 'ошибка: ' + р['ошибка'] if р['ошибка'] else (р['ответ'] or {}).get('инн'), flush=True)
-    with ThreadPoolExecutor(int(os.environ.get('GEMINI_POTOKOV', '8'))) as ex:
+        print(к['ключ'], р['сек'], 'с', 'поиск' if р.get('поиск') else 'БЕЗ поиска', 'заходов', р.get('заходов'), (р['ответ'] or {}).get('инн'), р['ошибка'][:60], flush=True)
+    with ThreadPoolExecutor(int(os.environ.get('GEMINI_POTOKOV', '24'))) as ex:
         list(ex.map(одна, [к for к in кк if к['ключ'] not in уже]))
