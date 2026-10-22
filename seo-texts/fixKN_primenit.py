@@ -8,7 +8,7 @@ r"""fixKN (22.10): панель КЦ – у компаний «КО» стары
 старые контакты остаются; у 417 компаний с новыми – уходят и «Люди», и телефоны / почты реквизитов.
 
 Что меняет (каталог C:\seostat\data\centrifugal.db + два шаблона, больше ничего):
-  * у 417 компаний (inn_zamena пакета): строки contact и person переносятся в contact_arhiv_fixKN / person_arhiv_fixKN
+  * у компаний inn_zamena пакета (все 523 «КО»; у 106 без новых контактов – старое просто уходит, владелец 22.10): строки contact и person переносятся в contact_arhiv_fixKN / person_arhiv_fixKN
     (не удаляются насовсем), поля реквизитов telefony_checko, pochty_checko, pochta, telefony_iz_bazy, telefony_predpriyatiya
     и счётчики n_phones / has_phone / n_tech / has_tech / n_purchaser / has_purchaser – в company_pole_arhiv_fixKN; вставляются
     новые контакты (порядок – по лесенке прозвона), счётчики пересчитываются по ним; отметка – таблица import_fixKN;
@@ -239,10 +239,15 @@ def proverit_katalog(do_db, posle_db, paket, plokh):
     ne_tak = [i for i in zam if n_kont.get(i, 0) != len(po_inn.get(i, [])) or n_ludi.get(i, 0)]
     if ne_tak:
         plokh.append('каталог: у %d из %d компаний число контактов не равно пакету или остались люди: %s' % (len(ne_tak), len(zam), ne_tak[:5]))
-    bylo_c = d.execute('SELECT COUNT(*) FROM contact WHERE inn IN (%s)' % ','.join('?' * len(zam)), sorted(zam)).fetchone()[0]
-    v_arh = k.execute('SELECT COUNT(*) FROM contact_arhiv_fixKN').fetchone()[0]
+    # уже заменённые раньше (import_fixKN в «до») второй раз в архив не идут – считаем только прирост архива
+    est_do = d.execute("SELECT 1 FROM sqlite_master WHERE name='import_fixKN'").fetchone()
+    uzhe = {r[0] for r in d.execute('SELECT inn FROM import_fixKN')} if est_do else set()
+    novye_zam = sorted(zam - uzhe)
+    bylo_c = d.execute('SELECT COUNT(*) FROM contact WHERE inn IN (%s)' % ','.join('?' * len(novye_zam)), novye_zam).fetchone()[0] if novye_zam else 0
+    arh_do = d.execute('SELECT COUNT(*) FROM contact_arhiv_fixKN').fetchone()[0] if est_do else 0
+    v_arh = k.execute('SELECT COUNT(*) FROM contact_arhiv_fixKN').fetchone()[0] - arh_do
     if bylo_c != v_arh:
-        plokh.append('каталог: было контактов у 417 – %d, в архиве %d' % (bylo_c, v_arh))
+        plokh.append('каталог: было контактов у заменяемых сейчас %d – %d, в архив добавилось %d' % (len(novye_zam), bylo_c, v_arh))
     bez_ssylki = k.execute("SELECT COUNT(*) FROM contact WHERE inn IN (%s) AND COALESCE(source_url,'') NOT LIKE 'http%%'"
                            % ','.join('?' * len(zam)), sorted(zam)).fetchone()[0]
     if bez_ssylki:
@@ -253,8 +258,8 @@ def proverit_katalog(do_db, posle_db, paket, plokh):
     est = dict(k.execute('SELECT bitrix_metka, COUNT(*) FROM company WHERE bitrix_metka IS NOT NULL GROUP BY 1').fetchall())
     if est != ozh:
         plokh.append('каталог: метки %s, в пакете %s' % (est, ozh))
-    p('каталог: было у 417 контактов %d (в архиве %d), людей в архиве %d; стало контактов %d; метки %s; типы inn: %s' % (
-        bylo_c, v_arh, k.execute('SELECT COUNT(*) FROM person_arhiv_fixKN').fetchone()[0],
+    p('каталог: заменяется сейчас %d компаний (раньше %d), их контактов было %d (в архив добавилось %d), людей в архиве всего %d; стало контактов у всех заменённых %d; метки %s; типы inn: %s' % (
+        len(novye_zam), len(uzhe), bylo_c, v_arh, k.execute('SELECT COUNT(*) FROM person_arhiv_fixKN').fetchone()[0],
         sum(n_kont.get(i, 0) for i in zam), est, k.execute('SELECT typeof(inn), COUNT(*) FROM contact GROUP BY 1').fetchall()))
     k.close()
     d.close()
@@ -319,7 +324,9 @@ def stadiya(paket) -> bool:
     for cvet in ('krasnaya', 'belaya', 'zelenaya'):
         obr.append(next(i for i in paket['inn_zamena'] if metki.get(i, {}).get('metka') == cvet))
     obr.append(next(i for i in paket['inn_zamena'] if i not in metki))
-    obr.append(next(i for i in paket['inn_ko'] if i not in zam))
+    obr.append(next((i for i in paket['inn_ko'] if i not in zam), ''))
+    pustye = [i for i in paket['inn_zamena'] if not any(x['inn'] == i for x in paket['kontakty'])]
+    obr += ([i for i in ('0266048970',) if i in pustye] or pustye[:1]) + pustye[1:2]   # «КО» без новых контактов (Салават – со скриншота)
     k = sqlite3.connect('file:%s?mode=ro' % os.path.join(DATA, 'centro_sales.db'), uri=True)
     vrab = [r[0] for r in k.execute("SELECT inn FROM company_state WHERE call_result='v_rabote' LIMIT 50")]
     k.close()
@@ -377,15 +384,15 @@ def stadiya(paket) -> bool:
     for inn in obr:
         url = '/centro?inn=' + inn
         a, b = do[url], po[url]
-        opis = '%s (%s)' % (inn, 'замена' if inn in zam else ('КО без новых' if inn in ko else 'не КО'))
+        opis = '%s (%s)' % (inn, ('замена' if po_inn.get(inn) else 'замена, новых нет') if inn in zam else ('КО без новых' if inn in ko else 'не КО'))
         if a['kod'] != 200 or b['kod'] != 200:
             plokh.append('карточка %s: коды %s -> %s' % (opis, a['kod'], b['kod']))
             continue
         if inn in zam:
-            ssylki = [u for x in po_inn[inn] for u in x['source_url'].split(' ; ')]
+            ssylki = [u for x in po_inn.get(inn, []) for u in x['source_url'].split(' ; ')]
             net = [u for u in ssylki if esc(u) not in b['telo']]
             m = metki.get(inn)
-            usl = {'контактов = пакету': b['kontaktov'] == len(po_inn[inn]), 'людей нет': b['lyudi'] == 0,
+            usl = {'контактов = пакету': b['kontaktov'] == len(po_inn.get(inn, [])), 'людей нет': b['lyudi'] == 0,
                    'нет «Телефоны (чеко)»': not b['cheko'], 'все ссылки в карточке': not net,
                    'метка': (m is None and 'title="Битрикс' not in b['telo']) or (m is not None and esc(m['tekst']) in b['telo'])}
             p('   карточка %s: было контактов %d, людей %d -> стало %d, людей %d; %s' % (
