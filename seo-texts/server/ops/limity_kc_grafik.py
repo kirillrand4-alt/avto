@@ -27,7 +27,11 @@ from sender.store import Store  # noqa: E402
 cfg = Config.load(r"C:\sender\sender.yaml")
 st = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 кц = [mb.mailbox_id for mb in cfg.mailboxes() if mb.division == "kc"]
-лимит = ГРАФИК.get(сегодня)
+# После графика — постоянный потолок 40 (владелец 22.10, после паузы КЦ по
+# спаму: «снизь до 40»). --limit=N — потолок прямо сейчас, мимо графика.
+ПОСЛЕ_ГРАФИКА = 40
+лимит = ГРАФИК.get(сегодня) or (ПОСЛЕ_ГРАФИКА if сегодня > max(ГРАФИК) else None)
+лимит = next((int(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--limit=")), лимит)
 print("сегодня %s, ящиков КЦ %d, лимит по графику: %s" % (сегодня, len(кц), лимит))
 if лимит is None:
     print("=== ЛИМИТЫ КЦ: график кончился, не трогаю ===")
