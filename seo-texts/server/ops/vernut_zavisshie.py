@@ -1,79 +1,32 @@
 # -*- coding: utf-8 -*-
-"""Вернуть зависшие в sending письма в расписание на сегодняшнее окно.
-
-Захвачены отправкой и брошены (attempt_count=0, ни sent_at, ни rfc, ни
-события, ни строки в send_log) — значит SMTP к ним даже не подходил, и
-повторной отправки быть не может.
-"""
+"""Вернуть в очередь письма, зависшие в «sending» больше суток (владелец 22.10:
+«верни»; 4 — Россия 9000, 3 — второе касание, взяты 14–20.10). Перед
+возвратом — сверка с send_log: если письмо по факту ушло, НЕ возвращаем
+(иначе дубль), только печатаем. Возврат — штатный store.release_message
+(sending → scheduled). Журнал _ops/vernut-zavisshie.jsonl. Без --primenit — счёт."""
 import io
 import json
-import os
-import sqlite3
 import sys
-import time
-from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 
 sys.path.insert(0, r"C:\sender")
-КАТИТЬ = "--katit" in sys.argv
-СЛЕД = r"C:\sender\_ops\vernuto-zavisshih.jsonl"
+from sender.config import Config  # noqa: E402
+from sender.store import Store    # noqa: E402
 
-from sender.config import Config                                  # noqa: E402
-from sender.store import Store                                    # noqa: E402
-from sender.auto_send import next_slot, recipient_tz_name, window_from  # noqa: E402
 cfg = Config.load(r"C:\sender\sender.yaml")
-store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
-win = window_from(store, cfg)
-now = datetime.now(timezone.utc)
-print("окно: %s" % str(win)[:140])
-
-c = sqlite3.connect("file:%s?mode=ro" % r"C:\sender\sender.db", uri=True, timeout=60)
-c.row_factory = sqlite3.Row
-строки = c.execute(
-    "SELECT m.id, m.recipient_id, m.scheduled_at, rc.email, rc.company_name, "
-    "       cr.id crid, cr.status crst "
-    "  FROM messages m JOIN recipients rc ON rc.id=m.recipient_id "
-    "  LEFT JOIN confirm_reviews cr ON cr.message_id=m.id "
-    " WHERE m.status='sending' AND m.attempt_count=0 AND m.sent_at IS NULL "
-    "   AND m.rfc_message_id IS NULL ORDER BY m.scheduled_at").fetchall()
-c.close()
-print("зависших к возврату: %d" % len(строки))
-сч = Counter(str(r["crst"] or "нет карточки") for r in строки)
-print("   статус карточек: %s" % dict(сч))
-if not КАТИТЬ:
-    for r in строки[:6]:
-        rec = store.get_recipient(int(r["recipient_id"]))
-        слот = next_slot(win, recipient_tz_name(win, rec), now) if rec else None
-        print("   msg %-6s %-26s было %s -> станет %s"
-              % (r["id"], str(r["email"])[:26], str(r["scheduled_at"])[:16],
-                 str(слот)[:16]))
-    raise SystemExit(0)
-
-итог = Counter()
-поток = io.open(СЛЕД, "a", encoding="utf-8")
-for r in строки:
-    rec = store.get_recipient(int(r["recipient_id"])) if r["recipient_id"] else None
-    if rec is None:
-        итог["нет получателя"] += 1
+st = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
+гр = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S")
+ряды = st._conn.execute("SELECT id, campaign_id, claimed_at, scheduled_at FROM messages WHERE status='sending' "
+                        "AND COALESCE(claimed_at, updated_at) < ?", (гр,)).fetchall()
+ж = io.open(r"C:\sender\_ops\vernut-zavisshie.jsonl", "a", encoding="utf-8")
+for mid, cid, cl, sa in ряды:
+    ушло = st._conn.execute("SELECT ts FROM send_log WHERE message_id=? AND outcome='sent'", (mid,)).fetchone()
+    if ушло:
+        print("#%d к%s — УЖЕ УШЛО %s, не возвращаю" % (mid, cid, ушло[0]))
         continue
-    try:
-        снят = store.release_message(int(r["id"]))
-        слот = next_slot(win, recipient_tz_name(win, rec), now)
-        store.reschedule_message(int(r["id"]), слот)
-        итог["возвращено"] += 1
-        поток.write(json.dumps({"msg": int(r["id"]), "email": r["email"],
-                                "bylo": str(r["scheduled_at"]),
-                                "stalo": str(слот), "lease": bool(снят)},
-                               ensure_ascii=False) + "\n")
-        поток.flush()
-        os.fsync(поток.fileno())
-    except Exception as ex:                                      # noqa: BLE001
-        итог["ошибка: " + str(ex)[:44]] += 1
-поток.close()
-print("")
-for к, n in итог.most_common():
-    print("   %-34s %4d" % (к, n))
-c = sqlite3.connect("file:%s?mode=ro" % r"C:\sender\sender.db", uri=True, timeout=60)
-print("осталось в sending: %d"
-      % c.execute("SELECT COUNT(*) FROM messages WHERE status='sending'").fetchone()[0])
-c.close()
+    print("#%d к%s взято %s → в очередь" % (mid, cid, cl))
+    if "--primenit" in sys.argv:
+        st.release_message(mid)
+        ж.write(json.dumps({"id": mid, "campaign": cid, "claimed_at": str(cl), "scheduled_at": str(sa)}) + "\n")
+ж.close()
+print("всего зависших:", len(ряды), "| ПРИМЕНЕНО" if "--primenit" in sys.argv else "| СУХОЙ ПРОГОН")
