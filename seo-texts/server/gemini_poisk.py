@@ -29,7 +29,11 @@ def найти(к, ключ=None):
     текст = ПР.format(имя=к['имя'], рег=к.get('регион') or '—', инн=('\nИНН: %s.' % к['инн']) if к.get('инн') else '',
                       сайт=('\nВероятный сайт: %s.' % к['сайт']) if к.get('сайт') else '')
     тело = {'contents': [{'role': 'user', 'parts': [{'text': текст}]}], 'tools': [{'google_search': {}}]}
-    з = urllib.request.Request('%s/v1beta/models/%s:generateContent' % (БАЗА, МОДЕЛЬ), data=json.dumps(тело).encode(),
+    # 22.10, проба: «размышления» 800–5000 токенов на ответ — это и цена (вывод 13 $/1M), и время; бюджет можно урезать
+    if os.environ.get('GEMINI_THINK'):
+        тело['generationConfig'] = {'thinkingConfig': {'thinkingBudget': int(os.environ['GEMINI_THINK'])}}
+    модель = os.environ.get('GEMINI_MODEL', МОДЕЛЬ)
+    з = urllib.request.Request('%s/v1beta/models/%s:generateContent' % (БАЗА, модель), data=json.dumps(тело).encode(),
                                headers={'x-goog-api-key': ключ, 'Authorization': 'Bearer ' + ключ,
                                         'Content-Type': 'application/json', 'User-Agent': 'curl/8.5.0'})
     t0 = time.time()
