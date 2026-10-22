@@ -32,7 +32,11 @@ except Exception:  # noqa: BLE001
 
 ГРУППА = "ФСА волна 1"
 ПЛОХО = re.compile(r"(?i)кадр|бухгалт|финанс|hr|резюме|не для письма")
-д = json.load(io.open(r"C:\seostat\drop\drop-storage\volna2-zaliv.json", encoding="utf-8"))
+# ярус B (владелец 22.10: «B тоже запускай мейер по тем же правилам»):
+#   zalit_volna2.py --yarus=B  -> volna2-zaliv-b.json, extra volna=v4-B
+ЯРУС = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--yarus=")), "A").upper()
+д = json.load(io.open(r"C:\seostat\drop\drop-storage\volna2-zaliv%s.json" % ("" if ЯРУС == "A" else "-" + ЯРУС.lower()),
+                      encoding="utf-8"))
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=120)
 e = sqlite3.connect(r"C:\sender\enrich.db", timeout=120)
 стоп = {str(r[0]).lower() for r in c.execute("SELECT value FROM suppression")}
@@ -76,8 +80,8 @@ for к in д["comp"]:
         continue
     _ист, адр, fio, роль = кандидаты[0]
     сч[("адрес из файла" if _ист < 2 else "адрес из наших баз")] += 1
-    extra = {"gruppy": [ГРУППА], "istochnik": "FSA-MEYER-v4-Meyer.xlsx", "volna": "v4-A", "target_division": "meyer",
-             "target_division_istochnik": "ФСА v4 ярус A, владелец 22.10", "dolzhnost": роль, "site": к.get("site"),
+    extra = {"gruppy": [ГРУППА], "istochnik": "FSA-MEYER-v4-Meyer.xlsx", "volna": "v4-" + ЯРУС, "target_division": "meyer",
+             "target_division_istochnik": "ФСА v4 ярус %s, владелец 22.10" % ЯРУС, "dolzhnost": роль, "site": к.get("site"),
              "revenue_rub": к.get("rev"), "pochemu_meyer": к.get("pochemu"), "pasport_fsa": к.get("pasport")}
     if адр in есть_получ:
         rid, ex = есть_получ[адр]

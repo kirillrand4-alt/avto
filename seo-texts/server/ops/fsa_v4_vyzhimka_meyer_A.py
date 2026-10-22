@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-"""ЛОКАЛЬНО (не на сервере): выжимка яруса A Meyer из FSA-MEYER-v4-Meyer.xlsx -> volna2-zaliv.json для zalit_volna2.py.
-Вход: inns.json (ярусы) и fsa-v4-novye.json (новые по ИНН, из fsa_v4_sverka.py). Пути — scratchpad сессии 22.10."""
 import openpyxl, json, re, collections
 D="/root/.claude/uploads/eb90afa2-9dfc-57d7-acb9-abafd7969908/"; F=D+'1059e4ff-FSA-MEYER-v4-Meyer.xlsx'
 S="/tmp/claude-0/-home-user-avto/eb90afa2-9dfc-57d7-acb9-abafd7969908/scratchpad/"
 inns=json.load(open(S+'fsa/inns.json'))['meyer']; nov=set(json.load(open(S+'fsa/fsa-v4-novye.json'))['meyer'])
-A={i for i in nov if inns[i][0]=='A'}
+import sys; Y=sys.argv[1] if len(sys.argv)>1 else 'A'; A={i for i in nov if inns[i][0]==Y}
 wb=openpyxl.load_workbook(F,read_only=True)
 ws=wb['Досье']; it=ws.iter_rows(values_only=True); h=list(next(it)); ix={k:i for i,k in enumerate(h)}
 g=lambda r,k:(str(r[ix[k]]).strip() if r[ix[k]] not in (None,'','—') else '')
@@ -44,5 +41,5 @@ for r in it:
     lpr=g(r,'ЛПР по оборудованию'); role=g(r,'Роль')
     step=1 if lpr=='да' else 2 if lpr=='возможно' else 4 if role=='Продажи' else 3
     cont.append({"inn":inn,"email":em,"fio":g(r,'ФИО'),"dolzh":g(r,'Должность (как на сайте)'),"role":role,"step":step})
-json.dump({"comp":comp,"cont":cont},open(S+'volna2-zaliv.json','w'),ensure_ascii=False)
+json.dump({"comp":comp,"cont":cont},open(S+('volna2-zaliv.json' if Y=='A' else 'volna2-zaliv-'+Y.lower()+'.json'),'w'),ensure_ascii=False)
 print(dict(c),'контактов',len(cont))
