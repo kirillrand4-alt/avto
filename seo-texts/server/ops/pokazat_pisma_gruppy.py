@@ -21,7 +21,7 @@ c = sqlite3.connect(r"C:\sender\sender.db")
 try:
     for s in io.open(ЖУР, encoding="utf-8"):
         z = json.loads(s)
-        if z.get("итог") and not z.get("ок"):
+        if "ок" in z and not z.get("ок"):
             брак[str(z.get("inn"))] = "; ".join(map(str, z.get("брак") or []))[:400]
 except OSError:
     pass
