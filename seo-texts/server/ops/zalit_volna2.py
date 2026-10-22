@@ -30,7 +30,9 @@ except Exception:  # noqa: BLE001
     def _rol_ball(_р):
         return 4
 
-ГРУППА = "ФСА волна 1"
+# --gruppa=латиницей: c10 -> «ФСА v4 C проба» (владелец 22.10: «вот этих [ярус C]
+# штук 10 писем сделай … посмотрю насколько хороши»)
+ГРУППА = {"c10": "ФСА v4 C проба"}.get(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--gruppa=")), ""), "ФСА волна 1")
 ПЛОХО = re.compile(r"(?i)кадр|бухгалт|финанс|hr|резюме|не для письма")
 # ярус B (владелец 22.10: «B тоже запускай мейер по тем же правилам»):
 #   zalit_volna2.py --yarus=B  -> volna2-zaliv-b.json, extra volna=v4-B

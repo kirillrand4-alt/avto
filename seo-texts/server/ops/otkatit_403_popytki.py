@@ -37,6 +37,10 @@ from collections import Counter
 ЖУРНАЛ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("zhurnal=")),
               r"C:\sender\_ops\gen-partiya-935.jsonl")
 ПРИЗНАК = ("credit wallet quota insufficient", "HTTP 403")
+# 22.10: шлюз провайдера лёг с HTTP 502 посреди КЦ-1 — тоже не вина компании.
+# С ключом --502 снимаем и такие попытки.
+if "--502" in sys.argv:
+    ПРИЗНАК = ПРИЗНАК + ("HTTP 502",)
 СНИМАТЬ = "--снять" in sys.argv or "--snyat" in sys.argv
 
 
