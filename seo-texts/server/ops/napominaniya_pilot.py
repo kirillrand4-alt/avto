@@ -269,7 +269,10 @@ def пересказ(черновики):
     m = GP._raw_stream([{"role": "user", "content": ПЕРЕСКАЗ.replace("{pisma}", "\n\n---\n\n".join(тексты))
                          .replace("{{", "{").replace("}}", "}")}], МОДЕЛЬ, 4000, thinking=False, effort="low")
     т = m if isinstance(m, str) else "".join(getattr(b, "text", "") for b in getattr(m, "content", []) or [])
-    д, _ = json.JSONDecoder(strict=False).raw_decode(т[т.find("{"):])
+    нач = т.find('{"pisma"')
+    if нач < 0:
+        нач = т.find("{\n")
+    д, _ = json.JSONDecoder(strict=False).raw_decode(т[нач:])
     out = {}
     for f in д.get("pisma") or []:
         try:
