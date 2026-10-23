@@ -39,6 +39,7 @@ for inn, sa in c.execute("SELECT r.inn, MAX(m.sent_at) FROM messages m JOIN reci
                          "WHERE m.campaign_id=? AND m.status='sent' AND r.inn IS NOT NULL GROUP BY r.inn", (cid,)):
     комп[str(inn)] = str(sa)
 сч, вер, дом, роли, итог = Counter(), Counter(), Counter(), Counter(), []
+нет_вовсе, отсев = Counter(), Counter()
 for inn, sa in комп.items():
     if inn in ответ:
         сч["ответили"] += 1
@@ -58,6 +59,28 @@ for inn, sa in комп.items():
         канд.append(({"есть": 0, "принимает всё": 1}.get(проба.get(а, ""), 2), -_rol_ball(роль), а, роль))
     if not канд:
         сч["  запасного нет"] += 1
+        # почему: все адреса компании, кроме уже писанных, — по первой причине отсева
+        прич = Counter()
+        for а, роль in e.execute("SELECT lower(email), role FROM emails WHERE inn=?", (inn,)):
+            роль = str(роль or "")
+            if not а or а in писали:
+                continue
+            if а in стоп or а.split("@")[-1] in стоп:
+                прич["стоп-лист"] += 1
+            elif ПЛОХО.search(роль) or ПЛОХО.search(а.split("@")[0]):
+                прич["кадры/бухгалтерия/финансы"] += 1
+            elif _rol_ball(роль) <= 1:
+                прич["роль низкая (%s)" % роль.split("|")[0].strip()[:20]] += 1
+            elif проба.get(а) in ("нет ящика", "нет MX", "неясно", "отказ пробе"):
+                прич["проба: %s" % проба.get(а)] += 1
+            elif а in получ and получ[а] != inn:
+                прич["числится за другим ИНН"] += 1
+        if not прич:
+            нет_вовсе["других адресов нет вообще"] += 1
+        else:
+            нет_вовсе["есть, но отсеяны"] += 1
+            for k in прич:
+                отсев[k] += 1
         continue
     канд.sort()
     в, _, а, роль = канд[0]
@@ -69,6 +92,8 @@ for inn, sa in комп.items():
 print("компаний в кампании:", len(комп))
 for k, v in сч.items():
     print("  %-28s %d" % (k, v))
+print("без запасного:", dict(нет_вовсе))
+print("  причины отсева (компаний):", отсев.most_common(12))
 print("запасной по пробе:", dict(вер))
 print("домен:", dict(дом))
 print("роль:", роли.most_common(10))
