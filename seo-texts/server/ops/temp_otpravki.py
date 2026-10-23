@@ -15,7 +15,7 @@ cfg = Config.load(r"C:\sender\sender.yaml")
 c = sqlite3.connect(r"C:\sender\sender.db")
 ч = defaultdict(Counter)
 посл = {}
-for mb, sa in c.execute("SELECT mailbox_id, sent_at FROM messages WHERE status='sent' AND sent_at>='2026-10-22'"):
+for mb, sa in c.execute("SELECT mailbox_id, sent_at FROM messages WHERE status='sent' AND sent_at>=?", (datetime.utcnow().strftime('%Y-%m-%d'),)):
     ч[str(sa)[11:13]][нап.get(mb, "?")] += 1
     посл[mb] = max(посл.get(mb, ""), str(sa)[11:19])
 for h in sorted(ч):
