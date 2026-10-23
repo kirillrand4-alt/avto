@@ -25,6 +25,7 @@ import os
 import re
 import sqlite3
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 
 import requests
@@ -267,9 +268,12 @@ def пересказ(черновики):
     тексты = ["ЧЕРНОВИК %d (отправитель - %s)\n%s" % (i, "женщина" if ж else "мужчина", т)
               for i, (т, ж) in enumerate(черновики, 1)]
     m = GP._raw_stream([{"role": "user", "content": ПЕРЕСКАЗ.replace("{pisma}", "\n\n---\n\n".join(тексты))
-                         .replace("{{", "{").replace("}}", "}")}], МОДЕЛЬ, 4000, thinking=False, effort="low")
+                         .replace("{{", "{").replace("}}", "}")}], МОДЕЛЬ, 8000, thinking=False, effort="low")
     т = m if isinstance(m, str) else "".join(getattr(b, "text", "") for b in getattr(m, "content", []) or [])
-    нач = т.find('{"pisma"')
+    with io.open(r"C:\sender\_ops\napominaniya-syroy.txt", "a", encoding="utf-8") as сф:
+        сф.write("\n\n======== %s\n%s" % (time.strftime("%H:%M:%S"), т))
+    # модель рассуждает вслух и переписывает образец формата — берём ПОСЛЕДНИЙ JSON
+    нач = т.rfind('{"pisma"')
     if нач < 0:
         нач = т.find("{\n")
     д, _ = json.JSONDecoder(strict=False).raw_decode(т[нач:])
@@ -286,13 +290,21 @@ def пересказ(черновики):
 
 
 def годен(нов, черн):
-    if not нов or ЗАПРЕТ.search(нов) or len(нов) > len(черн) * 1.4 or len(нов) < len(черн) * 0.5:
-        return False
+    """'' — годен, иначе причина отсева."""
+    if not нов:
+        return "пусто"
+    з = ЗАПРЕТ.search(нов)
+    if з:
+        return "запрет: " + з.group(0)
+    if len(нов) > len(черн) * 1.4:
+        return "длиннее черновика"
+    if len(нов) < len(черн) * 0.5:
+        return "короче черновика"
     if not set(re.findall(r"\d+", нов)) <= set(re.findall(r"\d+", черн)):
-        return False
+        return "новые цифры"
     if "бесплатн" in нов.lower() and "бесплатн" not in черн.lower():
-        return False
-    return True
+        return "добавлено «бесплатно»"
+    return ""
 
 
 def чисто(в):
@@ -313,7 +325,7 @@ if ЗАВЕСТИ:
 i = 0
 while len(готово) < НАДО and i < len(кандидаты):
     пачка = []
-    while len(пачка) < 10 and i < len(кандидаты):
+    while len(пачка) < 5 and i < len(кандидаты):
         _, инн, x = кандидаты[i]
         i += 1
         тело = (c.execute("SELECT body_rendered FROM messages WHERE id=?", (x["mid"],)).fetchone() or [""])[0] or ""
@@ -371,8 +383,11 @@ while len(готово) < НАДО and i < len(кандидаты):
         if len(готово) >= НАДО:
             break
         т = нов.get(n, "")
-        if not годен(т, запись["telo"]):
-            отсев["пересказ не прошёл проверку"] += 1
+        причина = годен(т, запись["telo"])
+        if причина:
+            отсев[причина] += 1
+            if отсев[причина] <= 2:
+                print("  отсев (%s): %r" % (причина, т[:300]), flush=True)
             continue
         if any(difflib.SequenceMatcher(None, т, г["telo"]).ratio() > 0.6 for г in готово[-200:]):
             отсев["слишком похоже на готовое"] += 1
