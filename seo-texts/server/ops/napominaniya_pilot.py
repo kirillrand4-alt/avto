@@ -17,6 +17,7 @@
     napominaniya_pilot.py --pokaz=10          показать, ничего не заводить
     napominaniya_pilot.py --zavesti=300       завести карточки (kind=reply, pending)
 Журнал (резюм): _ops/napominaniya-pilot.jsonl; показ — на дроп napominaniya-pokaz.txt."""
+import difflib
 import hashlib
 import io
 import json
@@ -230,6 +231,57 @@ def слоты(пачка):
     return out
 
 
+ПЕРЕСКАЗ = """Ниже - черновики коротких напоминаний (Re: в ветку нашего прошлого письма,
+ответа не было). Перепиши КАЖДЫЙ своими словами так, чтобы все письма пачки
+звучали по-разному: разные слова, порядок, длина фраз, разное начало. Пишет живой
+менеджер Meyer (фотосепараторы, рентген-инспекция), не робот.
+
+ЖЁСТКО:
+- смысл каждой части сохранить: первая фраза (сразу после приветствия) - тот же
+  вопрос или предложение, она видна в превью и должна цеплять; дальше - отсылка к
+  прошлому письму и то же предложение; в конце - та же просьба о контакте/звонке;
+- приветствие: «{{Имя}}, добрый день!», «Добрый день!» или «Здравствуйте!» (имя - только если оно есть в черновике);
+- ничего не добавлять: никаких фактов о компании, цифр, цен, сроков, ссылок, обещаний;
+  «бесплатно» - только если оно есть в черновике;
+- не писать «без обязательств», «надеюсь, у вас всё хорошо», «хотел бы предложить»;
+- род отправителя как в черновике (писал/писала, рад/рада);
+- без длинного тире, только дефис или запятая; 2-4 предложения плюс приветствие;
+- без подписи.
+
+{pisma}
+
+Ответ - СТРОГО JSON: {{"pisma": [{{"n": 1, "tekst": "..."}}]}}"""
+
+
+def пересказ(черновики):
+    тексты = ["ЧЕРНОВИК %d (отправитель - %s)\n%s" % (i, "женщина" if ж else "мужчина", т)
+              for i, (т, ж) in enumerate(черновики, 1)]
+    m = GP._raw_stream([{"role": "user", "content": ПЕРЕСКАЗ.replace("{pisma}", "\n\n---\n\n".join(тексты))
+                         .replace("{{", "{").replace("}}", "}")}], МОДЕЛЬ, 4000, thinking=False, effort="low")
+    т = m if isinstance(m, str) else "".join(getattr(b, "text", "") for b in getattr(m, "content", []) or [])
+    д, _ = json.JSONDecoder(strict=False).raw_decode(т[т.find("{"):])
+    out = {}
+    for f in д.get("pisma") or []:
+        try:
+            out[int(f.get("n"))] = str(f.get("tekst") or "").strip()
+        except (TypeError, ValueError):
+            pass
+    return out
+
+
+ЗАПРЕТ = re.compile(r"—|без обязательств|http|www\.|надеюсь", re.I)
+
+
+def годен(нов, черн):
+    if not нов or ЗАПРЕТ.search(нов) or len(нов) > len(черн) * 1.4 or len(нов) < len(черн) * 0.5:
+        return False
+    if not set(re.findall(r"\d+", нов)) <= set(re.findall(r"\d+", черн)):
+        return False
+    if "бесплатн" in нов.lower() and "бесплатн" not in черн.lower():
+        return False
+    return True
+
+
 def чисто(в):
     в = str(в or "").strip().strip(".,;").lower()
     return в if (в and len(в) <= 40 and not re.search(r"[\d\"«»—]", в)) else ""
@@ -237,7 +289,8 @@ def чисто(в):
 
 ИМЯ_ИЗ_ПИСЬМА = re.compile(r"^\s*([А-ЯЁ][а-яё]+)(?:\s+[А-ЯЁ][а-яё]+)?,\s*(?:добрый|здравствуйте)", re.M)
 ПОДПИСЬ_ИМЯ = re.compile(r"Меня зовут\s+([А-ЯЁ][а-яё]+)")
-CONTACT_ROT = 0
+from collections import Counter  # noqa: E402
+отсев = Counter()
 готово, номер = [], 0
 ж = io.open(ЖУР, "a", encoding="utf-8") if ЗАВЕСТИ else None
 cs = None
@@ -261,9 +314,8 @@ while len(готово) < НАДО and i < len(кандидаты):
     except Exception as ex:  # noqa: BLE001
         print("слоты не пришли:", str(ex)[:150], flush=True)
         continue
+    черн_пачки = []
     for n, (инн, x, тело) in enumerate(пачка, 1):
-        if len(готово) >= НАДО:
-            break
         с = сл.get(n) or {}
         с = {**{k: чисто(с.get(k)) for k in ("syrye_r", "syrye_p", "prod_r", "prod_p")},
              "tip": "rentgen" if str(с.get("tip")) == "rentgen" else "sortirovka", "zerno": bool(с.get("zerno"))}
@@ -282,7 +334,10 @@ while len(готово) < НАДО and i < len(кандидаты):
         жен = отпр_имя.lower().endswith(("а", "я")) and отпр_имя.lower() not in ЖЕН_ИСКЛ
         варианты = [4, 5, 6, 8, 9] if с["tip"] != "rentgen" else [6, 8]
         заход = варианты[номер % len(варианты)]
-        текст = собрать(с, заход, номер // len(варианты), имя, жен)
+        # строка контакта — своя у каждой компании (по ИНН), независимо от захода:
+        # раньше менялась раз в пять писем, и в показе до номера не доходило
+        к_номер = int(hashlib.md5(str(инн).encode()).hexdigest(), 16)
+        текст = собрать(с, заход, к_номер, имя, жен)
         номер += 1
         if not текст:
             continue
@@ -290,10 +345,31 @@ while len(готово) < НАДО and i < len(кандидаты):
         em = пол[x["rid"]][1]
         запись = dict(inn=инн, email=em, mailbox=x["mb"], v_otvet_na=x["mid"], zahod=заход, sloty=с,
                       tema=тема, telo=текст, imya=имя, otpravitel=отпр_имя, zhen=жен, pervoe=x["sent"][:10])
+        черн_пачки.append((запись, x))
+    # 300 писем из одних строк — шаблон для спам-фильтра (владелец 23.10:
+    # «слишком одинаково, в спам улетим»): модель пересказывает каждое,
+    # смысл утверждённых строк остаётся; похожие на уже готовые — мимо.
+    try:
+        нов = пересказ([(з["telo"], з["zhen"]) for з, _ in черн_пачки]) if черн_пачки else {}
+    except Exception as ex:  # noqa: BLE001
+        print("пересказ не пришёл:", str(ex)[:150], flush=True)
+        нов = {}
+    for n, (запись, x) in enumerate(черн_пачки, 1):
+        if len(готово) >= НАДО:
+            break
+        т = нов.get(n, "")
+        if not годен(т, запись["telo"]):
+            отсев["пересказ не прошёл проверку"] += 1
+            continue
+        if any(difflib.SequenceMatcher(None, т, г["telo"]).ratio() > 0.6 for г in готово[-200:]):
+            отсев["слишком похоже на готовое"] += 1
+            continue
+        запись["chernovik"], запись["telo"] = запись["telo"], т
         if ЗАВЕСТИ:
-            р = cs.submit_reply(reply_to=em, subject=тема, body=текст, in_reply_to=x["rfc"], thread_id=x["thr"],
-                                recipient_id=x["rid"], inn=инн,
-                                panel={"mailbox_id": x["mb"], "napominanie": заход, "vruchnuyu": "пилот напоминаний 23.10"})
+            р = cs.submit_reply(reply_to=запись["email"], subject=запись["tema"], body=т, in_reply_to=x["rfc"],
+                                thread_id=x["thr"], recipient_id=x["rid"], inn=запись["inn"],
+                                panel={"mailbox_id": x["mb"], "napominanie": запись["zahod"],
+                                       "vruchnuyu": "пилот напоминаний 23.10"})
             запись["karta"] = getattr(р, "review_id", None) or str(р)
             ж.write(json.dumps(запись, ensure_ascii=False) + "\n")
             ж.flush()
@@ -313,4 +389,5 @@ try:
                  data=текст.encode("utf-8"), headers={"X-Drop-Token": os.environ.get("DROP_TOKEN", "")}, timeout=60)
 except Exception as ex:  # noqa: BLE001
     print("на дроп не ушло:", ex)
+print("отсев:", dict(отсев))
 print("итог: %d напоминаний%s" % (len(готово), ", карточки заведены" if ЗАВЕСТИ else " (показ, ничего не заведено)"))
