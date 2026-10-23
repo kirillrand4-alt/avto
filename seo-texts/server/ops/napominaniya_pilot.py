@@ -44,6 +44,16 @@ _а = dict(a.lstrip("-").split("=", 1) for a in sys.argv[1:] if "=" in a)
 if not (ПОКАЗ or ЗАВЕСТИ):
     print(__doc__)
     sys.exit(0)
+# отсоединённо (раннер режет задачу на 900 с): --zapusk + те же ключи; журнал — _ops/napominaniya-pilot.log
+if "--zapusk" in sys.argv:
+    import subprocess
+    import time
+    л = io.open(r"C:\sender\_ops\napominaniya-pilot.log", "w", encoding="utf-8")
+    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__)] + [a for a in sys.argv[1:] if a != "--zapusk"],
+                         cwd=r"C:\sender", stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
+    time.sleep(10)
+    print("запущен, pid %d, жив %s" % (п.pid, п.poll() is None))
+    sys.exit(0)
 
 # ----------------------------------------------------------------- строки --
 ЖЕН_ИСКЛ = {"никита", "илья", "кузьма", "фома", "лука", "савва", "данила"}
@@ -375,7 +385,7 @@ while len(готово) < НАДО and i < len(кандидаты):
             ж.flush()
             os.fsync(ж.fileno())
         готово.append(запись)
-    print("готово %d" % len(готово), flush=True)
+    print("готово %d, отсев %s" % (len(готово), dict(отсев)), flush=True)
 
 вых = []
 for з in готово:
