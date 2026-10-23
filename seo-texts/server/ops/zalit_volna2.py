@@ -61,8 +61,13 @@ def годен(адр, роль=""):
         and проба.get(адр, "") not in ("нет ящика", "нет MX") and адр not in есть_получ
 
 
+инн_в_панели = {str(r[0]) for r in c.execute("SELECT DISTINCT inn FROM recipients WHERE inn IS NOT NULL")}
 for к in д["comp"]:
     inn = к["inn"]
+    # Компания уже в панели (пробы яруса C, добор) — второй получатель ей не нужен.
+    if inn in инн_в_панели:
+        сч["компания уже в панели — пропуск"] += 1
+        continue
     кандидаты = []
     if годен(к["best"], ""):
         кандидаты.append((0, к["best"], к.get("best_fio"), к.get("best_dolzh") or "лучший контакт файла"))
