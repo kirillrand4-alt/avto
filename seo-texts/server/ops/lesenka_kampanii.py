@@ -21,6 +21,9 @@ except Exception:  # noqa: BLE001
     def _rol_ball(_р):
         return 4
 cid = int(sys.argv[1])
+# --s-hr: брать и кадры/бухгалтерию, и адреса без роли (владелец 23.10: «да,
+# добавляем») — последними по лесенке; «не для письма» не берём никогда.
+С_HR = "--s-hr" in sys.argv
 c = sqlite3.connect(r"C:\sender\sender.db")
 e = sqlite3.connect(r"C:\sender\enrich.db")
 ПЛОХО = re.compile(r"(?i)кадр|бухгалт|финанс|hr|резюме|не для письма")
@@ -34,6 +37,8 @@ e = sqlite3.connect(r"C:\sender\enrich.db")
 ответ = {str(r[0]) for r in c.execute("SELECT DISTINCT inn FROM leads WHERE inn IS NOT NULL")}
 ответ |= {str(r[0]) for r in c.execute("SELECT DISTINCT r.inn FROM events ev JOIN recipients r ON r.id=ev.recipient_id "
                                        "WHERE ev.event_type IN ('reply','reply_auto') AND r.inn IS NOT NULL")}
+# адрес, записанный в обогащении за НЕСКОЛЬКИМИ ИНН, — чей он, неизвестно: не берём
+многоинн = {str(r[0]) for r in e.execute("SELECT lower(email) FROM emails GROUP BY lower(email) HAVING COUNT(DISTINCT inn) > 1")}
 комп = {}
 for inn, sa in c.execute("SELECT r.inn, MAX(m.sent_at) FROM messages m JOIN recipients r ON r.id=m.recipient_id "
                          "WHERE m.campaign_id=? AND m.status='sent' AND r.inn IS NOT NULL GROUP BY r.inn", (cid,)):
@@ -50,13 +55,20 @@ for inn, sa in комп.items():
         роль = str(роль or "")
         if not а or а in писали or а in стоп or а.split("@")[-1] in стоп:
             continue
-        if ПЛОХО.search(роль) or ПЛОХО.search(а.split("@")[0]) or _rol_ball(роль) <= 1:
+        хуже = 0
+        if "не для письма" in роль.lower():
             continue
+        if ПЛОХО.search(роль) or ПЛОХО.search(а.split("@")[0]) or _rol_ball(роль) <= 1:
+            if not С_HR:
+                continue
+            хуже = 1
         if проба.get(а) in ("нет ящика", "нет MX", "неясно", "отказ пробе"):
             continue
         if а in получ and получ[а] != inn:
             continue
-        канд.append(({"есть": 0, "принимает всё": 1}.get(проба.get(а, ""), 2), -_rol_ball(роль), а, роль))
+        if а in многоинн:
+            continue
+        канд.append((хуже, {"есть": 0, "принимает всё": 1}.get(проба.get(а, ""), 2), -_rol_ball(роль), а, роль))
     if not канд:
         сч["  запасного нет"] += 1
         # почему: все адреса компании, кроме уже писанных, — по первой причине отсева
@@ -83,7 +95,7 @@ for inn, sa in комп.items():
                 отсев[k] += 1
         continue
     канд.sort()
-    в, _, а, роль = канд[0]
+    _х, в, _, а, роль = канд[0]
     сч["  есть следующий адрес"] += 1
     вер[{0: "есть", 1: "принимает всё", 2: "не проверен"}[в]] += 1
     дом["публичный" if а.split("@")[-1] in ПУБ else "свой домен"] += 1
