@@ -24,11 +24,12 @@ import time
 СПИСОК = r"C:\sender\_ops\spisok-v4c-pachka.json"
 СТОП = r"C:\sender\_ops\v4c-pachki.STOP"
 ХОД_ПРОБЫ = r"C:\sender\_ops\smtp-proba-v4c.json"
-ПАЧКА = 100
+ПАЧКА = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--pachka=")), "100"))
+ОДНА = "--odna" in sys.argv   # одна пачка и стоп (проверка цены после починки кэша 23.10)
 
 if "--zapusk" in sys.argv:
     л = io.open(ЛОГ, "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"], cwd=r"C:\sender",
+    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith("--pachka=") or a == "--odna"], cwd=r"C:\sender",
                          stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
     io.open(r"C:\sender\_ops\v4c-pachki.pid", "w").write(str(п.pid))
     time.sleep(15)
@@ -56,7 +57,8 @@ def попытки():
                 z = json.loads(s)
             except ValueError:
                 continue
-            if z.get("inn"):
+            # попытка, сгоревшая на пустом кошельке шлюза (HTTP 403, 23.10), — не попытка
+            if z.get("inn") and "HTTP 403" not in json.dumps(z.get("брак") or [], ensure_ascii=False):
                 инн.add(str(z["inn"]))
     except OSError:
         pass
@@ -77,6 +79,12 @@ while not os.path.exists(СТОП):
     проба = {str(r[0]).lower(): str(r[1] or "") for r in c.execute("SELECT email, verdict FROM addr_probe")}
     с_письмом = {r[0] for r in c.execute("SELECT DISTINCT recipient_id FROM messages")}
     были = попытки()
+    # гейт адресата уже сказал «не покупатель» — в журнал такие не попадают,
+    # и без этого верх по выручке снова и снова приходил одними отказниками (23.10)
+    try:
+        были |= {str(r[0]) for r in c.execute("SELECT inn FROM target_verdicts WHERE verdict='не покупатель'")}
+    except sqlite3.Error:
+        pass
     кандидаты, ждут = [], 0
     for rid, em, inn, ex in c.execute("SELECT id, lower(email), inn, extra_json FROM recipients WHERE extra_json LIKE '%v4-C%'"):
         x = json.loads(ex or "{}")
@@ -119,4 +127,7 @@ while not os.path.exists(СТОП):
         лог("пачка %d готова, код %s | %s" % (номер, р.returncode, итог[-1] if итог else "итога нет"))
     except OSError:
         pass
+    if ОДНА:
+        лог("=== ДИРИЖЁР ЯРУСА C: одна пачка (--odna) — стоп ===")
+        break
 лог("=== ДИРИЖЁР ЯРУСА C: конец ===")
