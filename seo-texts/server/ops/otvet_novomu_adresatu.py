@@ -28,6 +28,9 @@ _а = dict(a.split("=", 1) for a in sys.argv[1:] if "=" in a)
                  headers={"X-Drop-Token": os.environ.get("DROP_TOKEN", "")}, timeout=60)
 т.encoding = "utf-8"
 тема, тело = т.text.split("\n", 1)
+# Подпись ставит панель сама (send_reply: полная подпись менеджера). Своя в
+# тексте давала две подписи подряд (23.10, ответы Наумову и Тищенко) — режем.
+тело = тело.split("\n\nС уважением,")[0]
 cfg = Config.load(r"C:\sender\sender.yaml")
 st = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 cs = build_deps(cfg, st, dry_run=True).confirm
