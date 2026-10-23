@@ -283,9 +283,9 @@ def пересказ(черновики):
     with io.open(r"C:\sender\_ops\napominaniya-syroy.txt", "a", encoding="utf-8") as сф:
         сф.write("\n\n======== %s\n%s" % (time.strftime("%H:%M:%S"), т))
     # модель рассуждает вслух и переписывает образец формата — берём ПОСЛЕДНИЙ JSON
-    нач = т.rfind('{"pisma"')
-    if нач < 0:
-        нач = т.find("{\n")
+    # JSON бывает с отступами: «{\n  "pisma"» — ищем последний такой, а не только слитный
+    вх = [m.start() for m in re.finditer(r'\{\s*"pisma"', т)]
+    нач = вх[-1] if вх else -1
     д, _ = json.JSONDecoder(strict=False).raw_decode(т[нач:])
     out = {}
     for f in д.get("pisma") or []:
