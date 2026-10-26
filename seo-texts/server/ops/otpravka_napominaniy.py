@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 СТОП = r"C:\sender\_ops\otpravka-napominaniy.STOP"
 if "--zapusk" in sys.argv:
     л = io.open(r"C:\sender\_ops\otpravka-napominaniy.log", "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"], cwd=r"C:\sender",
+    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a == "--bez-okna"], cwd=r"C:\sender",
                          stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
     time.sleep(10)
     print("запущен, pid %d, жив %s" % (п.pid, п.poll() is None))
@@ -66,6 +66,8 @@ def ушло_сегодня(mb):
 
 
 def окно():
+    if "--bez-okna" in sys.argv:   # владелец 26.10: «пусть сразу начинает, посмотрим как работает»
+        return True
     т = datetime.now(МСК)
     return т.weekday() < 5 and 9 <= т.hour < 18
 
