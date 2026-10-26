@@ -41,10 +41,28 @@ if os.path.exists(ЖУР):
     сделано = {json.loads(s).get("inn") for s in io.open(ЖУР, encoding="utf-8")}
 сч = Counter()
 план = []
+# --tolko-vtoroe (владелец 26.10: «реальное второе (не больше) касание»):
+# компании, у которой Meyer уже писал на 2+ адреса, третье не ставим.
+ТОЛЬКО_ВТОРОЕ = "--tolko-vtoroe" in sys.argv
+_мей = [r[0] for r in c.execute("SELECT id, name FROM campaigns") if "meyer" in str(r[1]).lower()]
+# компании пилота напоминаний 26.10 только что получили «Re:» — второй адрес им пока не шлём
+_пилот = set()
+if os.path.exists(r"C:\sender\_ops\napominaniya-pilot.jsonl"):
+    _пилот = {json.loads(s).get("inn") for s in io.open(r"C:\sender\_ops\napominaniya-pilot.jsonl", encoding="utf-8")}
 for x in д:
+    if x["inn"] in _пилот:
+        сч["в пилоте напоминаний — пока нет"] += 1
+        continue
     if x["inn"] in сделано:
         сч["уже ставили"] += 1
         continue
+    if ТОЛЬКО_ВТОРОЕ:
+        n_адр = c.execute("SELECT COUNT(DISTINCT lower(r.email)) FROM messages m JOIN recipients r ON r.id=m.recipient_id "
+                          "WHERE r.inn=? AND m.campaign_id IN (%s) AND m.status IN ('sent','scheduled','sending','pending_review')"
+                          % ",".join(map(str, _мей)), (x["inn"],)).fetchone()[0]
+        if n_адр >= 2:
+            сч["уже 2+ адреса — не третье"] += 1
+            continue
     р = c.execute("SELECT m.id mid, m.mailbox_id mb, r.id rid, lower(r.email) em, cr.subject, cr.body FROM messages m "
                   "JOIN recipients r ON r.id=m.recipient_id LEFT JOIN confirm_reviews cr ON cr.message_id=m.id "
                   "WHERE m.campaign_id=? AND m.status='sent' AND r.inn=? ORDER BY m.sent_at DESC LIMIT 1",
@@ -69,6 +87,9 @@ cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 q = build_ai_quota(store, cfg)
 cs = ConfirmSend(cfg, store, Suppression(store))
+# ящик первого письма мог уйти из конфига (август: zernosort.ru и др.) — тогда
+# ящик не задаём, панель подберёт рабочий ящик Meyer сама
+_ящики = {mb.mailbox_id for mb in cfg.mailboxes() if mb.division == "meyer"}
 итог = Counter()
 ж = io.open(ЖУР, "a", encoding="utf-8")
 for x, р, тело in план:
@@ -95,8 +116,11 @@ for x, р, тело in план:
         continue
     r = cs.submit(email=адр, subject=р["subject"], body=тело + "\n\nС уважением,", inn=x["inn"], campaign_id=КАМП,
                   recipient_id=rid, message_id=mid,
-                  panel={"letter_division": "meyer", "kopiya_s": р["em"], "mailbox_id": р["mb"], "vtoroe_kasanie": True,
-                         "lesenka_iz_kampanii": cid})
+                  panel=dict({"letter_division": "meyer", "kopiya_s": р["em"], "vtoroe_kasanie": True,
+                              "lesenka_iz_kampanii": cid},
+                             **({"mailbox_id": р["mb"]} if р["mb"] in _ящики else {})))
+    if р["mb"] not in _ящики:
+        итог["ящик первого письма не в работе — подберёт панель"] += 1
     итог["очередь: " + str(r.status) + ((" " + str(r.reason)[:50]) if getattr(r, "reason", None) else "")] += 1
     ж.write(json.dumps({"inn": x["inn"], "кому": адр, "review": r.review_id, "status": r.status}, ensure_ascii=False) + "\n")
     ж.flush()

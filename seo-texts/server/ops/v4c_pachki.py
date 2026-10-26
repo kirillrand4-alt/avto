@@ -26,10 +26,14 @@ import time
 ХОД_ПРОБЫ = r"C:\sender\_ops\smtp-proba-v4c.json"
 ПАЧКА = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--pachka=")), "100"))
 ОДНА = "--odna" in sys.argv   # одна пачка и стоп (проверка цены после починки кэша 23.10)
+# --vsego=N (владелец 26.10: «отправим первые по выручке топ 2000 компаний»):
+# при старте фиксируем N лучших по выручке готовых получателей, дальше берём только их
+ВСЕГО = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--vsego=")), "0"))
+ТОП = None
 
 if "--zapusk" in sys.argv:
     л = io.open(ЛОГ, "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith("--pachka=") or a == "--odna"], cwd=r"C:\sender",
+    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith(("--pachka=", "--vsego=")) or a == "--odna"], cwd=r"C:\sender",
                          stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
     io.open(r"C:\sender\_ops\v4c-pachki.pid", "w").write(str(п.pid))
     time.sleep(15)
@@ -102,7 +106,15 @@ while not os.path.exists(СТОП):
             выр = 0.0
         кандидаты.append((-выр, rid))
     c.close()
-    if len(кандидаты) < ПАЧКА and not проба_кончилась():
+    if ВСЕГО:
+        if ТОП is None:
+            ТОП = {r for _, r in sorted(кандидаты)[:ВСЕГО]}
+            лог("топ-%d по выручке зафиксирован: %d получателей" % (ВСЕГО, len(ТОП)))
+        кандидаты = [k for k in кандидаты if k[1] in ТОП]
+        if not кандидаты:
+            лог("=== ДИРИЖЁР ЯРУСА C: топ-%d разобран — стоп ===" % ВСЕГО)
+            break
+    if len(кандидаты) < ПАЧКА and not проба_кончилась() and not ВСЕГО:
         лог("ждём пробу: готовых %d, ещё без вердикта %d" % (len(кандидаты), ждут))
         time.sleep(600)
         continue
