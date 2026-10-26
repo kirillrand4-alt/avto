@@ -42,7 +42,7 @@ for rid, cid, sent in s.execute("SELECT recipient_id, campaign_id, sent_at FROM 
     инн, em = пол.get(rid, ("", ""))
     писали_адр.add(em)
     if инн:
-        отпр[инн].append((sent, "meyer" if cid in мей_к else "kc", em))
+        отпр[инн].append((sent, "meyer" if cid in мей_к else "kc", em, cid))
 плохие = set()
 for (rid,) in s.execute("SELECT DISTINCT recipient_id FROM events WHERE event_type IN ('reply','reply_auto','complaint','dsn','bounce')"):
     if rid in пол and пол[rid][0]:
@@ -108,6 +108,7 @@ for инн, сп in отпр.items():
 
 # 2) второе касание Meyer
 р2 = Counter()
+р2к = Counter()
 for инн, сп in отпр.items():
     мей = [x for x in сп if x[1] == "meyer"]
     if not мей or инн in плохие:
@@ -120,7 +121,11 @@ for инн, сп in отпр.items():
     ст = лучший(другие)
     if ст != "нет":
         р2[ст] += 1
+        # по кампаниям, где компании писали Meyer (одна компания — во всех своих)
+        for к in sorted({кам.get(x[3]) for x in мей}):
+            р2к[к] += 1
 п("2) ВТОРОЕ КАСАНИЕ Meyer (компаний с неиспользованным адресом):", sum(р2.values()), dict(р2))
+п("   по кампаниям Meyer, где компании писали:", р2к.most_common())
 
 # 3/4) не писали в направлении
 ix = ObzvonIndex(r"C:\sender\obzvon-index.db")
