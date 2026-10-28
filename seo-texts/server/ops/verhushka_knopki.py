@@ -38,7 +38,8 @@ def в_группе(r):
     return bool(наб) and ГР in наб
 
 
-rows = [r for r in rows if в_группе(r)]
+# gruppa=* — без фильтра группы (кнопка с выбором «все»)
+rows = [r for r in rows if ГР == "*" or в_группе(r)]
 
 
 def балл(r):
