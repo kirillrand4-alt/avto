@@ -15,7 +15,10 @@ from sender.store import Store    # noqa: E402
 
 cfg = Config.load(r"C:\sender\sender.yaml")
 st = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
-гр = (datetime.utcnow() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S")
+# --chasov=N: порог зависания в часах (по умолчанию сутки); 28.10 — 9 писем,
+# оборванных перезапуском службы 27.10 в 10:58, висят 18 часов
+_ч = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--chasov=")), "24"))
+гр = (datetime.utcnow() - timedelta(hours=_ч)).strftime("%Y-%m-%dT%H:%M:%S")
 ряды = st._conn.execute("SELECT id, campaign_id, claimed_at, scheduled_at FROM messages WHERE status='sending' "
                         "AND COALESCE(claimed_at, updated_at) < ?", (гр,)).fetchall()
 ж = io.open(r"C:\sender\_ops\vernut-zavisshie.jsonl", "a", encoding="utf-8")
