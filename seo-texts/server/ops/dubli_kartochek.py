@@ -1,31 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Откуда расхождение 6306 против 6332: двойные карточки на одно письмо."""
+"""Дубли карточек: у одного получателя/адреса несколько pending в кампании.
+    dubli_kartochek.py <campaign_id> [--snyat]  (снимает лишние, оставляет самую раннюю)"""
+import sqlite3
 import sys
-sys.path.insert(0, r"C:\sender")
-from sender.store import Store                                  # noqa: E402
-
-МЕЙЕР = ("optic-sort.ru", "sort-systems.ru", "zernosort.ru", "food-sort.ru",
-         "sorting-systems.ru", "rentgen-control.ru", "optical-sort.ru",
-         "rentgen-inspection.ru", "inspection-systems.ru")
-store = Store(r"C:\sender\sender.db")
-усл = " OR ".join("m.mailbox_id LIKE '%%%s'" % д for д in МЕЙЕР)
-with store._lock:
-    c = store._conn
-    чисто = c.execute("SELECT COUNT(*) FROM messages m WHERE m.status='sent' "
-                      "  AND m.sent_at >= '2026-08-01' AND (%s)" % усл).fetchone()[0]
-    с_джойном = c.execute(
-        "SELECT COUNT(*) FROM messages m "
-        "  LEFT JOIN confirm_reviews cr ON cr.message_id = m.id "
-        " WHERE m.status='sent' AND m.sent_at >= '2026-08-01' AND (%s)"
-        % усл).fetchone()[0]
-    дубли = c.execute(
-        "SELECT COUNT(*) FROM (SELECT cr.message_id, COUNT(*) n "
-        "  FROM confirm_reviews cr JOIN messages m ON cr.message_id = m.id "
-        " WHERE m.status='sent' AND m.sent_at >= '2026-08-01' AND (%s) "
-        " GROUP BY 1 HAVING n > 1)" % усл).fetchone()[0]
-print("писем без джойна:            %5d" % чисто)
-print("строк с LEFT JOIN карточек:  %5d" % с_джойном)
-print("писем с двумя карточками:    %5d" % дубли)
-print("")
-print("=" * 74)
-print("=== ДУБЛИ КАРТОЧЕК ===")
+from datetime import datetime
+c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
+cid = int(sys.argv[1])
+ряды = c.execute("SELECT lower(email), GROUP_CONCAT(id), COUNT(*) FROM confirm_reviews WHERE status='pending' AND campaign_id=? "
+                 "GROUP BY lower(email) HAVING COUNT(*)>1", (cid,)).fetchall()
+print("адресов с несколькими pending:", len(ряды), "| лишних карточек:", sum(r[2] - 1 for r in ряды))
+for r in ряды[:5]:
+    print("  ", r)
+if "--snyat" in sys.argv:
+    т = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+    n = 0
+    with c:
+        for em, ids, k in ряды:
+            for i in sorted(int(x) for x in ids.split(","))[1:]:
+                mid = c.execute("SELECT message_id FROM confirm_reviews WHERE id=?", (i,)).fetchone()[0]
+                c.execute("UPDATE confirm_reviews SET status='skipped', reason='дубль карточки (двойной запуск починки 29.10)', decided_at=?, updated_at=? WHERE id=?", (т, т, i))
+                if mid:
+                    c.execute("UPDATE messages SET status='skipped', last_error='дубль карточки' WHERE id=? AND status IN ('pending_review','scheduled') "
+                              "AND NOT EXISTS (SELECT 1 FROM confirm_reviews WHERE message_id=? AND status='pending')", (mid, mid))
+                n += 1
+    print("снято дублей:", n)
