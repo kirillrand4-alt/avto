@@ -25,6 +25,9 @@ import time
 СТОП = r"C:\sender\_ops\v4c-pachki.STOP"
 ХОД_ПРОБЫ = r"C:\sender\_ops\smtp-proba-v4c.json"
 ПАЧКА = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--pachka=")), "100"))
+# владелец 29.10: «стоп при цене письма выше 1$ на 30 компаниях»
+ПОРОГ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--porog=")), "2.0")
+ОКНО = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--okno=")), "10")
 ОДНА = "--odna" in sys.argv   # одна пачка и стоп (проверка цены после починки кэша 23.10)
 # --vsego=N (владелец 26.10: «отправим первые по выручке топ 2000 компаний»):
 # при старте фиксируем N лучших по выручке готовых получателей, дальше берём только их
@@ -33,7 +36,7 @@ import time
 
 if "--zapusk" in sys.argv:
     л = io.open(ЛОГ, "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith(("--pachka=", "--vsego=")) or a == "--odna"], cwd=r"C:\sender",
+    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith(("--pachka=", "--vsego=", "--porog=", "--okno=")) or a == "--odna"], cwd=r"C:\sender",
                          stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
     io.open(r"C:\sender\_ops\v4c-pachki.pid", "w").write(str(п.pid))
     time.sleep(15)
@@ -62,7 +65,9 @@ def попытки():
             except ValueError:
                 continue
             # попытка, сгоревшая на пустом кошельке шлюза (HTTP 403, 23.10), — не попытка
-            if z.get("inn") and "HTTP 403" not in json.dumps(z.get("брак") or [], ensure_ascii=False):
+            # и техсбой «прогон упал» (нет/битый JSON у модели) — тоже не попытка: перегенерируем (владелец 29.10)
+            _бр = json.dumps(z.get("брак") or [], ensure_ascii=False)
+            if z.get("inn") and "HTTP 403" not in _бр and "прогон упал" not in _бр:
                 инн.add(str(z["inn"]))
     except OSError:
         pass
@@ -130,7 +135,7 @@ while not os.path.exists(СТОП):
         гл.flush()
         р = subprocess.run([sys.executable, r"C:\sender\server\ops\partiya_gen.py", str(len(пачка)), "5400", "meyer", "0",
                             "gruppa=ФСА волна 1", "camp_meyer=18", "zhurnal=" + ЖУРНАЛ, "threads=6",
-                            "spisok=" + СПИСОК, "revenue=0", "model=claude-sonnet-4-6", "porog=2.0",
+                            "spisok=" + СПИСОК, "revenue=0", "model=claude-sonnet-4-6", "porog=" + ПОРОГ, "okno=" + ОКНО,
                             "--bez-zacepki", "--bez-predklassa"],
                            cwd=r"C:\sender", stdout=гл, stderr=гл, env=dict(os.environ, PROVIDER_THINKING_FIELD="omit"))
     try:
@@ -142,4 +147,10 @@ while not os.path.exists(СТОП):
     if ОДНА:
         лог("=== ДИРИЖЁР ЯРУСА C: одна пачка (--odna) — стоп ===")
         break
+    try:
+        if "СТОП ПО ЦЕНЕ" in хв:   # хвост лога — это конец только что прошедшей пачки
+            лог("=== ДИРИЖЁР ЯРУСА C: в пачке сработал СТОП ПО ЦЕНЕ (порог $%s на %s) — стоп ===" % (ПОРОГ, ОКНО))
+            break
+    except NameError:
+        pass
 лог("=== ДИРИЖЁР ЯРУСА C: конец ===")
