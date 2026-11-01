@@ -24,7 +24,7 @@ T = datetime.fromisoformat(sys.argv[1]).replace(tzinfo=timezone.utc)
 cfg = Config.load(os.path.join(BASE, "sender.yaml"))
 mbr = MailBrowser(cfg)
 c = sqlite3.connect(os.path.join(BASE, "sender.db"), timeout=60)
-известные = {r[0].strip() for r in c.execute("SELECT rfc_msgid FROM events WHERE rfc_msgid IS NOT NULL AND event_ts >= date('now','-2 days')")}
+известные = {r[0].strip() for r in c.execute("SELECT rfc_msgid FROM events WHERE rfc_msgid IS NOT NULL AND event_ts >= date('now','-5 days')")}
 вых, всего, новых, сбоев = [], 0, 0, 0
 for mb in cfg.mailboxes():
     try:
