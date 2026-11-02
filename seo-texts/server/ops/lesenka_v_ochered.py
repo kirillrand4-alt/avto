@@ -49,12 +49,21 @@ _мей = [r[0] for r in c.execute("SELECT id, name FROM campaigns") if "meyer" 
 _пилот = set()
 if os.path.exists(r"C:\sender\_ops\napominaniya-pilot.jsonl"):
     _пилот = {json.loads(s).get("inn") for s in io.open(r"C:\sender\_ops\napominaniya-pilot.jsonl", encoding="utf-8")}
+_проба = {str(r[0]).lower(): str(r[1] or "") for r in c.execute("SELECT email, verdict FROM addr_probe")}
+for _ж in (r"C:\sender\_ops\napominaniya-v2.jsonl",):
+    if os.path.exists(_ж):
+        _пилот |= {json.loads(s).get("inn") for s in io.open(_ж, encoding="utf-8")}
 for x in д:
     if x["inn"] in _пилот:
         сч["в пилоте напоминаний — пока нет"] += 1
         continue
     if x["inn"] in сделано:
         сч["уже ставили"] += 1
+        continue
+    # только проверенный адрес (владелец 29.10: второе касание и копии — только на
+    # пробу «есть»/«принимает всё»; 15 отбивок 29.10 были от «не проверен»)
+    if _проба.get(str(x["email"]).lower()) not in ("есть", "принимает всё"):
+        сч["адрес без живой пробы — мимо"] += 1
         continue
     if ТОЛЬКО_ВТОРОЕ:
         n_адр = c.execute("SELECT COUNT(DISTINCT lower(r.email)) FROM messages m JOIN recipients r ON r.id=m.recipient_id "
