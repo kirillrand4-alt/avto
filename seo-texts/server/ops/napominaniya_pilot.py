@@ -454,6 +454,21 @@ while len(готово) < НАДО and i < len(кандидаты):
                                        "vruchnuyu": ("напоминания A/B 02.11: заходы" if СПИСОК_ИНН is not None else "пилот напоминаний 23.10")})
             запись["karta"] = getattr(р, "review_id", None)
             запись["status"] = getattr(р, "status", "")
+            if (СПИСОК_ИНН is not None and not getattr(р, "created", True) and запись["karta"]):
+                # A/B 02.11: тред занят снятой карточкой v2 (её сняли ровно под
+                # заходы) — перезаписываем её текстом захода и возвращаем в очередь.
+                _ст = datetime.now(timezone.utc).isoformat()
+                with sqlite3.connect(r"C:\sender\sender.db", timeout=60) as _к:
+                    _н = _к.execute(
+                        "UPDATE confirm_reviews SET subject=?, body=?, edited_body=NULL, panel_json=?, status='pending', "
+                        "reason=NULL, decided_at=NULL, updated_at=? WHERE id=? AND status='skipped' "
+                        "AND reason='напоминание v2: версия заходов (A/B 02.11)'",
+                        (запись["tema"], т, json.dumps({"mailbox_id": x["mb"], "napominanie": запись["zahod"],
+                                                        "vruchnuyu": "напоминания A/B 02.11: заходы"}, ensure_ascii=False),
+                         _ст, запись["karta"])).rowcount
+                if _н:
+                    запись["status"] = "pending"
+                    р = type("Р", (), {"created": True})()
             if not getattr(р, "created", True) or запись["status"] != "pending":
                 # карточка на этот адрес уже была или её снял заслон — не в счёт
                 отсев["карточка: %s" % ("уже была" if not getattr(р, "created", True) else запись["status"])] += 1
