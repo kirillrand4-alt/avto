@@ -33,10 +33,15 @@ import time
 # при старте фиксируем N лучших по выручке готовых получателей, дальше берём только их
 ВСЕГО = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--vsego=")), "0"))
 ТОП = None
+# --povtor (владелец 02.11: «запускай 565»): заново только компании, у которых
+# последняя попытка — техсбой без черновика (JSON не разобран, сбой шлюза);
+# отказы модели («I can») и «не покупатель» не повторяем.
+ПОВТОР = "--povtor" in sys.argv
+ВЗЯТЫ = set()   # в повторе каждую компанию — один раз за запуск
 
 if "--zapusk" in sys.argv:
     л = io.open(ЛОГ, "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith(("--pachka=", "--vsego=", "--porog=", "--okno=")) or a == "--odna"], cwd=r"C:\sender",
+    п = subprocess.Popen([sys.executable, os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith(("--pachka=", "--vsego=", "--porog=", "--okno=")) or a in ("--odna", "--povtor")], cwd=r"C:\sender",
                          stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
     io.open(r"C:\sender\_ops\v4c-pachki.pid", "w").write(str(п.pid))
     time.sleep(15)
@@ -75,6 +80,25 @@ def попытки():
     return инн
 
 
+def техсбои():
+    """ИНН, у которых последняя запись журнала — техсбой без черновика."""
+    посл = {}
+    for s in io.open(ЖУРНАЛ, encoding="utf-8", errors="replace"):
+        try:
+            z = json.loads(s)
+        except ValueError:
+            continue
+        if z.get("inn"):
+            посл[str(z["inn"])] = z
+    вых = set()
+    for инн, z in посл.items():
+        _бр = json.dumps(z.get("брак") or [], ensure_ascii=False).lower()
+        if z.get("ок") or z.get("тело_брака") or "i can" in _бр or "не покупатель" in _бр or "переставить на kc" in _бр:
+            continue
+        вых.add(инн)
+    return вых
+
+
 def проба_кончилась():
     try:
         return bool(json.load(io.open(ХОД_ПРОБЫ, encoding="utf-8")).get("финиш"))
@@ -96,10 +120,15 @@ while not os.path.exists(СТОП):
         были |= {str(r[0]) for r in c.execute("SELECT inn FROM target_verdicts WHERE verdict='не покупатель'")}
     except sqlite3.Error:
         pass
+    if ПОВТОР:
+        _тс = техсбои()
+        были -= _тс
+        if номер == 0:
+            лог("повтор техсбоев: компаний %d" % len(_тс))
     кандидаты, ждут = [], 0
     for rid, em, inn, ex in c.execute("SELECT id, lower(email), inn, extra_json FROM recipients WHERE extra_json LIKE '%v4-C%'"):
         x = json.loads(ex or "{}")
-        if x.get("volna") != "v4-C" or rid in с_письмом or str(inn) in были:
+        if x.get("volna") != "v4-C" or rid in с_письмом or str(inn) in были or (ПОВТОР and (str(inn) not in _тс or rid in ВЗЯТЫ)):
             continue
         в = проба.get(em, "")
         if not в:
@@ -121,7 +150,7 @@ while not os.path.exists(СТОП):
         if not кандидаты:
             лог("=== ДИРИЖЁР ЯРУСА C: топ-%d разобран — стоп ===" % ВСЕГО)
             break
-    if len(кандидаты) < ПАЧКА and not проба_кончилась() and not ВСЕГО:
+    if len(кандидаты) < ПАЧКА and not проба_кончилась() and not ВСЕГО and not ПОВТОР:
         лог("ждём пробу: готовых %d, ещё без вердикта %d" % (len(кандидаты), ждут))
         time.sleep(600)
         continue
@@ -130,6 +159,7 @@ while not os.path.exists(СТОП):
         break
     номер += 1
     пачка = [r for _, r in sorted(кандидаты)[:ПАЧКА]]
+    ВЗЯТЫ.update(пачка)
     json.dump(пачка, io.open(СПИСОК, "w"))
     лог("пачка %d: %d получателей (готовых всего %d, без вердикта %d)" % (номер, len(пачка), len(кандидаты), ждут))
     with io.open(r"C:\sender\_ops\gen-v4c.log", "a", encoding="utf-8") as гл:
