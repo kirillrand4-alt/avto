@@ -3,7 +3,7 @@
 их» — кнопка «В автоотправку» карточки-ответы kind=reply не берёт, у них только
 ручное «Отправить» = немедленная отправка). Отсоединённый процесс жмёт штатный
 approve по одной карточке:
-  * только карточки пилота (_ops/napominaniya-pilot.jsonl), ещё pending;
+  * только карточки напоминаний (_ops/napominaniya-pilot.jsonl, napominaniya-v2.jsonl), ещё pending;
   * ящик не на паузе, у ящика за сегодня меньше дневного лимита (send_limits
     per_mailbox, иначе 70) — send_reply сам лимиты не смотрит;
   * рабочее окно получателя: будни, 09:00-18:00 по Москве;
@@ -40,7 +40,11 @@ store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 
 
 def карточки():
-    з = [json.loads(s) for s in io.open(r"C:\sender\_ops\napominaniya-pilot.jsonl", encoding="utf-8")]
+    з = []
+    # пилот 23.10 и вторая партия по шаблонам редактора (владелец 02.11: «запускай отправку»)
+    for _ж in (r"C:\sender\_ops\napominaniya-pilot.jsonl", r"C:\sender\_ops\napominaniya-v2.jsonl"):
+        if os.path.exists(_ж):
+            з += [json.loads(s) for s in io.open(_ж, encoding="utf-8")]
     out = []
     for x in з:
         r = store._conn.execute("SELECT status FROM confirm_reviews WHERE id=?", (x.get("karta"),)).fetchone()
@@ -107,7 +111,7 @@ while not os.path.exists(СТОП):
     kid, mb, em = random.choice(годные)
     запись = {"karta": kid, "mailbox": mb, "email": em, "ts": datetime.now(timezone.utc).isoformat()}
     try:
-        запись["ok"] = bool(deps.confirm.approve(kid, operator="kirill (через Claude, 26.10: протолкнуть напоминания пилота)"))
+        запись["ok"] = bool(deps.confirm.approve(kid, operator="kirill (через Claude: напоминания Meyer, размеренно)"))
     except Exception as ex:  # noqa: BLE001
         запись["ok"], запись["oshibka"] = False, str(ex)[:300]
     r = store._conn.execute("SELECT status FROM confirm_reviews WHERE id=?", (kid,)).fetchone()
