@@ -112,6 +112,7 @@ c = sqlite3.connect(r"C:\sender\sender.db", timeout=90)
 порог = (сейчас - timedelta(days=ДНЕЙ)).strftime("%Y-%m-%dT%H:%M:%S")
 кам = {r[0]: r[1] for r in c.execute("SELECT id, name FROM campaigns")}
 мк = {k for k, v in кам.items() if "meyer" in str(v).lower() or "мейер" in str(v).lower()}
+оквэд = {r[0]: str(r[1] or "")[:90] for r in c.execute("SELECT id, okved FROM recipients")}
 пол = {r[0]: (str(r[1] or "") or "rid%d" % r[0], (r[2] or "").lower(), r[3] or "") for r in
        c.execute("SELECT id, inn, email, company_name FROM recipients")}
 отпр = {}
@@ -189,17 +190,26 @@ import gen_provider as GP  # noqa: E402
 - syrye_p: то же в предложном падеже без предлога (пшенице; подсолнечнике; орехах). Нет ясности - "";
 - prod_r: продукция компании в родительном падеже, 1-3 слова (муки; растительного масла; готовой продукции). Нет ясности - "";
 - prod_p: то же в предложном без предлога (муке; растительном масле). Нет ясности - "".
+- nuzhen: true ТОЛЬКО если компании точно нужен фотосепаратор (сортировка сыпучего пищевого
+  или с/х сырья: зерно, крупы, бобовые, семена, орехи, сухофрукты, ягоды, кофе, специи,
+  чай, замороженные овощи/фрукты, рыба/морепродукты сыпучие, переработка пластика)
+  ИЛИ рентген-инспекция (упакованные пищевые продукты: мясо, колбасы, птица, рыба,
+  молочка, сыры, кондитерка, снеки, выпечка, полуфабрикаты, консервы, детское питание,
+  корма в упаковке). false - руды, горная добыча, щебень, песок, гипс, стройматериалы,
+  напитки (вода, соки, пиво, лимонады, алкоголь), торговля/дистрибуция без своего
+  производства, услуги, непищевое (химия, металл, косметика), и любые сомнения;
+- pochemu: 3-8 слов, почему так решил.
 Бери только то, что прямо есть в письме. Ничего не выдумывай. Несколько культур - назови главную или общее слово (зерна).
 
 {pisma}
 
-Ответ - СТРОГО JSON: {{"firmy": [{{"n": 1, "tip": "...", "zerno": true, "syrye_r": "...", "syrye_p": "...", "prod_r": "...", "prod_p": "..."}}]}}"""
+Ответ - СТРОГО JSON: {{"firmy": [{{"n": 1, "tip": "...", "zerno": true, "syrye_r": "...", "syrye_p": "...", "prod_r": "...", "prod_p": "...", "nuzhen": true, "pochemu": "..."}}]}}"""
 
 
 def слоты(пачка):
     тексты = []
     for i, (инн, x, тело) in enumerate(пачка, 1):
-        тексты.append("ПИСЬМО %d (компания: %s)\n%s" % (i, пол[x["rid"]][2][:80], тело[:1500]))
+        тексты.append("ПИСЬМО %d (компания: %s; ОКВЭД: %s)\n%s" % (i, пол[x["rid"]][2][:80], оквэд.get(x["rid"], ""), тело[:1500]))
     m = GP._raw_stream([{"role": "user", "content": ЗАДАНИЕ.replace("{pisma}", "\n\n---\n\n".join(тексты))
                          .replace("{{", "{").replace("}}", "}")}], МОДЕЛЬ, 3000, thinking=False, effort="low")
     т = m if isinstance(m, str) else "".join(getattr(b, "text", "") for b in getattr(m, "content", []) or [])
@@ -321,14 +331,22 @@ while len(готово) < НАДО and i < len(кандидаты):
         пачка.append((инн, x, тело))
     if not пачка:
         continue
-    сл_пачки = {}
-    if ПРОДУКТ:
-        try:
-            сл_пачки = слоты(пачка)
-        except Exception as ex:  # noqa: BLE001
-            print("слоты не пришли:", str(ex)[:150], flush=True)
+    # предклассификатор (владелец 02.11: «руды, стройку, напитки уберём полностью…
+    # оставим только те где нужен точно фсп или рентген»): нет ответа модели — пачку мимо
+    try:
+        сл_пачки = слоты(пачка)
+    except Exception as ex:  # noqa: BLE001
+        print("слоты не пришли:", str(ex)[:150], flush=True)
+        continue
     черн_пачки = []
     for n, (инн, x, тело) in enumerate(пачка, 1):
+        ф = сл_пачки.get(n) or {}
+        if ф.get("nuzhen") is not True:
+            отсев["не наш профиль"] += 1
+            with io.open(r"C:\sender\_ops\napominaniya-v2-ne-profil.jsonl", "a", encoding="utf-8") as нп:
+                нп.write(json.dumps({"inn": инн, "imya": пол[x["rid"]][2], "okved": оквэд.get(x["rid"], ""),
+                                     "pochemu": ф.get("pochemu")}, ensure_ascii=False) + "\n")
+            continue
         им = ИМЯ_ИЗ_ПИСЬМА.search(тело)
         имя = им.group(1) if им and им.group(1) not in ("Добрый", "Здравствуйте", "Уважаемый", "Уважаемая") else ""
         отпр_имя = (ПОДПИСЬ_ИМЯ.search(тело) or [None, (ящики.get(x["mb"]) or "").split(" ")[0]])[1] or ""
