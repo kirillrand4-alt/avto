@@ -127,6 +127,7 @@ def одно(z):
     запрос = ("ПРИЧИНА БРАКА: %s\n\n=== ПИСЬМО id=1\nКОМПАНИЯ: %s\nТЕМА: %s\n%s\n\nОТВЕТЬ ТОЛЬКО JSON, БЕЗ РАССУЖДЕНИЙ."
               % ("; ".join(str(x) for x in (z.get("брак") or []))[:400], z.get("имя"), z.get("тема_брака"), z.get("тело_брака")))
     тема = тело = ""
+    посл_ош = ""
     for _ in range(3):
         try:
             m = GP._raw_stream([{"role": "user", "content": запрос}], МОДЕЛЬ, 4000, thinking=False, effort="low", system=СИСТЕМА)
@@ -138,11 +139,15 @@ def одно(z):
             тело = str(L.get("body") or "").strip()
             if тело:
                 break
-        except Exception:  # noqa: BLE001
+        except Exception as ex:  # noqa: BLE001
+            посл_ош = "%s: %s" % (type(ex).__name__, str(ex)[:150])
+            time.sleep(10)
             continue
     if len(тело) < 200:
         with замок:
             итоги["модель не дала текст"] += 1
+            if итоги["модель не дала текст"] <= 5:
+                print("  не дала текст: %s | ответ: %r" % (посл_ош, (т if "т" in dir() else "")[:200]), flush=True)
         return
     if "С уважением," not in тело:
         тело = тело.rstrip() + "\n\nС уважением,"
