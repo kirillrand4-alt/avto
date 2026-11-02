@@ -145,7 +145,8 @@ for _ж in (ЖУР, ЖУР_ПИЛОТ):
 for инн, сп in отпр.items():
     # вебинар — не письмо об оборудовании: в его ветку напоминание «направлял письмо
     # об оборудовании Meyer» не ложится (показ 02.11: два письма ушли бы в ветку вебинара)
-    мей = [x for x in сп if x["cid"] in мк and "вебинар" not in str(кам.get(x["cid"], "")).lower()]
+    мей = [x for x in сп if x["cid"] in мк and "вебинар" not in str(кам.get(x["cid"], "")).lower()
+           and not re.search(r"вебинар|\bИИ\b", x["subj"], re.I)]
     if not мей or инн in плохие or инн in уже:
         continue
     if max(x["sent"] for x in сп) >= порог:
