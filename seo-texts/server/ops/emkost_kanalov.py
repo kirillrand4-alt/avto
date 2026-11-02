@@ -52,6 +52,12 @@ for (инн,) in s.execute("SELECT DISTINCT inn FROM leads WHERE inn IS NOT NULL
 стоп = {(a, b.lower()) for a, b in s.execute("SELECT scope, value FROM suppression")}
 проба = {r[0].lower(): r[1] for r in s.execute("SELECT email, verdict FROM addr_probe")}
 не_пок = {str(r[0]) for r in s.execute("SELECT inn FROM target_verdicts WHERE verdict='не покупатель'")}
+в_очереди = set()                 # ИНН с письмом в очереди/подтверждении (ещё не ушло)
+for (rid,) in s.execute("SELECT recipient_id FROM messages WHERE status IN ('scheduled','sending','pending_review')"):
+    if rid in пол and пол[rid][0]:
+        в_очереди.add(пол[rid][0])
+for (инн,) in s.execute("SELECT DISTINCT inn FROM confirm_reviews WHERE status='pending' AND inn IS NOT NULL"):
+    в_очереди.add(str(инн))
 пилот = set()
 try:
     пилот = {json.loads(x)["inn"] for x in io.open(r"C:\sender\_ops\napominaniya-pilot.jsonl", encoding="utf-8")}
@@ -109,6 +115,7 @@ for инн, сп in отпр.items():
 # 2) второе касание Meyer
 р2 = Counter()
 р2к = Counter()
+р2о = Counter()   # (адрес, настоящее второе?, уже в очереди?)
 for инн, сп in отпр.items():
     мей = [x for x in сп if x[1] == "meyer"]
     if not мей or инн in плохие:
@@ -127,11 +134,13 @@ for инн, сп in отпр.items():
             р2к[к] += 1
         # сколько адресов уже было у компании в Meyer — второе это касание или третье
         р2к["касаний Meyer по адресам: %d" % len({x[2] for x in мей})] += 1
+        р2о[(ст, len({x[2] for x in мей}) == 1, инн in в_очереди)] += 1
         for гл in ("Россия 9000 — Meyer", "Партия 935 — Meyer"):
             if гл in кк:
                 р2к["%s: уже было «Второе касание»: %s" % (гл, "Второе касание — Meyer" in кк)] += 1
 п("2) ВТОРОЕ КАСАНИЕ Meyer (компаний с неиспользованным адресом):", sum(р2.values()), dict(р2))
 п("   по кампаниям Meyer, где компании писали:", р2к.most_common())
+п("   (адрес, настоящее второе касание, письмо компании уже в очереди):", sorted(р2о.items()))
 
 # 3/4) не писали в направлении
 ix = ObzvonIndex(r"C:\sender\obzvon-index.db")
