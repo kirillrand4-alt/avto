@@ -172,7 +172,7 @@ for инн, сп in отпр.items():
             continue
         лок = em.split("@")[0]
         # отдел кадров и бухгалтерия про сортировку сырья не решают — мимо
-        if re.match(r"(hr|kadr|buh|rezume|resume|job|vakans)", лок):
+        if re.match(r"(hr|kadr|buh|rezume|resume|job|vakans|personal|personnel|otdelkadrov)", лок):
             continue
         роль = лок.split(".")[0].split("_")[0] in РОЛИ
         лучшие.append(((0 if в == "есть" else 1 if в == "принимает всё" else 2), 1 if роль else 0, "~" + x["sent"], x))
@@ -290,7 +290,7 @@ def годен(нов, черн):
         return "запрет: " + з.group(0)
     if "{" in нов or "}" in нов:
         return "заглушка в тексте"
-    if re.search(r"удобн\w* (?:звонок|разговор)|связь могла не", нов, re.I):
+    if re.search(r"удобн\w* (?:звонок|разговор)|связь могла не|обращение удалось ли|письмо удалось ли|признательн\w* буду|благодарн\w* буду", нов, re.I):
         return "кривая фраза"
     if re.search(r"(?:^|[.!?]\s+|\n)(?:дайте|скиньте|отправьте|давайте)\b|\bскин\w+|визуал\b", нов, re.I):
         return "грубо"
