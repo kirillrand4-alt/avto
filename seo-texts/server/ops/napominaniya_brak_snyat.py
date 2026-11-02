@@ -6,7 +6,7 @@
 import io, json, re, sqlite3, sys
 from datetime import datetime
 АДР = re.compile(r"^(personal|personnel|hr|kadr|otdelkadrov|ok|buh|job|rezume|resume|vakans)", re.I)
-ТЕКСТ = re.compile(r"обращение удалось ли|письмо удалось ли|признательн\w* буду|благодарн\w* буду", re.I)
+ТЕКСТ = re.compile(r"сортировки (?:молока|сливок|воды|сока|масла)|обращение удалось ли|письмо удалось ли|признательн\w* буду|благодарн\w* буду", re.I)
 з = [json.loads(s) for s in io.open(r"C:\sender\_ops\napominaniya-v2.jsonl", encoding="utf-8")]
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
 т = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
