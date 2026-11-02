@@ -15,7 +15,7 @@ Re: в ветку первого письма, с того же ящика; ци
 
     napominaniya_v2.py --pokaz=10          показать, ничего не заводить
     napominaniya_v2.py --zavesti=300       завести карточки (kind=reply, pending)
-Журнал: _ops/napominaniya-v2.jsonl; показ — на дроп napominaniya-v2-pokaz.txt."""
+Журнал: _ops/napominaniya-v2.jsonl; показ — на дроп napominaniya-v2-pokaz.txt (с --produkt: napominaniya-v2-produkt-pokaz.txt — их сырьё/продукция вместо общих слов)."""
 import difflib
 import hashlib
 import io
@@ -49,7 +49,7 @@ if not (ПОКАЗ or ЗАВЕСТИ):
 if "--zapusk" in sys.argv:
     import subprocess
     import time
-    л = io.open(r"C:\sender\_ops\napominaniya-v2.log", "w", encoding="utf-8")
+    л = io.open(r"C:\sender\_ops\napominaniya-v2%s.log" % ("-produkt" if "--produkt" in sys.argv else ""), "w", encoding="utf-8")
     п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__)] + [a for a in sys.argv[1:] if a != "--zapusk"],
                          cwd=r"C:\sender", stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
     time.sleep(10)
@@ -83,9 +83,20 @@ def м_ж(т, жен):
 }
 
 
-def собрать(шаблон, имя, жен):
+ПРОДУКТ = "--produkt" in sys.argv   # владелец 02.11: «если релевантно вставить их продукцию»
+
+
+def собрать(шаблон, имя, жен, сл=None):
     привет = ("%s, добрый день!" % имя) if имя else "Добрый день!"
-    return привет + "\n\n" + м_ж(ШАБЛОН[шаблон], жен)
+    т = ШАБЛОН[шаблон]
+    if сл:
+        # их сырьё/продукция вместо общих слов — только там, где модель уверена
+        if сл.get("syrye_r"):
+            т = т.replace("для сортировки сырья", "для сортировки %s" % сл["syrye_r"])
+        if сл.get("prod_r"):
+            т = т.replace("контроля пищевой продукции", "контроля качества %s" % сл["prod_r"])
+            т = т.replace("контроля продукции", "контроля качества %s" % сл["prod_r"])
+    return привет + "\n\n" + м_ж(т, жен)
 
 
 # ------------------------------------------------------------- отбор ------
@@ -132,7 +143,9 @@ for _ж in (ЖУР, ЖУР_ПИЛОТ):
             pass
 кандидаты = []
 for инн, сп in отпр.items():
-    мей = [x for x in сп if x["cid"] in мк]
+    # вебинар — не письмо об оборудовании: в его ветку напоминание «направлял письмо
+    # об оборудовании Meyer» не ложится (показ 02.11: два письма ушли бы в ветку вебинара)
+    мей = [x for x in сп if x["cid"] in мк and "вебинар" not in str(кам.get(x["cid"], "")).lower()]
     if not мей or инн in плохие or инн in уже:
         continue
     if max(x["sent"] for x in сп) >= порог:
@@ -213,6 +226,10 @@ def слоты(пачка):
 - не писать «без обязательств», «надеюсь, у вас всё хорошо»;
 - род отправителя как в черновике (направлял/направляла, благодарен/благодарна);
 - без длинного тире, только дефис или запятая;
+- срок не уточнять: первое письмо было давно - только «ранее», «некоторое время назад»;
+  НЕ «недавно», «на днях», «несколько дней назад»;
+- вопрос в шаблоне A - с «Подскажите, пожалуйста, удалось ли…» или «…ли удалось…»,
+  не голое «Моё обращение удалось передать…?»;
 - без подписи.
 
 {pisma}
@@ -242,7 +259,7 @@ def пересказ(черновики):
     return out
 
 
-ЗАПРЕТ = re.compile(r"—|без обязательств|http|www\.|надеюсь", re.I)
+ЗАПРЕТ = re.compile(r"—|без обязательств|http|www\.|надеюсь|недавн|на днях|несколько дней", re.I)
 МОЁ_УДОБНО = re.compile(r"(?:перезвон|позвон|набер|свяж)\w*[^.?!]{0,30}?когда (?:будет )?удобно(?! (?:вам|ему|ей|им))", re.I)
 СЛАБОЕ_НАЧАЛО = re.compile(r"^\s*(?:возвраща|напомина|вопрос по прошлому|по прошлому письму|уточн|пишу)", re.I)
 
@@ -303,6 +320,12 @@ while len(готово) < НАДО and i < len(кандидаты):
         пачка.append((инн, x, тело))
     if not пачка:
         continue
+    сл_пачки = {}
+    if ПРОДУКТ:
+        try:
+            сл_пачки = слоты(пачка)
+        except Exception as ex:  # noqa: BLE001
+            print("слоты не пришли:", str(ex)[:150], flush=True)
     черн_пачки = []
     for n, (инн, x, тело) in enumerate(пачка, 1):
         им = ИМЯ_ИЗ_ПИСЬМА.search(тело)
@@ -311,7 +334,8 @@ while len(готово) < НАДО and i < len(кандидаты):
         жен = отпр_имя.lower().endswith(("а", "я")) and отпр_имя.lower() not in ЖЕН_ИСКЛ
         лок = пол[x["rid"]][1].split("@")[0]
         заход = "A" if лок.split(".")[0].split("_")[0].split("-")[0] in РОЛИ else "B"
-        текст = собрать(заход, имя, жен)
+        сл = {k: чисто((сл_пачки.get(n) or {}).get(k)) for k in ("syrye_r", "prod_r")} if ПРОДУКТ else None
+        текст = собрать(заход, имя, жен, сл)
         номер += 1
         if not текст:
             continue
@@ -368,9 +392,9 @@ for з in готово:
         з["zahod"], пол.get(next((x["rid"] for x in отпр[з["inn"]] if x["mid"] == з["v_otvet_na"]), 0), ("", "", ""))[2][:60],
         з["email"], з["pervoe"], з["mailbox"], з["otpravitel"], з["tema"], з["telo"]))
 текст = "\n\n".join(вых) + "\n"
-io.open(r"C:\sender\_ops\napominaniya-v2-pokaz.txt", "w", encoding="utf-8").write(текст)
+io.open(r"C:\sender\_ops\napominaniya-v2%s-pokaz.txt" % ("-produkt" if ПРОДУКТ else ""), "w", encoding="utf-8").write(текст)
 try:
-    requests.put(os.environ.get("DROP_URL", "https://parsercompressor.online/drop").rstrip("/") + "/napominaniya-v2-pokaz.txt",
+    requests.put(os.environ.get("DROP_URL", "https://parsercompressor.online/drop").rstrip("/") + "/napominaniya-v2%s-pokaz.txt" % ("-produkt" if ПРОДУКТ else ""),
                  data=текст.encode("utf-8"), headers={"X-Drop-Token": os.environ.get("DROP_TOKEN", "")}, timeout=60)
 except Exception as ex:  # noqa: BLE001
     print("на дроп не ушло:", ex)
