@@ -142,6 +142,12 @@ for _ж in (ЖУР, ЖУР_ПИЛОТ):
             уже.add(json.loads(s)["inn"])
         except (ValueError, KeyError):
             pass
+# у компании уже стоит письмо (второе касание и т.п.) — напоминание не шлём
+for (инн,) in c.execute("SELECT DISTINCT r.inn FROM messages m JOIN recipients r ON r.id=m.recipient_id "
+                        "WHERE m.status IN ('pending_review','scheduled','sending') AND r.inn IS NOT NULL"):
+    уже.add(str(инн))
+for (инн,) in c.execute("SELECT DISTINCT inn FROM confirm_reviews WHERE status='pending' AND inn IS NOT NULL"):
+    уже.add(str(инн))
 кандидаты = []
 for инн, сп in отпр.items():
     # вебинар — не письмо об оборудовании: в его ветку напоминание «направлял письмо

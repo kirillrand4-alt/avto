@@ -53,6 +53,9 @@ _проба = {str(r[0]).lower(): str(r[1] or "") for r in c.execute("SELECT ema
 for _ж in (r"C:\sender\_ops\napominaniya-v2.jsonl",):
     if os.path.exists(_ж):
         _пилот |= {json.loads(s).get("inn") for s in io.open(_ж, encoding="utf-8")}
+# --s-pilotom (владелец 02.11: «да» — пилоту напоминаний 26-27.10 второй адрес уже можно)
+if "--s-pilotom" in sys.argv:
+    _пилот -= {json.loads(s).get("inn") for s in io.open(r"C:\sender\_ops\napominaniya-pilot.jsonl", encoding="utf-8")}
 for x in д:
     if x["inn"] in _пилот:
         сч["в пилоте напоминаний — пока нет"] += 1
@@ -72,9 +75,10 @@ for x in д:
         if n_адр >= 2:
             сч["уже 2+ адреса — не третье"] += 1
             continue
-    р = c.execute("SELECT m.id mid, m.mailbox_id mb, r.id rid, lower(r.email) em, cr.subject, cr.body FROM messages m "
+    р = c.execute("SELECT m.id mid, m.mailbox_id mb, r.id rid, lower(r.email) em, COALESCE(cr.subject, m.subject) subject, "
+                  "COALESCE(cr.body, m.body_rendered) body FROM messages m "
                   "JOIN recipients r ON r.id=m.recipient_id LEFT JOIN confirm_reviews cr ON cr.message_id=m.id "
-                  "WHERE m.campaign_id=? AND m.status='sent' AND r.inn=? ORDER BY m.sent_at DESC LIMIT 1",
+                  "WHERE m.campaign_id=? AND m.status='sent' AND r.inn=? AND COALESCE(cr.subject, m.subject, '') NOT LIKE 'Re:%' ORDER BY m.sent_at DESC LIMIT 1",
                   (cid, x["inn"])).fetchone()
     if not р or not р["body"]:
         сч["нет текста первого письма"] += 1
