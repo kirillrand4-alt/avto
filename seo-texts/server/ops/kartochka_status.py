@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Статус карточек и их писем: kartochka_status.py <id,id,...>"""
-import sqlite3
-import sys
-c = sqlite3.connect(r"C:\sender\sender.db")
-for i in sys.argv[1].split(","):
-    print(c.execute("SELECT c.id, c.email, c.status, c.decided_by, m.status, m.mailbox_id, m.sent_at, m.last_error "
-                    "FROM confirm_reviews c LEFT JOIN messages m ON m.id=c.message_id WHERE c.id=?", (int(i),)).fetchone())
+"""Статус карточек и след отправки: kartochka_status.py ID [ID…]"""
+import sqlite3, sys
+c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
+for i in sys.argv[1:]:
+    print(c.execute("SELECT id, status, decided_at, email, subject, reason FROM confirm_reviews WHERE id=?", (int(i),)).fetchone())
+cols = [r[1] for r in c.execute("PRAGMA table_info(events)")]
+print(cols)
