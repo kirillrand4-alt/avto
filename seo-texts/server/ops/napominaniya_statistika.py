@@ -20,7 +20,7 @@ def почтовик(e):
     return "корпоративный"
 группы = collections.defaultdict(lambda: collections.Counter())
 люди = []
-for i, em, d, п in c.execute("SELECT id, lower(email), decided_at, panel_json FROM confirm_reviews WHERE kind='reply' AND status='sent' "
+for i, em, d, п, тм in c.execute("SELECT id, lower(email), decided_at, panel_json, subject FROM confirm_reviews WHERE kind='reply' AND status='sent' "
                              "AND panel_json LIKE '%napominanie%' AND decided_at IS NOT NULL"):
     п = json.loads(п or "{}")
     if "спам-тест" in str(п.get("vruchnuyu", "")) or "владельцу" in str(п.get("vruchnuyu", "")):
@@ -31,7 +31,7 @@ for i, em, d, п in c.execute("SELECT id, lower(email), decided_at, panel_json F
     после = [et for et, ts in ев.get(em, []) if ts >= d]
     исход = "отбивка" if "bounce" in после else ("ответ" if "reply" in после else ("автоответ" if "reply_auto" in после else "тишина"))
     ключи = [("волна", волна), ("версия", волна + " / " + версия), ("тема", волна + " / " + str(п.get("re_ab", "до деления"))),
-             ("почтовик", волна + " / " + почтовик(em)), ("заход", волна + " / " + str(п.get("napominanie")))]
+             ("почтовик", волна + " / " + почтовик(em)), ("фактическая тема", "все / " + ("с Re:" if (тм or "").lower().startswith("re:") else "без Re:")), ("фактическая тема", волна + " / " + ("с Re:" if (тм or "").lower().startswith("re:") else "без Re:")), ("заход", волна + " / " + str(п.get("napominanie")))]
     for к in ключи:
         группы[к]["отправлено"] += 1
         группы[к][исход] += 1
@@ -39,7 +39,7 @@ for i, em, d, п in c.execute("SELECT id, lower(email), decided_at, panel_json F
             группы[к]["интерес"] += лид.get(em) in ("new", "perepiska", "in_bitrix")
     if исход == "ответ":
         люди.append((волна, версия, em, лид.get(em)))
-for раздел in ("волна", "версия", "тема", "почтовик", "заход"):
+for раздел in ("волна", "версия", "тема", "фактическая тема", "почтовик", "заход"):
     print("\n== по: %s" % раздел)
     print("   %-38s %6s %6s %6s %7s %7s %6s" % ("", "ушло", "ответ", "%", "автоотв", "отбивка", "интер."))
     for (р, к), сч in sorted(группы.items()):
