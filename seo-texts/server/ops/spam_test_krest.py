@@ -11,7 +11,7 @@ from sender.config import Config            # noqa: E402
 from sender.store import Store              # noqa: E402
 from sender.wiring import build_deps        # noqa: E402
 N = next((int(a[4:]) for a in sys.argv if a.startswith("--n=")), None)
-КОМУ = "martiushov@prokompressor.ru"
+КОМУ = next((a[7:] for a in sys.argv if a.startswith("--komu=")), "martiushov@prokompressor.ru")
 cfg = Config.load(r"C:\sender\sender.yaml")
 st = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 c = st._conn
@@ -35,13 +35,13 @@ if N is None:
     sys.exit(0)
 mb, в, (oid, subj, тело) = план[N]
 deps = build_deps(cfg, st, dry_run=False)
-if mb in ТРЕД:
+if mb in ТРЕД and КОМУ.startswith("martiushov@"):
     m = c.execute("SELECT rfc_message_id, thread_id, subject, recipient_id FROM messages WHERE id=?", (ТРЕД[mb][0],)).fetchone()
     irt, thr, subj, rid = m[0], (m[1] or "kopiya-krest-%d" % ТРЕД[mb][0]), "Re: " + m[2], m[3]
 else:
-    irt, thr, rid = None, "spam-test-%s-%s" % (mb, в), None
+    irt, thr, rid = None, "spam-test-%s-%s-%s" % (КОМУ, mb, в), None
 р = deps.confirm.submit_reply(reply_to=КОМУ, subject=subj, body=тело, in_reply_to=irt, thread_id=thr, recipient_id=rid, inn=None,
-                              panel={"mailbox_id": mb, "vruchnuyu": "спам-тест владельцу 03.11 (%s)" % в})
+                              panel={"mailbox_id": mb, "vruchnuyu": "спам-тест владельцу 03.11 (%s → %s)" % (в, КОМУ)})
 print("карточка", р.review_id, р.status, р.created)
 if р.status == "pending":
     print("отправка:", deps.confirm.approve(р.review_id, operator="kirill (через Claude: спам-тест)"))
