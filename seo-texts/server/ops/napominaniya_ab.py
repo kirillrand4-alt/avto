@@ -29,8 +29,8 @@ c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
 for x in з:
     if not x.get("karta"):
         continue
-    р = c.execute("SELECT status, body, inn FROM confirm_reviews WHERE id=?", (x["karta"],)).fetchone()
-    if not р or р[0] != "pending":
+    р = c.execute("SELECT status, body, inn, panel_json FROM confirm_reviews WHERE id=?", (x["karta"],)).fetchone()
+    if not р or р[0] != "pending" or "заходы" in (р[3] or ""):   # карточка уже отдана заходам
         continue
     тело = р[1] or ""
     if СНЯТЬ.search(тело):
