@@ -386,7 +386,7 @@ while len(готово) < НАДО and i < len(кандидаты):
         номер += 1
         if not текст:
             continue
-        тема = re.sub(r"^(?:re:\s*)+", "", x["subj"], flags=re.I)  # владелец 03.11: без Re:
+        тема = "Re: " + re.sub(r"^(?:re:\s*)+", "", x["subj"], flags=re.I)  # владелец 03.11: все с Re:
         em = пол[x["rid"]][1]
         запись = dict(inn=инн, email=em, mailbox=x["mb"], v_otvet_na=x["mid"], zahod=заход,
                       tema=тема, telo=текст, imya=имя, otpravitel=отпр_имя, zhen=жен, pervoe=x["sent"][:10])
