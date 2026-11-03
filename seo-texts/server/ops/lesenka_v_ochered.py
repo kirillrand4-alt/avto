@@ -56,6 +56,12 @@ for _ж in (r"C:\sender\_ops\napominaniya-v2.jsonl",):
 # --s-pilotom (владелец 02.11: «да» — пилоту напоминаний 26-27.10 второй адрес уже можно)
 if "--s-pilotom" in sys.argv:
     _пилот -= {json.loads(s).get("inn") for s in io.open(r"C:\sender\_ops\napominaniya-pilot.jsonl", encoding="utf-8")}
+# 03.11 «Фишландия»: --s-pilotom снимал и свежие A/B-заходы — компания получила
+# напоминание и второе касание в один день. Любое напоминание (pending или ушедшее
+# за 3 дня) по базе — второе касание не ставим, какой бы журнал его ни вёл.
+_пилот |= {r[0] for r in c.execute(
+    "SELECT DISTINCT inn FROM confirm_reviews WHERE kind='reply' AND panel_json LIKE '%napominanie%' AND inn IS NOT NULL "
+    "AND (status='pending' OR (status='sent' AND decided_at >= datetime('now','-3 days')))")}
 for x in д:
     if x["inn"] in _пилот:
         сч["в пилоте напоминаний — пока нет"] += 1
