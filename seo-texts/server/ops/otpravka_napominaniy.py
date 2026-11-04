@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 СТОП = r"C:\sender\_ops\otpravka-napominaniy.STOP"
 if "--zapusk" in sys.argv:
     л = io.open(r"C:\sender\_ops\otpravka-napominaniy.log", "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a == "--bez-okna"], cwd=r"C:\sender",
+    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a == "--bez-okna" or a.startswith("--potolok=")], cwd=r"C:\sender",
                          stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
     time.sleep(10)
     print("запущен, pid %d, жив %s" % (п.pid, п.poll() is None))
@@ -58,6 +58,19 @@ def лимит(mb):
     if isinstance(сл, str):
         сл = json.loads(сл or "{}")
     return int((сл.get("per_mailbox") or {}).get(mb) or 70)
+
+
+# ПОТОЛОК-04.11 (владелец «делай»): напоминания не больше N в день с ящика,
+# остальное лимита — холодным письмам (ФСА волна). --potolok=N, по умолчанию 35.
+ПОТОЛОК = next((int(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--potolok=")), 35)
+
+
+def напоминаний_сегодня(mb):
+    сегодня = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    r = store._conn.execute(
+        "SELECT COUNT(*) FROM confirm_reviews WHERE kind='reply' AND status='sent' AND panel_json LIKE '%napominanie%' "
+        "AND substr(decided_at,1,10)=? AND json_extract(panel_json,'$.mailbox_id')=?", (сегодня, mb)).fetchone()
+    return int(r[0] or 0)
 
 
 def ушло_сегодня(mb):
@@ -102,7 +115,7 @@ while not os.path.exists(СТОП):
     годные = []
     for kid, mb, em in к:
         у, п = ушло_сегодня(mb)
-        if п or у >= лимит(mb) or сейчас - последний.get(mb, 0) < 150:
+        if п or у >= лимит(mb) or сейчас - последний.get(mb, 0) < 150 or напоминаний_сегодня(mb) >= ПОТОЛОК:
             continue
         годные.append((kid, mb, em))
     if not годные:
