@@ -409,7 +409,7 @@ while len(готово) < НАДО and i < len(кандидаты):
             if отсев[причина] <= 2:
                 print("  отсев (%s): %r" % (причина, т[:300]), flush=True)
             continue
-        if any(difflib.SequenceMatcher(None, т, г["telo"]).ratio() > 0.6 for г in готово[-200:]):
+        if any(difflib.SequenceMatcher(None, т, г["telo"]).ratio() > 0.85 for г in готово[-200:]):
             отсев["слишком похоже на готовое"] += 1
             continue
         запись["chernovik"], запись["telo"] = запись["telo"], т
