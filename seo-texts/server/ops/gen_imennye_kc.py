@@ -11,7 +11,7 @@ import io, json, os, random, re, sqlite3, subprocess, sys, time
 from datetime import datetime, timezone
 if "--zapusk" in sys.argv:
     лог = io.open(r"C:\sender\_ops\imennye-kc.log", "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith("--limit=")],
+    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith("--limit=") or a == "--panel"],
                          cwd=r"C:\sender", stdout=лог, stderr=лог, creationflags=0x00000008 | 0x00000200)
     time.sleep(8); print("запущен, pid %d, жив %s" % (п.pid, п.poll() is None)); sys.exit(0)
 sys.path.insert(0, r"C:\sender"); sys.path.insert(0, r"C:\sender\server")
@@ -65,7 +65,18 @@ def отрасль_годна(inn):
         return False
     return 5 <= к <= 43 or 49 <= к <= 52   # добыча, обработка, энергетика, вода, стройка, транспорт
 канд = {}
-for inn, person, post, role, em in e.execute("SELECT inn, person, COALESCE(zahod_rol,''), COALESCE(role,''), email FROM emails WHERE person IS NOT NULL AND trim(person)!='' AND imya_ok='1' AND email IS NOT NULL"):
+# Источники (владелец 06.11): enrich.emails с подтверждённым именем; --panel — получатели панели
+# с contact_name (база КЦ-1, Россия 9000, spaseno182), должность из extra.stupen.
+def _источник():
+    if "--panel" in sys.argv:
+        for inn, person, em, seg, ex in s.execute("SELECT inn, contact_name, email, segment, extra_json FROM recipients WHERE inn IS NOT NULL AND contact_name IS NOT NULL AND trim(contact_name)!='' AND email IS NOT NULL"):
+            x = json.loads(ex or "{}")
+            if not (str(seg or "") == "кц" or x.get("target_division") == "kc" or "kc" in str(x.get("divisions") or "")):
+                continue
+            yield inn, person, str(x.get("stupen") or x.get("dolzhnost") or ""), "", em
+    else:
+        yield from e.execute("SELECT inn, person, COALESCE(zahod_rol,''), COALESCE(role,''), email FROM emails WHERE person IS NOT NULL AND trim(person)!='' AND imya_ok='1' AND email IS NOT NULL")
+for inn, person, post, role, em in _источник():
     inn, em = str(inn), em.lower()
     if not re.search(r"\.(ru|рф|su|com|org|net|pro|biz|info)$", em) or em.endswith(".by"):
         continue
