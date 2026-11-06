@@ -19,7 +19,8 @@ def роль(ст):
     return "без должности"
 лучший = {}
 сч = collections.Counter()
-for rid, em, inn, seg, имя, ex in c.execute("SELECT id, lower(email), inn, segment, contact_name, extra_json FROM recipients WHERE inn IS NOT NULL AND contact_name IS NOT NULL AND trim(contact_name)!=''"):
+ист = collections.Counter()
+for rid, em, inn, seg, имя, ex, src in c.execute("SELECT id, lower(email), inn, segment, contact_name, extra_json, source FROM recipients WHERE inn IS NOT NULL AND contact_name IS NOT NULL AND trim(contact_name)!=''"):
     x = json.loads(ex or "{}")
     кц = str(seg or "") == "кц" or x.get("target_division") == "kc" or "kc" in str(x.get("divisions") or "")
     if not кц: continue
@@ -32,6 +33,9 @@ for rid, em, inn, seg, имя, ex in c.execute("SELECT id, lower(email), inn, se
     ранг = [н for н, _ in РОЛИ].index(р) if р in [н for н, _ in РОЛИ] else 9
     if inn not in лучший or ранг < лучший[inn][0]:
         лучший[inn] = (ранг, р)
+        ист[(src, str(x.get("gruppy") or "")[:40])] += 1
 print("исключено:", dict(сч))
 print("компаний КЦ с именованным контактом (лучший на компанию):", len(лучший))
 print("по роли лучшего:", collections.Counter(р for _, р in лучший.values()).most_common())
+
+print("источник/группа:", ист.most_common(8))
