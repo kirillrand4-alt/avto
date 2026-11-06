@@ -11,7 +11,7 @@ import io, json, os, random, re, sqlite3, subprocess, sys, time
 from datetime import datetime, timezone
 if "--zapusk" in sys.argv:
     лог = io.open(r"C:\sender\_ops\imennye-kc.log", "a", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith("--limit=") or a == "--panel"],
+    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [a for a in sys.argv[1:] if a.startswith("--limit=") or a.startswith("--fayl=") or a == "--panel"],
                          cwd=r"C:\sender", stdout=лог, stderr=лог, creationflags=0x00000008 | 0x00000200)
     time.sleep(8); print("запущен, pid %d, жив %s" % (п.pid, п.poll() is None)); sys.exit(0)
 sys.path.insert(0, r"C:\sender"); sys.path.insert(0, r"C:\sender\server")
@@ -67,7 +67,30 @@ def отрасль_годна(inn):
 канд = {}
 # Источники (владелец 06.11): enrich.emails с подтверждённым именем; --panel — получатели панели
 # с contact_name (база КЦ-1, Россия 9000, spaseno182), должность из extra.stupen.
+ФАЙЛ = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--fayl=")), None)
+def _из_файла(имя):
+    """Лист «Контакты с сайта» / «Контакты» xlsx с дропа (FSA-MEYER-v4-KC и т.п.): ИНН, ФИО, должность, роль, e-mail."""
+    import requests, openpyxl
+    for line in io.open(r"C:\sender\panel.env", encoding="utf-8", errors="replace").read().splitlines():
+        if "=" in line and not line.strip().startswith("#"):
+            k_, v_ = line.split("=", 1); os.environ.setdefault(k_.strip(), v_.strip().strip('"'))
+    п = os.path.join(r"C:\sender\_ops", имя)
+    if not os.path.exists(п):
+        р = requests.get(os.environ.get("DROP_URL", "https://parsercompressor.online/drop").rstrip("/") + "/" + имя, headers={"X-Drop-Token": os.environ.get("DROP_TOKEN", "")}, timeout=300)
+        р.raise_for_status(); io.open(п, "wb").write(р.content)
+    wb = openpyxl.load_workbook(п, read_only=True)
+    ws = wb["Контакты с сайта"] if "Контакты с сайта" in wb.sheetnames else wb["Контакты"]
+    rows = ws.iter_rows(values_only=True); h = list(next(rows))
+    ix = {k: h.index(k) for k in ("ИНН / УНП", "ФИО", "Должность (как на сайте)", "Роль", "E-mail")}
+    for r in rows:
+        em = str(r[ix["E-mail"]] or "").strip()
+        fio = str(r[ix["ФИО"]] or "").strip()
+        if em and fio and "@" in em:
+            yield str(r[ix["ИНН / УНП"]] or ""), fio, str(r[ix["Должность (как на сайте)"]] or ""), str(r[ix["Роль"]] or ""), em
 def _источник():
+    if ФАЙЛ:
+        yield from _из_файла(ФАЙЛ)
+        return
     if "--panel" in sys.argv:
         for inn, person, em, seg, ex in s.execute("SELECT inn, contact_name, email, segment, extra_json FROM recipients WHERE inn IS NOT NULL AND contact_name IS NOT NULL AND trim(contact_name)!='' AND email IS NOT NULL"):
             x = json.loads(ex or "{}")
@@ -80,7 +103,7 @@ for inn, person, post, role, em in _источник():
     inn, em = str(inn), em.lower()
     if not re.search(r"\.(ru|рф|su|com|org|net|pro|biz|info)$", em) or em.endswith(".by"):
         continue
-    if inn not in кц or not отрасль_годна(inn) or inn in ответ or inn in недавно or em in стоп or inn in стоп or em in мёртв:
+    if (not ФАЙЛ and inn not in кц) or not (отрасль_годна(inn) or (ФАЙЛ and not e.execute("SELECT 1 FROM companies WHERE inn=? AND okved IS NOT NULL AND okved!=''", (inn,)).fetchone())) or inn in ответ or inn in недавно or em in стоп or inn in стоп or em in мёртв:
         continue
     тех = bool(re.search(ТЕХ, post + " " + role, re.I))
     if not обращение(person):
