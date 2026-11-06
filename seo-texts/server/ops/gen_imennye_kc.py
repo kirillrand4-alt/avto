@@ -36,7 +36,7 @@ s = sqlite3.connect("file:C:\\sender\\sender.db?mode=ro", uri=True, timeout=30)
 e = sqlite3.connect("file:C:\\sender\\enrich.db?mode=ro", uri=True, timeout=30)
 o = sqlite3.connect("file:C:\\sender\\obzvon-index.db?mode=ro", uri=True, timeout=30)
 кц = {str(i) for i, d in o.execute("SELECT inn, division FROM obzvon") if "kc" in str(d or "").lower()}
-недавно = {str(r[0]) for r in s.execute("SELECT DISTINCT inn FROM send_log WHERE outcome='sent' AND ts>=datetime('now','-21 days') AND inn IS NOT NULL")}
+недавно = {str(r[0]) for r in s.execute("SELECT DISTINCT inn FROM send_log WHERE outcome='sent' AND ts>=datetime('now','-15 days') AND inn IS NOT NULL")}  # владелец 06.11: 15 дней
 ответ = {str(r[0]) for r in s.execute("SELECT DISTINCT r.inn FROM events e JOIN recipients r ON r.id=e.recipient_id WHERE e.event_type IN ('reply','complaint','unsubscribe')")}
 стоп = {v.lower() for _, v in s.execute("SELECT scope, value FROM suppression")}
 мёртв = {r[0].lower() for r in s.execute("SELECT email FROM addr_probe WHERE verdict IN ('нет ящика','нет MX','неясно','отказ пробе')")}
@@ -137,7 +137,7 @@ q = build_ai_quota(store, cfg) if "--rabota" in sys.argv else None
 # ---- кандидаты: доп. исключения — карточка уже есть в этой кампании, письмо в очереди, тот же адрес < 30 дней
 готовы = {str(x[0]) for x in к.execute("SELECT inn FROM confirm_reviews WHERE campaign_id=?", (КАМП,))}
 в_очереди = {str(x[0]) for x in к.execute("SELECT DISTINCT r.inn FROM messages m JOIN recipients r ON r.id=m.recipient_id WHERE m.status IN ('scheduled','sending','pending_review')")}
-адрес_30 = {x[0].lower() for x in к.execute("SELECT DISTINCT email FROM send_log WHERE outcome='sent' AND ts>=datetime('now','-30 days')")}
+адрес_30 = {x[0].lower() for x in к.execute("SELECT DISTINCT email FROM send_log WHERE outcome='sent' AND ts>=datetime('now','-15 days')")}  # владелец 06.11: 15 дней
 список = [i for i in sorted(канд) if i not in готовы and i not in в_очереди and канд[i][1] not in адрес_30]
 random.shuffle(список)
 список = список[:ЛИМИТ]

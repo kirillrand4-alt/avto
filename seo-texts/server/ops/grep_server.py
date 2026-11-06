@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""grep по коду панели: grep_server.py <строка> [корень=C:\\sender\\sender]"""
-import io, os, sys
-ч = sys.argv[1]; корень = sys.argv[2] if len(sys.argv) > 2 else r"C:\sender\sender"
-for п, _, фф in os.walk(корень):
-    if "node_modules" in п or "__pycache__" in п: continue
-    for ф in фф:
-        if not ф.endswith((".py", ".html", ".js", ".jsx", ".ts", ".tsx", ".vue", ".css")): continue
-        try: т = io.open(os.path.join(п, ф), encoding="utf-8", errors="replace").read()
-        except Exception: continue
-        for н, s in enumerate(т.splitlines(), 1):
-            if ч in s: print("%s:%d: %s" % (os.path.join(п, ф), н, s.strip()[:200]))
+"""Поиск строки в файлах кода панели на сервере: grep_server.py ПОДСТРОКА [файл…] (по умолчанию sender/*.py), ±3 строки."""
+import glob, io, os, sys
+к = sys.argv[1]
+файлы = [os.path.join(r"C:\sender\sender", f) for f in sys.argv[2:]] or glob.glob(r"C:\sender\sender\*.py")
+for п in файлы:
+    т = io.open(п, encoding="utf-8").read().splitlines()
+    for i, s in enumerate(т):
+        if к in s:
+            print("---- %s:%d" % (os.path.basename(п), i + 1))
+            for j in range(max(0, i - 3), min(len(т), i + 4)):
+                print("%5d|%s" % (j + 1, т[j]))
