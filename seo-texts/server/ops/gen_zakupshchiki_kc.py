@@ -249,7 +249,11 @@ for п0 in range(0, len(список), 20):
             else:
                 запись["otsev"] = "адрес закреплён за другим ИНН %s" % есть[1]
                 ЖУР.write(json.dumps(запись, ensure_ascii=False) + "\n"); ЖУР.flush(); os.fsync(ЖУР.fileno()); continue
-        if False:
+        _ключ = "%s|%s|%d" % (inn, em, КАМП)
+        _был = к.execute("SELECT status, COALESCE(reason,'') FROM confirm_reviews WHERE dedup_key=?", (_ключ,)).fetchone()
+        if inn in готовы or (_был and not (_был[0] == "skipped" and _был[1].startswith("общая фраза"))):
+            # 08.11: у ИНН группы карточка в этой кампании уже есть (в т.ч. снятая браком) — второй раз не пишем
+            запись["otsev"] = "карточка уже есть: %s" % (list(_был) if _был else "ИНН в кампании")
             ЖУР.write(json.dumps(запись, ensure_ascii=False) + "\n"); ЖУР.flush(); os.fsync(ЖУР.fileno()); continue
         сейчас = datetime.now(timezone.utc).isoformat()
         if есть:
@@ -280,7 +284,7 @@ for п0 in range(0, len(список), 20):
             кид = к.execute("INSERT INTO confirm_reviews (dedup_key, campaign_id, recipient_id, message_id, inn, email, subject, body, panel_json, status, kind, created_at, updated_at) "
                             "VALUES (?,?,?,?,?,?,?,?,?,'pending','outbound',?,?)", ("%s|%s|%d" % (inn, em, КАМП), КАМП, rid, mid, inn, em, тема, тело, панель, сейчас, сейчас)).lastrowid
             к.commit()
-        заведено += 1
+        заведено += 1; готовы.add(inn)
         запись.update({"karta": кид, "mailbox": mb.mailbox_id, "tema": тема, "telo": тело})
         ЖУР.write(json.dumps(запись, ensure_ascii=False) + "\n"); ЖУР.flush(); os.fsync(ЖУР.fileno())
         if i == 1:
