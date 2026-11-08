@@ -104,15 +104,15 @@
 
 1. **Таблица или список с должностями:**
    ```
-   Иванов Иван Иванович — Главный механик — ivan@company.ru — +7 (123) 456-78-90
+   И*** И. И. — Главный механик — i***@company.ru — +7 (123) 456-78-90
    ```
 
 2. **Карточки сотрудников:**
    ```html
    <div class="employee">
-     <h3>Петров Пётр Петрович</h3>
+     <h3>П*** П. П.</h3>
      <p class="position">Начальник компрессорной станции</p>
-     <a href="mailto:petrov@company.ru">petrov@company.ru</a>
+     <a href="mailto:p***@company.ru">p***@company.ru</a>
    </div>
    ```
 
@@ -121,7 +121,7 @@
    Служба главного механика
    Начальник службы: Сидоров С.С.
    Тел.: +7 (123) 456-78-91
-   Email: ogm@company.ru
+   Email: o***@company.ru
    ```
 
 4. **JSON-LD schema.org/Person или Organization:**
@@ -130,7 +130,7 @@
      "@type": "Person",
      "name": "Смирнов Алексей",
      "jobTitle": "Главный энергетик",
-     "email": "smirnov@company.ru"
+     "email": "s***@company.ru"
    }
    ```
 
@@ -402,41 +402,41 @@ def select_best_contacts(contacts, max_contacts=3):
 ```json
 [
   {
-    "name": "Иванов Иван Иванович",
+    "name": "И*** И. И.",
     "position": "Главный механик",
     "role": "chief_mechanic",
     "priority": 1,
-    "email": "ivanov@company.ru",
+    "email": "i***@company.ru",
     "phone": "+7 (123) 456-78-90",
     "source_url": "https://company.ru/about/staff",
     "best_for_outreach": true
   },
   {
-    "name": "Петров Пётр Петрович",
+    "name": "П*** П. П.",
     "position": "Начальник компрессорной станции №1",
     "role": "compressor_chief",
     "priority": 1,
-    "email": "petrov@company.ru",
+    "email": "p***@company.ru",
     "phone": "+7 (123) 456-78-91",
     "source_url": "https://company.ru/contacts/ks1",
     "best_for_outreach": true
   },
   {
-    "name": "Сидорова Анна Васильевна",
+    "name": "С*** А. В.",
     "position": "Начальник отдела закупок",
     "role": "procurement_head",
     "priority": 3,
-    "email": "sidorova@company.ru",
+    "email": "s***@company.ru",
     "phone": "+7 (123) 456-78-92",
     "source_url": "https://company.ru/about/staff",
     "best_for_outreach": false
   },
   {
-    "name": "Смирнов Алексей Николаевич",
+    "name": "С*** А. Н.",
     "position": "Главный бухгалтер",
     "role": "irrelevant",
     "priority": 5,
-    "email": "smirnov@company.ru",
+    "email": "s***@company.ru",
     "phone": "+7 (123) 456-78-93",
     "source_url": "https://company.ru/about/staff",
     "best_for_outreach": false

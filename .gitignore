@@ -27,3 +27,13 @@ seo-texts/server/result-*.json
 seo-texts/server/job-*.json
 # телеметрия re-enrich: живёт на сервере, локально — только мусор смоуков
 seo-texts/server/re_enrich.jsonl
+
+# 08.11, владелец: личные данные (контакты людей, выгрузки сделок) в репозиторий не кладём — только на сервер/дроп
+seo-texts/server/probe-rezultat*.jsonl
+seo-texts/server/roli_etalon*.json
+seo-texts/email-assistant/news-campaign*.csv
+seo-texts/email-assistant/news-leads*.json
+seo-texts/email-assistant/news-leads*.xlsx
+*sdelki*.csv
+*sdelki*.xlsx
+*deals*.csv
