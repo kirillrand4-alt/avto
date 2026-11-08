@@ -87,9 +87,23 @@ def _из_файла(имя):
         fio = str(r[ix["ФИО"]] or "").strip()
         if em and fio and "@" in em:
             yield str(r[ix["ИНН / УНП"]] or ""), fio, str(r[ix["Должность (как на сайте)"]] or ""), str(r[ix["Роль"]] or ""), em
+ИЗ_ФАЙЛА = {}   # inn -> (название, продукция кратко) из листа «Работа» FSA-файла
+def _работа(имя):
+    import openpyxl
+    п = os.path.join(r"C:\sender\_ops", имя)
+    if not os.path.exists(п): return
+    wb = openpyxl.load_workbook(п, read_only=True)
+    if "Работа" not in wb.sheetnames: return
+    rows = wb["Работа"].iter_rows(values_only=True); h = list(next(rows))
+    if "ИНН" not in h: return
+    iИ, iК = h.index("ИНН"), (h.index("Компания") if "Компания" in h else h.index("Название"))
+    iП = h.index("Продукция (кратко)") if "Продукция (кратко)" in h else None
+    for r in rows:
+        ИЗ_ФАЙЛА[str(r[iИ] or "")] = (str(r[iК] or ""), str(r[iП] or "") if iП is not None else "")
 def _источник():
     if ФАЙЛ:
         yield from _из_файла(ФАЙЛ)
+        _работа(ФАЙЛ)
         return
     if "--panel" in sys.argv:
         for inn, person, em, seg, ex in s.execute("SELECT inn, contact_name, email, segment, extra_json FROM recipients WHERE inn IS NOT NULL AND contact_name IS NOT NULL AND trim(contact_name)!='' AND email IS NOT NULL"):
@@ -158,7 +172,7 @@ else:
     print("заведена кампания", КАМП, ИМЯ_КАМП, flush=True)
 q = build_ai_quota(store, cfg) if "--rabota" in sys.argv else None
 # ---- кандидаты: доп. исключения — карточка уже есть в этой кампании, письмо в очереди, тот же адрес < 30 дней
-готовы = {str(x[0]) for x in к.execute("SELECT inn FROM confirm_reviews WHERE campaign_id=?", (КАМП,))}
+готовы = {str(x[0]) for x in к.execute("SELECT inn FROM confirm_reviews WHERE campaign_id=? AND NOT (status='skipped' AND reason LIKE 'общая фраза%')", (КАМП,))}
 в_очереди = {str(x[0]) for x in к.execute("SELECT DISTINCT r.inn FROM messages m JOIN recipients r ON r.id=m.recipient_id WHERE m.status IN ('scheduled','sending','pending_review')")}
 адрес_30 = {x[0].lower() for x in к.execute("SELECT DISTINCT email FROM send_log WHERE outcome='sent' AND ts>=datetime('now','-15 days')")}  # владелец 06.11: 15 дней
 список = [i for i in sorted(канд) if i not in готовы and i not in в_очереди and канд[i][1] not in адрес_30]
@@ -173,6 +187,7 @@ def фраза_годна(т):
     т = (т or "").strip()
     if len(т) < 25 or len(т.split()) > 30: return False
     if re.search(r"\d|—|\bмы\b|\bнаш|компрессор центр", т, re.I): return False
+    if re.search(r"^На производстве сжатый воздух|технологических процесс", т, re.I): return False
     return "сжат" in т.lower()
 заведено = 0
 for п0 in range(0, len(список), 20):
@@ -180,6 +195,8 @@ for п0 in range(0, len(список), 20):
     строки = []
     for i, inn in enumerate(пачка, 1):
         r = e.execute("SELECT name, okved, substr(COALESCE(activity,''),1,300) FROM companies WHERE inn=?", (inn,)).fetchone() or ("", "", "")
+        if not (r[0] and (r[1] or r[2])) and inn in ИЗ_ФАЙЛА:
+            r = (ИЗ_ФАЙЛА[inn][0], r[1] or "", ИЗ_ФАЙЛА[inn][1][:300])
         строки.append("%d. %s; ОКВЭД %s; %s" % (i, r[0], r[1], r[2]))
     try:
         м = GP._raw_stream([{"role": "user", "content": ЗАДАНИЕ.replace("{firmy}", "\n".join(строки)).replace("{{", "{").replace("}}", "}")}],
@@ -198,7 +215,7 @@ for п0 in range(0, len(список), 20):
             запись["otsev"] = "фраза модели: %r" % ф[:120]
             ЖУР.write(json.dumps(запись, ensure_ascii=False) + "\n"); ЖУР.flush(); os.fsync(ЖУР.fileno())
             continue
-        имя_комп = (e.execute("SELECT name FROM companies WHERE inn=?", (inn,)).fetchone() or [""])[0]
+        имя_комп = (e.execute("SELECT name FROM companies WHERE inn=?", (inn,)).fetchone() or [""])[0] or ИЗ_ФАЙЛА.get(inn, ("", ""))[0]
         _им = обращение(fio).split()[0]
         mb = random.choice([m for m in ящики if str(getattr(m, "from_name", "") or "").split()[:1] != [_им]] or ящики)
         менеджер = (str(getattr(mb, "from_name", "") or "").split(",")[0].split() or ["Сергей"])[0]
@@ -229,6 +246,16 @@ for п0 in range(0, len(список), 20):
         панель = json.dumps({"letter_division": "kc", "mailbox_id": mb.mailbox_id, "vruchnuyu": "КЦ по имени 06.11", "company": {"name": имя_комп}}, ensure_ascii=False)
         with store._lock:
             к.execute("UPDATE messages SET mailbox_id=? WHERE id=?", (mb.mailbox_id, mid))
+            к.execute("UPDATE messages SET status='pending_review', last_error=NULL WHERE id=? AND status='skipped' AND last_error='общая фраза'", (mid,))
+            _ст = к.execute("SELECT id FROM confirm_reviews WHERE dedup_key=? AND status='skipped' AND reason LIKE 'общая фраза%'", ("%s|%s|%d" % (inn, em, КАМП),)).fetchone()
+        if _ст:
+            with store._lock:
+                к.execute("UPDATE confirm_reviews SET subject=?, body=?, panel_json=?, status='pending', reason=NULL, decided_at=NULL, message_id=?, updated_at=? WHERE id=?",
+                          (тема, тело, панель, mid, сейчас, _ст[0]))
+                к.commit()
+            кид = _ст[0]
+        else:
+          with store._lock:
             кид = к.execute("INSERT INTO confirm_reviews (dedup_key, campaign_id, recipient_id, message_id, inn, email, subject, body, panel_json, status, kind, created_at, updated_at) "
                             "VALUES (?,?,?,?,?,?,?,?,?,'pending','outbound',?,?)", ("%s|%s|%d" % (inn, em, КАМП), КАМП, rid, mid, inn, em, тема, тело, панель, сейчас, сейчас)).lastrowid
             к.commit()
