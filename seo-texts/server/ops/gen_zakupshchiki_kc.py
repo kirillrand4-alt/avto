@@ -203,14 +203,19 @@ for п0 in range(0, len(список), 20):
         if not (r[0] and (r[1] or r[2])) and inn in ИЗ_ФАЙЛА:
             r = (ИЗ_ФАЙЛА[inn][0], r[1] or "", ИЗ_ФАЙЛА[inn][1][:300])
         строки.append("%d. %s; ОКВЭД %s; %s" % (i, r[0], r[1], r[2]))
-    try:
-        м = GP._raw_stream([{"role": "user", "content": ЗАДАНИЕ.replace("{firmy}", "\n".join(строки)).replace("{{", "{").replace("}}", "}")}],
-                           "claude-sonnet-4-6", 3000, thinking=False, effort="low")
-        т = м if isinstance(м, str) else "".join(getattr(b, "text", "") for b in getattr(м, "content", []) or [])
-        _п = max(т.rfind('{"f"'), т.rfind('{ "f"'))
-        фразы = {int(x["n"]): x["t"] for x in json.JSONDecoder(strict=False).raw_decode(т[_п:])[0].get("f", [])}
-    except Exception as ex:  # noqa: BLE001
-        print("пачка %d: модель не дала фраз: %s" % (п0, str(ex)[:150]), flush=True)
+    фразы = None
+    for _попытка in range(4):   # пустой ответ шлюза — повторяем пачку, а не теряем её (08.11: 13 пачек потеряно)
+        try:
+            м = GP._raw_stream([{"role": "user", "content": ЗАДАНИЕ.replace("{firmy}", "\n".join(строки)).replace("{{", "{").replace("}}", "}")}],
+                               "claude-sonnet-4-6", 3000, thinking=False, effort="low")
+            т = м if isinstance(м, str) else "".join(getattr(b, "text", "") for b in getattr(м, "content", []) or [])
+            _п = max(т.rfind('{"f"'), т.rfind('{ "f"'))
+            фразы = {int(x["n"]): x["t"] for x in json.JSONDecoder(strict=False).raw_decode(т[_п:])[0].get("f", [])}
+            break
+        except Exception as ex:  # noqa: BLE001
+            print("пачка %d: модель не дала фраз (попытка %d): %s" % (п0, _попытка + 1, str(ex)[:150]), flush=True)
+            time.sleep(30)
+    if фразы is None:
         continue
     for i, inn in enumerate(пачка, 1):
         fio, em, должн, тех = канд[inn]
