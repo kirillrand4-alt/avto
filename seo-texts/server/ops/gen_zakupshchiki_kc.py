@@ -235,9 +235,21 @@ for п0 in range(0, len(список), 20):
         тело = "\n\n".join(абз)
         тема = random.choice(["Вопрос по компрессорной на следующий год", "Компрессорная: планы на следующий год", "Вопрос по сжатому воздуху на производстве"])
         # получатель
-        есть = к.execute("SELECT id, inn FROM recipients WHERE lower(email)=?", (em,)).fetchone()
+        есть = к.execute("SELECT id, inn, company_name FROM recipients WHERE lower(email)=?", (em,)).fetchone()
         if есть and есть[1] and str(есть[1]) != inn:
-            запись["otsev"] = "адрес закреплён за другим ИНН %s" % есть[1]
+            # ОБЩАЯ ПОЧТА ГРУППЫ (владелец 08.11 «да, делай так»): названия по сути совпадают и на адрес
+            # не писали ни разу — пишем один раз, привязав к компании, что уже стоит в панели.
+            def _ядро(н):
+                н = re.sub(r"(?i)общество с ограниченной ответственностью|акционерное общество|публичное|непубличное|\b(ооо|ао|пао|зао|оао|нпо|нпп|гк|пк|тк|ск|нпц|ип)\b|[«»\"'()\-.,]", " ", str(н or ""))
+                return " ".join(н.lower().split())
+            _наше, _их = _ядро(имя_комп), _ядро(есть[2] or (e.execute("SELECT name FROM companies WHERE inn=?", (str(есть[1]),)).fetchone() or [""])[0])
+            _писали = к.execute("SELECT 1 FROM send_log WHERE outcome='sent' AND lower(email)=? LIMIT 1", (em,)).fetchone()
+            if _наше and _их and (_наше == _их or _наше in _их or _их in _наше) and not _писали and str(есть[1]) not in ответ and str(есть[1]) not in недавно and str(есть[1]) not in в_очереди:
+                inn = str(есть[1]); запись["inn"] = inn; запись["gruppa_obshchiy"] = True
+            else:
+                запись["otsev"] = "адрес закреплён за другим ИНН %s" % есть[1]
+                ЖУР.write(json.dumps(запись, ensure_ascii=False) + "\n"); ЖУР.flush(); os.fsync(ЖУР.fileno()); continue
+        if False:
             ЖУР.write(json.dumps(запись, ensure_ascii=False) + "\n"); ЖУР.flush(); os.fsync(ЖУР.fileno()); continue
         сейчас = datetime.now(timezone.utc).isoformat()
         if есть:
