@@ -106,7 +106,7 @@ st = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 ящики = {}
 for mb in cfg.mailboxes():
     s = st.get_mailbox_state(mb.mailbox_id)
-    if mb.division == "meyer" and not (s and getattr(s, "paused", False)):
+    if mb.division == "meyer" and ("--vklyuchaya-pauzu" in sys.argv or not (s and getattr(s, "paused", False))):
         ящики[mb.mailbox_id] = mb.from_name
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=90)
 сейчас = datetime.now(timezone.utc)
@@ -185,6 +185,11 @@ for инн, сп in отпр.items():
 кандидаты.sort()
 НАДО = ПОКАЗ or ЗАВЕСТИ
 print("подходит компаний: %d, берём %d" % (len(кандидаты), НАДО), flush=True)
+if "--tolko-schet" in sys.argv:   # 09.11: только посчитать, без модели и записи
+    from collections import Counter as _C
+    print("ящики в отборе: %d; по ящикам первого письма:" % len(ящики), _C(x[2]["mb"] for x in кандидаты).most_common())
+    print("по давности последнего письма:", _C(x[0][:10] for x in кандидаты).most_common(8))
+    sys.exit(0)
 
 # --------------------------------------------------------- слоты моделью --
 import gen_provider as GP  # noqa: E402
