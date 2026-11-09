@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Владелец 09.11: «МеталлПромСервис» (ГК «Баррикада») — Циркун (ac@, продажи) направил в снабжение к Елманову. Ответом в тред письма 42787; текст утверждён владельцем. [--katit]"""
+"""Владелец 09.11: «МеталлПромСервис» (ГК «Баррикада») — Циркун (ac@, продажи) направил в снабжение к Елманову. Новым письмом (владелец: «не ответом, а новым письмом»), тема и ящик — как у письма 42787; текст утверждён владельцем. [--katit]"""
 import sys
 sys.path.insert(0, r"C:\sender")
 from sender.config import Config            # noqa: E402
@@ -19,8 +19,8 @@ mb, rfc, thr, subj = st._conn.execute("SELECT mailbox_id, rfc_message_id, thread
 print("с", mb, "→", КОМУ, "| тема:", subj, "| in-reply-to:", bool(rfc))
 if "--katit" in sys.argv:
     deps = build_deps(cfg, st, dry_run=False)
-    р = deps.confirm.submit_reply(reply_to=КОМУ, subject=subj, body=ТЕКСТ, in_reply_to=rfc,
-                                  thread_id=thr or "metpromserv-42787", recipient_id=None, inn=ИНН,
+    р = deps.confirm.submit_reply(reply_to=КОМУ, subject=subj, body=ТЕКСТ, in_reply_to=None,
+                                  thread_id="metpromserv-novoe-0911", recipient_id=None, inn=ИНН,
                                   panel={"mailbox_id": mb, "vruchnuyu": "МеталлПромСервис: по указанию Циркуна в снабжение (владелец 09.11)"})
     print("карточка", р.review_id, р.status, р.created)
     if р.status == "pending":
