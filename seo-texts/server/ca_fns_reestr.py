@@ -284,7 +284,9 @@ def main():
         con.close()
     except Exception as e:  # noqa: BLE001
         отметка(ошибка_enrich=repr(e)[:200])
-    for путь in glob.glob(os.path.join(DIR, '*checko*.jsonl')) + glob.glob(os.path.join(DIR, '*dadata*.jsonl')):
+    # 09.11: *okved*.jsonl (kc-okved-fns, poisk-okved) и добор ca_okved_dobor.py раньше не читались
+    for путь in sorted(set(glob.glob(os.path.join(DIR, '*checko*.jsonl')) + glob.glob(os.path.join(DIR, '*dadata*.jsonl')) +
+                           glob.glob(os.path.join(DIR, '*okved*.jsonl')) + glob.glob(os.path.join(ПАПКА, 'ca-okved-dobor.jsonl')))):
         for s in io.open(путь, encoding='utf-8', errors='replace'):
             try:
                 y = json.loads(s)
