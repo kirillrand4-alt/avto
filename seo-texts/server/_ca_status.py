@@ -9,7 +9,7 @@ r = subprocess.run(['powershell', '-NoProfile', '-Command',
                     '$o=Get-CimInstance Win32_OperatingSystem; [math]::Round(100-100*$o.FreePhysicalMemory/$o.TotalVisibleMemorySize)'],
                    capture_output=True, text=True, timeout=120)
 print('ЦП %, память %:', r.stdout.split())
-for имя in ('ca-konveyer-obertka.json', 'ca-okved-dobor-progress.json', 'ca-rynok-15-progress.json', 'ca-signaly-progress.json'):
+for имя in ('ca-konveyer-obertka.json', 'ca-okved-dobor-progress.json', 'ca-rynok-15-progress.json', 'ca-signaly-progress.json', 'ca-gaz-zakupki-progress.json'):
     п = os.path.join(П, имя)
     print(имя, open(п, encoding='utf-8', errors='replace').read()[:400] if os.path.exists(п) else 'нет')
 print('замки', [os.path.basename(x) for x in glob.glob(os.path.join(П, '*.lock'))])
