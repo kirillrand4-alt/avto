@@ -69,6 +69,58 @@ if ВИД:
             k += 1
             if k <= n: print("#%s %s" % (о["id"], re.sub(r"\s+", " ", re.split(r"(?:-{4,}|_{4,}|>\s*>|Кому:|From:|От кого:)", о["t"])[0])[:260]))
     print("всего:", k); sys.exit(0)
+if "--sravnit" in sys.argv:
+    # ЭТАЛОН: ручное решение владельца по лиду (последний ответ получателя), иначе — модель.
+    import importlib
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    К = importlib.import_module("reply_classify_kandidat")
+    ВЛАД = {"not_interested": "не интересно", "in_bitrix": "интересно", "avtootvet": "автоответ", "v_otpuske": "автоответ"}
+    рид = {eid: rid for eid, rid in c.execute("SELECT id, recipient_id FROM events WHERE event_type IN ('reply','reply_auto')")}
+    последний = {}
+    for о in ответы:
+        r = рид.get(о["id"])
+        if r: последний[r] = max(последний.get(r, 0), о["id"])
+    сырые = {eid: (json.loads(det or "{}")) for eid, det in c.execute("SELECT id, detail_json FROM events WHERE event_type IN ('reply','reply_auto')")}
+    ит = Counter(); мат = Counter(); ош = defaultdict(list); ист = Counter()
+    for о in ответы:
+        м = готово.get(о["id"])
+        if not м: continue
+        r = рид.get(о["id"]); эт = None
+        if r and последний.get(r) == о["id"]:
+            л = c.execute("SELECT status FROM leads WHERE recipient_id=? ORDER BY id DESC LIMIT 1", (r,)).fetchone()
+            if л and л[0] in ВЛАД: эт = ВЛАД[л[0]]; ист["владелец"] += 1
+        if эт is None: эт = ГРУППА.get(м["model"]); ист["модель"] += 1
+        д = сырые.get(о["id"]) or {}
+        з = д.get("headers") if isinstance(д.get("headers"), dict) else None
+        try: кв = К.classify_reply(о["tema"], о["t"], з).kind
+        except Exception as ex: кв = "ошибка"
+        гб, гк = ГРУППА.get(о["pravila"], о["pravila"]), ГРУППА.get(кв, кв)
+        ит["было верно"] += (гб == эт); ит["стало верно"] += (гк == эт); ит["всего"] += 1
+        гм = ГРУППА.get(м["model"])
+        ит["было=модель"] += (гб == гм); ит["стало=модель"] += (гк == гм)
+        if эт != гм or ист.get("_") is None:
+            pass
+        влад = эт if (r and последний.get(r) == о["id"] and эт is not None and ист) else None
+        ит["было=любой"] += (гб in (эт, гм)); ит["стало=любой"] += (гк in (эт, гм))
+        мат[(гк, эт)] += 1
+        if гк != эт and len(ош[(гк, эт)]) < 40:
+            ош[(гк, эт)].append("#%s [%s] %s" % (о["id"], кв, re.sub(r"\s+", " ", re.split(r"(?:-{4,}|_{4,}|>\s*>|Кому:|From:|От кого:)", о["t"])[0])[:170]))
+    print("эталон: %s" % dict(ист))
+    n = ит["всего"]
+    print("СОВПАДЕНИЕ С МОДЕЛЬЮ: было %.0f%%, стало %.0f%%" % (100.0 * ит["было=модель"] / n, 100.0 * ит["стало=модель"] / n))
+    print("СОВПАДЕНИЕ ХОТЯ БЫ С ОДНИМ (владелец или модель): было %.0f%%, стало %.0f%%" % (100.0 * ит["было=любой"] / n, 100.0 * ит["стало=любой"] / n))
+    print("ТОЧНОСТЬ ГРУПП (эталон: владелец, иначе модель): было %d/%d (%.0f%%), стало %d/%d (%.0f%%)" % (ит["было верно"], ит["всего"], 100.0 * ит["было верно"] / ит["всего"], ит["стало верно"], ит["всего"], 100.0 * ит["стало верно"] / ит["всего"]))
+    гр = ["автоответ", "интересно", "не интересно", "нейтрально"]
+    print("строки — новые правила, столбцы — эталон:")
+    print("%-14s" % "" + "".join("%14s" % г for г in гр))
+    for a in гр: print("%-14s" % a + "".join("%14d" % мат[(a, b)] for b in гр))
+    if "--primery" in sys.argv:
+        КЛ = next((a.split("=",1)[1] for a in sys.argv if a.startswith("--kletka=")), None)
+        for к, сп in sorted(ош.items(), key=lambda x: -мат[x[0]]):
+            if КЛ and "%s>%s" % к != КЛ: continue
+            print("== правила «%s», эталон «%s» (%d)" % (к[0], к[1], мат[к]))
+            for x in сп: print("   ", x)
+    sys.exit(0)
 if "--lidy" in sys.argv:
     # что стало с лидами по ответам, где модель видит интерес, а правила — нет
     рид = {eid: rid for eid, rid in c.execute("SELECT id, recipient_id FROM events WHERE event_type IN ('reply','reply_auto')")}
