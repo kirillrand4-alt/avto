@@ -194,10 +194,14 @@ SEO-текст. Каждый запрос сперва преврати в но�
 фразу - используй его тему, а не формулировку.
 
 {auth_note}
-=== НАТИВНАЯ МОДЕЛЬ (обязательна) ===
-Статья - редакционный материал площадки, НЕ от поставщика: без байлайна и подписи,
-без названий компаний-продавцов в тексте (имена брендов допустимы ТОЛЬКО внутри
-текста-якоря ссылки, если якорь брендовый).
+{raskrytie_block}
+=== ПОДАЧА (обязательна) ===
+Каждый раздел H2 открывается прямым ответом на вопрос заголовка в 1-2 предложениях,
+дальше условия, расчёт и исключения. Ключевые утверждения (цифра, норма, вывод) понятны
+без соседнего абзаца: предмет и условие названы в той же фразе, без «он», «этот
+способ», «как сказано выше». Если тема про выбор между вариантами - одна таблица
+сравнения (<table><tr><th>/<td>, без стилей и объединённых ячеек); нет сравнения -
+таблицы нет.
 ТОН (канон владельца 04.08): спокойный инженерно-деловой разбор с цифровой
 конкретикой (диапазоны, классы, потери, коэффициенты - только проверенные). БЕЗ
 сцен-диалогов, вымышленных звонков, «ударных» однострочных абзацев и разговорных
@@ -210,7 +214,8 @@ SEO-текст. Каждый запрос сперва преврати в но�
 Первая строка: TITLE: <заголовок до 70 знаков с главным ключом>
 Вторая строка: DESCRIPTION: <150-160 знаков, с ключом, без кавычек>
 Третья строка: ANONS: <2-3 предложения для листинга площадки>
-Со второй строки: чистый HTML тела - <p>, <h2>, <h3>, <a>, <strong>, <ul>/<ol>/<li>.
+Со второй строки: чистый HTML тела - <p>, <h2>, <h3>, <a>, <strong>, <ul>/<ol>/<li>,
+<table>/<tr>/<th>/<td>.
 Без <h1>, без длинных тире, без ```-ограждений, без пояснений до и после."""
 
 
@@ -241,7 +246,59 @@ def build_prompt(job):
                          case=job['case'], donor_note=job['donor_note'],
                          seo=job.get('seo', 'ключи по теме статьи, без переспама'),
                          nlinks=len(job['links']), links_block=links_block,
-                         auth_note=auth_note)
+                         auth_note=auth_note, raskrytie_block=raskrytie_block(job))
+
+
+# Тип раскрытия (стайлгайд, «Модель раскрытия»). Упоминание введено владельцем 09.11.2026:
+# нативные статьи держат бренд только в якоре, и ИИ-ответам рекомендовать нечего.
+RASKRYTIE = ('нативная', 'упоминание', 'авторская')
+
+
+def raskrytie(job):
+    r = job.get('raskrytie') or 'нативная'
+    if r not in RASKRYTIE:
+        raise ValueError(f"{job['slug']}: raskrytie={r!r}, допустимо {RASKRYTIE}")
+    if r == 'упоминание' and not (job.get('brand') and job.get('brand_name')):
+        raise ValueError(f"{job['slug']}: для упоминания нужны brand (слаг kb) и brand_name")
+    return r
+
+
+def raskrytie_block(job):
+    r = raskrytie(job)
+    if r == 'упоминание':
+        sys.path.insert(0, os.path.join(DIR, '..'))
+        import brand_facts_lib as bf
+        facts = (bf.fact_block(job['brand']) or '').replace('—', '-').replace('–', '-')
+        if not facts:
+            raise ValueError(f"{job['slug']}: в kb нет фактов бренда {job['brand']!r}")
+        return f"""=== МОДЕЛЬ «С УПОМИНАНИЕМ» (обязательна) ===
+Статья - редакционный материал площадки: без байлайна и подписи. Бренд {job['brand_name']}
+назван в тексте ВНЕ ссылок РОВНО ОДИН раз - как пример решения в разборе, с одним
+проверяемым фактом ТОЛЬКО из блока ниже. Без оценок (лучший, надёжный, ведущий), без
+призывов, без цен и гарантий. Рядом - альтернатива или условие, при котором это решение
+не подходит. Другие наши бренды и компании-продавцы в тексте не называть (внутри
+текста-якоря брендового якоря имя допустимо). Строки «НЕ УТВЕРЖДАТЬ» - запреты, их
+содержание в текст не переносить.
+Факты бренда:
+{facts}
+"""
+    if r == 'авторская':
+        return """=== АВТОРСКАЯ МОДЕЛЬ ===
+Статья от эксперта-практика: байлайн приклеит код, сам его не пиши. Бренды называть
+только с фактами, без рекламных оценок и призывов.
+"""
+    return """=== НАТИВНАЯ МОДЕЛЬ (обязательна) ===
+Статья - редакционный материал площадки, НЕ от поставщика: без байлайна и подписи,
+без названий компаний-продавцов в тексте (имена брендов допустимы ТОЛЬКО внутри
+текста-якоря ссылки, если якорь брендовый).
+"""
+
+
+def brand_mentions(html, name):
+    """Сколько раз бренд назван вне текста ссылок."""
+    bare = re.sub(r'<a\b[^>]*>.*?</a>', ' ', html, flags=re.S)
+    bare = re.sub(r'<[^>]+>', ' ', bare)
+    return len(re.findall(r'(?<![\w-])' + re.escape(name) + r'(?![\w-])', bare, re.I))
 
 
 # Куда можно ссылаться как на источник. Домены, которые инженер и так бы процитировал.
@@ -253,7 +310,7 @@ AUTHORITY_RX = re.compile(
     r'protect\.gost\.ru|www\.iso\.org|rosstat\.gov\.ru|www\.gost\.ru)/')
 
 
-def qa_multi(html, links, auth_allow=2):
+def qa_multi(html, links, auth_allow=2, job=None):
     """qa_article из gp_gen, обобщённый на 1-2 разрешённых ссылки."""
     text = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', html)).strip()
     low = text.lower()
@@ -270,7 +327,7 @@ def qa_multi(html, links, auth_allow=2):
     # Голые < и & в тексте: статья уезжает в чужую CMS, и что она сделает с «deltaE < 2»
     # или «R&D» - лотерея. Найдено 20.08 в двух статьях волны, ни одна линза этого
     # не видит: они читают текст, а не разметку.
-    _tags = r'</?(?:p|h1|h2|h3|a|strong|ul|ol|li)\b[^>]*>'
+    _tags = r'</?(?:p|h1|h2|h3|a|strong|ul|ol|li|table|tr|th|td)\b[^>]*>'
     _rest = re.sub(_tags, '', html)
     if '<' in _rest:
         issues.append('голый < в тексте (нужно &lt; или словами)')
@@ -280,7 +337,7 @@ def qa_multi(html, links, auth_allow=2):
     # ушла в приёмку с последним абзацем без </p> (20.08). Ни одна из 17 линз этого
     # не увидела: они читают текст, а разметку не считают.
     _stack, _bad = [], []
-    for _m in re.finditer(r'</?(p|h1|h2|h3|ul|ol|li|strong)\b[^>]*>', html):
+    for _m in re.finditer(r'</?(p|h1|h2|h3|ul|ol|li|strong|table|tr|th|td)\b[^>]*>', html):
         _t = _m.group(1)
         if _m.group(0).startswith('</'):
             if _stack and _stack[-1] == _t:
@@ -327,8 +384,18 @@ def qa_multi(html, links, auth_allow=2):
         for h in our:
             if h in paras[0] or h in paras[-1]:
                 issues.append('ссылка в первом/последнем абзаце - перенести в середину')
-    if re.search(r'<(?!/?(p|h2|h3|a|strong|ul|ol|li)\b)[a-z]', html):
-        issues.append('посторонние HTML-теги (разрешены p, h2, h3, a, strong, ul, ol, li)')
+    if re.search(r'<(?!/?(p|h2|h3|a|strong|ul|ol|li|table|tr|th|td)\b)[a-z]', html):
+        issues.append('посторонние HTML-теги (разрешены p, h2, h3, a, strong, ul, ol, li, table, tr, th, td)')
+    # Таблица сравнения разрешена 09.11.2026, но в чужой CMS переживает только простая:
+    # без стилей, атрибутов и объединённых ячеек.
+    if len(re.findall(r'<table\b', html)) > 2:
+        issues.append('таблиц больше двух (норма: одна, где тема просит сравнения)')
+    if re.search(r'<(table|tr|th|td)\s[^>]*>', html):
+        issues.append('атрибуты в таблице (style/colspan/rowspan и т.п.) - только голые <table>, <tr>, <th>, <td>')
+    if job and raskrytie(job) == 'упоминание':
+        n = brand_mentions(html, job['brand_name'])
+        if n != 1:
+            issues.append(f"бренд {job['brand_name']} вне ссылок назван {n} раз (нужно ровно 1)")
     n_open = len(re.findall(r'<a\s', html))
     n_strict = len(re.findall(r'<a href="[^"]+">', html))
     n_close = html.count('</a>')
@@ -436,7 +503,7 @@ def gen_job(job, model_override=None, tag=None):
                 {'role': 'user', 'content': f'Формат нарушен ({e}). Повтори ответ СТРОГО по формату: '
                  'первая строка TITLE: <заголовок>, дальше чистый HTML тела.'}]
             continue
-        issues = qa_multi(html, job['links'], job.get('auth_allow', 0))
+        issues = qa_multi(html, job['links'], job.get('auth_allow', 0), job)
         if not issues:
             break
         print(f"[{job['slug']}] раунд {rnd+1}: {len(issues)} претензий: {'; '.join(issues)[:160]}",
@@ -453,7 +520,8 @@ def gen_job(job, model_override=None, tag=None):
     meta = dict(slug=job['slug'], title=title, description=desc, anons=anons,
                 donor=job['donor'],
                 links=[u for u, _ in job['links']],
-                anchors=[a for _, a in job['links']], model=used_model, native=True,
+                anchors=[a for _, a in job['links']], model=used_model, native=raskrytie(job) == 'нативная',
+                raskrytie=raskrytie(job),
                 clean=not issues, issues=issues,
                 chars=len(re.sub(r'<[^>]+>', '', html)), seconds=round(time.time() - t0),
                 output_tokens=usage_out)
