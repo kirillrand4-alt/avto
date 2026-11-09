@@ -104,7 +104,8 @@ def main():
     отметка(этап='сделки', **{н: {к: len(v) for к, v in с.items()} for н, с in напр_инн.items()})
     # ---------- 2. ждём реестр МСП (его качает ca_fns_reestr.py) ----------
     for _ in range(240):
-        фф = [f for f in glob.glob(os.path.join(FNS, 'data-*-structure-*.zip')) if zipfile.is_zipfile(f)]
+        # метку .ok кладёт ca_fns_reestr.py после проверки CRC всего архива (09.11: первый архив был битый)
+        фф = [f for f in glob.glob(os.path.join(FNS, 'data-*-structure-*.zip')) if os.path.exists(f + '.ok')]
         if фф:
             break
         отметка(этап='жду rsmp')

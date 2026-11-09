@@ -71,6 +71,9 @@ def ssl_ctx():
     return ctx
 
 
+UA = 'Mozilla/5.0 (compatible; ruspromdata/1.0)'
+
+
 def get(url, ctx, tmo=120):
     з = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; ruspromdata/1.0)'})
     return urllib.request.urlopen(з, timeout=tmo, context=ctx)
@@ -88,49 +91,74 @@ def скачать_rsmp(ctx):
         raise SystemExit('нет ссылки на rsmp')
     url = max(ссылки, key=lambda u: (lambda d: d[4:] + d[2:4] + d[:2])(re.search(r'data-(\d{8})', u).group(1)))
     путь = os.path.join(FNS, os.path.basename(url))
-    if os.path.exists(путь) and zipfile.is_zipfile(путь):
+    if os.path.exists(путь + '.ok'):
         отметка(этап='rsmp-есть', url=url)
         return путь
-    if os.path.exists(путь):  # 09.11: первый заход оборвался на 211 МБ без исключения — битый файл докачиваем
-        os.replace(путь, путь + '.part')
+    # 09.11: докачка «с конца файла» дала архив, битый с места первого обрыва (3321 из 7440 файлов) — теперь качаем
+    # кусками по 64 МБ с явным Range a-b, сверяем длину и Content-Range, пишем по смещению; в конце — CRC всех файлов
+    # архива; только после этого рядом кладётся метка .ok (её ждёт ca_pokupateli.py)
+    if os.path.exists(путь) and целый(путь):
+        open(путь + '.ok', 'w').close()
+        return путь
+    for f in (путь, путь + '.part'):
+        if os.path.exists(f):
+            os.remove(f)
     if shutil.disk_usage(FNS).free < 15e9:
         raise SystemExit('мало места под rsmp')
-    отметка(этап='rsmp-качаю', url=url)
-    for попытка in range(12):  # обрывы соединения ФНС: докачка с места обрыва (Range)
-        есть = os.path.getsize(путь + '.part') if os.path.exists(путь + '.part') else 0
-        try:
-            з = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; ruspromdata/1.0)',
-                                                     **({'Range': 'bytes=%d-' % есть} if есть else {})})
-            with urllib.request.urlopen(з, timeout=300, context=ctx) as r, open(путь + '.part', 'ab' if есть else 'wb') as f:
-                if есть and r.status != 206:  # сервер не умеет докачку — с нуля
-                    f.seek(0)
-                    f.truncate()
-                    есть = 0
-                всего = есть + int(r.headers.get('Content-Length') or 0)
-                n = есть
-                while True:
-                    ch = r.read(1 << 22)
-                    if not ch:
-                        break
-                    f.write(ch)
-                    n += len(ch)
-                    if n % (200 << 20) < (1 << 22):
-                        отметка(скачано_мб=n >> 20, всего_мб=всего >> 20)
-            if всего and n < всего:
-                raise IOError('оборвалось на %d из %d МБ' % (n >> 20, всего >> 20))
-            if not zipfile.is_zipfile(путь + '.part'):
-                raise IOError('не zip (%d МБ)' % (n >> 20))
-            os.replace(путь + '.part', путь)
-            return путь
-        except Exception as e:  # noqa: BLE001
-            отметка(ошибка_скачивания=repr(e)[:200], попытка=попытка)
-            if '416' in repr(e):  # докачка за концом файла: целый — берём, нет — с нуля
-                if zipfile.is_zipfile(путь + '.part'):
-                    os.replace(путь + '.part', путь)
-                    return путь
-                os.remove(путь + '.part')
-            time.sleep(30 * min(попытка + 1, 4))
-    raise SystemExit('rsmp не скачался')
+    з = urllib.request.Request(url, headers={'User-Agent': UA, 'Range': 'bytes=0-0'})
+    with urllib.request.urlopen(з, timeout=120, context=ctx) as r:
+        всего = int(r.headers['Content-Range'].split('/')[-1])
+    КУС = 64 << 20
+    куски = [(a, min(a + КУС, всего) - 1) for a in range(0, всего, КУС)]
+    отметка(этап='rsmp-качаю', url=url, всего_мб=всего >> 20, кусков=len(куски))
+    with open(путь + '.part', 'wb') as f:
+        f.truncate(всего)
+    with open(путь + '.part', 'r+b') as f:
+        for k, (a, b) in enumerate(куски):
+            for попытка in range(15):
+                try:
+                    з = urllib.request.Request(url, headers={'User-Agent': UA, 'Range': 'bytes=%d-%d' % (a, b)})
+                    with urllib.request.urlopen(з, timeout=300, context=ctx) as r:
+                        cr = r.headers.get('Content-Range') or ''
+                        if r.status != 206 or not cr.startswith('bytes %d-%d/' % (a, b)):
+                            raise IOError('не тот кусок: %s %s' % (r.status, cr))
+                        данные = r.read()
+                    if len(данные) != b - a + 1:
+                        raise IOError('кусок %d: %d из %d байт' % (k, len(данные), b - a + 1))
+                    f.seek(a)
+                    f.write(данные)
+                    break
+                except Exception as e:  # noqa: BLE001
+                    отметка(ошибка_скачивания=repr(e)[:200], кусок=k, попытка=попытка)
+                    time.sleep(10 * min(попытка + 1, 6))
+            else:
+                raise SystemExit('кусок %d не скачался' % k)
+            if k % 4 == 0:
+                отметка(этап='rsmp-качаю', кусок=k, кусков=len(куски))
+        f.flush()
+        os.fsync(f.fileno())
+    if not целый(путь + '.part'):
+        os.replace(путь + '.part', путь + '.bad')
+        raise SystemExit('rsmp битый после скачивания')
+    os.replace(путь + '.part', путь)
+    open(путь + '.ok', 'w').close()
+    return путь
+
+
+def целый(путь):
+    """CRC всех файлов архива (zipfile проверяет при полном чтении)."""
+    отметка(этап='rsmp-проверка CRC')
+    try:
+        with zipfile.ZipFile(путь) as z:
+            for i in z.infolist():
+                with z.open(i) as fh:
+                    while fh.read(1 << 22):
+                        pass
+        return True
+    except Exception as e:  # noqa: BLE001
+        отметка(rsmp_битый=repr(e)[:200])
+        return False
+
 
 
 def документы(fh):
