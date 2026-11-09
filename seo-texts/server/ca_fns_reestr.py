@@ -37,6 +37,19 @@ if '--vnutri' not in sys.argv:
 sys.path.insert(0, DIR)
 import ca_cel  # noqa: E402
 
+# 09.11: раннер перезапускал запуск по своему таймауту — четыре копии писали в один .part; второй экземпляр выходит
+ЗАМОК = os.path.join(ПАПКА, 'ca_fns_reestr.lock')
+try:
+    _fd = os.open(ЗАМОК, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    os.write(_fd, str(os.getpid()).encode())
+    os.close(_fd)
+except FileExistsError:
+    _pid = open(ЗАМОК).read().strip()
+    if _pid and str(_pid) in subprocess.run(['tasklist', '/FI', 'PID eq %s' % _pid], capture_output=True, text=True).stdout:
+        print('уже запущен, pid', _pid)
+        sys.exit(0)
+    open(ЗАМОК, 'w').write(str(os.getpid()))
+
 ПРОГ = os.path.join(ПАПКА, 'ca-zamer-progress.json')
 сост = {'старт': time.strftime('%Y-%m-%d %H:%M:%S'), 'этап': 'rsmp-ссылка'}
 
@@ -111,6 +124,11 @@ def скачать_rsmp(ctx):
             return путь
         except Exception as e:  # noqa: BLE001
             отметка(ошибка_скачивания=repr(e)[:200], попытка=попытка)
+            if '416' in repr(e):  # докачка за концом файла: целый — берём, нет — с нуля
+                if zipfile.is_zipfile(путь + '.part'):
+                    os.replace(путь + '.part', путь)
+                    return путь
+                os.remove(путь + '.part')
             time.sleep(30 * min(попытка + 1, 4))
     raise SystemExit('rsmp не скачался')
 
@@ -325,3 +343,8 @@ if __name__ == '__main__':
     except BaseException as e:  # noqa: BLE001
         отметка(этап='ошибка', ошибка=repr(e)[:500])
         raise
+    finally:
+        try:
+            os.remove(ЗАМОК)
+        except OSError:
+            pass
