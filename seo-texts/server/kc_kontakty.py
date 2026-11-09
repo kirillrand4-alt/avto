@@ -322,6 +322,64 @@ def checko(к):
 СТРАНИЦ_САЙТА = int(os.environ.get('KC_STRANIC', '30' if ГЛУБ else '15'))
 ЛЮДЕЙ_СТРАНИЦ = int(os.environ.get('KC_LYUDEY', '200' if ГЛУБ else '40'))
 ПАГИНАЦИЯ_СТР, КАРТОЧЕК = (20, 200) if ГЛУБ else (10, 30)
+# документы сайта (план, шаг 4: «PDF и документы»): карточка предприятия/реквизиты, прайсы и бланки с добавочными,
+# политика ПДн (ответственный), годовые отчёты, структура, вакансии, положения о закупках. Только в глубоком режиме,
+# только свой домен; текст документа идёт в общую разметку как ещё одна страница (номера, почты, подписи, роли).
+ДОКОВ = int(os.environ.get('KC_DOKOV', '8' if ГЛУБ else '0'))
+ДОК_ФАЙЛ = re.compile(r'\.(pdf|docx)(?:$|[?#])', re.I)
+ДОК_ТЕМА = re.compile(r'rekviz|реквизит|kartoch|карточк|card|price|прайс|polit|политик|персональн|pdn|konfiden|'
+                      r'конфиденц|otchet|отч[её]т|godov|годов|annual|blank|бланк|kontakt|контакт|struktur|структур|'
+                      r'vakan|ваканс|zakup|закуп|tender|тендер|polozh|положени|spravoch|справоч|telefon|телефон', re.I)
+
+
+def док_ссылки(база, html):
+    """[(url, тема)] документов со страницы: свой домен, .pdf/.docx; тема — по адресу или тексту ссылки."""
+    свой = MN.домен(база)
+    out = []
+    for м in re.finditer(r'<a\b[^>]*href=["\']([^"\'#]+)["\'][^>]*>(.*?)</a>', html or '', re.I | re.S):
+        u = urllib.parse.urljoin(база, м.group(1).strip())
+        if not ДОК_ФАЙЛ.search(u) or MN.домен(u) != свой:
+            continue
+        анк = re.sub(r'<[^>]+>|\s+', ' ', м.group(2))[:150]
+        out.append((u, bool(ДОК_ТЕМА.search(urllib.parse.unquote(u) + ' ' + анк))))
+    return out
+
+
+def док_текст(url):
+    """Текст PDF (fitz, иначе pypdf; до 40 страниц) или DOCX; до 10 МБ. Пусто — не открылся или нечем читать."""
+    import ssl
+    import urllib.request
+    import zipfile
+    req = urllib.request.Request(MP.ascii_url(url), headers={'User-Agent': MP.UA, 'Accept': '*/*'})
+    данные = b''
+    for ctx in (None, ssl._create_unverified_context()):
+        try:
+            with urllib.request.build_opener(urllib.request.ProxyHandler({}),
+                                             urllib.request.HTTPSHandler(context=ctx)).open(req, timeout=20) as r:
+                данные = r.read(10_000_000)
+            break
+        except Exception:  # noqa: BLE001
+            continue
+    if not данные:
+        return ''
+    try:
+        if данные[:4] == b'%PDF':
+            try:
+                import fitz
+                with fitz.open(stream=данные, filetype='pdf') as d:
+                    return '\n'.join(d[i].get_text() for i in range(min(40, d.page_count)))[:200_000]
+            except ImportError:
+                import pypdf
+                ч = pypdf.PdfReader(io.BytesIO(данные))
+                return '\n'.join((ч.pages[i].extract_text() or '') for i in range(min(40, len(ч.pages))))[:200_000]
+        if данные[:2] == b'PK':
+            with zipfile.ZipFile(io.BytesIO(данные)) as z:
+                x = z.read('word/document.xml').decode('utf-8', 'replace')
+            т = re.sub(r'<[^>]+>', '', x.replace('</w:p>', '\n').replace('<w:tab/>', ' '))
+            return re.sub(r'[ \t]+', ' ', _html.unescape(т)).strip()[:200_000]
+    except Exception:  # noqa: BLE001
+        return ''
+    return ''
 
 
 def люди_ссылки(база, html):
@@ -762,6 +820,7 @@ def обход(к, сайт):
         ec_поток.start()
     очередь = [старт] + [u for u in к.get('страницы_базы', []) if u.startswith('http')][:6]
     тексты, страницы, сырые = {}, [], {}
+    доки = {}  # url документа -> тема (реквизиты, прайс, политика ПДн...) — глубокий режим
     i = 0
     люди_доп = 0  # сверх СТРАНИЦ_САЙТА (15, глубокий 30): пагинация и карточки сотрудников, до ЛЮДЕЙ_СТРАНИЦ (40 / 200)
     while i < len(очередь) and len(тексты) < СТРАНИЦ_САЙТА + люди_доп:
@@ -774,6 +833,10 @@ def обход(к, сайт):
             continue
         тексты[u] = MP.в_текст(html) + json_текст(html)
         сырые[u] = html
+        if ДОКОВ:
+            for л, тема in док_ссылки(u, html):
+                if л not in доки:
+                    доки[л] = тема
         if i == 1 or (len(очередь) < 2 * СТРАНИЦ_САЙТА and ВТОРОЙ_УРОВЕНЬ.search(urllib.parse.unquote(u))):
             for л in ссылки_kc(u, html)[:(24 if ГЛУБ else 12) if i == 1 else (10 if ГЛУБ else 6)]:
                 if л not in очередь:
@@ -784,6 +847,12 @@ def обход(к, сайт):
                 if л not in очередь and люди_доп < ЛЮДЕЙ_СТРАНИЦ:
                     очередь.append(л)
                     люди_доп += 1
+    # документы: сначала по теме (реквизиты, прайс, контакты, политика ПДн), потом прочие; до ДОКОВ штук
+    for л in sorted(доки, key=lambda x: not доки[x])[:ДОКОВ]:
+        т = док_текст(л)
+        страницы.append([л, 'док' if т else 'док: не прочитан'])
+        if т.strip():
+            тексты[л] = т
     свежие = dict(сырые)  # в кэш — только скачанное сейчас (старым страницам не ставим новую дату)
     if ec_поток is not None:
         ec_поток.join()
