@@ -135,7 +135,7 @@ except sqlite3.Error:
 стоп = {(s, v.lower()) for s, v in c.execute("SELECT scope, value FROM suppression")}
 проба = {r[0].lower(): r[1] for r in c.execute("SELECT email, verdict FROM addr_probe")}
 уже = set()
-for _ж in (ЖУР, ЖУР_ПИЛОТ):
+for _ж in (ЖУР, ЖУР_ПИЛОТ, r"C:\sender\_ops\napominaniya-v2-ne-profil.jsonl"):   # не наш профиль — второй раз модель не гоняем
     if not os.path.exists(_ж):
         continue
     for s in io.open(_ж, encoding="utf-8"):
@@ -419,10 +419,18 @@ while len(готово) < НАДО and i < len(кандидаты):
             continue
         запись["chernovik"], запись["telo"] = запись["telo"], т
         if ЗАВЕСТИ:
-            р = cs.submit_reply(reply_to=запись["email"], subject=запись["tema"], body=т, in_reply_to=x["rfc"],
-                                thread_id=x["thr"], recipient_id=x["rid"], inn=запись["inn"],
-                                panel={"mailbox_id": x["mb"], "napominanie": запись["zahod"],
-                                       "vruchnuyu": "напоминания v2 (шаблоны редактора) 02.11"})
+            for _з in range(12):   # 09.11: «database is locked» уронил прогон на 18-й карточке — ждём и повторяем
+                try:
+                    р = cs.submit_reply(reply_to=запись["email"], subject=запись["tema"], body=т, in_reply_to=x["rfc"],
+                                        thread_id=x["thr"], recipient_id=x["rid"], inn=запись["inn"],
+                                        panel={"mailbox_id": x["mb"], "napominanie": запись["zahod"],
+                                               "vruchnuyu": "напоминания v2 (шаблоны редактора) 02.11"})
+                    break
+                except sqlite3.OperationalError as _ex:
+                    if "locked" not in str(_ex) or _з == 11:
+                        raise
+                    print("база занята, жду 10 с", flush=True)
+                    time.sleep(10)
             запись["karta"] = getattr(р, "review_id", None)
             запись["status"] = getattr(р, "status", "")
             if not getattr(р, "created", True) or запись["status"] != "pending":
