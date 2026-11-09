@@ -11,7 +11,12 @@
    клиента, в нём КП/презентация/вложение, и прошло ≥3 дней.
 Только чтение, кроме --primenit (только перевод статуса bitrix-лидов).
     perepiska_razbor.py [--primenit]"""
-import email, email.header, email.utils, imaplib, io, json, os, re, sqlite3, sys
+import email, email.header, email.utils, imaplib, io, json, os, re, sqlite3, subprocess, sys, time
+if "--zapusk" in sys.argv:   # IMAP по всем ящикам дольше 900 с раннера — отсоединённо, вывод в _ops/perepiska-razbor.txt
+    л = io.open(r"C:\sender\_ops\perepiska-razbor.txt", "w", encoding="utf-8")
+    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__)] + [a for a in sys.argv[1:] if a != "--zapusk"],
+                         cwd=r"C:\sender", stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
+    time.sleep(5); print("запущен, pid %d" % п.pid); sys.exit(0)
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 sys.path.insert(0, r"C:\sender")
@@ -34,10 +39,18 @@ for л in лиды:
     почему = []
     if сд and (сд[0] or сд[1] or сд[2]): почему.append("сделка в работе: " + "+".join(n for n, f in zip(("Meyer", "КЦ", "СЦ"), сд[:3]) if f))
     if л[5]: почему.append("лид передан в Битрикс #%s" % л[5])
+    # владелец 09.11: «битрикс который "передали в битрикс"» — у компании (ИНН) или адреса есть лид в этом статусе
+    пб = c.execute("SELECT id FROM leads WHERE status='in_bitrix' AND id<>? AND ((inn=? AND ?<>'') OR lower(email)=?) LIMIT 1",
+                   (л[0], л[3] or "", цифры(л[3]), л[1] or "@@")).fetchone()
+    if пб: почему.append("у компании лид #%s «передали в Битрикс»" % пб[0])
     (в_битриксе if почему else остальные).append((л, "; ".join(почему)))
 try: print("выгрузка сделок Битрикса от:", c.execute("SELECT max(ts) FROM sdelki_napr").fetchone()[0])
 except sqlite3.Error: pass
 print("уже в Битриксе: %d → в «не интересно»" % len(в_битриксе))
+_пр = Counter()
+for _, п in в_битриксе:
+    for ч in п.split("; "): _пр[re.sub(r"#\d+", "#", ч.split(":")[0])] += 1
+print("по признакам:", _пр.most_common())
 for л, п in в_битриксе[:40]: print("   #%s %-32s %-34s %s" % (л[0], л[1][:32], str(л[4] or "")[:34], п))
 if "--primenit" in sys.argv:
     n = 0
