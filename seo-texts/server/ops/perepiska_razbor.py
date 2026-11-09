@@ -30,7 +30,14 @@ store = Store(cfg.get("service.db_path", r"C:\sender\sender.db")); c = store._co
 сейчас = datetime.now(timezone.utc)
 def цифры(x): return "".join(ч for ч in str(x or "") if ч.isdigit())
 лиды = c.execute("SELECT id, lower(email), recipient_id, inn, company_name, bitrix_lead_id, version, created_at FROM leads WHERE status='perepiska'").fetchall()
-print("лидов «ведётся переписка»: %d" % len(лиды))
+МЕЙЕР = {mb.mailbox_id for mb in cfg.mailboxes() if getattr(mb, "division", "") == "meyer"}
+if "--meyer" in sys.argv:   # владелец 09.11: «можешь только мейер проверять»
+    def _мейер(л):
+        яя = {r[0] for r in c.execute("SELECT DISTINCT mailbox_id FROM messages WHERE recipient_id=? AND status='sent'", (л[2],))}
+        яя |= {r[0] for r in c.execute("SELECT DISTINCT mailbox_id FROM events WHERE recipient_id=? AND event_type='reply'", (л[2],))}
+        return bool(яя & МЕЙЕР)
+    лиды = [л for л in лиды if _мейер(л)]
+print("лидов «ведётся переписка»%s: %d" % (" (Meyer)" if "--meyer" in sys.argv else "", len(лиды)))
 в_битриксе, остальные = [], []
 for л in лиды:
     сд = None
@@ -66,21 +73,19 @@ def дек(v):
     try: return str(email.header.make_header(email.header.decode_header(v or "")))
     except Exception: return str(v or "")
 SINCE = (сейчас - timedelta(days=75)).strftime("%d-%b-%Y")
-for mb in cfg.mailboxes():
-    try:
-        im = imaplib.IMAP4_SSL(mb.imap_host, mb.imap_port, timeout=25); im.login(mb.login, os.getenv(mb.password_env, ""))
-    except Exception as ex:  # noqa: BLE001
-        print("вход не вышел:", mb.mailbox_id, str(ex)[:40]); continue
+не_вышло = []
+def _скан(mb):
+    im = _ящик(mb)
     папка = None
     for стр in im.list()[1] or []:
         s = стр.decode("utf-8", "replace") if isinstance(стр, bytes) else str(стр)
         if "\\Sent" in s or re.search(r'"(Sent|Отправленные)"$', s):
             м = re.search(r'"([^"]+)"$', s); папка = м.group(1) if м else "Sent"; break
-    try:
-        if im.select('"%s"' % (папка or "Sent"), readonly=True)[0] != "OK": im.logout(); continue
+    if True:
+        if im.select('"%s"' % (папка or "Sent"), readonly=True)[0] != "OK": im.logout(); return
         uids = (im.uid("SEARCH", None, "SINCE", SINCE)[1][0] or b"").split()
-        for i in range(0, len(uids), 100):
-            typ, data = im.uid("FETCH", b",".join(uids[i:i + 100]), "(BODYSTRUCTURE BODY.PEEK[HEADER.FIELDS (TO CC DATE SUBJECT)])")
+        for i in range(0, len(uids), 25):
+            typ, data = im.uid("FETCH", b",".join(uids[i:i + 25]), "(BODYSTRUCTURE BODY.PEEK[HEADER.FIELDS (TO CC DATE SUBJECT)])")
             структ = ""
             for ч in data or []:
                 if isinstance(ч, tuple):
@@ -94,10 +99,24 @@ for mb in cfg.mailboxes():
                     вл = bool(re.search(r'"(?:attachment|application)"|"(?:PDF|pdf|vnd\.|msword|octet-stream)"', структ, re.I))
                     тема = дек(h.get("Subject"))
                     for a in общ: отправлено[a].append((дата, mb.mailbox_id, тема, вл, "почта"))
-    except Exception as ex:  # noqa: BLE001
-        print("папка", mb.mailbox_id, str(ex)[:60])
     try: im.logout()
     except Exception: pass
+
+def _ящик(mb):
+    im = imaplib.IMAP4_SSL(mb.imap_host, mb.imap_port, timeout=40); im.login(mb.login, os.getenv(mb.password_env, ""))
+    return im
+for mb in cfg.mailboxes():
+    if "--meyer" in sys.argv and mb.mailbox_id not in МЕЙЕР: continue
+    for _попытка in range(4):
+        try:
+            _скан(mb); break
+        except Exception as ex:  # noqa: BLE001
+            print("ящик %s, попытка %d: %s" % (mb.mailbox_id, _попытка + 1, str(ex)[:60]), flush=True); time.sleep(20 * (_попытка + 1))
+    else:
+        не_вышло.append(mb.mailbox_id)
+print("не удалось прочитать «Отправленные»:", не_вышло or "все прочитаны")
+if False:
+    im = None
 # через панель
 КП = re.compile(r"(?i)\bкп\b|коммерческ\w* предложени|презентаци|прайс|опросн\w* лист|расч[её]т|во вложени|прикрепля|направляю")
 for em, т, тело, пj in c.execute("SELECT lower(email), COALESCE(decided_at, updated_at), COALESCE(edited_body, body), COALESCE(panel_json,'') FROM confirm_reviews WHERE status='sent' AND kind='reply'"):
