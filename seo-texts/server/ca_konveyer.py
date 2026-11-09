@@ -62,7 +62,10 @@ def загрузка():
 
 def main():
     сп = os.path.join(DIR, 'ca-spisok.json')
-    if not os.path.exists(сп) or os.environ.get('CA_SPISOK_ZANOVO') == '1':
+    флаг = os.path.join(ПАПКА, 'ca-spisok-zanovo.flag')  # вторая волна: пересобрать список (лазер с сигналом, добор)
+    if not os.path.exists(сп) or os.environ.get('CA_SPISOK_ZANOVO') == '1' or os.path.exists(флаг):
+        if os.path.exists(флаг):
+            os.remove(флаг)
         отметка(этап='список')
         with open(os.path.join(ПАПКА, 'ca_spisok_%s.log' % time.strftime('%d%m-%H%M')), 'ab') as f:
             r = subprocess.run([sys.executable, '-u', os.path.join(DIR, 'ca_spisok.py')], cwd=DIR, env=ENV,
