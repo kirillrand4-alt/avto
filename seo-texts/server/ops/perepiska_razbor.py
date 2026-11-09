@@ -116,7 +116,7 @@ if "--kesh" in sys.argv and os.path.exists(КЭШ):
     for a, сп in json.load(io.open(КЭШ, encoding="utf-8")).items():
         for x in сп: отправлено[a].append((datetime.fromisoformat(x[0]), x[1], x[2], x[3], x[4]))
     print("«Отправленные» — из кэша")
-for mb in ([] if "--kesh" in sys.argv and os.path.exists(КЭШ) else cfg.mailboxes()):
+for mb in ([] if ("--kesh" in sys.argv and os.path.exists(КЭШ)) or "--bez-imap" in sys.argv else cfg.mailboxes()):
     if "--meyer" in sys.argv and mb.mailbox_id not in МЕЙЕР: continue
     for _попытка in range(4):
         try:
@@ -126,7 +126,7 @@ for mb in ([] if "--kesh" in sys.argv and os.path.exists(КЭШ) else cfg.mailbo
     else:
         не_вышло.append(mb.mailbox_id)
 print("не удалось прочитать «Отправленные»:", не_вышло or "все прочитаны")
-if "--kesh" not in sys.argv:
+if "--kesh" not in sys.argv and "--bez-imap" not in sys.argv:
     with io.open(КЭШ, "w", encoding="utf-8") as _к:
         json.dump({a: [(x[0].isoformat(), x[1], x[2], x[3], x[4]) for x in сп] for a, сп in отправлено.items()}, _к, ensure_ascii=False)
 if False:
