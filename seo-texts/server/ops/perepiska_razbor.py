@@ -83,9 +83,15 @@ def _скан(mb):
             м = re.search(r'"([^"]+)"$', s); папка = м.group(1) if м else "Sent"; break
     if True:
         if im.select('"%s"' % (папка or "Sent"), readonly=True)[0] != "OK": im.logout(); return
-        uids = (im.uid("SEARCH", None, "SINCE", SINCE)[1][0] or b"").split()
+        # 09.11: перебор всех «Отправленных» (≈0,2 с на письмо у Яндекса) рвёт соединение —
+        # ищем на сервере только письма на адреса лидов (TO и CC)
+        _н = set()
+        for _а in sorted(адреса):
+            for _поле in ("TO", "CC"):
+                _н |= set((im.uid("SEARCH", None, "SINCE", SINCE, _поле, '"%s"' % _а)[1][0] or b"").split())
+        uids = sorted(_н, key=int)
         for i in range(0, len(uids), 25):
-            typ, data = im.uid("FETCH", b",".join(uids[i:i + 25]), "(BODYSTRUCTURE BODY.PEEK[HEADER.FIELDS (TO CC DATE SUBJECT)])")
+            typ, data = im.uid("FETCH", b",".join(uids[i:i + 25]), "(BODY.PEEK[HEADER.FIELDS (TO CC DATE SUBJECT CONTENT-TYPE)])")
             структ = ""
             for ч in data or []:
                 if isinstance(ч, tuple):
@@ -96,7 +102,7 @@ def _скан(mb):
                     if not общ: continue
                     try: дата = email.utils.parsedate_to_datetime(h.get("Date")).astimezone(timezone.utc)
                     except Exception: continue
-                    вл = bool(re.search(r'"(?:attachment|application)"|"(?:PDF|pdf|vnd\.|msword|octet-stream)"', структ, re.I))
+                    вл = "multipart/mixed" in str(h.get("Content-Type") or "").lower()   # вложение — по типу письма (BODYSTRUCTURE роняет IMAP Яндекса)
                     тема = дек(h.get("Subject"))
                     for a in общ: отправлено[a].append((дата, mb.mailbox_id, тема, вл, "почта"))
     try: im.logout()
