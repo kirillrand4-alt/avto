@@ -58,6 +58,32 @@ if os.path.exists(ЖУР):
         except Exception: pass
 print("ответов с текстом: %d, размечено моделью: %d" % (len(ответы), len(готово)), flush=True)
 
+ВИД = next((a.split("=",1)[1] for a in sys.argv if a.startswith("--vid=")), None)
+if ВИД:
+    а, б = ВИД.split(">")
+    n = int(next((a.split("=",1)[1] for a in sys.argv if a.startswith("--n=")), "25"))
+    k = 0
+    for о in ответы:
+        м = готово.get(о["id"])
+        if м and о["pravila"] == а and м["model"] == б:
+            k += 1
+            if k <= n: print("#%s %s" % (о["id"], re.sub(r"\s+", " ", re.split(r"(?:-{4,}|_{4,}|>\s*>|Кому:|From:|От кого:)", о["t"])[0])[:260]))
+    print("всего:", k); sys.exit(0)
+if "--lidy" in sys.argv:
+    # что стало с лидами по ответам, где модель видит интерес, а правила — нет
+    рид = {eid: rid for eid, rid in c.execute("SELECT id, recipient_id FROM events WHERE event_type IN ('reply','reply_auto')")}
+    ст = Counter(); прим = []
+    for о in ответы:
+        м = готово.get(о["id"])
+        if not м or ГРУППА.get(м["model"]) != "интересно" or ГРУППА.get(о["pravila"]) == "интересно": continue
+        л = c.execute("SELECT id, status, reply_kind, bitrix_lead_id FROM leads WHERE recipient_id=? ORDER BY id DESC LIMIT 1", (рид.get(о["id"]),)).fetchone()
+        к = (м["model"], л[1] if л else "лида нет", "в битриксе" if л and л[3] else "")
+        ст[к] += 1
+        if (not л or л[1] in ("not_interested", "closed", "avtootvet", "deleted")) and len(прим) < 25:
+            прим.append("#%s лид %s %s | %s" % (о["id"], л[0] if л else "-", л[1] if л else "-", re.sub(r"\s+", " ", о["t"])[:150]))
+    for k, n in ст.most_common(): print("  %4d  %s" % (n, k))
+    for x in прим: print("   ", x)
+    sys.exit(0)
 if "--otchet" in sys.argv:
     мат = Counter(); вид_мат = Counter(); прим = defaultdict(list)
     for о in ответы:
@@ -76,6 +102,7 @@ if "--otchet" in sys.argv:
     print("\nчастые расхождения по видам (правила → модель):")
     for (a, b), n in вид_мат.most_common(40):
         if ГРУППА.get(a, a) != ГРУППА.get(b, b): print("  %4d  %s → %s" % (n, a, b))
+    if "--kratko" in sys.argv: sys.exit(0)
     print("\nПРИМЕРЫ:")
     for к, сп in sorted(прим.items(), key=lambda x: -мат[x[0]]):
         print("== правила «%s», модель «%s» (%d)" % (к[0], к[1], мат[к]))
