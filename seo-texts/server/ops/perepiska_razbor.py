@@ -111,7 +111,12 @@ def _скан(mb):
 def _ящик(mb):
     im = imaplib.IMAP4_SSL(mb.imap_host, mb.imap_port, timeout=40); im.login(mb.login, os.getenv(mb.password_env, ""))
     return im
-for mb in cfg.mailboxes():
+КЭШ = r"C:\sender\_ops\perepiska-otpravlennye.json"
+if "--kesh" in sys.argv and os.path.exists(КЭШ):
+    for a, сп in json.load(io.open(КЭШ, encoding="utf-8")).items():
+        for x in сп: отправлено[a].append((datetime.fromisoformat(x[0]), x[1], x[2], x[3], x[4]))
+    print("«Отправленные» — из кэша")
+for mb in ([] if "--kesh" in sys.argv and os.path.exists(КЭШ) else cfg.mailboxes()):
     if "--meyer" in sys.argv and mb.mailbox_id not in МЕЙЕР: continue
     for _попытка in range(4):
         try:
@@ -121,6 +126,9 @@ for mb in cfg.mailboxes():
     else:
         не_вышло.append(mb.mailbox_id)
 print("не удалось прочитать «Отправленные»:", не_вышло or "все прочитаны")
+if "--kesh" not in sys.argv:
+    with io.open(КЭШ, "w", encoding="utf-8") as _к:
+        json.dump({a: [(x[0].isoformat(), x[1], x[2], x[3], x[4]) for x in сп] for a, сп in отправлено.items()}, _к, ensure_ascii=False)
 if False:
     im = None
 # через панель
@@ -130,7 +138,7 @@ for em, т, тело, пj in c.execute("SELECT lower(email), COALESCE(decided_at
         try: дата = datetime.fromisoformat(str(т)[:26]).replace(tzinfo=timezone.utc)
         except Exception: continue
         отправлено[em].append((дата, "панель", "", "vlozheniya" in пj, "панель" + (" КП" if КП.search(тело or "") else "")))
-итог, напомнить = Counter(), []
+итог, напомнить, за_нами = Counter(), [], []
 for л, _ in остальные:
     em = л[1]
     отв = c.execute("SELECT max(event_ts) FROM events WHERE event_type='reply' AND (recipient_id=? OR lower(detail_json) LIKE ?)", (л[2], "%" + (em or "@@") + "%")).fetchone()[0]
@@ -139,7 +147,14 @@ for л, _ in остальные:
     наши = sorted(отправлено.get(em, []))
     после = [x for x in наши if not отв or x[0] > отв]
     if not после:
-        итог["за нами ход: после ответа клиента мы не писали" if отв else "нет ни ответа, ни нашего письма"] += 1; continue
+        итог["за нами ход: после ответа клиента мы не писали" if отв else "нет ни ответа, ни нашего письма"] += 1
+        if отв:
+            сн = (c.execute("SELECT json_extract(detail_json,'$.snippet') FROM events WHERE event_type='reply' AND (recipient_id=? OR lower(detail_json) LIKE ?) ORDER BY event_ts DESC LIMIT 1",
+                            (л[2], "%" + (em or "@@") + "%")).fetchone() or [""])[0] or ""
+            сн = re.split(r"(?m)^\s*>|^-{2,}|^\s*(?:От|From|Кому)\s*:|\d{1,2}\s+\w+\s+20\d\d.{0,60}(?:пишет|wrote|от )", сн)[0]
+            за_нами.append(((сейчас - отв).days, л[0], em, str(л[4] or "")[:40], отв.strftime("%d.%m"), re.sub(r"\s+", " ", сн).strip()[:600],
+                            "наше последнее: " + (наши[-1][0].strftime("%d.%m") + " " + наши[-1][1] if наши else "нет")))
+        continue
     посл = после[-1]
     с_кп = any(x[3] or "КП" in x[4] or re.search(r"(?i)кп|предложени|презентац|прайс", x[2] or "") for x in после)
     дней = (сейчас - посл[0]).days
@@ -153,3 +168,6 @@ for k, n in итог.most_common(): print("  %4d  %s" % (n, k))
 print("писем руками из почты нашлось по адресам лидов: %d" % sum(1 for v in отправлено.values() for x in v if x[1] != "панель"))
 print("\nНАПОМНИТЬ О КП (дней тишины, лид, адрес, компания, откуда наше письмо, когда, что было):")
 for x in sorted(напомнить, reverse=True): print("  %3d  #%s %-30s %-30s %-34s %s %s" % x)
+print("\nЗА НАМИ ХОД (дней с ответа клиента, лид, адрес, компания, дата ответа):")
+for x in sorted(за_нами, reverse=True):
+    print("  %3d  #%s %s | %s | ответ %s | %s\n       «%s»" % (x[0], x[1], x[2], x[3], x[4], x[6], x[5]))
