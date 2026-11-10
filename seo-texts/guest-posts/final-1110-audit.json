@@ -1,0 +1,4939 @@
+[
+ {
+  "domain": "metaprom.ru",
+  "status": "blocked",
+  "http": 403,
+  "hint": "добить через сервер: browser_probe + дельфин-профиль",
+  "verdict": "blocked"
+ },
+ {
+  "domain": "stoking.ru",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 40,
+  "with_ext_links": 0,
+  "with_dofollow": 0,
+  "pct_ad": 0,
+  "pct_dofollow_of_ad": 0,
+  "pct_not_in_listings": 0,
+  "avg_ext_per_ad": 0.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [],
+  "sponsored_links": 0,
+  "top_ext_hosts": [],
+  "seconds": 16,
+  "articles": [
+   {
+    "url": "https://stoking.ru/products/sumoglusitel-shuft-srsr-300x2001000-2x100",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13209,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-60-o-800300-mb230-0-0-0-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13168,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-60-o-700400-mb230-0-0-0-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13520,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-60-o-900450-mb230-0-0-0-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13345,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-o-1500500-mb230-0-0-kk-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13400,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdo-90-o-400200-mb230-0-0-0-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13348,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-o-12001200-mbe24-f1-in-0-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13927,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-mn-450450-mb230-0-0-0-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14252,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-o-1000500-mb230-0-0-kk-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14118,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-mn-700700-mb230-f1-in-kk-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14319,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdo-60-o-1000700-mb230-0-0-kk-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14257,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdo-120-o-300500-mb230-0-0-0-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14197,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdo-120-o-800650-mb230-0-0-0-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15098,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdo-120-o-750750-mb230-0-0-0-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15098,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdo-120-o-750700-mb230-0-0-0-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15098,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdo-90-o-250200-mb230-0-0-0-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15128,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-o-600700-mb230-0-0-0-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15043,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-o-800650-mb230-0-0-0-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15037,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-o-1200400-mb230-0-0-0-mc-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15044,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/klapan-protivopozarnyj-shuft-shfdc-120-mn-600600-mb230-f1-in-kk-0-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15245,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/pogruzhnoy-skvazhinnyy-nasos-unipump-eco-slim-1-36-27082",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23525,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/pogruzhnoy-skvazhinnyy-nasos-unipump-eco-slim-1-28-42647",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23602,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/reduktor-fa77g-2550132b5",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 17988,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/filtr-karmannyy-naveka-fvk-l-998-498-760-7-m5-25-dlya-k-10050-3",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14888,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/korpus-karmannogo-filtra-naveka-k-10050",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14716,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/korpus-kompaktnogo-karmannogo-filtra-naveka-k-10050",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14739,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilyacionnaya-pritochnaya-node4-10050-50m-vec-b500-w3-s-chernym-pultom-ts4b",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15701,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilyacionnaya-pritochnaya-node4-10050-50m-vec-b500-e129-s-chernym-pultom-ts4b",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15789,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilyacionnaya-pritochnaya-node4-10050-50m-vec-b500-e-97-s-chernym-pultom-ts4b",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15829,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilyacionnaya-pritochnaya-node4-10050-50m-vec-b500-e-65-s-chernym-pultom-ts4b",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15829,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/vozduhonagrevatel-vodyanoy-w3-10050-tft-2560-wh-20t-3nr-1000a-2-50p-15nc",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15058,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilacionnaa-vast1-180h150-aqua-20-00050srpvecb5003ztnw-classic-s-cernym-pultom-ts4b-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15927,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilacionnaa-vast1-120h-90-aqua-8-00050srpvecb500ztnw-classic-s-cernym-pultom-ts4b-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15972,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/vozduhonagrevatel-elektricheskiy-predvaritelnyy-e11-ptc-10050-s-filtrom-g4-termostat-na-vhode-naveka",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15291,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilacionnaa-vast1-150h120-aqua-13-00050srpvecb5002ztnw-classic-s-cernym-pultom-ts4b-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16041,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilacionnaa-vast1-90h-60-aqua-4-00050srpvecb500ztnw-classic-s-cernym-pultom-ts4b-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16121,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilacionnaa-vast1-180h120-aqua-16-00050srpvecb5002ztnw-classic-s-cernym-pultom-ts4b-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16249,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilacionnaa-vast1-120h-90-aqua-10-00050srpvecb630ztnw-classic-s-cernym-pultom-ts4b-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16242,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilacionnaa-vast1-90h-60-aqua-3-00050srpvecb355ztnw-classic-s-cernym-pultom-ts4b-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16233,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://stoking.ru/products/ustanovka-ventilacionnaa-vast1-90h-90-aqua-5-00050srpvecb500ztnw-classic-s-cernym-pultom-ts4b-2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16350,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   }
+  ],
+  "verdict": "ОТКАЗ: dofollow-размещений не найдено"
+ },
+ {
+  "domain": "tgko.ru",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 23,
+  "with_ext_links": 7,
+  "with_dofollow": 7,
+  "pct_ad": 30,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 1.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "creon-conferences.com",
+    2
+   ],
+   [
+    "cryomatika.ru",
+    2
+   ],
+   [
+    "gazprommap.ru",
+    1
+   ],
+   [
+    "gazovozoff.com",
+    1
+   ],
+   [
+    "tdpgk.ru",
+    1
+   ]
+  ],
+  "seconds": 49,
+  "articles": [
+   {
+    "url": "https://tgko.ru/novosti/konferencii/rynok-sug-novye-realii-20261.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "creon-conferences.com",
+      "href": "https://creon-conferences.com/creon_conferences/рынок-суг-2026/",
+      "rel": "",
+      "anchor": "CREON"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 54522,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/novosti/konferencii/gelij-20261.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "creon-conferences.com",
+      "href": "https://creon-conferences.com/creon_conferences/гелий-2026/",
+      "rel": "",
+      "anchor": "CREON"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 53985,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/obyavleniya/chastnye/buy/shtok-3-stupeni-317-41.10-01-02-dlya-kompressora-6gm16-140200-m1.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50622,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/obyavleniya/chastnye/buy/nasos-pogruzhnoj-spg-slp-181103.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50584,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/obyavleniya/chastnye/buy/zapros-223432-vkladysh.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 51432,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/obyavleniya/chastnye/buy/interesuet-kompressor-bulkline-6501000.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50289,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/obyavleniya/chastnye/sell/klapany-ventili-uf23032-010-01-du10-ru400-zapornye-uglovye-pod-privarku-g.-konotop.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 52393,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/obyavleniya/chastnye/sell/klapany-ventili-uf23032-032-01-du32-ru400-zapornye-uglovye-pod-privarku-g.-konotop.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 52309,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "cryomatika.ru",
+      "href": "https://cryomatika.ru/",
+      "rel": "",
+      "anchor": "https://cryomatika.ru/"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 49581,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/o-kompanii579.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "cryomatika.ru",
+      "href": "https://cryomatika.ru/",
+      "rel": "",
+      "anchor": "https://cryomatika.ru/"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 49581,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/oborudovanie581.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 49026,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/oborudovanie-kategoriya579.html",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/oborudovanie-tovar579.html",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/katalog-gazov-i-smesej579.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 49719,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/uslugi-v-gazovoj-otrasli581.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 49457,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/obyavleniya580.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 49994,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/obyavleniya580/prodazha580.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50118,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/obyavleniya580/pokupka576.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50118,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/moskovskaya-oblast/5001140874/obyavleniya580/arenda575.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50115,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/obyavleniya/chastnye/sell/shpilka-m14h2h88mm-st.35h-gost10494-80-s-gajkami-m14h2h22h14mm-st.30h-gost10495-80-pr-vo-konotop.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 51763,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/obyavleniya/chastnye/buy/zapros-na-kompressor-8m3-v-sbore-pade-80-55-adsol-n20111135.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50768,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/oborudovanie/zapchasti-i-armatura/regulirovochnaya_armatura/regulyatory-davleniya/regulyator-davleniya-gaza-rduk2n-200105.html",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 49840,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/doneckaya-narodnaya-respublika/pao-gazprom-test-112233/o-kompanii2735.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "gazprommap.ru",
+      "href": "https://www.gazprommap.ru/dnr/",
+      "rel": "",
+      "anchor": "https://www.gazprommap.ru/dnr/"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 49866,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/yaroslavskaya-oblast/7602088686/o-kompanii3242.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "gazovozoff.com",
+      "href": "https://gazovozoff.com",
+      "rel": "",
+      "anchor": "https://gazovozoff.com"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50440,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://tgko.ru/katalog/kompanii/saratovskaya-oblast/ooo-zavod-pervaya-gazovaya-kompaniya-inn-9721118277/o-kompanii336.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "tdpgk.ru",
+      "href": "https://tdpgk.ru/",
+      "rel": "",
+      "anchor": "https://tdpgk.ru/"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 50064,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   }
+  ],
+  "verdict": "ГОДЕН по слою 1 (dofollow 100%) - UR подтвердить Ahrefs"
+ },
+ {
+  "domain": "mining-portal.ru",
+  "status": "ok",
+  "sitemap_urls": 1019,
+  "checked": 4,
+  "with_ext_links": 0,
+  "with_dofollow": 0,
+  "pct_ad": 0,
+  "pct_dofollow_of_ad": 0,
+  "pct_not_in_listings": 0,
+  "avg_ext_per_ad": 0.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [
+   "top100.rambler.ru",
+   "vgroup.one"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [],
+  "seconds": 19,
+  "articles": [
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=rules&amp;sid=5e68481e7dd518448379f4c7242fee17",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/company_news/mejdunarodnyiy-injenernyiy-chempionat---case-in/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=ca62b5abbf67e851343db7dbdf896c56",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=00cf6cb943cde75c830807d5a7f73eb8",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/interesting/istoriya-sozdaniya-tsentrobejno-udarnoy-drobilki/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/international-news/novyiy-ministr-prirodnyih-resursov-fillipin-vyistupila-protiv-otkryitogo-sposoba-dobyichi/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/interesting/faktyi-ot-greenpeace/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/company_news/drobilnoe-i-burovoe-oborudovanie-kompanii-sandvik/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=60c814b758931f3b9d4fa1298f2834fb",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=rules&amp;sid=3dd96d8e367cc60fd40c2c42129c1636",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/international-news/vsemirnyiy-ekonomicheskiy-forum-rekomenduet-sbalansirovat-toplivno-energeticheskiy-kompleks/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?sid=e40dd18973179be2ed09c4bd3fda38c2",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=cbbc84e53ad5e0916778d43ec07f0803",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/?sid=cbbc84e53ad5e0916778d43ec07f0803",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9479,
+    "has_ad_label": false,
+    "internal_links": 52,
+    "sitewide_hosts": [
+     "top100.rambler.ru",
+     "vgroup.one"
+    ]
+   },
+   {
+    "url": "http://www.mining-portal.ru/?sid=4d60266ffe57a5d0fe0abed7047ecff2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9479,
+    "has_ad_label": false,
+    "internal_links": 52,
+    "sitewide_hosts": [
+     "top100.rambler.ru",
+     "vgroup.one"
+    ]
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/international-news/v-indii---udovletvorennost-kachestvom-uglya---budet-novyim-marketingovyim-elementom/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=7cda41961aeba282a1823f35ac1aa69e",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/?sid=7cda41961aeba282a1823f35ac1aa69e",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9479,
+    "has_ad_label": false,
+    "internal_links": 52,
+    "sitewide_hosts": [
+     "top100.rambler.ru",
+     "vgroup.one"
+    ]
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=rules&amp;sid=857a0af95b1e7bc8ce985d1e951775ff",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?sid=48fdb1f55394a04f54bf93970ba59cc7",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?sid=9efc1dfd133e3e23904e2ce77dd1626e",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=95dd4c93e8876168e92779ddf2da0e6c",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/interesting/newonthesite/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=rules&amp;sid=1623ee9c786a9098449c3c0d96c00288",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/?sid=1623ee9c786a9098449c3c0d96c00288",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9479,
+    "has_ad_label": false,
+    "internal_links": 52,
+    "sitewide_hosts": [
+     "top100.rambler.ru",
+     "vgroup.one"
+    ]
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=1623ee9c786a9098449c3c0d96c00288",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=rules&amp;sid=6fea0d3c1781094d69f662a54e06ceb2",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=rules&amp;sid=3110b6b4cfcb305e3469507ae9b39f4a",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?sid=6fb3bcd2d3a19423d130d34a41cca90b",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=c84c728150ca50728e5eeb6ff29282fb",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?sid=99652cb41e981ea3a3ce2cb9f73dce0d",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=9efc1dfd133e3e23904e2ce77dd1626e",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=8e82475d5666ca4d00dd9bff14ee001e",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/press_center/news/interesting/top-10-samyih-glubokih-karerov-mira/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=rules&amp;sid=052d80897d729effd814a7cb5bfaa304",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=e4a6422a5a998d336c00e3d53960fbfe",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=b5b3a745a9206f8697454aaa57645e41",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=rules&amp;sid=3abb3c4e7cdfa0bdbd5421826ccb17d5",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?mode=bbcode&amp;sid=c841a6d909c240d371f5a34346f36a91",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "http://www.mining-portal.ru/forum/faq.php?sid=c841a6d909c240d371f5a34346f36a91",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   }
+  ],
+  "verdict": "ОТКАЗ: dofollow-размещений не найдено"
+ },
+ {
+  "domain": "ruscable.ru",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 40,
+  "with_ext_links": 12,
+  "with_dofollow": 12,
+  "pct_ad": 30,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 1.2,
+  "ad_labeled": 0,
+  "sitewide_hosts": [
+   "rc3d.ru"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "megaflex.ru",
+    2
+   ],
+   [
+    "mkm.ru",
+    2
+   ],
+   [
+    "gazprombank.ru",
+    1
+   ],
+   [
+    "ag-technologies.ru",
+    1
+   ],
+   [
+    "kolesa5.ru",
+    1
+   ],
+   [
+    "uncomtech.ru",
+    1
+   ],
+   [
+    "traktorodetal.ru",
+    1
+   ],
+   [
+    "spetskabel.ru",
+    1
+   ],
+   [
+    "euroteplo.ru",
+    1
+   ],
+   [
+    "cyberleninka.ru",
+    1
+   ]
+  ],
+  "seconds": 26,
+  "articles": [
+   {
+    "url": "https://www.ruscable.ru/article/bussines/specifika_formirovaniya_procentnyh_stavo/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "gazprombank.ru",
+      "href": "https://www.gazprombank.ru/personal/page/increase/deposits/vklady-s-vysokimi-procentami/",
+      "rel": "",
+      "anchor": "вклады в банках с высоким процентом"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7576,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/bussines/_megafleks_vash_nadezhnyj_partner_v_mire/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "megaflex.ru",
+      "href": "https://megaflex.ru/stat-partnerom/",
+      "rel": "",
+      "anchor": "Megaflex"
+     },
+     {
+      "host": "megaflex.ru",
+      "href": "https://megaflex.ru/stat-partnerom/",
+      "rel": "",
+      "anchor": "Партнерство с Megaflex"
+     }
+    ],
+    "ext_dofollow": 2,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 12028,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/bussines/specodezhda_zashitit_lyudej_i_usilit_kom/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "ag-technologies.ru",
+      "href": "https://ag-technologies.ru",
+      "rel": "",
+      "anchor": "AG Technologies"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9988,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/any/vidy_koles_dlya_speci/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "kolesa5.ru",
+      "href": "https://kolesa5.ru/",
+      "rel": "",
+      "anchor": "https://kolesa5.ru/"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6955,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/cable/kabel_specialnogo_naznacheniya_keunk/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "uncomtech.ru",
+      "href": "https://www.uncomtech.ru/news/135",
+      "rel": "",
+      "anchor": "УНКОМТЕХ"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 29698,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/any/rynok_spectehniki_tendencii_2023/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "traktorodetal.ru",
+      "href": "https://traktorodetal.ru",
+      "rel": "",
+      "anchor": "https://traktorodetal.ru"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7177,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/company/istoriya_kompanii_ooo_npp_speckabel_/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "spetskabel.ru",
+      "href": "http://spetskabel.ru/",
+      "rel": "",
+      "anchor": "ООО НПП &quot;Спецкабель&quot;"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8494,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/cable_heating/Sistema_elektricheskogo_kabelynogo_obogreva__heatline-promobogrev_v_/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "euroteplo.ru",
+      "href": "http://www.euroteplo.ru/",
+      "rel": "",
+      "anchor": "ООО \"Производственная Компания ХИТ ЛАЙН\""
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14442,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/fiber-optic/analiz-veroyatnosti-obespecheniya-udalennogo-ehlektropitaniya-optiches/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "cyberleninka.ru",
+      "href": "https://cyberleninka.ru/",
+      "rel": "",
+      "anchor": "cyberleninka"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16011,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/tests/obosnovanie-i-obespechenie-tekhnologicheskih-pokazatelej-triboehlektri/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 17338,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/company/Moskabelmet_123_Anniversary_Special/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "mkm.ru",
+      "href": "https://www.mkm.ru/",
+      "rel": "",
+      "anchor": "ГК \"Москабельмет\""
+     },
+     {
+      "host": "mkm.ru",
+      "href": "https://www.mkm.ru/elkat/",
+      "rel": "",
+      "anchor": "ООО «Элкат»"
+     }
+    ],
+    "ext_dofollow": 2,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11427,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/electrotechnology/SHesty_shagov_k_stabilynomu_energoobespecheniu_festivalya_na_otkrytom_/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "iek.ru",
+      "href": "http://www.iek.ru/",
+      "rel": "",
+      "anchor": "Группа компаний IEK"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 17162,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/cable/Obespechenie_ustojchivogo_razvitiya_i_nadyozhnosti_elektrosnabzheniya/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "kabel-news.ru",
+      "href": "http://kabel-news.ru/",
+      "rel": "",
+      "anchor": "Журнал \"КАБЕЛЬ-news\""
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13073,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/info/wire/mark/Bashgran_11102_/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8527,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/info/wire/mark/Bashgran_21102_neokrashenniy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8561,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/info/wire/mark/Bashgran_21102_cherniy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8543,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/info/wire/mark/Bashgran_31102_neokrashenniy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8564,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/info/wire/mark/Bashgran_11102_ks_cherniy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8545,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/info/wire/mark/Bashgran_11102_ks_neokrashenniy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8563,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/info/wire/mark/Bashgran_21102_ks_cherniy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8555,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/info/wire/mark/Bashgran_21102_ks_neokrashenniy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8573,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/plus/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23617,
+    "has_ad_label": false,
+    "internal_links": 27,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/ehkspluataciya_kl/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13781,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/tests/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18381,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/equipment/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 21099,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/fiber-optic/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16864,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/lan-cable/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18224,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/cable/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23574,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/electrotechnology/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 20620,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/energy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16766,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/cable_heating/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15164,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/company/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23964,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/report/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23816,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/glasnaroda/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8305,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/cables_wires/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23235,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/bussines/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 16502,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/any/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18163,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/polymer/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 24230,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/ruscable/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 19868,
+    "has_ad_label": false,
+    "internal_links": 26,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   },
+   {
+    "url": "https://www.ruscable.ru/article/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 45459,
+    "has_ad_label": false,
+    "internal_links": 27,
+    "sitewide_hosts": [
+     "rc3d.ru"
+    ]
+   }
+  ],
+  "verdict": "ГОДЕН по слою 1 (dofollow 100%) - UR подтвердить Ahrefs"
+ },
+ {
+  "domain": "smetnoedelo.ru",
+  "status": "ok",
+  "sitemap_urls": 3736,
+  "checked": 16,
+  "with_ext_links": 1,
+  "with_dofollow": 1,
+  "pct_ad": 6,
+  "pct_dofollow_of_ad": 100,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 3.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [
+   "connect.mail.ru"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "td-perel.ru",
+    3
+   ]
+  ],
+  "seconds": 22,
+  "articles": [
+   {
+    "url": "https://smetnoedelo.ru/yet/materialy/stroitelnye-materialy-perel-vash-nadezhnyy-partner-v-stroitelstve.html",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "td-perel.ru",
+      "href": "https://td-perel.ru/",
+      "rel": "",
+      "anchor": "строительные материалы Perel"
+     },
+     {
+      "host": "td-perel.ru",
+      "href": "https://td-perel.ru/catalog/dekorativnaya-shtukaturka/",
+      "rel": "",
+      "anchor": "Декоративная штукатурка"
+     },
+     {
+      "host": "td-perel.ru",
+      "href": "https://td-perel.ru/catalog/tsvetnaya-kladochnaya-smes/",
+      "rel": "",
+      "anchor": "Цветная кладочная смесь"
+     }
+    ],
+    "ext_dofollow": 3,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 2,
+    "chars": 8131,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44666/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8340,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44687/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10442,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44684/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6459,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44725/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8394,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44732/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8509,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44724/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10894,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44742/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13695,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44756/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8579,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44745/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9987,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44760/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13736,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44773/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7205,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44790/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5650,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44794/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7846,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44532/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6434,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44801/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44835/messages/#messages",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7959,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "connect.mail.ru"
+    ]
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44847/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44803/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44860/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44879/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44884/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44904/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44895/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44908/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44900/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44909/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44930/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44926/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44940/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44958/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44980/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44991/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44999/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44995/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic45017/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic45036/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic44919/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic45050/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   },
+   {
+    "url": "https://smetnoedelo.ru/forum/forum3/topic45072/messages/#messages",
+    "http": 503,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 503",
+    "internal_links": 0
+   }
+  ],
+  "verdict": "МАЛО ДАННЫХ: найдено 1 dofollow-размещений (нужен Ahrefs)"
+ },
+ {
+  "domain": "promportal.su",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 39,
+  "with_ext_links": 0,
+  "with_dofollow": 0,
+  "pct_ad": 0,
+  "pct_dofollow_of_ad": 0,
+  "pct_not_in_listings": 0,
+  "avg_ext_per_ad": 0.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [],
+  "sponsored_links": 0,
+  "top_ext_hosts": [],
+  "seconds": 14,
+  "articles": [
+   {
+    "url": "https://promportal.su/g/45720/kovshi-dlya-spectehniki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/45728/drugoe-navesnoe-oborudovanie-dlya-spectehniki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/28850/avtotransport-specnaznacheniya/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/31163/generatori-speceffektov/",
+    "http": 0,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "__ERR__ConnectError('[Errno 104] Connection reset by peer')",
+    "internal_links": 0
+   },
+   {
+    "url": "https://promportal.su/g/31181/drugie-generatori-speceffektov/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/50355/pryanosti-specii-pripravi/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/46860/programmnoe-obespechenie-po/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48692/sumki-holodilniki-termoboksi/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48698/pohodnie-i-avto-dushi/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48704/pitevie-sistemi-gidratori-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48700/pili-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48707/nabori-dlya-vizhivaniya/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48706/kurvimetri-ruchnie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48699/kompressionnie-meshki-i-germomeshki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48697/kompasi/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48688/vneshnie-akkumulyatori-dlya-cifrovoy-tehniki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48609/turisticheskie-instrumenti/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48628/turisticheskie-bahili-gamashi/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/46397/termosi/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48679/drugaya-turisticheskaya-posuda/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48678/chayniki-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48682/turisticheskie-stolovie-pribori/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48684/skovorodki-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48673/podstavki-i-trenogi-kostrovie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48677/nabori-turisticheskoy-posudi/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48683/miski-i-tarelki-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48676/kruzhki-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48675/kotelki-kastryuli-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48610/turisticheskaya-posuda/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48662/sredstva-po-uhodu-za-ekipirovkoy/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48631/turisticheskaya-kosmetika-i-himiya/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48614/spalnie-meshki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48611/palatki-i-tenti/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48626/naduvnie-podushki-i-podgolovniki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48619/karemati-i-sidushki/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48645/drugoe-gazovoe-oborudovanie-dlya-turizma/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48641/pliti-i-gorelki-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48642/gazovie-balloni-turisticheskie/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48644/aksessuari-dlya-lamp-gorelok-turisticheskih/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://promportal.su/g/48613/gazovoe-oborudovanie-dlya-turizma/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 302,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   }
+  ],
+  "verdict": "ОТКАЗ: dofollow-размещений не найдено"
+ },
+ {
+  "domain": "dwg.ru",
+  "status": "ok",
+  "sitemap_urls": 279,
+  "checked": 40,
+  "with_ext_links": 0,
+  "with_dofollow": 0,
+  "pct_ad": 0,
+  "pct_dofollow_of_ad": 0,
+  "pct_not_in_listings": 0,
+  "avg_ext_per_ad": 0.0,
+  "ad_labeled": 0,
+  "sitewide_hosts": [],
+  "sponsored_links": 0,
+  "top_ext_hosts": [],
+  "seconds": 9,
+  "articles": [
+   {
+    "url": "https://dwg.ru/dnl/15995",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 7273,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/15996",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8376,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/15997",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5101,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/15998",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4553,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/15999",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3883,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16002",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8958,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16006",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3367,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16008",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3288,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16009",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3287,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16010",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 9382,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16011",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3367,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16013",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4028,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16014",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4063,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16015",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3501,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16016",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5232,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16017",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3663,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16018",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4426,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16019",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 8618,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16020",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3890,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16021",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4089,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16023",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4635,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16025",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4060,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16026",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4806,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16030",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3824,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16033",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5630,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/dnl/16041",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3356,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/blog/p3",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4837,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/blog/p2",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 5140,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://dwg.ru/blog/index",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 6601,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=19343",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2868,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=159601",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3150,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=12714",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2859,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=12279",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3221,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=111444",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2890,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=11523",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3025,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=162337",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2929,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=152159",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2865,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=162428",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2842,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=116220",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 3069,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://forum.dwg.ru/member.php?u=35956",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2860,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   }
+  ],
+  "verdict": "ОТКАЗ: dofollow-размещений не найдено"
+ },
+ {
+  "domain": "prom.st",
+  "status": "no-articles",
+  "sitemap_urls": 0,
+  "verdict": "no-articles"
+ },
+ {
+  "domain": "energobelarus.by",
+  "status": "ok",
+  "sitemap_urls": 4000,
+  "checked": 39,
+  "with_ext_links": 18,
+  "with_dofollow": 15,
+  "pct_ad": 46,
+  "pct_dofollow_of_ad": 83,
+  "pct_not_in_listings": 100,
+  "avg_ext_per_ad": 2.1,
+  "ad_labeled": 18,
+  "sitewide_hosts": [
+   "ecnis.biz",
+   "renwex.ru",
+   "vodaexpo.by",
+   "weintek.by"
+  ],
+  "sponsored_links": 0,
+  "top_ext_hosts": [
+   [
+    "oilru.com",
+    10
+   ],
+   [
+    "energyexpo.by",
+    6
+   ],
+   [
+    "seemore.ru",
+    4
+   ],
+   [
+    "regnum.ru",
+    2
+   ],
+   [
+    "belta.by",
+    2
+   ],
+   [
+    "dzr.by",
+    2
+   ],
+   [
+    "pogoda.by",
+    1
+   ],
+   [
+    "БЕЛТА",
+    1
+   ],
+   [
+    "konf.digitalleaders.by",
+    1
+   ],
+   [
+    "digitalleaders.by",
+    1
+   ]
+  ],
+  "seconds": 28,
+  "articles": [
+   {
+    "url": "https://energobelarus.by/advertising/articles/rss/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 4657,
+    "has_ad_label": false,
+    "internal_links": 0,
+    "sitewide_hosts": []
+   },
+   {
+    "url": "https://energobelarus.by/advertising/articles/my/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 2418,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/advertising/articles/",
+    "http": 404,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 0,
+    "has_ad_label": false,
+    "error": "http 404",
+    "internal_links": 0
+   },
+   {
+    "url": "https://energobelarus.by/articles/traditsionnaya_energetika/smi_sliyaniya_quot_neftegaza_ukrainy_quot_s_quot_gazpromom_quot_ne_izbezhat/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     }
+    ],
+    "ext_dofollow": 0,
+    "ext_nofollow": 3,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18968,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/traditsionnaya_energetika/rossiya_ne_mozhet_obespechit_appetity_quot_gazproma_quot_podrobnee_http_www_ng_ru_economics_2011_08_01_4_gazprom_html/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "seemore.ru",
+      "href": "http://www.seemore.ru/?keywid=6257200",
+      "rel": "nofollow",
+      "anchor": "Финам"
+     },
+     {
+      "host": "seemore.ru",
+      "href": "http://www.seemore.ru/?keywid=6257201",
+      "rel": "nofollow",
+      "anchor": "газ"
+     },
+     {
+      "host": "energyexpo.by",
+      "href": "https://energyexpo.by/",
+      "rel": "",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 2,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14660,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/traditsionnaya_energetika/gazpromovskaya_quot_voyna_quot_evropa_namerena_lishit_rossiyu_eksklyuzivnogo_prava_prodavat_gaz/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "seemore.ru",
+      "href": "http://www.seemore.ru/?keywid=6448335",
+      "rel": "nofollow",
+      "anchor": "Еврокомиссия"
+     },
+     {
+      "host": "seemore.ru",
+      "href": "http://www.seemore.ru/?keywid=6448333",
+      "rel": "nofollow",
+      "anchor": "Газпром"
+     }
+    ],
+    "ext_dofollow": 0,
+    "ext_nofollow": 2,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 12909,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/analitika/treugolnik_es_turtsiya_rossiya_partnery_ankary_okazalis_v_ravno_nevygodnoy_situatsii/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18528,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/analitika/quot_vostochnoe_partnerstvo_quot_i_tamozhennyy_soyuz_plyusy_i_minusy_dlya_belarusi/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "regnum.ru",
+      "href": "http://www.regnum.ru/news/polit/1457529.html",
+      "rel": "nofollow",
+      "anchor": "ИА REGNUM"
+     },
+     {
+      "host": "energyexpo.by",
+      "href": "https://energyexpo.by/",
+      "rel": "",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18108,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/traditsionnaya_energetika/tranzitnaya_igra_polshi_i_ukrainy_stoilo_li_voevat_s_gazpromom_/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "energyexpo.by",
+      "href": "https://energyexpo.by/",
+      "rel": "",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 20936,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/analitika/partnerstvo_na_tikhom_okeane_novaya_igra_ekonomicheskikh_superderzhav/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13850,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/energosberezhenie/problemy_i_strategiya_ustoychivogo_energoobespecheniya_selskikh_territoriy_belarusi/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 22862,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/analitika/vmesto_irana_ssha_nakazhut_partnerov_po_nato_ekonomiki_gretsii_i_italii_okonchatelno_rukhnut_bez_iranskoy_nefti/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18996,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/articles/traditsionnaya_energetika/terminaly_szhizhennogo_gaza_v_pribaltike_borba_s_quot_gazpromom_quot_i_golyy_entuziazm/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "oilru.com",
+      "href": "http://www.oilru.com/go.php?URL=http://www.gazprom.ru/",
+      "rel": "nofollow",
+      "anchor": "&quot;Газпром&quot;"
+     },
+     {
+      "host": "regnum.ru",
+      "href": "http://www.regnum.ru/",
+      "rel": "nofollow",
+      "anchor": "ИА REGNUM"
+     },
+     {
+      "host": "energyexpo.by",
+      "href": "https://energyexpo.by/",
+      "rel": "",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 8,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 40954,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Tema_dnya/novyy_god_bez_snega_i_moroza_sinoptiki_dali_prognoz_na_31_dekabrya/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "pogoda.by",
+      "href": "http://pogoda.by",
+      "rel": "",
+      "anchor": "pogoda.by"
+     },
+     {
+      "host": "energyexpo.by",
+      "href": "https://energyexpo.by/",
+      "rel": "",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 2,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10394,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Belarus/costoyalas_pervaya_delovaya_konferentsiya_tsifrovaya_transformatsiya_predpriyatiy_i_otrasley_v_respublike_belarus/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 20770,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_analogovyy_anca_jpa00021/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14126,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_analogovyy_anca_jpa00022/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14373,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_analogovyy_anca_jpa00023/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 13675,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_analogovyy_anca_jpa00025/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14234,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_analogovyy_anca_jpa00028/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14241,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_tsifrovoy_anca_jpd00021/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14653,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_tsifrovoy_anca_jpd00022/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14370,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_tsifrovoy_anca_jpd00023/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15092,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_tsifrovoy_anca_jpd00024/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15100,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_tsifrovoy_anca_jpd00025/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14309,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_tsifrovoy_anca_jpd00026/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14323,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_tsifrovoy_anca_jpd00028/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14567,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/market/pulty_upravleniya_i_radioupravlenie/pult_distantsionnogo_upravleniya_tsifrovoy_anca_jpd00029/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14178,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "weintek.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Tema_dnya/vtoruyu_aes_v_belarusi_mogut_postroit_v_mogilevskoy_oblasti/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "belta.by",
+      "href": "https://www.belta.by/president/view/lukashenko-imet-dve-aes-bylo-by-ochen-i-ochen-vygodno-dlja-belarusi-594991-2023/",
+      "rel": "nofollow",
+      "anchor": "передает"
+     },
+     {
+      "host": "БЕЛТА",
+      "href": "http://БЕЛТА",
+      "rel": "",
+      "anchor": "БЕЛТА"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11132,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Belarus/lidery_tsifrovoy_ekonomiki_2023_nazvany_pobediteli_vtorogo_respublikanskogo_konkursa/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "konf.digitalleaders.by",
+      "href": "https://konf.digitalleaders.by",
+      "rel": "nofollow",
+      "anchor": "https://konf.digitalleaders.by"
+     },
+     {
+      "host": "digitalleaders.by",
+      "href": "https://digitalleaders.by/",
+      "rel": "nofollow",
+      "anchor": "на сайте"
+     }
+    ],
+    "ext_dofollow": 0,
+    "ext_nofollow": 2,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 29005,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Tema_dnya/s_rozhdestvom_i_novym_godom_2024/",
+    "http": 200,
+    "ext_links": [],
+    "ext_dofollow": 0,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10227,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/SNG/nazvan_region_lider_kazakhstana_po_moshchnosti_vie/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "eenergy.media",
+      "href": "http://eenergy.media",
+      "rel": "",
+      "anchor": "eenergy.media"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11422,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/SNG/pravitelstvo_rossii_obrashchaet_k_novomu_reglamentu_formirovaniya_tarifov_na_elektrichestvo/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "irk.ru",
+      "href": "http://irk.ru",
+      "rel": "",
+      "anchor": "irk.ru"
+     },
+     {
+      "host": "energyexpo.by",
+      "href": "https://energyexpo.by/",
+      "rel": "",
+      "anchor": ""
+     }
+    ],
+    "ext_dofollow": 2,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 10452,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Belarus/v_grodnenskoy_energosisteme_postroena_tretya_tsifrovaya_podstantsiya_110_kv_dubrova/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "belarus-economy.by",
+      "href": "https://belarus-economy.by/ru",
+      "rel": "nofollow",
+      "anchor": "\"Экономика Беларуси\""
+     },
+     {
+      "host": "belta.by",
+      "href": "http://belta.by",
+      "rel": "",
+      "anchor": "belta.by"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11447,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Tema_dnya/minenergo_itogi_2023_goda/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "belatom.by",
+      "href": "http://belatom.by",
+      "rel": "",
+      "anchor": "belatom.by"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 14647,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/SNG/kakimi_budut_elektro_tarify_v_altayskom_krae_v_2024_godu_i_zachem_vveli_diapazony_potrebleniya/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "altapress.ru",
+      "href": "http://altapress.ru",
+      "rel": "",
+      "anchor": "altapress.ru"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 15360,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/V_mire/moldovagaz_obyazali_zakupit_u_energocom_451_mln_kub_m_gaza_v_i_kvartale/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "1prime.ru",
+      "href": "http://1prime.ru",
+      "rel": "",
+      "anchor": "1prime.ru"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11706,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/V_mire/termoyadernyy_reaktor_iter_rukotvornoe_solntse_dlya_snabzheniya_zemli_energiey/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "ru.euronews.com",
+      "href": "http://ru.euronews.com",
+      "rel": "",
+      "anchor": "ru.euronews.com"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 18343,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Tema_dnya/belaes_summarno_vyrabotala_bolee_22_mlrd_kvtch_elektroenergii/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "Minenergo_by",
+      "href": "http://Minenergo_by",
+      "rel": "",
+      "anchor": "Minenergo_by"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 0,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 11316,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   },
+   {
+    "url": "https://energobelarus.by/news/Tema_dnya/vse_samye_vazhnye_izmeneniya_v_belarusi_s_1_yanvarya_2024_goda/",
+    "http": 200,
+    "ext_links": [
+     {
+      "host": "dzr.by",
+      "href": "https://dzr.by/",
+      "rel": "nofollow",
+      "anchor": "портал Держинского района"
+     },
+     {
+      "host": "dzr.by",
+      "href": "http://dzr.by",
+      "rel": "",
+      "anchor": "dzr.by"
+     }
+    ],
+    "ext_dofollow": 1,
+    "ext_nofollow": 1,
+    "sponsored": 0,
+    "commercial": 0,
+    "chars": 23587,
+    "has_ad_label": true,
+    "internal_links": 0,
+    "sitewide_hosts": [
+     "ecnis.biz",
+     "renwex.ru",
+     "vodaexpo.by"
+    ]
+   }
+  ],
+  "verdict": "ГОДЕН по слою 1 (dofollow 83%) - UR подтвердить Ahrefs"
+ }
+]
