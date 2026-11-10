@@ -45,6 +45,12 @@ cs = build_deps(cfg, store, dry_run=True).confirm
 win = window_from(store, cfg)
 now = datetime.now(timezone.utc)
 ряды = [r for r in cs.pending(limit=100_000) if (r.get("kind") or "outbound") != "reply"]
+# --bez=1,5,6 — не трогать карточки этих кампаний (владелец 10.11: старые хвосты не катим)
+_БЕЗ = {int(x) for a in sys.argv if a.startswith("--bez=") for x in a.split("=", 1)[1].split(",") if x.strip().isdigit()}
+if _БЕЗ:
+    ряды = [r for r in ряды if int(r.get("campaign_id") or 0) not in _БЕЗ]
+_по_камп = Counter(int(r.get("campaign_id") or 0) for r in ряды)
+print("по кампаниям:", sorted(_по_камп.items()), flush=True)
 print("%s в подтверждении (без ответов): %d" % (time.strftime("%H:%M:%S"), len(ряды)), flush=True)
 итог = Counter()
 поток = io.open(r"C:\sender\_ops\vse-v-avto.jsonl", "a", encoding="utf-8") if КАТИТЬ else None
@@ -78,7 +84,7 @@ for i, r in enumerate(ряды, 1):
         итог["нет получателя"] += 1
         continue
     if not КАТИТЬ:
-        итог["пройдёт"] += 1
+        итог["пройдёт"] += 1; итог["пройдёт, кампания %s" % r.get("campaign_id")] += 1
         continue
     try:
         слот = next_slot(win, recipient_tz_name(win, rec), now)
