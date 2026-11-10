@@ -22,6 +22,7 @@ if os.path.exists(п):
 for шаблон in (os.path.join(П, 'ca_spisok_*.log'), os.path.join(DIR, 'konveyer_ca_*.log')):
     for л in sorted(glob.glob(шаблон), key=os.path.getmtime)[-2:]:
         print(os.path.basename(л), '…', open(л, encoding='utf-8', errors='replace').read()[-300:].replace('\n', ' | '))
+print('etp.env', 'есть' if os.path.exists(os.path.join(П, 'etp.env')) else 'нет')
 for ф in ('ca-kontakty.jsonl',):
     п = os.path.join(DIR, ф)
     if os.path.exists(п):
