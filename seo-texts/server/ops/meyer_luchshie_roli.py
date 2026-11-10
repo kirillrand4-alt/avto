@@ -44,6 +44,10 @@ def годен(em, inn):
     if проба.get(em, "") in ("нет ящика", "нет MX"): return False
     if за_инн.get(em) and inn not in за_инн[em]: return False
     return True
+напом = Counter()
+for (inn,) in c.execute("SELECT inn FROM confirm_reviews WHERE kind='reply' AND status='sent' AND panel_json LIKE '%napominanie%' AND inn IS NOT NULL"):
+    напом[str(inn)] += 1
+писем_2б = Counter(); адресов_2б = Counter(); напом_2б = Counter(); писем_2а = Counter()
 ит = Counter(); перв_роль = Counter(); недобор_роль = Counter(); прим1, прим2 = [], []
 for inn, сп in отпр.items():
     if inn in живые: continue
@@ -72,12 +76,18 @@ for inn, сп in отпр.items():
         лучший = max(выше, key=выше.get)
         недобор_роль[(вс.get(лучший) or "?")[:30]] += 1
         ит["2а) из них упущенная роль сильная (технолог…элеватор, балл ≥10)" if выше[лучший] >= 10 else "2б) из них упущенная роль слабая (директор и ниже)"] += 1
+        if выше[лучший] >= 10: писем_2а[min(len(сп), 4)] += 1
+        else:
+            писем_2б[min(len(сп), 4)] += 1; адресов_2б[min(len(писали), 3)] += 1; напом_2б[min(напом.get(inn, 0), 2)] += 1
+            ит["2б: всего писем Meyer этим компаниям"] += len(сп); ит["2б: всего напоминаний этим компаниям"] += напом.get(inn, 0)
         if len(прим2) < 15:
             прим2.append("%s: писали %s — не писали %s [%s]" % (inn, ", ".join("%s[%s]" % (em, вс.get(em) or "?") for em in sorted(писали))[:120], лучший, вс.get(лучший)))
     else:
         ит["2) лучшие роли использованы (выше писавших годных нет)"] += 1
 print("кампании Meyer:", sorted(кам[i] for i in МК))
 for k, n in sorted(ит.items()): print("  %5d  %s" % (n, k))
+print("\n2б — писем Meyer на компанию (4 = 4 и больше):", sorted(писем_2б.items()), "| разных адресов:", sorted(адресов_2б.items()), "| напоминаний:", sorted(напом_2б.items()))
+print("2а — писем Meyer на компанию:", sorted(писем_2а.items()))
 print("\nроль первого письма:", перв_роль.most_common(12))
 print("\nнеиспользованная лучшая роль (что упустили):"); [print("   %4d  %s" % (n, k)) for k, n in недобор_роль.most_common(14)]
 if "--primery" in sys.argv:
