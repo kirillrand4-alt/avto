@@ -33,7 +33,9 @@ cid = int(sys.argv[1])
 ЖУР = r"C:\sender\_ops\lesenka-ochered-%d.jsonl" % cid
 КЛАСТЬ = "--klast" in sys.argv
 ИМЯ_ЗАЧИН = re.compile(r"^\s*[А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+){0,2},\s*(добрый день|здравствуйте)[!.]?", re.I)
-д = json.load(io.open(r"C:\sender\_ops\lesenka-%d.json" % cid, encoding="utf-8"))
+# --fayl=путь (владелец 10.11: лесенка по ролям из meyer_luchshie_roli.py --lesenka → lesenka-roli-<id>.json)
+_ф = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--fayl=")), r"C:\sender\_ops\lesenka-%d.json" % cid)
+д = json.load(io.open(_ф, encoding="utf-8"))
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=60)
 c.row_factory = sqlite3.Row
 сделано = set()

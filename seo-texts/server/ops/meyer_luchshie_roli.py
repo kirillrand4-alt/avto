@@ -10,7 +10,8 @@
   1) первое письмо компании ушло на лучший по баллу годный адрес — или ниже (и насколько);
   2) есть ли НЕиспользованный годный адрес с баллом выше, чем у всех, кому уже писали.
 Только чтение.  meyer_luchshie_roli.py [--primery]"""
-import re, sqlite3, sys
+import io, json, re, sqlite3, sys
+from datetime import datetime, timedelta, timezone
 from collections import Counter, defaultdict
 sys.path.insert(0, r"C:\sender\server")
 from lead_scoring import _rol_ball   # noqa: E402
@@ -48,6 +49,7 @@ def годен(em, inn):
 for (inn,) in c.execute("SELECT inn FROM confirm_reviews WHERE kind='reply' AND status='sent' AND panel_json LIKE '%napominanie%' AND inn IS NOT NULL"):
     напом[str(inn)] += 1
 даты_1, напом_1 = Counter(), Counter()
+лесенка = []
 писем_2б = Counter(); адресов_2б = Counter(); напом_2б = Counter(); писем_2а = Counter()
 ит = Counter(); перв_роль = Counter(); недобор_роль = Counter(); прим1, прим2 = [], []
 for inn, сп in отпр.items():
@@ -77,6 +79,11 @@ for inn, сп in отпр.items():
         лучший = max(выше, key=выше.get)
         недобор_роль[(вс.get(лучший) or "?")[:30]] += 1
         ит["2а) из них упущенная роль сильная (технолог…элеватор, балл ≥10)" if выше[лучший] >= 10 else "2б) из них упущенная роль слабая (директор и ниже)"] += 1
+        старое = сп[-1][0] < (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%S")
+        if выше[лучший] >= 10 or (len(сп) == 1 and старое):   # владелец 10.11: лесенка на 32 сильных + 123 «старых»
+            последняя = [x for x in сп if not str(x[2] or "").startswith("Вебинар")][-1:] or сп[-1:]
+            лесенка.append({"inn": inn, "email": лучший, "role": вс.get(лучший), "kamp": последняя[0][2],
+                            "sloy": "сильная роль" if выше[лучший] >= 10 else "второй слой, 1 письмо >10 дн"})
         if выше[лучший] >= 10: писем_2а[min(len(сп), 4)] += 1
         else:
             if len(сп) == 1: даты_1[сп[0][0][:7] if сп[0][0] < "2026-10-01" else сп[0][0][:10]] += 1; напом_1[min(напом.get(inn, 0), 1)] += 1
@@ -96,3 +103,12 @@ print("\nнеиспользованная лучшая роль (что упус
 if "--primery" in sys.argv:
     print("\nПРИМЕРЫ 1 (первое письмо не на лучший):"); [print("  ", x) for x in прим1]
     print("\nПРИМЕРЫ 2 (не использован адрес выше):"); [print("  ", x) for x in прим2]
+if "--lesenka" in sys.argv:
+    кид = {n: i for i, n in кам.items()}
+    по_к = defaultdict(list)
+    for x in лесенка: по_к[кид.get(x["kamp"])].append(x)
+    for k, сп in по_к.items():
+        json.dump(сп, io.open(r"C:\sender\_ops\lesenka-roli-%s.json" % k, "w", encoding="utf-8"), ensure_ascii=False)
+    print("лесенка по ролям: %d компаний; по слоям %s; по кампаниям %s; проба целевых адресов %s" % (
+        len(лесенка), dict(Counter(x["sloy"] for x in лесенка)), {кам.get(k): len(v) for k, v in по_к.items()},
+        dict(Counter(проба.get(x["email"], "не проверен") for x in лесенка))))
