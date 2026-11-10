@@ -65,7 +65,7 @@ def snapshot(rec):
 def one(rec):
     try:
         msg = gp.call(None, [{'role': 'user', 'content': PROMPT + snapshot(rec)}],
-                      model='claude-fable-5', attempts=4)
+                      model=os.environ.get('CLS_MODEL', 'claude-fable-5'), attempts=4)
         out = ''.join(b.text for b in msg.content if b.type == 'text').strip()
     except Exception as e:                                   # noqa: BLE001
         return {'domain': rec['domain'], 'error': repr(e)[:120]}
