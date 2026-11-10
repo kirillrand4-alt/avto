@@ -7,7 +7,7 @@
 import csv, io, re, sqlite3, sys
 from collections import Counter, defaultdict
 ФАЙЛ = r"C:\seostat\drop\drop-storage" + "\\" + sys.argv[1]
-ПОРОГ = int(sys.argv[2]) if len(sys.argv) > 2 else 2
+ПОРОГ = int(next((a for a in sys.argv[2:] if a.isdigit()), "2"))
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=90)
 def цифры(x): return "".join(ч for ч in str(x or "") if ч.isdigit())
 строки = list(csv.DictReader(io.open(ФАЙЛ, encoding="utf-8-sig"), delimiter=";"))
@@ -43,3 +43,26 @@ print(dict(ит)); print("в итоговом списке (≥%d, без сде
 print("распределение писем:", sorted(Counter(min(x[3] + x[4], 6) for x in вых).items()))
 print("по направлениям:", Counter("Meyer+КЦ" if ("Meyer" in x[5] and "КЦ" in x[5]) else ("Meyer" if "Meyer" in x[5] else "КЦ" if "КЦ" in x[5] else "только ответы") for x in вых).most_common())
 for x in вых[:15]: print("  ", x)
+if "--vse" in sys.argv:
+    # владелец 10.11: «отметь есть ли среди 8к активные сделки, я формирую новую базу» — весь файл + колонки
+    import json as _j
+    сд = {}
+    try:
+        for inn, m, k, sc, det in c.execute("SELECT inn, meyer, kc, sc, detali FROM sdelki_napr"): сд[цифры(inn)] = (m, k, sc, det)
+    except sqlite3.Error: pass
+    путь2 = r"C:\sender\_ops\%s-sdelki.csv" % re.sub(r"\.\w+$", "", sys.argv[1])
+    поля = list(строки[0].keys()) + ["Активная сделка", "Сделка КЦ", "Сделка Meyer", "Сделка СЦ", "Сделки (ID: воронка, стадия)", "Писали раз"]
+    сч = Counter()
+    with io.open(путь2, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f, delimiter=";"); w.writerow(поля)
+        for r in строки:
+            ц = цифры(r.get("ИНН")); д = сд.get(ц)
+            дет = ""
+            if д and д[3]:
+                try: дет = "; ".join("%s: %s, %s" % (x.get("id"), x.get("v"), x.get("st")) for v in _j.loads(д[3]).values() for x in v)
+                except Exception: дет = str(д[3])[:200]
+            есть = bool(д and (д[0] or д[1] or д[2]))
+            сч["с активной сделкой" if есть else "без сделки"] += 1
+            if д: сч["КЦ"] += bool(д[1]); сч["Meyer"] += bool(д[0]); сч["СЦ"] += bool(д[2])
+            w.writerow(list(r.values()) + ["да" if есть else "нет", "да" if д and д[1] else "", "да" if д and д[0] else "", "да" if д and д[2] else "", дет, писем[ц] + отв[ц]])
+    print("ВЕСЬ ФАЙЛ со сделками:", dict(сч), "→", путь2)
