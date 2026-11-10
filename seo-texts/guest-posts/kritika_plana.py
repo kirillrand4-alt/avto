@@ -210,5 +210,49 @@ def main():
             print(f'{model}: {res}', flush=True)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and sys.argv[1:2] != ['svod']:
     main()
+
+
+SVOD = """Ниже ответы нескольких моделей, которых попросили найти слабые места в плане отбора доноров
+(бюджет до 40 тыс. руб в месяц, прошлая кампания эффекта не дала). Сведи их для владельца бизнеса:
+
+## 1. Общий вердикт моделей (сходятся ли, что план работает; в 3-5 предложениях)
+## 2. Слабые места, которые назвали 3+ модели (таблица: слабое место | сколько моделей | суть | как исправить)
+## 3. Ценные идеи, которые назвала одна-две модели (с указанием, кто)
+## 4. Где модели расходятся (и чьи аргументы сильнее, со ссылкой на цифры из брифа)
+## 5. Бюджет 40 тыс./мес: сводная раскладка
+## 6. Дизайн замера при 2-3 размещениях в месяц
+## 7. Итоговый список изменений плана, по убыванию важности (10 пунктов максимум)
+
+Указывай модель в скобках. Ничего не добавляй от себя без пометки «от сводчика». По-русски, без длинных тире.
+"""
+
+
+def svod():
+    parts = []
+    for fn in sorted(os.listdir(OUT)):
+        if fn.startswith('otvet-'):
+            parts.append(f'=== Модель: {fn[6:-3]} ===\n' + open(os.path.join(OUT, fn), encoding='utf-8').read())
+    path = os.path.join(OUT, 'SVOD.md')
+    _, res = ask_to(path, 'claude-opus-5-5', SVOD + '\n\n' + '\n\n'.join(parts))
+    print('свод:', res)
+
+
+def ask_to(path, model, prompt):
+    import gen_provider as gp
+    msg = gp._raw_stream([{'role': 'user', 'content': prompt}], model, 16000, thinking=False, effort=None)
+    text = ''.join(b.text for b in msg.content if b.type == 'text')
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(f'# Свод критики плана отбора доноров ({len(parts_count())} моделей)\n\n' + text)
+        f.flush()
+        os.fsync(f.fileno())
+    return model, f'{len(text)} знаков'
+
+
+def parts_count():
+    return [f for f in os.listdir(OUT) if f.startswith('otvet-')]
+
+
+if __name__ == '__main__' and sys.argv[1:2] == ['svod']:
+    svod()
