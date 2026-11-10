@@ -19,8 +19,18 @@ import httpx
 SP = os.environ.get('SR_COOKIE_FILE',
                     '/tmp/claude-0/-home-user-avto/20e1aa6d-1000-514f-959c-428ea037ecc1/scratchpad/sr_cookie.txt')
 URL = 'https://sr.groupbuyseo.org/dpa/rpc'
-API = '4daff3d2f58fe6b7bde7b8cb33bcf394'
-UID = 30530406
+# Ключи аккаунта Semrush на сервере групбая: из тела любого запроса /dpa/rpc
+# (userId, apiKey). Меняются вместе с сервером, поэтому не в коде, а в окружении
+# или в файле SR_KEYS_FILE (скратчпад, chmod 600).
+def _keys():
+    f = os.environ.get('SR_KEYS_FILE',
+                       '/tmp/claude-0/-home-user-avto/20e1aa6d-1000-514f-959c-428ea037ecc1/scratchpad/sr_keys.env')
+    kv = dict(l.strip().split('=', 1) for l in open(f) if '=' in l) if os.path.exists(f) else {}
+    kv.update({k: v for k, v in os.environ.items() if k in ('SR_USER_ID', 'SR_API_KEY')})
+    return kv.get('SR_API_KEY'), int(kv.get('SR_USER_ID') or 0)
+
+
+API, UID = _keys()
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36')
 
