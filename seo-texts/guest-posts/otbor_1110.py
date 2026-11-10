@@ -77,7 +77,10 @@ def cmd_merge():
         c.font = Font(bold=True)
     out = []
     for r in kand:
-        a = ahr.get(r['host'], {})
+        # Режим domain в Ahrefs - ровно этот хост, без поддоменов. kommersant.ru без www
+        # дал 96 визитов в месяц: сайт живёт на www. Берём больший из двух вариантов.
+        a = max((ahr.get(r['host'], {}), ahr.get('www.' + r['host'], {})),
+                key=lambda x: x.get('org_traffic') or 0)
         tr = a.get('org_traffic')
         rat = round(tr / r['Ahrefs трафик'], 2) if tr is not None and r.get('Ahrefs трафик') else None
         out.append((tr or 0, [r.get(c) for c in cols] + [round(dolya(r) * 100, 2), 'да' if r['nash_temy'] else '']
