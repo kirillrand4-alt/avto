@@ -8,11 +8,11 @@
 f — где именно в их процессе нужен газ (из «Продукция» + «Техпроцесс» отрасли), b — одна «боль» отрасли
 без цифр (из «Боли»). Остальное — канон в коде. Проверка: без цифр, без «мы», без длинного тире,
 длина. Каждый образец печатается со следом полей, из которых он собран.
-Пишет C:\\sender\\_ops\\gaz-obrazcy.txt (и копию на дроп). [--zapusk]"""
+Пишет C:\\sender\\_ops\\gaz-obrazcy.txt (и копию на дроп). [--zapusk] [--model=claude-opus-5-5]"""
 import csv, io, json, os, random, re, subprocess, sys, time
 if "--zapusk" in sys.argv:
     л = io.open(r"C:\sender\_ops\gaz-obrazcy.log", "w", encoding="utf-8")
-    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__)], cwd=r"C:\sender", stdout=л, stderr=л,
+    п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__)] + [x for x in sys.argv[1:] if x != "--zapusk"], cwd=r"C:\sender", stdout=л, stderr=л,
                          creationflags=0x00000008 | 0x00000200)
     time.sleep(5); print("запущен, pid %d" % п.pid); sys.exit(0)
 sys.path.insert(0, r"C:\sender"); sys.path.insert(0, r"C:\sender\server")
@@ -93,13 +93,16 @@ for отр in sorted({р["Отрасль"] for р in комп} | set(по_отр
 print("отраслей: %d, кандидатов: %d" % (len({x[0] for x in выбор}), len(выбор)), flush=True)
 # ---- модель: две фразы на компанию
 _сырой = GP._raw_stream
+МОДЕЛЬ = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--model=")), "claude-opus-5-5")
+print("модель: %s" % МОДЕЛЬ, flush=True)
 def зов(текст):
     for _п in range(20):
         try:
-            м = _сырой([{"role": "user", "content": текст}], "claude-sonnet-4-6", 2500, thinking=False, effort="low")
+            м = _сырой([{"role": "user", "content": текст}], МОДЕЛЬ, 4000, thinking=False, effort="low")
             т = м if isinstance(м, str) else "".join(getattr(b, "text", "") for b in getattr(м, "content", []) or [])
-            _i = max(т.rfind('{"o"'), т.rfind('{ "o"'))
-            return {int(x["n"]): x for x in json.JSONDecoder(strict=False).raw_decode(т[_i:])[0].get("o", [])}
+            _м = list(re.finditer(r'\{\s*"o"\s*:', т))
+            if not _м: raise ValueError("нет JSON в ответе: %r" % т[:200])
+            return {int(x["n"]): x for x in json.JSONDecoder(strict=False).raw_decode(т[_м[-1].start():])[0].get("o", [])}
         except Exception as ex:  # noqa: BLE001
             print("модель: %s, повтор" % str(ex)[:100], flush=True); time.sleep(300 if "429" in str(ex) else 90 if "503" in str(ex) else 20)
     return {}
