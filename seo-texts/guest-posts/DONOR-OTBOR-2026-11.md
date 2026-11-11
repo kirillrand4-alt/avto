@@ -149,8 +149,8 @@ kompr.ru, pnevmoteh.by, pnevmo-sklad.ru, ни одного СМИ. Вывод: �
 
 ## Доноры конкурентов: итог 11.11.2026
 
-Ahrefs Referring domains по 184 конкурентам из списка владельца (28 + 156; остальные
-70 не сняты: Ahrefs упёрся в месячный лимит строк SeRowsMonthlyLimitReached).
+Ahrefs Referring domains по 156 конкурентам из 254 в списке владельца (остальные
+98 не сняты: Ahrefs упёрся в месячный лимит строк SeRowsMonthlyLimitReached).
 Пересечение (`konkurenty_peresechenie.py`): 516 доменов с трафиком от 100 ссылаются на
 2+ конкурентов; после отсева Яндекса, справочников и SEO-сервисов, при 3+ конкурентах
 и dofollow - 222. Тип и тема по главной странице через провайдера (`konkurenty_tip.py`,
