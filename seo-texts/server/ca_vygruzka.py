@@ -7,7 +7,8 @@ r"""Выгрузка готовых компаний ЦА O2/N2 для зали�
 должность, личная почта, телефон (свой у того же человека, иначе основной телефон компании — колонка «Чей телефон»).
 Контакты — с сайта («лпр: да», не чужой номер) и чистые ЕИС (закупщики).
 Исключения уже применены при сборке списка (активные сделки КЦ, запреты панели, гос, конкуренты).
-Выход: ca\CA-ENGER-ZALIVKA.csv (utf-8-sig, «;») и .xlsx (+ дроп). Персональные данные — только на сервере и в дропе.
+Лист 2 «Компании»: без ЛПР, но с почтой и продукцией, по которым больше ничего не найдём (см. ниже).
+Выход: ca\CA-ENGER-ZALIVKA.csv, CA-ENGER-ZALIVKA-kompanii.csv (utf-8-sig, «;») и .xlsx с двумя листами (+ дроп). Персональные данные — только на сервере и в дропе.
 """
 import collections, csv, io, json, os, re, sys
 
@@ -166,6 +167,73 @@ def main():
                 continue
             строки.append(r)
     строки.sort(key=lambda r: (r['Газ'], r['Отрасль'], -int(r['Выручка, млн ₽'] or 0)))
+    # 11.11, владелец: «там, где есть почта (любая) + продукция, но они уже обработаны и больше мы ничего по ним не найдём,
+    # тоже в файл». Компании без строки ЛПР: обход пройден (запись ok), паспорт с продукцией, есть почта, и агенты ничего
+    # не добавят — агент уже отработал, либо компания не в очереди агентов (сайт подтверждён или выручка < 120 млн)
+    с_лпр = {r['ИНН'] for r in строки}
+    агент_был = set()
+    п = os.path.join(DIR, 'ca-glubokiy.jsonl')
+    if os.path.exists(п):
+        for s_ in io.open(п, encoding='utf-8', errors='replace'):
+            try:
+                агент_был.add(json.loads(s_)['inn'])
+            except (ValueError, KeyError):
+                pass
+    п = os.path.join(ДРОП, 'ca-glubokiy-vhod.json')
+    очередь_агентов = set(json.load(io.open(п, encoding='utf-8'))) if os.path.exists(п) else set()
+    компании = []
+    for инн, к in сп.items():
+        if инн in с_лпр or инн not in зап or not продукция.get(инн):
+            continue
+        if инн in очередь_агентов and инн not in агент_был and (к.get('выручка') or 0) >= 120e6:
+            причины['компания: ждёт агента'] += 1
+            continue
+        з = зап[инн]
+        ном = [x for x in з.get('номера') or [] if x.get('чей') != 'другая']
+        почты = [x['почта'] for x in ном if x.get('почта')] + [x['почта'] for x in еис.get(инн, []) if x.get('почта')]
+        if not почты:
+            причины['компания: нет почты'] += 1
+            continue
+        def вес(п_):
+            л = п_.split('@')[0].lower()
+            if личная(п_):
+                return 0
+            if re.match(r'(snab|zakup|supply|tender|ogm|oge|ogt|energ|glavinzh|tech|teh|proizv|production|mehanik)', л):
+                return 1
+            if re.match(r'(info|office|mail|post|priem|reception|secretar|sekretar|general|kontakt|contact|zavod|plant)', л):
+                return 2
+            if re.match(r'(sales?|zakaz|order|opt|market|reklama|hr|kadr|buh|account|finance|job|rabota|resume|vacancy|press|smi|noreply|no-reply)', л):
+                return 4
+            return 3
+        почта = sorted(dict.fromkeys(почты), key=вес)[0]
+        def тел(x):
+            return (x.get('номер') or '').strip() + ((' доб. ' + x['доб']) if x.get('доб') else '')
+        телефон = next((тел(x) for x in ном if x.get('номер') and 'приём' in (x.get('роль') or '').lower()), '') or \
+            next((тел(x) for x in ном if x.get('номер') and x.get('лпр') == 'да'), '') or \
+            next((тел(x) for x in ном if x.get('номер')), '')
+        кат = [c for c in (к.get('сегм') or '').split(', ') if c in ca_cel.КАТ]
+        if not кат:
+            continue
+        гл = sorted(кат, key=lambda c: ('ядро', 'новая', 'по нашим сделкам', 'резерв').index(ca_cel.КАТ[c][1])
+                    if ca_cel.КАТ[c][1] in ('ядро', 'новая', 'по нашим сделкам', 'резерв') else 9)[0]
+        рег = к.get('регион') or ''
+        рег = РЕГИОНЫ.get(рег, рег) if re.fullmatch(r'\d{2}', рег) else рег
+        if not рег and re.fullmatch(r'\d{10}', инн):
+            рег = РЕГИОНЫ.get(инн[:2], '')
+        r = {'ИНН': инн, 'Компания': к.get('имя') or '', 'Регион': рег,
+             'Выручка, млн ₽': round((к.get('выручка') or 0) / 1e6) or '', 'Сайт': з.get('сайт') or к.get('сайт') or '',
+             'Отрасль': '; '.join(ca_cel.КАТ[c][2] for c in кат), 'Газ': ГАЗ[ca_cel.КАТ[гл][0]],
+             'Техпроцесс (где нужен газ)': (кар.get(гл) or {}).get('техпроцесс', ''), 'Боли': (кар.get(гл) or {}).get('боли', ''),
+             'Продукция': продукция.get(инн, ''), 'Почта': почта,
+             'Тип почты': ['личная', 'служба (снабжение/техническая)', 'общая', 'прочая', 'продажи/прочие службы'][вес(почта)],
+             'Телефон': телефон, 'Почему без ЛПР': 'агент отработал' if инн in агент_был else 'обход и проверки пройдены, агент не нужен'}
+        пустые = [k for k, v in r.items() if not str(v).strip()]
+        if пустые:
+            for k in пустые:
+                причины['компания пусто: ' + k] += 1
+            continue
+        компании.append(r)
+    компании.sort(key=lambda r: (r['Газ'], r['Отрасль'], -int(r['Выручка, млн ₽'] or 0)))
     кол = ['ИНН', 'Компания', 'Регион', 'Выручка, млн ₽', 'Сайт', 'Отрасль', 'Газ', 'Техпроцесс (где нужен газ)', 'Боли',
            'Продукция', 'ФИО', 'Должность', 'Почта', 'Телефон', 'Чей телефон', 'Источник контакта']
     вых = os.path.join(ПАПКА, 'CA-ENGER-ZALIVKA.csv')
@@ -193,12 +261,36 @@ def main():
             c.alignment = Alignment(wrap_text=True, vertical='top')
     ws.freeze_panes = 'C2'
     ws.auto_filter.ref = ws.dimensions
+    кол2 = ['ИНН', 'Компания', 'Регион', 'Выручка, млн ₽', 'Сайт', 'Отрасль', 'Газ', 'Техпроцесс (где нужен газ)', 'Боли',
+            'Продукция', 'Почта', 'Тип почты', 'Телефон', 'Почему без ЛПР']
+    вых2 = os.path.join(ПАПКА, 'CA-ENGER-ZALIVKA-kompanii.csv')
+    with io.open(вых2, 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.DictWriter(f, fieldnames=кол2, delimiter=';')
+        w.writeheader()
+        w.writerows(компании)
+    ws2 = wb.create_sheet('Компании (общая почта)')
+    ws2.append(кол2)
+    for r in компании:
+        ws2.append([r[k] for k in кол2])
+    for c in ws2[1]:
+        c.font = Font(bold=True)
+    for i, k in enumerate(кол2, 1):
+        ws2.column_dimensions[openpyxl.utils.get_column_letter(i)].width = ширина.get(k, 24)
+    for row in ws2.iter_rows(min_row=2):
+        for c in row:
+            c.alignment = Alignment(wrap_text=True, vertical='top')
+    ws2.freeze_panes = 'C2'
+    ws2.auto_filter.ref = ws2.dimensions
+    ws.title = 'ЛПР'
     вх = os.path.join(ПАПКА, 'CA-ENGER-ZALIVKA.xlsx')
     wb.save(вх)
     import shutil
-    for ф in (вых, вх):
+    for ф in (вых, вых2, вх):
         shutil.copyfile(ф, os.path.join(ДРОП, os.path.basename(ф)))
     print('===ИТОГ===', json.dumps({'строк': len(строки), 'компаний': len({r['ИНН'] for r in строки}),
+                                     'лист_компании': len(компании),
+                                     'лист_компании_тип_почты': dict(collections.Counter(r['Тип почты'] for r in компании)),
+                                     'лист_компании_почему': dict(collections.Counter(r['Почему без ЛПР'] for r in компании)),
                                      'по_газу': dict(collections.Counter(r['Газ'][:12] for r in строки)),
                                      'по_отрасли_компаний': dict(collections.Counter(r['Отрасль'].split(';')[0] for r in
                                                                                      {r['ИНН']: r for r in строки}.values())),
