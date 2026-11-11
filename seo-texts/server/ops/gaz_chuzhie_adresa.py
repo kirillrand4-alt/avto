@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Разбор адресов из лесенок газовых писем, которые в панели (recipients) записаны за ДРУГИМ ИНН.
 Чья привязка верна: сравниваем названия, домен адреса с сайтами обеих компаний, источник контакта у ЦА,
-источник записи в панели, писали ли на адрес. Только чтение.  [--primery=N]"""
+источник записи в панели, писали ли на адрес. Только чтение баз.  [--vygruzit] — адреса «домен = сайт другой
+компании» в CSV на дроп GAZ-CHUZHIE-ADRESA-54.csv (владелец 11.11: «выпиши для другой сессии»)."""
 import csv, io, os, re, sqlite3
 from collections import Counter, defaultdict
 csv.field_size_limit(10 ** 9)
@@ -39,7 +40,7 @@ for em, inn, cn, src in s.execute("SELECT lower(email), inn, company_name, sourc
 def имя_и_сайт(inn):
     r = en.execute("SELECT name, site FROM companies WHERE inn=?", (inn,)).fetchone()
     return (r[0] or "", r[1] or "") if r else ("", "")
-кат = Counter(); примеры = defaultdict(list); ист = Counter(); ист_панели = Counter()
+кат = Counter(); примеры = defaultdict(list); ист = Counter(); ист_панели = Counter(); ЧУЖИЕ = []
 for em, наши in адреса.items():
     if em not in rec: continue
     чужой, имя_п, src = rec[em]
@@ -63,11 +64,21 @@ for em, наши in адреса.items():
         к = "домен = сайт ДРУГОЙ компании (ошибается ЦА)"
     else: к = "корп. домен, ни с одним сайтом не совпал"
     кат[к] += 1
+    if к.startswith("домен = сайт ДРУГОЙ"):
+        ЧУЖИЕ.append([em, наш_инн, наш_имя, наш_сайт, чужой, их_имя, их_сайт, src, "да" if em in писали else "нет", "; ".join(sorted({x[1] or x[2] for x in наши}))])
     for x in наши: ист["%s: %s" % (x[2], x[1][:40])] += 1
     ист_панели[src[:30]] += 1
     if len(примеры[к]) < 4:
         примеры[к].append("%s | наш: %s (%s, сайт %s) | в панели: %s (%s, сайт %s, источник %s) | писали: %s" % (
             em, наш_имя[:45], наш_инн, наш_сайт or "-", их_имя[:45], чужой, их_сайт or "-", src[:20], "да" if em in писали else "нет"))
+if "--vygruzit" in __import__("sys").argv:
+    п = os.path.join(ДРОП, "GAZ-CHUZHIE-ADRESA-54.csv")
+    with io.open(п, "w", encoding="utf-8-sig", newline="") as ф:
+        w = csv.writer(ф, delimiter=";")
+        w.writerow(["Почта", "ИНН в файле ЦА", "Компания в файле ЦА", "Сайт в файле ЦА", "ИНН в панели", "Компания в панели",
+                    "Сайт компании в панели", "Источник записи в панели", "Писали на адрес", "Источник контакта у ЦА"])
+        w.writerows(ЧУЖИЕ)
+    print("выгружено на дроп: %s (%d строк)" % (п, len(ЧУЖИЕ)))
 print("ВСЕГО адресов с другой привязкой:", sum(кат.values()))
 for к, n in кат.most_common():
     print("\n%5d  %s" % (n, к))

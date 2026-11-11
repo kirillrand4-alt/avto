@@ -130,6 +130,18 @@ try:
 except Exception as ex:  # noqa: BLE001
     print("реестр «не наш» не прочитан: %s" % ex, flush=True); не_наш = set()
 from sender.sdelki_napr import blok as сделка_блок   # noqa: E402
+# АДРЕС ЗА ДРУГИМ ИНН (владелец 11.11: «54 за другим доменом выпиши для другой сессии, остальным больше верю ЦА»):
+# берём по привязке ЦА, КРОМЕ домена = сайт другой компании, и если та, другая, компания сама в стопе.
+_en = sqlite3.connect("file:C:\\sender\\enrich.db?mode=ro", uri=True, timeout=60)
+САЙТ_ИНН = {цифры(i): (с or "") for i, с in _en.execute("SELECT inn, site FROM companies WHERE site IS NOT NULL AND site<>''")}
+def _домен_сайта(с):
+    с = str(с or "").lower().split("//")[-1].split("/")[0]
+    return с[4:] if с.startswith("www.") else с
+def _домен_совпал(дом, сайт):
+    сайт = _домен_сайта(сайт)
+    return bool(сайт) and (дом == сайт or дом.endswith("." + сайт) or сайт.endswith("." + дом))
+def в_стопе(и):
+    return и in не_наш or и in стоп or и in ответ or bool(сделка_блок(к, и, "kc"))
 print("стоп-лист %d, мёртвых %d, ответивших ИНН %d, кампаний КЦ %d, адресов КЦ<15д %d, не наш %d"
       % (len(стоп), len(мёртв), len(ответ), len(кц_камп), len(кц_15), len(не_наш)), flush=True)
 
@@ -174,7 +186,14 @@ def лесенка(и):
         if e1 in мёртв: почему["мёртв по пробе"] += 1; continue
         if e1 in кц_15: почему["КЦ писал < 15 дней"] += 1; continue
         if e1 in в_очереди: почему["уже в очереди"] += 1; continue
-        if чей_адрес.get(e1) and чей_адрес[e1] != и: почему["адрес за другим ИНН"] += 1; continue
+        _др = чей_адрес.get(e1)
+        if _др and _др != и:
+            if в_стопе(_др): почему["адрес за другим ИНН, та компания в стопе"] += 1; continue
+            _дом = e1.rsplit("@", 1)[-1]
+            _наш_сайт = (база.get(и, {}).get("Сайт") or САЙТ.get(и, {}).get("Сайт") or САЙТ_ИНН.get(и, ""))
+            if _домен_совпал(_дом, САЙТ_ИНН.get(_др, "")) and not _домен_совпал(_дом, _наш_сайт):
+                почему["домен = сайт другой компании"] += 1; continue
+            к1 = dict(к1, drugoy_inn=_др); почему["за другим ИНН, берём по ЦА"] += 1
         вых.append(к1)
     return вых[:6], почему
 
@@ -386,7 +405,7 @@ for и in выбраны:
     сейчас = datetime.now(timezone.utc).isoformat()
     есть = к.execute("SELECT id, inn FROM recipients WHERE lower(email)=?", (em,)).fetchone()
     if есть and есть[1] and цифры(есть[1]) != и:
-        запись["otsev"] = "адрес закреплён за другим ИНН %s" % есть[1]; пиши(ЖУР_КАРТ, запись); пропущено["адрес за другим ИНН"] += 1; continue
+        запись["drugoy_inn"] = цифры(есть[1])     # по привязке ЦА (владелец 11.11); получатель в панели остаётся как был
     if есть:
         rid = есть[0]
     else:
@@ -402,7 +421,8 @@ for и in выбраны:
     mid, _шаг, почему = с_повтором(q._ensure_message, КАМП, int(rid))
     if not mid:
         запись["otsev"] = "сообщение не завелось: %s" % почему; пиши(ЖУР_КАРТ, запись); пропущено["сообщение не завелось"] += 1; continue
-    панель = json.dumps({"letter_division": "kc", "mailbox_id": mb.mailbox_id, "vruchnuyu": ИМЯ_КАМП, "company": {"name": имя_комп}}, ensure_ascii=False)
+    панель = json.dumps({"letter_division": "kc", "mailbox_id": mb.mailbox_id, "vruchnuyu": ИМЯ_КАМП, "company": {"name": имя_комп},
+                         **({"adres_za_drugim_inn": запись["drugoy_inn"]} if запись.get("drugoy_inn") else {})}, ensure_ascii=False)
     ключ = "%s|%s|%d" % (и, em, КАМП)
     if к.execute("SELECT 1 FROM confirm_reviews WHERE dedup_key=?", (ключ,)).fetchone():
         пропущено["карточка уже есть"] += 1; continue
