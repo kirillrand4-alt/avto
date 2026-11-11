@@ -1,2074 +1,7326 @@
 [
-{
-"domain": "siteprice.org",
-"n": 16,
-"dr": 71.0,
-"tr": "35857",
-"do": "0"
-},
-{
-"domain": "sitelike.org",
-"n": 14,
-"dr": 64.0,
-"tr": "24269",
-"do": "0"
-},
-{
-"domain": "ya.ru",
-"n": 10,
-"dr": 89.0,
-"tr": "5925164",
-"do": "2"
-},
-{
-"domain": "prlog.ru",
-"n": 8,
-"dr": 52.0,
-"tr": "76",
-"do": "0"
-},
-{
-"domain": "lyubimiigorod.ru",
-"n": 7,
-"dr": 51.0,
-"tr": "2618",
-"do": "2"
-},
-{
-"domain": "poidata.io",
-"n": 7,
-"dr": 42.0,
-"tr": "1",
-"do": "0"
-},
-{
-"domain": "rusbetonplus.ru",
-"n": 7,
-"dr": 29.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "asktel.ru",
-"n": 6,
-"dr": 39.0,
-"tr": "208",
-"do": "0"
-},
-{
-"domain": "otzyv-pro.ru",
-"n": 6,
-"dr": 29.0,
-"tr": "8",
-"do": "6"
-},
-{
-"domain": "fccland.ru",
-"n": 6,
-"dr": 36.0,
-"tr": "6",
-"do": "2"
-},
-{
-"domain": "pawetta.com",
-"n": 5,
-"dr": 21.0,
-"tr": "192985",
-"do": "0"
-},
-{
-"domain": "volga.news",
-"n": 5,
-"dr": 70.0,
-"tr": "12522",
-"do": "2"
-},
-{
-"domain": "mastergrad.com",
-"n": 5,
-"dr": 70.0,
-"tr": "9632",
-"do": "0"
-},
-{
-"domain": "searchengines.guru",
-"n": 5,
-"dr": 72.0,
-"tr": "5094",
-"do": "0"
-},
-{
-"domain": "odp.org",
-"n": 5,
-"dr": 39.0,
-"tr": "1078",
-"do": "2"
-},
-{
-"domain": "donnews.ru",
-"n": 5,
-"dr": 57.0,
-"tr": "670",
-"do": "3"
-},
-{
-"domain": "worldgonesour.ru",
-"n": 5,
-"dr": 37.0,
-"tr": "76",
-"do": "1"
-},
-{
-"domain": "tovaryplus.ru",
-"n": 5,
-"dr": 30.0,
-"tr": "23",
-"do": "0"
-},
-{
-"domain": "racechrono.ru",
-"n": 5,
-"dr": 31.0,
-"tr": "15",
-"do": "1"
-},
-{
-"domain": "masteroff.org",
-"n": 5,
-"dr": 55.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "positroika-doma.ru",
-"n": 5,
-"dr": 38.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "teletap.org",
-"n": 5,
-"dr": 30.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "bigpicture.ru",
-"n": 4,
-"dr": 69.0,
-"tr": "24078",
-"do": "6"
-},
-{
-"domain": "verif.com",
-"n": 4,
-"dr": 71.0,
-"tr": "22262",
-"do": "1"
-},
-{
-"domain": "yerkramas.org",
-"n": 4,
-"dr": 50.0,
-"tr": "13874",
-"do": "3"
-},
-{
-"domain": "weblancer.net",
-"n": 4,
-"dr": 67.0,
-"tr": "8745",
-"do": "0"
-},
-{
-"domain": "c-inform.info",
-"n": 4,
-"dr": 58.0,
-"tr": "8066",
-"do": "3"
-},
-{
-"domain": "istoki.tv",
-"n": 4,
-"dr": 44.0,
-"tr": "3065",
-"do": "3"
-},
-{
-"domain": "infpol.ru",
-"n": 4,
-"dr": 63.0,
-"tr": "2558",
-"do": "3"
-},
-{
-"domain": "spravka-region.ru",
-"n": 4,
-"dr": 19.0,
-"tr": "2235",
-"do": "0"
-},
-{
-"domain": "trud-ost.ru",
-"n": 4,
-"dr": 50.0,
-"tr": "1248",
-"do": "3"
-},
-{
-"domain": "metaprom.ru",
-"n": 4,
-"dr": 57.0,
-"tr": "1007",
-"do": "0"
-},
-{
-"domain": "avtosreda.ru",
-"n": 4,
-"dr": 42.0,
-"tr": "840",
-"do": "18"
-},
-{
-"domain": "progorodsamara.ru",
-"n": 4,
-"dr": 58.0,
-"tr": "560",
-"do": "3"
-},
-{
-"domain": "autodela.ru",
-"n": 4,
-"dr": 44.0,
-"tr": "480",
-"do": "22"
-},
-{
-"domain": "dezinfo.net",
-"n": 4,
-"dr": 38.0,
-"tr": "125",
-"do": "2"
-},
-{
-"domain": "handcent.ru",
-"n": 4,
-"dr": 26.0,
-"tr": "76",
-"do": "1"
-},
-{
-"domain": "news-life.pro",
-"n": 4,
-"dr": 48.0,
-"tr": "21",
-"do": "0"
-},
-{
-"domain": "sitebs.ru",
-"n": 4,
-"dr": 33.0,
-"tr": "15",
-"do": "22"
-},
-{
-"domain": "sunmuseum.ru",
-"n": 4,
-"dr": 44.0,
-"tr": "13",
-"do": "1"
-},
-{
-"domain": "dk-zio.ru",
-"n": 4,
-"dr": 39.0,
-"tr": "7",
-"do": "3"
-},
-{
-"domain": "metal-archive.ru",
-"n": 4,
-"dr": 31.0,
-"tr": "7",
-"do": "4"
-},
-{
-"domain": "prostostroy.com",
-"n": 4,
-"dr": 56.0,
-"tr": "4",
-"do": "1"
-},
-{
-"domain": "ifvremya.ru",
-"n": 4,
-"dr": 39.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "blitz-remont.ru",
-"n": 4,
-"dr": 35.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "dumainfo.ru",
-"n": 4,
-"dr": 30.0,
-"tr": "0",
-"do": "4"
-},
-{
-"domain": "the-master.ru",
-"n": 4,
-"dr": 29.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "catalog-777.com",
-"n": 4,
-"dr": 16.0,
-"tr": "0",
-"do": "2"
-},
-{
-"domain": "ctoday.ru",
-"n": 4,
-"dr": 52.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "runcms.org",
-"n": 4,
-"dr": 34.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "lesnayaskazka74.ru",
-"n": 4,
-"dr": 31.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "stroybest.ru",
-"n": 4,
-"dr": 33.0,
-"tr": "0",
-"do": "2"
-},
-{
-"domain": "apploidnews.com",
-"n": 4,
-"dr": 38.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "binom-s.com",
-"n": 4,
-"dr": 30.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "vinbazar.com",
-"n": 3,
-"dr": 46.0,
-"tr": "83330",
-"do": "2"
-},
-{
-"domain": "66.ru",
-"n": 3,
-"dr": 69.0,
-"tr": "46010",
-"do": "1"
-},
-{
-"domain": "ruxpert.ru",
-"n": 3,
-"dr": 44.0,
-"tr": "21311",
-"do": "0"
-},
-{
-"domain": "progorod33.ru",
-"n": 3,
-"dr": 46.0,
-"tr": "15820",
-"do": "3"
-},
-{
-"domain": "spravka.ru",
-"n": 3,
-"dr": 32.0,
-"tr": "6965",
-"do": "0"
-},
-{
-"domain": "lifeglobe.net",
-"n": 3,
-"dr": 50.0,
-"tr": "4552",
-"do": "2"
-},
-{
-"domain": "sovsekretno.ru",
-"n": 3,
-"dr": 54.0,
-"tr": "3594",
-"do": "1"
-},
-{
-"domain": "progorod76.ru",
-"n": 3,
-"dr": 44.0,
-"tr": "3296",
-"do": "3"
-},
-{
-"domain": "publicwww.com",
-"n": 3,
-"dr": 68.0,
-"tr": "3296",
-"do": "0"
-},
-{
-"domain": "spravka.city",
-"n": 3,
-"dr": 32.0,
-"tr": "3275",
-"do": "0"
-},
-{
-"domain": "vb.by",
-"n": 3,
-"dr": 50.0,
-"tr": "2345",
-"do": "1"
-},
-{
-"domain": "totalarch.com",
-"n": 3,
-"dr": 52.0,
-"tr": "2242",
-"do": "2"
-},
-{
-"domain": "komiinform.ru",
-"n": 3,
-"dr": 62.0,
-"tr": "1985",
-"do": "4"
-},
-{
-"domain": "progorod43.ru",
-"n": 3,
-"dr": 56.0,
-"tr": "1731",
-"do": "2"
-},
-{
-"domain": "realbrest.by",
-"n": 3,
-"dr": 29.0,
-"tr": "1423",
-"do": "3"
-},
-{
-"domain": "michurinsk.ru",
-"n": 3,
-"dr": 31.0,
-"tr": "831",
-"do": "2"
-},
-{
-"domain": "gostei.ru",
-"n": 3,
-"dr": 28.0,
-"tr": "616",
-"do": "1"
-},
-{
-"domain": "smolensk-i.ru",
-"n": 3,
-"dr": 49.0,
-"tr": "507",
-"do": "3"
-},
-{
-"domain": "progorod59.ru",
-"n": 3,
-"dr": 48.0,
-"tr": "455",
-"do": "3"
-},
-{
-"domain": "art-assorty.ru",
-"n": 3,
-"dr": 36.0,
-"tr": "394",
-"do": "2"
-},
-{
-"domain": "rank-craft.com",
-"n": 3,
-"dr": 20.0,
-"tr": "331",
-"do": "0"
-},
-{
-"domain": "mygazeta.com",
-"n": 3,
-"dr": 26.0,
-"tr": "265",
-"do": "2"
-},
-{
-"domain": "rossoshru.ru",
-"n": 3,
-"dr": 38.0,
-"tr": "184",
-"do": "1"
-},
-{
-"domain": "time-samara.ru",
-"n": 3,
-"dr": 49.0,
-"tr": "172",
-"do": "3"
-},
-{
-"domain": "sovross.ru",
-"n": 3,
-"dr": 54.0,
-"tr": "157",
-"do": "3"
-},
-{
-"domain": "business-key.com",
-"n": 3,
-"dr": 51.0,
-"tr": "146",
-"do": "0"
-},
-{
-"domain": "freesmi.by",
-"n": 3,
-"dr": 44.0,
-"tr": "120",
-"do": "1"
-},
-{
-"domain": "zelenograd24.ru",
-"n": 3,
-"dr": 43.0,
-"tr": "87",
-"do": "3"
-},
-{
-"domain": "rossia.org",
-"n": 3,
-"dr": 55.0,
-"tr": "83",
-"do": "4"
-},
-{
-"domain": "progorodnsk.ru",
-"n": 3,
-"dr": 42.0,
-"tr": "39",
-"do": "3"
-},
-{
-"domain": "kakpravilino.com",
-"n": 3,
-"dr": 33.0,
-"tr": "30",
-"do": "1"
-},
-{
-"domain": "earth-chronicles.ru",
-"n": 3,
-"dr": 51.0,
-"tr": "18",
-"do": "1"
-},
-{
-"domain": "agro-archive.ru",
-"n": 3,
-"dr": 25.0,
-"tr": "13",
-"do": "1"
-},
-{
-"domain": "sveto-copy.com",
-"n": 3,
-"dr": 37.0,
-"tr": "12",
-"do": "1"
-},
-{
-"domain": "gnezdoparanoika.ru",
-"n": 3,
-"dr": 27.0,
-"tr": "9",
-"do": "1"
-},
-{
-"domain": "roofor.ru",
-"n": 3,
-"dr": 28.0,
-"tr": "3",
-"do": "1"
-},
-{
-"domain": "okvsk.ru",
-"n": 3,
-"dr": 26.0,
-"tr": "3",
-"do": "1"
-},
-{
-"domain": "ufa-town.ru",
-"n": 3,
-"dr": 41.0,
-"tr": "3",
-"do": "2"
-},
-{
-"domain": "agro-portal.su",
-"n": 3,
-"dr": 15.0,
-"tr": "2",
-"do": "1"
-},
-{
-"domain": "mirsmi24.ru",
-"n": 3,
-"dr": 48.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "ru24.pro",
-"n": 3,
-"dr": 31.0,
-"tr": "0",
-"do": "0"
-},
-{
-"domain": "buzulukmedia.ru",
-"n": 3,
-"dr": 42.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "balforum.net",
-"n": 3,
-"dr": 38.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "poiskmonet.com",
-"n": 3,
-"dr": 35.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "region-ural.ru",
-"n": 3,
-"dr": 35.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "103news.com",
-"n": 3,
-"dr": 34.0,
-"tr": "0",
-"do": "0"
-},
-{
-"domain": "electrikexpert.ru",
-"n": 3,
-"dr": 31.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "hunt-dogs.ru",
-"n": 3,
-"dr": 28.0,
-"tr": "0",
-"do": "0"
-},
-{
-"domain": "lakkk.com",
-"n": 3,
-"dr": 24.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "stilin.ru",
-"n": 3,
-"dr": 22.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "gigapolis.ru",
-"n": 3,
-"dr": 19.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "kfaktiv.ru",
-"n": 3,
-"dr": 52.0,
-"tr": "0",
-"do": "7"
-},
-{
-"domain": "ctcmetar.ru",
-"n": 3,
-"dr": 17.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "stroylegko.com",
-"n": 3,
-"dr": 16.0,
-"tr": "0",
-"do": "2"
-},
-{
-"domain": "pic4you.ru",
-"n": 3,
-"dr": 41.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "expert-byt.ru",
-"n": 3,
-"dr": 40.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "dipris-studio.ru",
-"n": 3,
-"dr": 39.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "industrial-wood.ru",
-"n": 3,
-"dr": 39.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "moidomiks.ru",
-"n": 3,
-"dr": 36.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "mixednews.ru",
-"n": 3,
-"dr": 39.0,
-"tr": "0",
-"do": "2"
-},
-{
-"domain": "sportdon.ru",
-"n": 3,
-"dr": 36.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "vashesamodelkino.ru",
-"n": 3,
-"dr": 31.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "crunchbase.com",
-"n": 2,
-"dr": 91.0,
-"tr": "2503294",
-"do": "0"
-},
-{
-"domain": "xsrv.jp",
-"n": 2,
-"dr": 90.0,
-"tr": "596860",
-"do": "0"
-},
-{
-"domain": "yango.com",
-"n": 2,
-"dr": 74.0,
-"tr": "284455",
-"do": "0"
-},
-{
-"domain": "bc.edu",
-"n": 2,
-"dr": 86.0,
-"tr": "130401",
-"do": "2"
-},
-{
-"domain": "belarushockey.com",
-"n": 2,
-"dr": 39.0,
-"tr": "120216",
-"do": "2"
-},
-{
-"domain": "jpn.org",
-"n": 2,
-"dr": 85.0,
-"tr": "101763",
-"do": "0"
-},
-{
-"domain": "sq.com.ua",
-"n": 2,
-"dr": 66.0,
-"tr": "67685",
-"do": "2"
-},
-{
-"domain": "oouagoiwoye.edu.ng",
-"n": 2,
-"dr": 55.0,
-"tr": "45682",
-"do": "4"
-},
-{
-"domain": "mppolice.gov.in",
-"n": 2,
-"dr": 60.0,
-"tr": "42218",
-"do": "0"
-},
-{
-"domain": "versia.ru",
-"n": 2,
-"dr": 68.0,
-"tr": "33088",
-"do": "1"
-},
-{
-"domain": "altapress.ru",
-"n": 2,
-"dr": 70.0,
-"tr": "31834",
-"do": "1"
-},
-{
-"domain": "sevastopol.su",
-"n": 2,
-"dr": 63.0,
-"tr": "24642",
-"do": "1"
-},
-{
-"domain": "2ch.org",
-"n": 2,
-"dr": 40.0,
-"tr": "23442",
-"do": "1"
-},
-{
-"domain": "orgpage.ru",
-"n": 2,
-"dr": 55.0,
-"tr": "21704",
-"do": "0"
-},
-{
-"domain": "pg21.ru",
-"n": 2,
-"dr": 54.0,
-"tr": "21198",
-"do": "3"
-},
-{
-"domain": "moluch.ru",
-"n": 2,
-"dr": 70.0,
-"tr": "20959",
-"do": "1"
-},
-{
-"domain": "udf.name",
-"n": 2,
-"dr": 42.0,
-"tr": "18669",
-"do": "3"
-},
-{
-"domain": "infosport.ru",
-"n": 2,
-"dr": 46.0,
-"tr": "17477",
-"do": "6"
-},
-{
-"domain": "rt-online.ru",
-"n": 2,
-"dr": 57.0,
-"tr": "17451",
-"do": "2"
-},
-{
-"domain": "airwar.ru",
-"n": 2,
-"dr": 58.0,
-"tr": "15485",
-"do": "3"
-},
-{
-"domain": "politnavigator.net",
-"n": 2,
-"dr": 53.0,
-"tr": "14018",
-"do": "2"
-},
-{
-"domain": "metronews.ru",
-"n": 2,
-"dr": 73.0,
-"tr": "11521",
-"do": "1"
-},
-{
-"domain": "infolesson.kz",
-"n": 2,
-"dr": 9.0,
-"tr": "11129",
-"do": "0"
-},
-{
-"domain": "smart-market.uz",
-"n": 2,
-"dr": 29.0,
-"tr": "10373",
-"do": "0"
-},
-{
-"domain": "niasam.ru",
-"n": 2,
-"dr": 57.0,
-"tr": "9769",
-"do": "2"
-},
-{
-"domain": "satbayev.university",
-"n": 2,
-"dr": 59.0,
-"tr": "9118",
-"do": "1"
-},
-{
-"domain": "obzor.city",
-"n": 2,
-"dr": 55.0,
-"tr": "8097",
-"do": "3"
-},
-{
-"domain": "officelife.by",
-"n": 2,
-"dr": 51.0,
-"tr": "7886",
-"do": "2"
-},
-{
-"domain": "munkonggadget.com",
-"n": 2,
-"dr": 44.0,
-"tr": "7474",
-"do": "50"
-},
-{
-"domain": "21.by",
-"n": 2,
-"dr": 49.0,
-"tr": "7152",
-"do": "3"
-},
-{
-"domain": "1777.ru",
-"n": 2,
-"dr": 57.0,
-"tr": "6995",
-"do": "2"
-},
-{
-"domain": "yarnews.net",
-"n": 2,
-"dr": 52.0,
-"tr": "6854",
-"do": "1"
-},
-{
-"domain": "ar25.org",
-"n": 2,
-"dr": 42.0,
-"tr": "5097",
-"do": "2"
-},
-{
-"domain": "rlocman.ru",
-"n": 2,
-"dr": 51.0,
-"tr": "4808",
-"do": "1"
-},
-{
-"domain": "ucoz.org",
-"n": 2,
-"dr": 71.0,
-"tr": "4635",
-"do": "4"
-},
-{
-"domain": "checheninfo.ru",
-"n": 2,
-"dr": 46.0,
-"tr": "4538",
-"do": "2"
-},
-{
-"domain": "prochepetsk.ru",
-"n": 2,
-"dr": 37.0,
-"tr": "3996",
-"do": "3"
-},
-{
-"domain": "stoneforest.ru",
-"n": 2,
-"dr": 45.0,
-"tr": "3928",
-"do": "3"
-},
-{
-"domain": "clan.su",
-"n": 2,
-"dr": 71.0,
-"tr": "3592",
-"do": "1"
-},
-{
-"domain": "kikonline.ru",
-"n": 2,
-"dr": 56.0,
-"tr": "3575",
-"do": "1"
-},
-{
-"domain": "oborudunion.ru",
-"n": 2,
-"dr": 41.0,
-"tr": "3526",
-"do": "24"
-},
-{
-"domain": "grozny-inform.ru",
-"n": 2,
-"dr": 60.0,
-"tr": "3121",
-"do": "6"
-},
-{
-"domain": "autolada.ru",
-"n": 2,
-"dr": 28.0,
-"tr": "3068",
-"do": "3"
-},
-{
-"domain": "nashtransport.ru",
-"n": 2,
-"dr": 40.0,
-"tr": "3007",
-"do": "0"
-},
-{
-"domain": "artistecard.com",
-"n": 2,
-"dr": 70.0,
-"tr": "2876",
-"do": "1"
-},
-{
-"domain": "crimeapress.info",
-"n": 2,
-"dr": 49.0,
-"tr": "2770",
-"do": "2"
-},
-{
-"domain": "cxem.net",
-"n": 2,
-"dr": 51.0,
-"tr": "2766",
-"do": "0"
-},
-{
-"domain": "progorod58.ru",
-"n": 2,
-"dr": 49.0,
-"tr": "2754",
-"do": "3"
-},
-{
-"domain": "cont.ws",
-"n": 2,
-"dr": 64.0,
-"tr": "2633",
-"do": "3"
-},
-{
-"domain": "segodnia.ru",
-"n": 2,
-"dr": 45.0,
-"tr": "2618",
-"do": "2"
-},
-{
-"domain": "novosibdom.ru",
-"n": 2,
-"dr": 40.0,
-"tr": "2608",
-"do": "2"
-},
-{
-"domain": "ruffnews.ru",
-"n": 2,
-"dr": 48.0,
-"tr": "2588",
-"do": "3"
-},
-{
-"domain": "bragazeta.ru",
-"n": 2,
-"dr": 56.0,
-"tr": "2546",
-"do": "1"
-},
-{
-"domain": "rusnord.ru",
-"n": 2,
-"dr": 38.0,
-"tr": "2212",
-"do": "8"
-},
-{
-"domain": "brandcatalog.ru",
-"n": 2,
-"dr": 29.0,
-"tr": "2187",
-"do": "0"
-},
-{
-"domain": "cmsmagazine.ru",
-"n": 2,
-"dr": 72.0,
-"tr": "2134",
-"do": "1"
-},
-{
-"domain": "help-tel.ru",
-"n": 2,
-"dr": 23.0,
-"tr": "2131",
-"do": "0"
-},
-{
-"domain": "sgugit.ru",
-"n": 2,
-"dr": 51.0,
-"tr": "2036",
-"do": "2"
-},
-{
-"domain": "gorodkirov.ru",
-"n": 2,
-"dr": 54.0,
-"tr": "1551",
-"do": "1"
-},
-{
-"domain": "samaraonline24.ru",
-"n": 2,
-"dr": 47.0,
-"tr": "1516",
-"do": "2"
-},
-{
-"domain": "kafanews.com",
-"n": 2,
-"dr": 44.0,
-"tr": "1446",
-"do": "2"
-},
-{
-"domain": "megaobzor.com",
-"n": 2,
-"dr": 57.0,
-"tr": "1301",
-"do": "2"
-},
-{
-"domain": "zhzh.info",
-"n": 2,
-"dr": 48.0,
-"tr": "1255",
-"do": "2"
-},
-{
-"domain": "andreyex.ru",
-"n": 2,
-"dr": 45.0,
-"tr": "1172",
-"do": "1"
-},
-{
-"domain": "pinskmedia.by",
-"n": 2,
-"dr": 29.0,
-"tr": "1168",
-"do": "1"
-},
-{
-"domain": "innov.ru",
-"n": 2,
-"dr": 55.0,
-"tr": "1143",
-"do": "12"
-},
-{
-"domain": "potokmedia.ru",
-"n": 2,
-"dr": 56.0,
-"tr": "1087",
-"do": "3"
-},
-{
-"domain": "khab-vesti.ru",
-"n": 2,
-"dr": 51.0,
-"tr": "1084",
-"do": "4"
-},
-{
-"domain": "rudata.ru",
-"n": 2,
-"dr": 32.0,
-"tr": "1084",
-"do": "4"
-},
-{
-"domain": "infokam.su",
-"n": 2,
-"dr": 39.0,
-"tr": "1005",
-"do": "2"
-},
-{
-"domain": "kam24.ru",
-"n": 2,
-"dr": 56.0,
-"tr": "892",
-"do": "2"
-},
-{
-"domain": "belmarket.by",
-"n": 2,
-"dr": 45.0,
-"tr": "884",
-"do": "2"
-},
-{
-"domain": "urbanplaces.su",
-"n": 2,
-"dr": 2.0,
-"tr": "763",
-"do": "0"
-},
-{
-"domain": "dubna.ru",
-"n": 2,
-"dr": 46.0,
-"tr": "756",
-"do": "3"
-},
-{
-"domain": "pg12.ru",
-"n": 2,
-"dr": 40.0,
-"tr": "578",
-"do": "3"
-},
-{
-"domain": "progorodchelny.ru",
-"n": 2,
-"dr": 45.0,
-"tr": "538",
-"do": "3"
-},
-{
-"domain": "newsland.com",
-"n": 2,
-"dr": 61.0,
-"tr": "464",
-"do": "0"
-},
-{
-"domain": "progoroduhta.ru",
-"n": 2,
-"dr": 49.0,
-"tr": "396",
-"do": "3"
-},
-{
-"domain": "metallurgprom.org",
-"n": 2,
-"dr": 36.0,
-"tr": "377",
-"do": "4"
-},
-{
-"domain": "3rm.info",
-"n": 2,
-"dr": 40.0,
-"tr": "342",
-"do": "1"
-},
-{
-"domain": "tgko.ru",
-"n": 2,
-"dr": 31.0,
-"tr": "340",
-"do": "1"
-},
-{
-"domain": "etosibir.ru",
-"n": 2,
-"dr": 24.0,
-"tr": "333",
-"do": "1"
-},
-{
-"domain": "nta-pfo.ru",
-"n": 2,
-"dr": 49.0,
-"tr": "321",
-"do": "1"
-},
-{
-"domain": "cqham.ru",
-"n": 2,
-"dr": 57.0,
-"tr": "290",
-"do": "1"
-},
-{
-"domain": "pg13.ru",
-"n": 2,
-"dr": 48.0,
-"tr": "242",
-"do": "3"
-},
-{
-"domain": "vorle.ru",
-"n": 2,
-"dr": 43.0,
-"tr": "239",
-"do": "1"
-},
-{
-"domain": "biznet.guru",
-"n": 2,
-"dr": 26.0,
-"tr": "225",
-"do": "0"
-},
-{
-"domain": "1npf.com",
-"n": 2,
-"dr": 34.0,
-"tr": "203",
-"do": "4"
-},
-{
-"domain": "himachalscape.com",
-"n": 2,
-"dr": 9.0,
-"tr": "182",
-"do": "0"
-},
-{
-"domain": "spravkainform.ru",
-"n": 2,
-"dr": 27.0,
-"tr": "179",
-"do": "0"
-},
-{
-"domain": "graverstone.ru",
-"n": 2,
-"dr": 14.0,
-"tr": "134",
-"do": "0"
-},
-{
-"domain": "yopolis.ru",
-"n": 2,
-"dr": 36.0,
-"tr": "103",
-"do": "3"
-},
-{
-"domain": "vladivostok.com",
-"n": 2,
-"dr": 36.0,
-"tr": "84",
-"do": "1"
-},
-{
-"domain": "novosti.tj",
-"n": 2,
-"dr": 32.0,
-"tr": "70",
-"do": "4"
-},
-{
-"domain": "nnov.org",
-"n": 2,
-"dr": 49.0,
-"tr": "69",
-"do": "0"
-},
-{
-"domain": "baurum.ru",
-"n": 2,
-"dr": 32.0,
-"tr": "60",
-"do": "0"
-},
-{
-"domain": "hellhire.org",
-"n": 2,
-"dr": 35.0,
-"tr": "59",
-"do": "0"
-},
-{
-"domain": "portal.kharkov.ua",
-"n": 2,
-"dr": 54.0,
-"tr": "53",
-"do": "0"
-},
-{
-"domain": "start-drive.com.ua",
-"n": 2,
-"dr": 5.0,
-"tr": "53",
-"do": "2"
-},
-{
-"domain": "ncrim.ru",
-"n": 2,
-"dr": 44.0,
-"tr": "24",
-"do": "3"
-},
-{
-"domain": "novgorodauto.ru",
-"n": 2,
-"dr": 27.0,
-"tr": "23",
-"do": "2"
-},
-{
-"domain": "lratvakan.com",
-"n": 2,
-"dr": 36.0,
-"tr": "22",
-"do": "1"
-},
-{
-"domain": "finalpartings.com",
-"n": 2,
-"dr": 13.0,
-"tr": "21",
-"do": "2"
-},
-{
-"domain": "seokicks.de",
-"n": 2,
-"dr": 42.0,
-"tr": "19",
-"do": "0"
-},
-{
-"domain": "niros.ru",
-"n": 2,
-"dr": 40.0,
-"tr": "19",
-"do": "4"
-},
-{
-"domain": "medprom.ru",
-"n": 2,
-"dr": 30.0,
-"tr": "18",
-"do": "4"
-},
-{
-"domain": "mirprom.com",
-"n": 2,
-"dr": 29.0,
-"tr": "13",
-"do": "0"
-},
-{
-"domain": "tula.su",
-"n": 2,
-"dr": 29.0,
-"tr": "11",
-"do": "1"
-},
-{
-"domain": "biznclub.ru",
-"n": 2,
-"dr": 22.0,
-"tr": "11",
-"do": "6"
-},
-{
-"domain": "mopra.ru",
-"n": 2,
-"dr": 9.0,
-"tr": "10",
-"do": "0"
-},
-{
-"domain": "radymo.com",
-"n": 2,
-"dr": 26.0,
-"tr": "9",
-"do": "2"
-},
-{
-"domain": "picbasic.ru",
-"n": 2,
-"dr": 28.0,
-"tr": "7",
-"do": "1"
-},
-{
-"domain": "russianweek.ru",
-"n": 2,
-"dr": 6.0,
-"tr": "6",
-"do": "1"
-},
-{
-"domain": "zavod-gornica.ru",
-"n": 2,
-"dr": 26.0,
-"tr": "5",
-"do": "1"
-},
-{
-"domain": "euroelectrica.ru",
-"n": 2,
-"dr": 6.0,
-"tr": "5",
-"do": "1"
-},
-{
-"domain": "sv-barrisol.ru",
-"n": 2,
-"dr": 20.0,
-"tr": "4",
-"do": "1"
-},
-{
-"domain": "chexov.net",
-"n": 2,
-"dr": 29.0,
-"tr": "3",
-"do": "4"
-},
-{
-"domain": "ru24.net",
-"n": 2,
-"dr": 39.0,
-"tr": "2",
-"do": "0"
-},
-{
-"domain": "neruds.ru",
-"n": 2,
-"dr": 29.0,
-"tr": "2",
-"do": "2"
-},
-{
-"domain": "a1agregator.ru",
-"n": 2,
-"dr": 37.0,
-"tr": "2",
-"do": "5"
-},
-{
-"domain": "classical-news.ru",
-"n": 2,
-"dr": 28.0,
-"tr": "1",
-"do": "2"
-},
-{
-"domain": "mozhga18.ru",
-"n": 2,
-"dr": 44.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "hardexpert.net",
-"n": 2,
-"dr": 40.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "homeprorab.info",
-"n": 2,
-"dr": 39.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "5go.ru",
-"n": 2,
-"dr": 34.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "zonakulinara.ru",
-"n": 2,
-"dr": 36.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "emergate.net",
-"n": 2,
-"dr": 33.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "naoni.info",
-"n": 2,
-"dr": 31.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "veryscary.ru",
-"n": 2,
-"dr": 30.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "shoptrip.ru",
-"n": 2,
-"dr": 28.0,
-"tr": "0",
-"do": "2"
-},
-{
-"domain": "mtomd.info",
-"n": 2,
-"dr": 28.0,
-"tr": "0",
-"do": "2"
-},
-{
-"domain": "mozlife.ru",
-"n": 2,
-"dr": 26.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "4dekor.ru",
-"n": 2,
-"dr": 21.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "bazafasada.ru",
-"n": 2,
-"dr": 54.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "iqreview.ru",
-"n": 2,
-"dr": 52.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "tram23.ru",
-"n": 2,
-"dr": 40.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "krovlyakryshi.ru",
-"n": 2,
-"dr": 36.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "mybiysk.ru",
-"n": 2,
-"dr": 35.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "informvest.ru",
-"n": 2,
-"dr": 32.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "sstroys.ru",
-"n": 2,
-"dr": 30.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "studio-nd.ru",
-"n": 2,
-"dr": 30.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "vkyrse.com",
-"n": 2,
-"dr": 26.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "remstroitelstvo.ru",
-"n": 2,
-"dr": 25.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "mvkursk.ru",
-"n": 2,
-"dr": 21.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "vystroim.com",
-"n": 2,
-"dr": 30.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "oteplicah.com",
-"n": 2,
-"dr": 27.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "distroy.ru",
-"n": 2,
-"dr": 26.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "tppchita.ru",
-"n": 2,
-"dr": 18.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "jumper.ru",
-"n": 2,
-"dr": 8.0,
-"tr": "0",
-"do": "57"
-},
-{
-"domain": "start-partnership.com",
-"n": 2,
-"dr": 38.0,
-"tr": "0",
-"do": "8"
-},
-{
-"domain": "stroymaster-base.ru",
-"n": 2,
-"dr": 34.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "stroi-archive.ru",
-"n": 2,
-"dr": 25.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "russianshop.org",
-"n": 2,
-"dr": 39.0,
-"tr": "0",
-"do": "4"
-},
-{
-"domain": "vd-tv.ru",
-"n": 2,
-"dr": 38.0,
-"tr": "0",
-"do": "2"
-},
-{
-"domain": "ambox.ru",
-"n": 2,
-"dr": 36.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "stroitelstvosovety.ru",
-"n": 2,
-"dr": 35.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "oda-radio.com",
-"n": 2,
-"dr": 34.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "fraufluger.ru",
-"n": 2,
-"dr": 34.0,
-"tr": "0",
-"do": "4"
-},
-{
-"domain": "newshay.com",
-"n": 2,
-"dr": 32.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "mastercity.ru",
-"n": 2,
-"dr": 34.0,
-"tr": "0",
-"do": "0"
-},
-{
-"domain": "goo-gl.ru",
-"n": 2,
-"dr": 43.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "polotsk-portal.ru",
-"n": 2,
-"dr": 40.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "otomkak.ru",
-"n": 2,
-"dr": 39.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "stagramer.com",
-"n": 2,
-"dr": 35.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "planetoday.ru",
-"n": 2,
-"dr": 33.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "novostizn.ru",
-"n": 2,
-"dr": 32.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "biznesnewss.com",
-"n": 2,
-"dr": 32.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "o-kemerovo.ru",
-"n": 2,
-"dr": 31.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "hayastannews.com",
-"n": 2,
-"dr": 31.0,
-"tr": "0",
-"do": "4"
-},
-{
-"domain": "derevoblog.ru",
-"n": 2,
-"dr": 30.0,
-"tr": "0",
-"do": "3"
-},
-{
-"domain": "electromonter.info",
-"n": 2,
-"dr": 30.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "aksk29.ru",
-"n": 2,
-"dr": 29.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "2020about.com",
-"n": 2,
-"dr": 29.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "giknutye.ru",
-"n": 2,
-"dr": 27.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "gazeta-echo.ru",
-"n": 2,
-"dr": 27.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "csharpcoderr.com",
-"n": 2,
-"dr": 24.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "instukzia.com",
-"n": 2,
-"dr": 34.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "stroihome.net",
-"n": 2,
-"dr": 33.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "s-narodom.ru",
-"n": 2,
-"dr": 31.0,
-"tr": "0",
-"do": "1"
-},
-{
-"domain": "all-answers.ru",
-"n": 2,
-"dr": 29.0,
-"tr": "0",
-"do": "3"
-}
+ {
+  "domain": "urbanplaces.su",
+  "n": 73,
+  "dr": 2.0,
+  "tr": 763.0,
+  "do": 0.0,
+  "kto": [
+   "sp-energoservice.ru",
+   "kompr.ru",
+   "compressorgroup.ru",
+   "v-p-k.ru",
+   "delaton.ru",
+   "baysar-russia.ru",
+   "tss-s.ru",
+   "wgs-gcvep.ru",
+   "novotekpnz.ru",
+   "compressor.market",
+   "air-vint.ru",
+   "gkpnevmo.ru",
+   "smk-ksk.ru",
+   "dizelniy-generatory.ru",
+   "nt-welding.ru",
+   "regionfox.ru",
+   "gekkoldprom.ru",
+   "zenova.ru",
+   "compressing.ru",
+   "generalaer.ru",
+   "remeza.org",
+   "kompresurs.ru",
+   "dileks.ru",
+   "sts-rf.ru",
+   "2bar.ru",
+   "zif.su",
+   "tdtechmash.ru",
+   "energo-diesel.ru",
+   "artaz.ru",
+   "klapan-pik.ru",
+   "gsk-servis.ru",
+   "bitzer.ru",
+   "kviht.ru",
+   "airsystem.ru",
+   "air-energy.ru",
+   "service-scanner.ru",
+   "dalgakiran.su",
+   "drobesfera.ru",
+   "aso-bezh.ru",
+   "e-kp.ru",
+   "generatora.net",
+   "euronasos.ru",
+   "iteropro.ru",
+   "hitechsvarka.ru",
+   "grattech.ru",
+   "der-com.ru",
+   "dileks-air.ru",
+   "iwelder.ru",
+   "compressor-base.ru",
+   "svarma.ru",
+   "tsk-energo.ru",
+   "compressor-mash.ru",
+   "dalgakiran.ru",
+   "baumgroup.ru",
+   "rusinzh.ru",
+   "kraftmarket24.ru",
+   "promtula.ru",
+   "ttk-rus.ru",
+   "compressor-pk.ru",
+   "indstr.ru",
+   "nasosymarket.ru",
+   "kwt.market",
+   "tsk-progress.ru",
+   "pnevmoland.ru",
+   "ak2000.ru",
+   "remeza.group",
+   "prom-kompressory.ru",
+   "fabrika-kv.ru",
+   "prenmash.ru",
+   "teoil.ru",
+   "ps24.ru",
+   "remeza-russia.ru",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "siteprice.org",
+  "n": 72,
+  "dr": 71.0,
+  "tr": 35857.0,
+  "do": 0.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "decompnw.ru",
+   "atlas-co.ru",
+   "kompr.ru",
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "pnevmo-sklad.ru",
+   "abac-russia.com",
+   "remeza.com",
+   "asobezh.ru",
+   "shnek.ru",
+   "gc-azimut.ru",
+   "top-compressor.ru",
+   "deltainzhiniring.ru",
+   "energocontinent.ru",
+   "nt-rt.ru",
+   "promnasos.com",
+   "teploprofi.com",
+   "uralgrit.com",
+   "dizelnye-generatory.com",
+   "energoplaza.com",
+   "rutector.ru",
+   "ampika.ru",
+   "tica.ru",
+   "compressorgroup.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "tsa.su",
+   "rus-diesel.ru",
+   "tss-s.ru",
+   "remeza-logistic.ru",
+   "gkpnevmo.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "regionfox.ru",
+   "eosn.ru",
+   "zenova.ru",
+   "compressing.ru",
+   "generalaer.ru",
+   "remeza.org",
+   "dileks.ru",
+   "spitzenreiter.ru",
+   "2bar.ru",
+   "zif.su",
+   "energo-diesel.ru",
+   "pressair.ru",
+   "umin.su",
+   "air-energy.ru",
+   "service-scanner.ru",
+   "dalgakiran.su",
+   "drobesfera.ru",
+   "astar-compressors.ru",
+   "e-kp.ru",
+   "generatora.net",
+   "euronasos.ru",
+   "wmz.ru",
+   "hitechsvarka.ru",
+   "starkraft.ru",
+   "der-com.ru",
+   "svarma.ru",
+   "tsk-energo.ru",
+   "compressor-mash.ru",
+   "rusinzh.ru",
+   "kraftmarket24.ru",
+   "compressor-pk.ru",
+   "indstr.ru",
+   "kwt.market",
+   "ego-npp.spb.ru",
+   "pnevmomagazin.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "sitelike.org",
+  "n": 66,
+  "dr": 64.0,
+  "tr": 24269.0,
+  "do": 0.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "decompnw.ru",
+   "atlas-co.ru",
+   "kompr.ru",
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "pnevmo-sklad.ru",
+   "abac-russia.com",
+   "remeza.com",
+   "asobezh.ru",
+   "shnek.ru",
+   "gc-azimut.ru",
+   "top-compressor.ru",
+   "energocontinent.ru",
+   "nt-rt.ru",
+   "promnasos.com",
+   "teploprofi.com",
+   "afalina.com",
+   "uralgrit.com",
+   "dizelnye-generatory.com",
+   "energoplaza.com",
+   "rutector.ru",
+   "ampika.ru",
+   "compressorgroup.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "tsa.su",
+   "rus-diesel.ru",
+   "tss-s.ru",
+   "remeza-logistic.ru",
+   "pnevmo.ru",
+   "regionfox.ru",
+   "eosn.ru",
+   "zenova.ru",
+   "compressing.ru",
+   "dileks.ru",
+   "spitzenreiter.ru",
+   "2bar.ru",
+   "energo-diesel.ru",
+   "klapan-pik.ru",
+   "gsk-servis.ru",
+   "pressair.ru",
+   "air-energy.ru",
+   "service-scanner.ru",
+   "dalgakiran.su",
+   "drobesfera.ru",
+   "astar-compressors.ru",
+   "e-kp.ru",
+   "generatora.net",
+   "euronasos.ru",
+   "wmz.ru",
+   "hitechsvarka.ru",
+   "starkraft.ru",
+   "iwelder.ru",
+   "compressor-base.ru",
+   "svarma.ru",
+   "rusinzh.ru",
+   "kraftmarket24.ru",
+   "compressor-pk.ru",
+   "indstr.ru",
+   "nasosymarket.ru",
+   "kwt.market",
+   "ego-npp.spb.ru",
+   "pnevmomagazin.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "2rus.org",
+  "n": 66,
+  "dr": 27.0,
+  "tr": 4287.0,
+  "do": 255.0,
+  "kto": [
+   "erstvak.com",
+   "sp-energoservice.ru",
+   "kompr.ru",
+   "compressortyt.ru",
+   "pnevmo-sklad.ru",
+   "abac-russia.com",
+   "asobezh.ru",
+   "shnek.ru",
+   "atlas-stt.ru",
+   "gc-azimut.ru",
+   "energocontinent.ru",
+   "promnasos.com",
+   "teploprofi.com",
+   "afalina.com",
+   "energoplaza.com",
+   "pnevmoservice.com",
+   "ampika.ru",
+   "compressorgroup.ru",
+   "aerocompressors.ru",
+   "tsa.su",
+   "delaton.ru",
+   "remeza24.ru",
+   "tss-s.ru",
+   "novotekpnz.ru",
+   "remeza-logistic.ru",
+   "gkpnevmo.ru",
+   "smk-ksk.ru",
+   "dizelniy-generatory.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "regionfox.ru",
+   "eosn.ru",
+   "gekkoldprom.ru",
+   "compressing.ru",
+   "generalaer.ru",
+   "remeza.org",
+   "kompresurs.ru",
+   "dileks.ru",
+   "spitzenreiter.ru",
+   "sts-rf.ru",
+   "tdtechmash.ru",
+   "klapan-pik.ru",
+   "bitzer.ru",
+   "kviht.ru",
+   "airsystem.ru",
+   "air-energy.ru",
+   "e-kp.ru",
+   "euronasos.ru",
+   "wmz.ru",
+   "hitechsvarka.ru",
+   "starkraft.ru",
+   "svarma.ru",
+   "baumgroup.ru",
+   "kraftmarket24.ru",
+   "compressor-pk.ru",
+   "indstr.ru",
+   "nasosymarket.ru",
+   "kwt.market",
+   "asobezh-msk.ru",
+   "pnevmoland.ru",
+   "ak2000.ru",
+   "prom-kompressory.ru",
+   "ac-russia.ru",
+   "fabrika-kv.ru",
+   "teoil.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "ya.ru",
+  "n": 63,
+  "dr": 89.0,
+  "tr": 5925164.0,
+  "do": 415.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "skif-air.ru",
+   "kompr.ru",
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "pnevmo-sklad.ru",
+   "fiac.su",
+   "gc-azimut.ru",
+   "energocontinent.ru",
+   "nt-rt.ru",
+   "promnasos.com",
+   "ok-stanok.ru",
+   "uralgrit.com",
+   "dizelnye-generatory.com",
+   "en-mach.ru",
+   "almig-ru.com",
+   "sns-rus.com",
+   "rutector.ru",
+   "zolt.pro",
+   "stechnics.ru",
+   "ampika.ru",
+   "tica.ru",
+   "compressorgroup.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "aircompressorhub.ru",
+   "promcompressor.ru",
+   "tsa.su",
+   "kurs-peskostrui.ru",
+   "baysar-russia.ru",
+   "wgs-gcvep.ru",
+   "novotekpnz.ru",
+   "frigus-systems.ru",
+   "dizelniy-generatory.ru",
+   "nt-welding.ru",
+   "eosn.ru",
+   "zenova.ru",
+   "compressing.ru",
+   "dileks.ru",
+   "2bar.ru",
+   "tdtechmash.ru",
+   "rusgroupp.ru",
+   "energo-diesel.ru",
+   "artaz.ru",
+   "klapan-pik.ru",
+   "gsk-servis.ru",
+   "pressair.ru",
+   "kviht.ru",
+   "air-energy.ru",
+   "cvert.ru",
+   "astar-compressors.ru",
+   "rukavnie-filtri.ru",
+   "pikenergo.ru",
+   "euronasos.ru",
+   "der-com.ru",
+   "svarma.ru",
+   "kraftmarket24.ru",
+   "ttk-rus.ru",
+   "compressor-pk.ru",
+   "tsk-progress.ru",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "yandex.co.il",
+  "n": 58,
+  "dr": 57.0,
+  "tr": 939.0,
+  "do": 0.0,
+  "kto": [
+   "promcomtech.ru",
+   "skif-air.ru",
+   "sp-energoservice.ru",
+   "atlas-co.ru",
+   "pnevmoteh.ru",
+   "shnek.ru",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "pompashop.com",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "uralgrit.com",
+   "dizelnye-generatory.com",
+   "en-mach.ru",
+   "rutector.ru",
+   "zolt.pro",
+   "tica.ru",
+   "compressorgroup.ru",
+   "v-p-k.ru",
+   "promcompressor.ru",
+   "rus-diesel.ru",
+   "tss-s.ru",
+   "wgs-gcvep.ru",
+   "novotekpnz.ru",
+   "remeza-logistic.ru",
+   "smk-ksk.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "gekkoldprom.ru",
+   "generalaer.ru",
+   "dileks.ru",
+   "spitzenreiter.ru",
+   "sts-rf.ru",
+   "energo-diesel.ru",
+   "artaz.ru",
+   "klapan-pik.ru",
+   "gsk-servis.ru",
+   "umin.su",
+   "air-energy.ru",
+   "service-scanner.ru",
+   "dalgakiran.su",
+   "drobesfera.ru",
+   "aso-bezh.ru",
+   "rukavnie-filtri.ru",
+   "generatora.net",
+   "wmz.ru",
+   "iteropro.ru",
+   "aec-profi.ru",
+   "iwelder.ru",
+   "svarma.ru",
+   "tsk-energo.ru",
+   "compressor-pk.ru",
+   "kwt.market",
+   "pnevmoland.ru",
+   "remeza.group",
+   "pnevmomagazin.ru",
+   "fabrika-kv.ru"
+  ]
+ },
+ {
+  "domain": "spravka-region.ru",
+  "n": 53,
+  "dr": 19.0,
+  "tr": 2235.0,
+  "do": 0.0,
+  "kto": [
+   "sp-energoservice.ru",
+   "compressortyt.ru",
+   "pnevmo-sklad.ru",
+   "berg-air.ru",
+   "energocontinent.ru",
+   "afalina.com",
+   "dizelnye-generatory.com",
+   "pnevmoservice.com",
+   "almig-ru.com",
+   "rutector.ru",
+   "tica.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "promcompressor.ru",
+   "tsa.su",
+   "baysar-russia.ru",
+   "tss-s.ru",
+   "novotekpnz.ru",
+   "gkpnevmo.ru",
+   "smk-ksk.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "regionfox.ru",
+   "zenova.ru",
+   "kompresurs.ru",
+   "dileks.ru",
+   "spitzenreiter.ru",
+   "sts-rf.ru",
+   "artaz.ru",
+   "klapan-pik.ru",
+   "gsk-servis.ru",
+   "bitzer.ru",
+   "kviht.ru",
+   "air-energy.ru",
+   "dalgakiran.su",
+   "drobesfera.ru",
+   "astar-compressors.ru",
+   "generatora.net",
+   "wmz.ru",
+   "iteropro.ru",
+   "hitechsvarka.ru",
+   "starkraft.ru",
+   "der-com.ru",
+   "svarma.ru",
+   "kraftmarket24.ru",
+   "promtula.ru",
+   "compressor-pk.ru",
+   "kwt.market",
+   "remeza.group",
+   "prom-kompressory.ru",
+   "fabrika-kv.ru",
+   "remeza-russia.ru",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "spravka.city",
+  "n": 33,
+  "dr": 32.0,
+  "tr": 3275.0,
+  "do": 0.0,
+  "kto": [
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "atlas-stt.ru",
+   "nt-rt.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "dizelnye-generatory.com",
+   "almig-ru.com",
+   "rutector.ru",
+   "tica.ru",
+   "compressorgroup.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "rus-diesel.ru",
+   "compressor.market",
+   "air-vint.ru",
+   "gkpnevmo.ru",
+   "dizelniy-generatory.ru",
+   "nt-welding.ru",
+   "zenova.ru",
+   "zif.su",
+   "dalgakiran.su",
+   "astar-compressors.ru",
+   "hitechsvarka.ru",
+   "starkraft.ru",
+   "der-com.ru",
+   "aec-profi.ru",
+   "nasosymarket.ru",
+   "kwt.market",
+   "tsk-progress.ru",
+   "ak2000.ru",
+   "remeza.group",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "yango.com",
+  "n": 27,
+  "dr": 74.0,
+  "tr": 284455.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "deltainzhiniring.ru",
+   "energocontinent.ru",
+   "teploprofi.com",
+   "uralgrit.com",
+   "dizelnye-generatory.com",
+   "rutector.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "delaton.ru",
+   "novotekpnz.ru",
+   "remeza-logistic.ru",
+   "pnevmo.ru",
+   "dileks.ru",
+   "2bar.ru",
+   "energo-diesel.ru",
+   "dalgakiran.su",
+   "drobesfera.ru",
+   "aso-bezh.ru",
+   "der-com.ru",
+   "aec-profi.ru",
+   "svarma.ru",
+   "baumgroup.ru",
+   "compressor-pk.ru",
+   "indstr.ru",
+   "remeza.group",
+   "tehsolutions.ru"
+  ]
+ },
+ {
+  "domain": "asktel.ru",
+  "n": 27,
+  "dr": 39.0,
+  "tr": 208.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "kompr.ru",
+   "pnevmoteh.ru",
+   "pnevmo-sklad.ru",
+   "gc-azimut.ru",
+   "afalina.com",
+   "rutector.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "tss-s.ru",
+   "novotekpnz.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "regionfox.ru",
+   "eosn.ru",
+   "zenova.ru",
+   "generalaer.ru",
+   "remeza.org",
+   "kompresurs.ru",
+   "dileks.ru",
+   "energo-diesel.ru",
+   "klapan-pik.ru",
+   "air-energy.ru",
+   "dalgakiran.su",
+   "promtula.ru",
+   "fabrika-kv.ru"
+  ]
+ },
+ {
+  "domain": "yandex.com.ge",
+  "n": 26,
+  "dr": 76.0,
+  "tr": 121422.0,
+  "do": 0.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "asobezh.ru",
+   "deltainzhiniring.ru",
+   "energocontinent.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "dizelnye-generatory.com",
+   "rutector.ru",
+   "ampika.ru",
+   "compressorgroup.ru",
+   "v-p-k.ru",
+   "delaton.ru",
+   "rus-diesel.ru",
+   "remeza-logistic.ru",
+   "pnevmo.ru",
+   "gekkoldprom.ru",
+   "zenova.ru",
+   "pressair.ru",
+   "drobesfera.ru",
+   "cvert.ru",
+   "rukavnie-filtri.ru",
+   "baumgroup.ru",
+   "rusinzh.ru",
+   "tsk-progress.ru",
+   "ak2000.ru",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "volga.news",
+  "n": 25,
+  "dr": 70.0,
+  "tr": 12522.0,
+  "do": 158.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "decompnw.ru",
+   "pnevmoteh.ru",
+   "top-compressor.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "uralgrit.com",
+   "tica.ru",
+   "compressorgroup.ru",
+   "promcompressor.ru",
+   "delaton.ru",
+   "wgs-gcvep.ru",
+   "novotekpnz.ru",
+   "frigus-systems.ru",
+   "eosn.ru",
+   "compressing.ru",
+   "dileks.ru",
+   "tdtechmash.ru",
+   "service-scanner.ru",
+   "aso-bezh.ru",
+   "rukavnie-filtri.ru",
+   "rusinzh.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "verif.com",
+  "n": 22,
+  "dr": 71.0,
+  "tr": 22262.0,
+  "do": 37.0,
+  "kto": [
+   "promcomtech.ru",
+   "decompnw.ru",
+   "asobezh.ru",
+   "gc-azimut.ru",
+   "dizelnye-generatory.com",
+   "rutector.ru",
+   "tica.ru",
+   "aerocompressors.ru",
+   "tsa.su",
+   "nt-welding.ru",
+   "generalaer.ru",
+   "sts-rf.ru",
+   "bitzer.ru",
+   "air-energy.ru",
+   "dalgakiran.su",
+   "cvert.ru",
+   "wmz.ru",
+   "iteropro.ru",
+   "hitechsvarka.ru",
+   "pnevmoland.ru",
+   "fabrika-kv.ru",
+   "teoil.ru"
+  ]
+ },
+ {
+  "domain": "lyubimiigorod.ru",
+  "n": 22,
+  "dr": 51.0,
+  "tr": 2618.0,
+  "do": 43.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "pnevmo-sklad.ru",
+   "shnek.ru",
+   "atlas-stt.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "rus-diesel.ru",
+   "tss-s.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "zif.su",
+   "artaz.ru",
+   "kviht.ru",
+   "umin.su",
+   "promtula.ru",
+   "kwt.market",
+   "ak2000.ru",
+   "fabrika-kv.ru"
+  ]
+ },
+ {
+  "domain": "weblancer.net",
+  "n": 21,
+  "dr": 67.0,
+  "tr": 8745.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "compressortyt.ru",
+   "berg-air.ru",
+   "shnek.ru",
+   "energocontinent.ru",
+   "nt-rt.ru",
+   "promnasos.com",
+   "ok-stanok.ru",
+   "rutector.ru",
+   "v-p-k.ru",
+   "compressor.market",
+   "pnevmo.ru",
+   "zenova.ru",
+   "zif.su",
+   "energo-diesel.ru",
+   "service-scanner.ru",
+   "cvert.ru",
+   "tsk-energo.ru",
+   "compressor-mash.ru",
+   "kraftmarket24.ru",
+   "ctg-parts.ru"
+  ]
+ },
+ {
+  "domain": "ivest.kz",
+  "n": 21,
+  "dr": 37.0,
+  "tr": 5198.0,
+  "do": 47.0,
+  "kto": [
+   "compressortyt.ru",
+   "pnevmo-sklad.ru",
+   "asobezh.ru",
+   "energocontinent.ru",
+   "afalina.com",
+   "rutector.ru",
+   "compressorgroup.ru",
+   "v-p-k.ru",
+   "tsa.su",
+   "tss-s.ru",
+   "gkpnevmo.ru",
+   "dizelniy-generatory.ru",
+   "kompresurs.ru",
+   "energo-diesel.ru",
+   "klapan-pik.ru",
+   "umin.su",
+   "wmz.ru",
+   "grattech.ru",
+   "compressor-mash.ru",
+   "promtula.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "yandex.az",
+  "n": 20,
+  "dr": 55.0,
+  "tr": 151576.0,
+  "do": 0.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "compressortyt.ru",
+   "berg-air.ru",
+   "gc-azimut.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "dizelnye-generatory.com",
+   "en-mach.ru",
+   "rutector.ru",
+   "v-p-k.ru",
+   "dileks.ru",
+   "klapan-pik.ru",
+   "svarma.ru",
+   "tsk-energo.ru",
+   "kwt.market",
+   "pnevmoland.ru",
+   "prom-kompressory.ru",
+   "fabrika-kv.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "oborudunion.ru",
+  "n": 20,
+  "dr": 41.0,
+  "tr": 3526.0,
+  "do": 243.0,
+  "kto": [
+   "remeza.com",
+   "asobezh.ru",
+   "nt-rt.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "pnevmoservice.com",
+   "rutector.ru",
+   "v-p-k.ru",
+   "harrison-compressors.ru",
+   "novotekpnz.ru",
+   "remeza-logistic.ru",
+   "remeza.org",
+   "zif.su",
+   "tdtechmash.ru",
+   "air-energy.ru",
+   "dalgakiran.su",
+   "wmz.ru",
+   "pnevmoland.ru",
+   "remeza.group",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "pawetta.com",
+  "n": 19,
+  "dr": 21.0,
+  "tr": 192985.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "decompnw.ru",
+   "skif-air.ru",
+   "sp-energoservice.ru",
+   "pnevmo-sklad.ru",
+   "rutector.ru",
+   "zolt.pro",
+   "tica.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "baysar-russia.ru",
+   "tss-s.ru",
+   "smk-ksk.ru",
+   "dizelniy-generatory.ru",
+   "dileks.ru",
+   "sts-rf.ru",
+   "iteropro.ru",
+   "der-com.ru",
+   "tsk-energo.ru"
+  ]
+ },
+ {
+  "domain": "pr-cy.ru",
+  "n": 16,
+  "dr": 76.0,
+  "tr": 1890471.0,
+  "do": 31.0,
+  "kto": [
+   "compressortyt.ru",
+   "shnek.ru",
+   "energocontinent.ru",
+   "nt-rt.ru",
+   "sns-rus.com",
+   "wgs-gcvep.ru",
+   "nt-welding.ru",
+   "eosn.ru",
+   "gsk-servis.ru",
+   "kviht.ru",
+   "umin.su",
+   "service-scanner.ru",
+   "pikenergo.ru",
+   "iteropro.ru",
+   "nasosymarket.ru",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "sprashivalka.com",
+  "n": 16,
+  "dr": 16.0,
+  "tr": 583.0,
+  "do": 2.0,
+  "kto": [
+   "compressortyt.ru",
+   "asobezh.ru",
+   "energoplaza.com",
+   "ampika.ru",
+   "v-p-k.ru",
+   "delaton.ru",
+   "smk-ksk.ru",
+   "zenova.ru",
+   "2bar.ru",
+   "artaz.ru",
+   "klapan-pik.ru",
+   "air-energy.ru",
+   "starkraft.ru",
+   "svarma.ru",
+   "kwt.market",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "yandex.md",
+  "n": 15,
+  "dr": 67.0,
+  "tr": 92741.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "compressortyt.ru",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "uralgrit.com",
+   "dizelnye-generatory.com",
+   "rutector.ru",
+   "remeza-logistic.ru",
+   "dizelniy-generatory.ru",
+   "kompresurs.ru",
+   "sts-rf.ru",
+   "dalgakiran.su",
+   "wmz.ru",
+   "kwt.market"
+  ]
+ },
+ {
+  "domain": "mastergrad.com",
+  "n": 15,
+  "dr": 70.0,
+  "tr": 9632.0,
+  "do": 0.0,
+  "kto": [
+   "promcomtech.ru",
+   "kompr.ru",
+   "remeza.com",
+   "asobezh.ru",
+   "deltainzhiniring.ru",
+   "nt-rt.ru",
+   "ampika.ru",
+   "tss-s.ru",
+   "novotekpnz.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "remeza.org",
+   "generatora.net",
+   "wmz.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "spravka.ru",
+  "n": 15,
+  "dr": 32.0,
+  "tr": 6965.0,
+  "do": 9.0,
+  "kto": [
+   "compressortyt.ru",
+   "pnevmo-sklad.ru",
+   "deltainzhiniring.ru",
+   "nt-rt.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "delaton.ru",
+   "harrison-compressors.ru",
+   "tss-s.ru",
+   "gsk-servis.ru",
+   "starkraft.ru",
+   "compressor-pk.ru",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "yandex.tj",
+  "n": 14,
+  "dr": 54.0,
+  "tr": 116790.0,
+  "do": 0.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "rutector.ru",
+   "zolt.pro",
+   "tica.ru",
+   "aerocompressors.ru",
+   "zenova.ru",
+   "aerkomp.ru",
+   "airsystem.ru",
+   "cvert.ru",
+   "astar-compressors.ru"
+  ]
+ },
+ {
+  "domain": "sdelki.ru",
+  "n": 14,
+  "dr": 61.0,
+  "tr": 100.0,
+  "do": 36.0,
+  "kto": [
+   "kompr.ru",
+   "pnevmo-sklad.ru",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "afalina.com",
+   "aerocompressors.ru",
+   "pnevmo.ru",
+   "zenova.ru",
+   "starkraft.ru",
+   "rusinzh.ru",
+   "ttk-rus.ru",
+   "pnevmomagazin.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "searchengines.guru",
+  "n": 13,
+  "dr": 72.0,
+  "tr": 5094.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "kompr.ru",
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "gc-azimut.ru",
+   "dizelnye-generatory.com",
+   "stechnics.ru",
+   "ampika.ru",
+   "pnevmo.ru",
+   "dileks.ru",
+   "pressair.ru",
+   "generatora.net",
+   "kwt.market"
+  ]
+ },
+ {
+  "domain": "tuvaonline.ru",
+  "n": 13,
+  "dr": 54.0,
+  "tr": 1907.0,
+  "do": 29.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "all-pump.ru",
+   "afalina.com",
+   "compressorgroup.ru",
+   "delaton.ru",
+   "rus-diesel.ru",
+   "pnevmo.ru",
+   "kompresurs.ru",
+   "tdtechmash.ru",
+   "artaz.ru",
+   "aerkomp.ru",
+   "ttk-rus.ru",
+   "asobezh-msk.ru"
+  ]
+ },
+ {
+  "domain": "websvarka.ru",
+  "n": 13,
+  "dr": 21.0,
+  "tr": 630.0,
+  "do": 0.0,
+  "kto": [
+   "asobezh.ru",
+   "afalina.com",
+   "rutector.ru",
+   "aerocompressors.ru",
+   "tss-s.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "eosn.ru",
+   "gsk-servis.ru",
+   "generatora.net",
+   "starkraft.ru",
+   "iwelder.ru",
+   "svarma.ru"
+  ]
+ },
+ {
+  "domain": "tgko.ru",
+  "n": 13,
+  "dr": 31.0,
+  "tr": 340.0,
+  "do": 74.0,
+  "kto": [
+   "asobezh.ru",
+   "top-compressor.ru",
+   "nt-rt.ru",
+   "v-p-k.ru",
+   "tss-s.ru",
+   "novotekpnz.ru",
+   "remeza.org",
+   "kompresurs.ru",
+   "spitzenreiter.ru",
+   "zif.su",
+   "klapan-pik.ru",
+   "kviht.ru",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "yandex.uz",
+  "n": 12,
+  "dr": 83.0,
+  "tr": 2427693.0,
+  "do": 0.0,
+  "kto": [
+   "compressortyt.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "uralgrit.com",
+   "rutector.ru",
+   "v-p-k.ru",
+   "novotekpnz.ru",
+   "energo-diesel.ru",
+   "hitechsvarka.ru",
+   "kwt.market",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "odp.org",
+  "n": 12,
+  "dr": 39.0,
+  "tr": 1078.0,
+  "do": 22.0,
+  "kto": [
+   "kompr.ru",
+   "pnevmoteh.ru",
+   "remeza.com",
+   "asobezh.ru",
+   "gc-azimut.ru",
+   "pnevmo.ru",
+   "zif.su",
+   "klapan-pik.ru",
+   "bitzer.ru",
+   "airsystem.ru",
+   "air-energy.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "metallurgprom.org",
+  "n": 12,
+  "dr": 36.0,
+  "tr": 377.0,
+  "do": 62.0,
+  "kto": [
+   "shnek.ru",
+   "top-compressor.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "promcompressor.ru",
+   "kurs-peskostrui.ru",
+   "delaton.ru",
+   "baysar-russia.ru",
+   "smk-ksk.ru",
+   "rusgroupp.ru",
+   "artaz.ru",
+   "der-com.ru"
+  ]
+ },
+ {
+  "domain": "spravkainform.ru",
+  "n": 12,
+  "dr": 27.0,
+  "tr": 179.0,
+  "do": 0.0,
+  "kto": [
+   "decompnw.ru",
+   "shnek.ru",
+   "delaton.ru",
+   "gkpnevmo.ru",
+   "dizelniy-generatory.ru",
+   "remeza.org",
+   "kompresurs.ru",
+   "air-energy.ru",
+   "grattech.ru",
+   "compressor-pk.ru",
+   "ac-russia.ru",
+   "fabrika-kv.ru"
+  ]
+ },
+ {
+  "domain": "c99.nl",
+  "n": 11,
+  "dr": 50.0,
+  "tr": 24765.0,
+  "do": 239.0,
+  "kto": [
+   "erstvak.com",
+   "asobezh.ru",
+   "promnasos.com",
+   "v-p-k.ru",
+   "promcompressor.ru",
+   "gkpnevmo.ru",
+   "dizelniy-generatory.ru",
+   "artaz.ru",
+   "drobesfera.ru",
+   "ak2000.ru",
+   "mosmehanik.ru"
+  ]
+ },
+ {
+  "domain": "infpol.ru",
+  "n": 11,
+  "dr": 63.0,
+  "tr": 2558.0,
+  "do": 21.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "skif-air.ru",
+   "pnevmo-sklad.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "zolt.pro",
+   "ampika.ru",
+   "rus-diesel.ru",
+   "compressor.market",
+   "dizelniy-generatory.ru"
+  ]
+ },
+ {
+  "domain": "azovpromstal.com",
+  "n": 11,
+  "dr": 12.0,
+  "tr": 256.0,
+  "do": 21.0,
+  "kto": [
+   "pnevmoservice.com",
+   "v-p-k.ru",
+   "delaton.ru",
+   "smk-ksk.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "eosn.ru",
+   "spitzenreiter.ru",
+   "klapan-pik.ru",
+   "astar-compressors.ru",
+   "kraftmarket24.ru"
+  ]
+ },
+ {
+  "domain": "biznet.guru",
+  "n": 11,
+  "dr": 26.0,
+  "tr": 225.0,
+  "do": 0.0,
+  "kto": [
+   "atlas-co.ru",
+   "gc-azimut.ru",
+   "energocontinent.ru",
+   "compressorgroup.ru",
+   "tsa.su",
+   "pnevmo.ru",
+   "regionfox.ru",
+   "tdtechmash.ru",
+   "starkraft.ru",
+   "remeza-russia.ru",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "yandex.com",
+  "n": 10,
+  "dr": 92.0,
+  "tr": 20205862.0,
+  "do": 0.0,
+  "kto": [
+   "sp-energoservice.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "uralgrit.com",
+   "dizelnye-generatory.com",
+   "ampika.ru",
+   "aerocompressors.ru",
+   "remeza-logistic.ru",
+   "svarma.ru",
+   "tsk-energo.ru"
+  ]
+ },
+ {
+  "domain": "rossoshru.ru",
+  "n": 10,
+  "dr": 38.0,
+  "tr": 184.0,
+  "do": 13.0,
+  "kto": [
+   "decompnw.ru",
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "zolt.pro",
+   "promcompressor.ru",
+   "delaton.ru",
+   "novotekpnz.ru",
+   "pnevmo.ru",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "freesmi.by",
+  "n": 10,
+  "dr": 44.0,
+  "tr": 120.0,
+  "do": 14.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmoteh.ru",
+   "remeza.com",
+   "all-pump.ru",
+   "rutector.ru",
+   "compressorgroup.ru",
+   "promcompressor.ru",
+   "rus-diesel.ru",
+   "novotekpnz.ru",
+   "rusgroupp.ru"
+  ]
+ },
+ {
+  "domain": "vinbazar.com",
+  "n": 9,
+  "dr": 46.0,
+  "tr": 83330.0,
+  "do": 21.0,
+  "kto": [
+   "remeza.com",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "compressorgroup.ru",
+   "aerocompressors.ru",
+   "v-p-k.ru",
+   "rus-diesel.ru",
+   "tdtechmash.ru"
+  ]
+ },
+ {
+  "domain": "orgpage.ru",
+  "n": 9,
+  "dr": 55.0,
+  "tr": 21704.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "uralgrit.com",
+   "rutector.ru",
+   "wgs-gcvep.ru",
+   "e-kp.ru",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "1c-bitrix.ru",
+  "n": 9,
+  "dr": 88.0,
+  "tr": 15654.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "nt-welding.ru",
+   "pnevmo.ru",
+   "sts-rf.ru",
+   "klapan-pik.ru",
+   "cvert.ru",
+   "astar-compressors.ru",
+   "iteropro.ru",
+   "fabrika-kv.ru"
+  ]
+ },
+ {
+  "domain": "yerkramas.org",
+  "n": 9,
+  "dr": 50.0,
+  "tr": 13874.0,
+  "do": 20.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "pnevmoservice.com",
+   "rutector.ru",
+   "rus-diesel.ru",
+   "compressing.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "rlocman.ru",
+  "n": 9,
+  "dr": 51.0,
+  "tr": 4808.0,
+  "do": 14.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmoteh.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "zolt.pro",
+   "ampika.ru",
+   "remeza24.ru",
+   "gekkoldprom.ru",
+   "filtri-oem.ru"
+  ]
+ },
+ {
+  "domain": "topclimat.ru",
+  "n": 9,
+  "dr": 40.0,
+  "tr": 3485.0,
+  "do": 13.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "v-p-k.ru",
+   "tss-s.ru",
+   "frigus-systems.ru",
+   "gekkoldprom.ru",
+   "bitzer.ru",
+   "tsk-energo.ru"
+  ]
+ },
+ {
+  "domain": "komiinform.ru",
+  "n": 9,
+  "dr": 62.0,
+  "tr": 1985.0,
+  "do": 18.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmo-sklad.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "afalina.com",
+   "ampika.ru",
+   "rus-diesel.ru",
+   "kompresurs.ru",
+   "artaz.ru"
+  ]
+ },
+ {
+  "domain": "metaprom.ru",
+  "n": 9,
+  "dr": 57.0,
+  "tr": 1007.0,
+  "do": 4.0,
+  "kto": [
+   "kompr.ru",
+   "compressortyt.ru",
+   "shnek.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "zolt.pro",
+   "tss-s.ru",
+   "frigus-systems.ru",
+   "aec-profi.ru"
+  ]
+ },
+ {
+  "domain": "donnews.ru",
+  "n": 9,
+  "dr": 57.0,
+  "tr": 670.0,
+  "do": 19.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "ampika.ru",
+   "rus-diesel.ru"
+  ]
+ },
+ {
+  "domain": "progorodsamara.ru",
+  "n": 9,
+  "dr": 58.0,
+  "tr": 560.0,
+  "do": 21.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "compressortyt.ru",
+   "shnek.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "tss-s.ru",
+   "artaz.ru"
+  ]
+ },
+ {
+  "domain": "fabricators.ru",
+  "n": 9,
+  "dr": 31.0,
+  "tr": 497.0,
+  "do": 0.0,
+  "kto": [
+   "asobezh.ru",
+   "tica.ru",
+   "harrison-compressors.ru",
+   "novotekpnz.ru",
+   "dizelniy-generatory.ru",
+   "spitzenreiter.ru",
+   "zif.su",
+   "wmz.ru",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "rank-craft.com",
+  "n": 9,
+  "dr": 21.0,
+  "tr": 331.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "kompr.ru",
+   "compressortyt.ru",
+   "ampika.ru",
+   "harrison-compressors.ru",
+   "eosn.ru",
+   "energo-diesel.ru",
+   "klapan-pik.ru",
+   "airsystem.ru"
+  ]
+ },
+ {
+  "domain": "time-samara.ru",
+  "n": 9,
+  "dr": 49.0,
+  "tr": 172.0,
+  "do": 33.0,
+  "kto": [
+   "skif-air.ru",
+   "shnek.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "afalina.com",
+   "promcompressor.ru",
+   "delaton.ru",
+   "tss-s.ru",
+   "kompresurs.ru"
+  ]
+ },
+ {
+  "domain": "sovross.ru",
+  "n": 9,
+  "dr": 54.0,
+  "tr": 157.0,
+  "do": 15.0,
+  "kto": [
+   "skif-air.ru",
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "afalina.com",
+   "rutector.ru",
+   "rus-diesel.ru",
+   "frigus-systems.ru",
+   "umin.su",
+   "asobezh-msk.ru"
+  ]
+ },
+ {
+  "domain": "business-key.com",
+  "n": 9,
+  "dr": 51.0,
+  "tr": 146.0,
+  "do": 14.0,
+  "kto": [
+   "decompnw.ru",
+   "compressortyt.ru",
+   "deltainzhiniring.ru",
+   "energoplaza.com",
+   "tica.ru",
+   "aircompressorhub.ru",
+   "tsa.su",
+   "harrison-compressors.ru",
+   "starkraft.ru"
+  ]
+ },
+ {
+  "domain": "it-vacancies.ru",
+  "n": 9,
+  "dr": 12.0,
+  "tr": 142.0,
+  "do": 0.0,
+  "kto": [
+   "zolt.pro",
+   "tica.ru",
+   "v-p-k.ru",
+   "frigus-systems.ru",
+   "spitzenreiter.ru",
+   "der-com.ru",
+   "aec-profi.ru",
+   "dileks-air.ru",
+   "tsk-energo.ru"
+  ]
+ },
+ {
+  "domain": "otzovik.online",
+  "n": 9,
+  "dr": 8.0,
+  "tr": 114.0,
+  "do": 18.0,
+  "kto": [
+   "tica.ru",
+   "aircompressorhub.ru",
+   "harrison-compressors.ru",
+   "dizelniy-generatory.ru",
+   "compressing.ru",
+   "spitzenreiter.ru",
+   "umin.su",
+   "grattech.ru",
+   "compressor-pk.ru"
+  ]
+ },
+ {
+  "domain": "infolesson.kz",
+  "n": 8,
+  "dr": 9.0,
+  "tr": 11129.0,
+  "do": 4.0,
+  "kto": [
+   "compressortyt.ru",
+   "asobezh.ru",
+   "v-p-k.ru",
+   "tsa.su",
+   "nt-welding.ru",
+   "energo-diesel.ru",
+   "vacuum-group.ru",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "obzor.city",
+  "n": 8,
+  "dr": 55.0,
+  "tr": 8097.0,
+  "do": 12.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "stechnics.ru",
+   "umin.su",
+   "ttk-rus.ru",
+   "asobezh-msk.ru"
+  ]
+ },
+ {
+  "domain": "c-inform.info",
+  "n": 8,
+  "dr": 58.0,
+  "tr": 8066.0,
+  "do": 12.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "skif-air.ru",
+   "compressortyt.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "v-p-k.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "c-o-k.ru",
+  "n": 8,
+  "dr": 61.0,
+  "tr": 4188.0,
+  "do": 228.0,
+  "kto": [
+   "nt-rt.ru",
+   "promnasos.com",
+   "teploprofi.com",
+   "rutector.ru",
+   "ampika.ru",
+   "tica.ru",
+   "bitzer.ru",
+   "rusinzh.ru"
+  ]
+ },
+ {
+  "domain": "progorod76.ru",
+  "n": 8,
+  "dr": 44.0,
+  "tr": 3296.0,
+  "do": 12.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "kompr.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "frigus-systems.ru",
+   "pnevmo.ru",
+   "rusinzh.ru"
+  ]
+ },
+ {
+  "domain": "teletype.in",
+  "n": 8,
+  "dr": 82.0,
+  "tr": 2692.0,
+  "do": 9.0,
+  "kto": [
+   "decompnw.ru",
+   "uralgrit.com",
+   "bergair.ru",
+   "aircompressorhub.ru",
+   "tsa.su",
+   "grattech.ru",
+   "aec-profi.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "vsem-podryad.ru",
+  "n": 8,
+  "dr": 36.0,
+  "tr": 942.0,
+  "do": 8.0,
+  "kto": [
+   "aerocompressors.ru",
+   "novotekpnz.ru",
+   "kompresurs.ru",
+   "airsystem.ru",
+   "e-kp.ru",
+   "iteropro.ru",
+   "der-com.ru",
+   "compressor-mash.ru"
+  ]
+ },
+ {
+  "domain": "dubna.ru",
+  "n": 8,
+  "dr": 47.0,
+  "tr": 756.0,
+  "do": 11.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "pnevmoservice.com",
+   "promcompressor.ru",
+   "wgs-gcvep.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "gdeservisy.ru",
+  "n": 8,
+  "dr": 1.5,
+  "tr": 553.0,
+  "do": 0.0,
+  "kto": [
+   "tss-s.ru",
+   "compressor.market",
+   "artaz.ru",
+   "e-kp.ru",
+   "hitechsvarka.ru",
+   "der-com.ru",
+   "compressor-base.ru",
+   "prom-kompressory.ru"
+  ]
+ },
+ {
+  "domain": "autodela.ru",
+  "n": 8,
+  "dr": 44.0,
+  "tr": 480.0,
+  "do": 37.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "decompnw.ru",
+   "pnevmoteh.ru",
+   "gc-azimut.ru",
+   "rutector.ru",
+   "tss-s.ru",
+   "compressor.market",
+   "pnevmo.ru"
+  ]
+ },
+ {
+  "domain": "newsland.com",
+  "n": 8,
+  "dr": 61.0,
+  "tr": 464.0,
+  "do": 0.0,
+  "kto": [
+   "compressortyt.ru",
+   "gc-azimut.ru",
+   "teploprofi.com",
+   "energoplaza.com",
+   "2bar.ru",
+   "service-scanner.ru",
+   "starkraft.ru",
+   "ego-npp.spb.ru"
+  ]
+ },
+ {
+  "domain": "progorod59.ru",
+  "n": 8,
+  "dr": 48.0,
+  "tr": 455.0,
+  "do": 13.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "compressortyt.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "eosn.ru",
+   "rusinzh.ru",
+   "ttk-rus.ru",
+   "asobezh-msk.ru"
+  ]
+ },
+ {
+  "domain": "piterets.ru",
+  "n": 8,
+  "dr": 37.0,
+  "tr": 168.0,
+  "do": 9.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "promcompressor.ru",
+   "wgs-gcvep.ru",
+   "compressing.ru",
+   "tdtechmash.ru",
+   "rusgroupp.ru",
+   "drobesfera.ru",
+   "rusinzh.ru"
+  ]
+ },
+ {
+  "domain": "stroy-mart.ru",
+  "n": 8,
+  "dr": 24.0,
+  "tr": 168.0,
+  "do": 22.0,
+  "kto": [
+   "rutector.ru",
+   "remeza24.ru",
+   "tss-s.ru",
+   "dizelniy-generatory.ru",
+   "gekkoldprom.ru",
+   "umin.su",
+   "astar-compressors.ru",
+   "filtri-oem.ru"
+  ]
+ },
+ {
+  "domain": "flamb.ru",
+  "n": 8,
+  "dr": 11.0,
+  "tr": 157.0,
+  "do": 0.0,
+  "kto": [
+   "berg-air.ru",
+   "tica.ru",
+   "harrison-compressors.ru",
+   "spitzenreiter.ru",
+   "astar-compressors.ru",
+   "fabrika-kv.ru",
+   "remeza-russia.ru",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "sostav.ru",
+  "n": 7,
+  "dr": 80.0,
+  "tr": 678541.0,
+  "do": 0.0,
+  "kto": [
+   "decompnw.ru",
+   "rutector.ru",
+   "tica.ru",
+   "v-p-k.ru",
+   "regionfox.ru",
+   "tdtechmash.ru",
+   "aso-bezh.ru"
+  ]
+ },
+ {
+  "domain": "business-gazeta.ru",
+  "n": 7,
+  "dr": 75.0,
+  "tr": 73333.0,
+  "do": 18.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "ok-stanok.ru",
+   "afalina.com",
+   "zolt.pro",
+   "eosn.ru",
+   "remeza.org",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "66.ru",
+  "n": 7,
+  "dr": 69.0,
+  "tr": 46010.0,
+  "do": 12.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "delaton.ru",
+   "novotekpnz.ru",
+   "eosn.ru"
+  ]
+ },
+ {
+  "domain": "bigpicture.ru",
+  "n": 7,
+  "dr": 69.0,
+  "tr": 24078.0,
+  "do": 16.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "pnevmo-sklad.ru",
+   "gc-azimut.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "tss-s.ru"
+  ]
+ },
+ {
+  "domain": "v-tagile.ru",
+  "n": 7,
+  "dr": 37.0,
+  "tr": 12488.0,
+  "do": 13.0,
+  "kto": [
+   "erstvak.com",
+   "teploprofi.com",
+   "afalina.com",
+   "rutector.ru",
+   "gekkoldprom.ru",
+   "umin.su",
+   "service-scanner.ru"
+  ]
+ },
+ {
+  "domain": "metronews.ru",
+  "n": 7,
+  "dr": 73.0,
+  "tr": 11521.0,
+  "do": 14.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "promnasos.com",
+   "teploprofi.com",
+   "rutector.ru",
+   "gekkoldprom.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "storeleads.app",
+  "n": 7,
+  "dr": 76.0,
+  "tr": 6577.0,
+  "do": 0.0,
+  "kto": [
+   "ok-stanok.ru",
+   "ampika.ru",
+   "wgs-gcvep.ru",
+   "dileks.ru",
+   "drobesfera.ru",
+   "der-com.ru",
+   "tsk-energo.ru"
+  ]
+ },
+ {
+  "domain": "publicwww.com",
+  "n": 7,
+  "dr": 68.0,
+  "tr": 3296.0,
+  "do": 0.0,
+  "kto": [
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "nt-rt.ru",
+   "rutector.ru",
+   "ampika.ru",
+   "svarma.ru"
+  ]
+ },
+ {
+  "domain": "glarity.app",
+  "n": 7,
+  "dr": 54.0,
+  "tr": 1938.0,
+  "do": 0.0,
+  "kto": [
+   "energocontinent.ru",
+   "nt-rt.ru",
+   "teploprofi.com",
+   "airpressa.com",
+   "tica.ru",
+   "zenova.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "gorodkirov.ru",
+  "n": 7,
+  "dr": 54.0,
+  "tr": 1551.0,
+  "do": 6.0,
+  "kto": [
+   "skif-air.ru",
+   "kompr.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "delaton.ru",
+   "umin.su",
+   "asobezh-msk.ru"
+  ]
+ },
+ {
+  "domain": "inni.info",
+  "n": 7,
+  "dr": 32.0,
+  "tr": 1410.0,
+  "do": 14.0,
+  "kto": [
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "baysar-russia.ru",
+   "harrison-compressors.ru",
+   "compressing.ru",
+   "grattech.ru",
+   "vacuum-group.ru"
+  ]
+ },
+ {
+  "domain": "rcopen.com",
+  "n": 7,
+  "dr": 36.0,
+  "tr": 1281.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "ampika.ru",
+   "zenova.ru",
+   "bitzer.ru",
+   "promtula.ru",
+   "indstr.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "infokam.su",
+  "n": 7,
+  "dr": 39.0,
+  "tr": 1005.0,
+  "do": 15.0,
+  "kto": [
+   "top-compressor.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "dizelniy-generatory.ru",
+   "gekkoldprom.ru",
+   "drobesfera.ru"
+  ]
+ },
+ {
+  "domain": "avtosreda.ru",
+  "n": 7,
+  "dr": 42.0,
+  "tr": 840.0,
+  "do": 71.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmoteh.ru",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "rutector.ru",
+   "gekkoldprom.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "optsbyt.ru",
+  "n": 7,
+  "dr": 16.0,
+  "tr": 729.0,
+  "do": 0.0,
+  "kto": [
+   "afalina.com",
+   "rutector.ru",
+   "aerocompressors.ru",
+   "pnevmo.ru",
+   "artaz.ru",
+   "svarma.ru",
+   "indstr.ru"
+  ]
+ },
+ {
+  "domain": "gostei.ru",
+  "n": 7,
+  "dr": 28.0,
+  "tr": 616.0,
+  "do": 11.0,
+  "kto": [
+   "skif-air.ru",
+   "shnek.ru",
+   "top-compressor.ru",
+   "remeza24.ru",
+   "baysar-russia.ru",
+   "gkpnevmo.ru",
+   "baumgroup.ru"
+  ]
+ },
+ {
+  "domain": "export-base.ru",
+  "n": 7,
+  "dr": 48.0,
+  "tr": 547.0,
+  "do": 0.0,
+  "kto": [
+   "uralgrit.com",
+   "en-mach.ru",
+   "aerocompressors.ru",
+   "dizelniy-generatory.ru",
+   "2bar.ru",
+   "aerkomp.ru",
+   "aec-profi.ru"
+  ]
+ },
+ {
+  "domain": "stoking.ru",
+  "n": 7,
+  "dr": 38.0,
+  "tr": 452.0,
+  "do": 825.0,
+  "kto": [
+   "remeza.com",
+   "nt-rt.ru",
+   "rutector.ru",
+   "ampika.ru",
+   "zenova.ru",
+   "remeza.org",
+   "baumgroup.ru"
+  ]
+ },
+ {
+  "domain": "dezinfo.net",
+  "n": 7,
+  "dr": 38.0,
+  "tr": 125.0,
+  "do": 9.0,
+  "kto": [
+   "erstvak.com",
+   "shnek.ru",
+   "top-compressor.ru",
+   "deltainzhiniring.ru",
+   "afalina.com",
+   "pnevmoservice.com",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "youtube.com",
+  "n": 6,
+  "dr": 99.0,
+  "tr": 3764496896.0,
+  "do": 1.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "ok-stanok.ru",
+   "rutector.ru",
+   "kurs-peskostrui.ru",
+   "zenova.ru",
+   "artaz.ru"
+  ]
+ },
+ {
+  "domain": "niasam.ru",
+  "n": 6,
+  "dr": 57.0,
+  "tr": 9769.0,
+  "do": 9.0,
+  "kto": [
+   "compressortyt.ru",
+   "deltainzhiniring.ru",
+   "rutector.ru",
+   "dizelniy-generatory.ru",
+   "umin.su",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "satbayev.university",
+  "n": 6,
+  "dr": 59.0,
+  "tr": 9118.0,
+  "do": 28.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "pnevmo-sklad.ru",
+   "nt-rt.ru",
+   "ok-stanok.ru",
+   "aerocompressors.ru",
+   "tdtechmash.ru"
+  ]
+ },
+ {
+  "domain": "gderabota.ru",
+  "n": 6,
+  "dr": 51.0,
+  "tr": 8878.0,
+  "do": 0.0,
+  "kto": [
+   "gc-azimut.ru",
+   "smk-ksk.ru",
+   "pnevmo.ru",
+   "drobesfera.ru",
+   "e-kp.ru",
+   "fabrika-kv.ru"
+  ]
+ },
+ {
+  "domain": "svarog-rf.ru",
+  "n": 6,
+  "dr": 56.0,
+  "tr": 8277.0,
+  "do": 0.0,
+  "kto": [
+   "afalina.com",
+   "v-p-k.ru",
+   "tss-s.ru",
+   "grattech.ru",
+   "svarma.ru",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "1777.ru",
+  "n": 6,
+  "dr": 57.0,
+  "tr": 6995.0,
+  "do": 9.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "rutector.ru",
+   "stechnics.ru",
+   "dizelniy-generatory.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "sovsekretno.ru",
+  "n": 6,
+  "dr": 54.0,
+  "tr": 3594.0,
+  "do": 8.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "pnevmo-sklad.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "istoki.tv",
+  "n": 6,
+  "dr": 44.0,
+  "tr": 3065.0,
+  "do": 12.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "kompr.ru",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "cxem.net",
+  "n": 6,
+  "dr": 51.0,
+  "tr": 2766.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "abac-russia.com",
+   "nt-rt.ru",
+   "ampika.ru",
+   "v-p-k.ru",
+   "generatora.net"
+  ]
+ },
+ {
+  "domain": "totalarch.com",
+  "n": 6,
+  "dr": 52.0,
+  "tr": 2242.0,
+  "do": 8.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmo-sklad.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "gekkoldprom.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "brandcatalog.ru",
+  "n": 6,
+  "dr": 29.0,
+  "tr": 2187.0,
+  "do": 0.0,
+  "kto": [
+   "remeza.com",
+   "gc-azimut.ru",
+   "nt-rt.ru",
+   "ampika.ru",
+   "harrison-compressors.ru",
+   "bitzer.ru"
+  ]
+ },
+ {
+  "domain": "help-tel.ru",
+  "n": 6,
+  "dr": 23.0,
+  "tr": 2131.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "gc-azimut.ru",
+   "dizelnye-generatory.com",
+   "ampika.ru",
+   "svarma.ru",
+   "kwt.market"
+  ]
+ },
+ {
+  "domain": "progorod43.ru",
+  "n": 6,
+  "dr": 56.0,
+  "tr": 1731.0,
+  "do": 8.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "kompr.ru",
+   "pnevmoteh.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "realbrest.by",
+  "n": 6,
+  "dr": 29.0,
+  "tr": 1423.0,
+  "do": 9.0,
+  "kto": [
+   "sp-energoservice.ru",
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "promcompressor.ru",
+   "baysar-russia.ru",
+   "compressing.ru"
+  ]
+ },
+ {
+  "domain": "trud-ost.ru",
+  "n": 6,
+  "dr": 50.0,
+  "tr": 1248.0,
+  "do": 13.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "tss-s.ru",
+   "compressing.ru"
+  ]
+ },
+ {
+  "domain": "pinskmedia.by",
+  "n": 6,
+  "dr": 30.0,
+  "tr": 1168.0,
+  "do": 10.0,
+  "kto": [
+   "remeza.com",
+   "top-compressor.ru",
+   "ok-stanok.ru",
+   "rutector.ru",
+   "promcompressor.ru",
+   "delaton.ru"
+  ]
+ },
+ {
+  "domain": "semey.city",
+  "n": 6,
+  "dr": 30.0,
+  "tr": 1159.0,
+  "do": 0.0,
+  "kto": [
+   "all-pump.ru",
+   "compressorgroup.ru",
+   "v-p-k.ru",
+   "remeza-logistic.ru",
+   "dizelniy-generatory.ru",
+   "prom-kompressory.ru"
+  ]
+ },
+ {
+  "domain": "michurinsk.ru",
+  "n": 6,
+  "dr": 31.0,
+  "tr": 831.0,
+  "do": 27.0,
+  "kto": [
+   "compressortyt.ru",
+   "shnek.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "delaton.ru",
+   "eosn.ru"
+  ]
+ },
+ {
+  "domain": "remeza.org",
+  "n": 6,
+  "dr": 27.0,
+  "tr": 593.0,
+  "do": 0.0,
+  "kto": [
+   "pnevmo-sklad.ru",
+   "rutector.ru",
+   "delaton.ru",
+   "tss-s.ru",
+   "pnevmo.ru",
+   "generalaer.ru"
+  ]
+ },
+ {
+  "domain": "smolensk-i.ru",
+  "n": 6,
+  "dr": 50.0,
+  "tr": 507.0,
+  "do": 13.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "compressortyt.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "novotekpnz.ru"
+  ]
+ },
+ {
+  "domain": "art-assorty.ru",
+  "n": 6,
+  "dr": 36.0,
+  "tr": 394.0,
+  "do": 14.0,
+  "kto": [
+   "erstvak.com",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "afalina.com",
+   "delaton.ru",
+   "baysar-russia.ru"
+  ]
+ },
+ {
+  "domain": "kineshemec.ru",
+  "n": 6,
+  "dr": 64.0,
+  "tr": 354.0,
+  "do": 8.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "afalina.com",
+   "frigus-systems.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "1npf.com",
+  "n": 6,
+  "dr": 34.0,
+  "tr": 203.0,
+  "do": 10.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "pnevmoservice.com",
+   "promcompressor.ru",
+   "novotekpnz.ru",
+   "rusinzh.ru"
+  ]
+ },
+ {
+  "domain": "ariacom.ru",
+  "n": 6,
+  "dr": 15.0,
+  "tr": 144.0,
+  "do": 143.0,
+  "kto": [
+   "compressortyt.ru",
+   "aerocompressors.ru",
+   "aircompressorhub.ru",
+   "promcompressor.ru",
+   "tss-s.ru",
+   "dileks.ru"
+  ]
+ },
+ {
+  "domain": "mustat.com",
+  "n": 6,
+  "dr": 36.0,
+  "tr": 135.0,
+  "do": 27.0,
+  "kto": [
+   "asobezh.ru",
+   "shnek.ru",
+   "novotekpnz.ru",
+   "pnevmo.ru",
+   "air-energy.ru",
+   "wmz.ru"
+  ]
+ },
+ {
+  "domain": "graverstone.ru",
+  "n": 6,
+  "dr": 14.0,
+  "tr": 134.0,
+  "do": 0.0,
+  "kto": [
+   "remeza.com",
+   "asobezh.ru",
+   "ampika.ru",
+   "v-p-k.ru",
+   "pnevmo.ru",
+   "wmz.ru"
+  ]
+ },
+ {
+  "domain": "board.com.ua",
+  "n": 6,
+  "dr": 32.0,
+  "tr": 130.0,
+  "do": 24.0,
+  "kto": [
+   "promcomtech.ru",
+   "decompnw.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "remeza24.ru"
+  ]
+ },
+ {
+  "domain": "sketchfab.com",
+  "n": 5,
+  "dr": 90.0,
+  "tr": 1302581.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "en-mach.ru",
+   "tica.ru",
+   "zenova.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "narod.ru",
+  "n": 5,
+  "dr": 86.0,
+  "tr": 145869.0,
+  "do": 6.0,
+  "kto": [
+   "tss-s.ru",
+   "energo-diesel.ru",
+   "generatora.net",
+   "euronasos.ru",
+   "ego-npp.spb.ru"
+  ]
+ },
+ {
+  "domain": "freelancehunt.com",
+  "n": 5,
+  "dr": 71.0,
+  "tr": 81226.0,
+  "do": 0.0,
+  "kto": [
+   "uralgrit.com",
+   "zenova.ru",
+   "kompresurs.ru",
+   "zif.su",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "dothome.co.kr",
+  "n": 5,
+  "dr": 85.0,
+  "tr": 28591.0,
+  "do": 0.0,
+  "kto": [
+   "berg-air.ru",
+   "pompashop.com",
+   "bergair.ru",
+   "aso-bezh.ru",
+   "iwelder.ru"
+  ]
+ },
+ {
+  "domain": "guns.ru",
+  "n": 5,
+  "dr": 68.0,
+  "tr": 25298.0,
+  "do": 16.0,
+  "kto": [
+   "shnek.ru",
+   "nt-rt.ru",
+   "ampika.ru",
+   "tss-s.ru",
+   "generatora.net"
+  ]
+ },
+ {
+  "domain": "ruspravochnik.com",
+  "n": 5,
+  "dr": 22.0,
+  "tr": 18772.0,
+  "do": 0.0,
+  "kto": [
+   "compressortyt.ru",
+   "v-p-k.ru",
+   "delaton.ru",
+   "zenova.ru",
+   "energo-diesel.ru"
+  ]
+ },
+ {
+  "domain": "infosport.ru",
+  "n": 5,
+  "dr": 46.0,
+  "tr": 17477.0,
+  "do": 18.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "afalina.com",
+   "gekkoldprom.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "progorod33.ru",
+  "n": 5,
+  "dr": 46.0,
+  "tr": 15820.0,
+  "do": 11.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "compressortyt.ru",
+   "deltainzhiniring.ru",
+   "rutector.ru",
+   "asobezh-msk.ru"
+  ]
+ },
+ {
+  "domain": "utm.md",
+  "n": 5,
+  "dr": 64.0,
+  "tr": 7286.0,
+  "do": 6.0,
+  "kto": [
+   "teploprofi.com",
+   "aerocompressors.ru",
+   "frigus-systems.ru",
+   "e-kp.ru",
+   "rusinzh.ru"
+  ]
+ },
+ {
+  "domain": "gorno-altaisk.info",
+  "n": 5,
+  "dr": 51.0,
+  "tr": 5943.0,
+  "do": 8.0,
+  "kto": [
+   "erstvak.com",
+   "teploprofi.com",
+   "afalina.com",
+   "dizelniy-generatory.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "artaz.ru",
+  "n": 5,
+  "dr": 10.0,
+  "tr": 4292.0,
+  "do": 545.0,
+  "kto": [
+   "remeza.com",
+   "ampika.ru",
+   "v-p-k.ru",
+   "remeza-logistic.ru",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "clan.su",
+  "n": 5,
+  "dr": 71.0,
+  "tr": 3592.0,
+  "do": 6.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "shnek.ru",
+   "ampika.ru",
+   "harrison-compressors.ru",
+   "tdtechmash.ru"
+  ]
+ },
+ {
+  "domain": "autolada.ru",
+  "n": 5,
+  "dr": 29.0,
+  "tr": 3068.0,
+  "do": 8.0,
+  "kto": [
+   "kompr.ru",
+   "asobezh.ru",
+   "ampika.ru",
+   "pnevmo.ru",
+   "eosn.ru"
+  ]
+ },
+ {
+  "domain": "crimeapress.info",
+  "n": 5,
+  "dr": 49.0,
+  "tr": 2770.0,
+  "do": 9.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "rutector.ru",
+   "compressing.ru"
+  ]
+ },
+ {
+  "domain": "bragazeta.ru",
+  "n": 5,
+  "dr": 56.0,
+  "tr": 2546.0,
+  "do": 5.0,
+  "kto": [
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "aircompressorhub.ru",
+   "eosn.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "rusnord.ru",
+  "n": 5,
+  "dr": 38.0,
+  "tr": 2212.0,
+  "do": 16.0,
+  "kto": [
+   "decompnw.ru",
+   "gc-azimut.ru",
+   "ok-stanok.ru",
+   "starkraft.ru",
+   "svarma.ru"
+  ]
+ },
+ {
+  "domain": "zhzh.info",
+  "n": 5,
+  "dr": 48.0,
+  "tr": 1255.0,
+  "do": 9.0,
+  "kto": [
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "regionfox.ru",
+   "service-scanner.ru"
+  ]
+ },
+ {
+  "domain": "innov.ru",
+  "n": 5,
+  "dr": 55.0,
+  "tr": 1143.0,
+  "do": 46.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com",
+   "pnevmoservice.com",
+   "remeza.org"
+  ]
+ },
+ {
+  "domain": "ucoz.lv",
+  "n": 5,
+  "dr": 52.0,
+  "tr": 1100.0,
+  "do": 11.0,
+  "kto": [
+   "shnek.ru",
+   "v-p-k.ru",
+   "harrison-compressors.ru",
+   "mge-group.ru",
+   "tehsolutions.ru"
+  ]
+ },
+ {
+  "domain": "kam24.ru",
+  "n": 5,
+  "dr": 56.0,
+  "tr": 892.0,
+  "do": 28.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmo-sklad.ru",
+   "teploprofi.com",
+   "rutector.ru",
+   "v-p-k.ru"
+  ]
+ },
+ {
+  "domain": "cdn21vek.by",
+  "n": 5,
+  "dr": 35.0,
+  "tr": 758.0,
+  "do": 63.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "remeza.com",
+   "nt-rt.ru",
+   "v-p-k.ru",
+   "remeza-logistic.ru"
+  ]
+ },
+ {
+  "domain": "otsovik.com",
+  "n": 5,
+  "dr": 16.0,
+  "tr": 406.0,
+  "do": 0.0,
+  "kto": [
+   "kompr.ru",
+   "promcompressor.ru",
+   "nt-welding.ru",
+   "klapan-pik.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "vorle.ru",
+  "n": 5,
+  "dr": 43.0,
+  "tr": 239.0,
+  "do": 9.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "sp-energoservice.ru",
+   "rutector.ru",
+   "rus-diesel.ru",
+   "service-scanner.ru"
+  ]
+ },
+ {
+  "domain": "mir-cnc.ru",
+  "n": 5,
+  "dr": 19.0,
+  "tr": 224.0,
+  "do": 0.0,
+  "kto": [
+   "ampika.ru",
+   "compressorgroup.ru",
+   "zenova.ru",
+   "prom-kompressory.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "arsvest.ru",
+  "n": 5,
+  "dr": 36.0,
+  "tr": 118.0,
+  "do": 20.0,
+  "kto": [
+   "ok-stanok.ru",
+   "compressorgroup.ru",
+   "rus-diesel.ru",
+   "compressing.ru",
+   "tdtechmash.ru"
+  ]
+ },
+ {
+  "domain": "intensedebate.com",
+  "n": 5,
+  "dr": 78.0,
+  "tr": 112.0,
+  "do": 12.0,
+  "kto": [
+   "en-mach.ru",
+   "tica.ru",
+   "umin.su",
+   "grattech.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "wikipedia.org",
+  "n": 4,
+  "dr": 97.0,
+  "tr": 3468693248.0,
+  "do": 0.0,
+  "kto": [
+   "asobezh.ru",
+   "nt-rt.ru",
+   "stechnics.ru",
+   "nt-welding.ru"
+  ]
+ },
+ {
+  "domain": "yandex.kz",
+  "n": 4,
+  "dr": 83.0,
+  "tr": 4669804.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "crunchbase.com",
+  "n": 4,
+  "dr": 91.0,
+  "tr": 2503294.0,
+  "do": 0.0,
+  "kto": [
+   "asobezh.ru",
+   "shnek.ru",
+   "rutector.ru",
+   "pnevmo.ru"
+  ]
+ },
+ {
+  "domain": "docker.com",
+  "n": 4,
+  "dr": 92.0,
+  "tr": 2479477.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "en-mach.ru",
+   "grattech.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "bc.edu",
+  "n": 4,
+  "dr": 86.0,
+  "tr": 130401.0,
+  "do": 3.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "all-pump.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "hashnode.com",
+  "n": 4,
+  "dr": 83.0,
+  "tr": 115118.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "tica.ru",
+   "umin.su",
+   "grattech.ru"
+  ]
+ },
+ {
+  "domain": "jpn.org",
+  "n": 4,
+  "dr": 85.0,
+  "tr": 101763.0,
+  "do": 9.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "berg-air.ru",
+   "rus-diesel.ru",
+   "air-vint.ru"
+  ]
+ },
+ {
+  "domain": "moy.su",
+  "n": 4,
+  "dr": 70.0,
+  "tr": 74584.0,
+  "do": 4.0,
+  "kto": [
+   "all-pump.ru",
+   "teploprofi.com",
+   "uralgrit.com",
+   "harrison-compressors.ru"
+  ]
+ },
+ {
+  "domain": "kpi.ua",
+  "n": 4,
+  "dr": 74.0,
+  "tr": 59051.0,
+  "do": 15.0,
+  "kto": [
+   "gc-azimut.ru",
+   "nt-rt.ru",
+   "bitzer.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "justmedia.ru",
+  "n": 4,
+  "dr": 61.0,
+  "tr": 56574.0,
+  "do": 4.0,
+  "kto": [
+   "pnevmo-sklad.ru",
+   "afalina.com",
+   "zolt.pro",
+   "remeza-compressor.ru"
+  ]
+ },
+ {
+  "domain": "clients.site",
+  "n": 4,
+  "dr": 78.0,
+  "tr": 46752.0,
+  "do": 15.0,
+  "kto": [
+   "teploprofi.com",
+   "remeza.org",
+   "pikenergo.ru",
+   "grattech.ru"
+  ]
+ },
+ {
+  "domain": "oouagoiwoye.edu.ng",
+  "n": 4,
+  "dr": 55.0,
+  "tr": 45682.0,
+  "do": 4.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "en-mach.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "ucoz.com",
+  "n": 4,
+  "dr": 78.0,
+  "tr": 40114.0,
+  "do": 3.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "all-pump.ru",
+   "rutector.ru",
+   "tdtechmash.ru"
+  ]
+ },
+ {
+  "domain": "ratingruneta.ru",
+  "n": 4,
+  "dr": 77.0,
+  "tr": 35479.0,
+  "do": 5.0,
+  "kto": [
+   "promcomtech.ru",
+   "generalaer.ru",
+   "dileks.ru",
+   "tsk-energo.ru"
+  ]
+ },
+ {
+  "domain": "beniculturali.it",
+  "n": 4,
+  "dr": 84.0,
+  "tr": 35307.0,
+  "do": 19.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "promnasos.com",
+   "remeza-logistic.ru",
+   "zif.su"
+  ]
+ },
+ {
+  "domain": "versia.ru",
+  "n": 4,
+  "dr": 68.0,
+  "tr": 33088.0,
+  "do": 4.0,
+  "kto": [
+   "skif-air.ru",
+   "pnevmo-sklad.ru",
+   "teploprofi.com",
+   "afalina.com"
+  ]
+ },
+ {
+  "domain": "rentry.co",
+  "n": 4,
+  "dr": 78.0,
+  "tr": 24974.0,
+  "do": 12.0,
+  "kto": [
+   "atlas-stt.ru",
+   "promcompressor.ru",
+   "iteropro.ru",
+   "iwelder.ru"
+  ]
+ },
+ {
+  "domain": "2ch.org",
+  "n": 4,
+  "dr": 40.0,
+  "tr": 23442.0,
+  "do": 1.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "shnek.ru",
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "moluch.ru",
+  "n": 4,
+  "dr": 70.0,
+  "tr": 20959.0,
+  "do": 10.0,
+  "kto": [
+   "erstvak.com",
+   "pnevmo-sklad.ru",
+   "teploprofi.com",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "ifmo.ru",
+  "n": 4,
+  "dr": 73.0,
+  "tr": 14559.0,
+  "do": 11.0,
+  "kto": [
+   "nt-rt.ru",
+   "zenova.ru",
+   "bitzer.ru",
+   "kviht.ru"
+  ]
+ },
+ {
+  "domain": "smart-market.uz",
+  "n": 4,
+  "dr": 29.0,
+  "tr": 10373.0,
+  "do": 88.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "shnek.ru",
+   "nt-rt.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "banana.by",
+  "n": 4,
+  "dr": 28.0,
+  "tr": 7682.0,
+  "do": 8.0,
+  "kto": [
+   "gc-azimut.ru",
+   "bergair.ru",
+   "tdtechmash.ru",
+   "aso-bezh.ru"
+  ]
+ },
+ {
+  "domain": "munkonggadget.com",
+  "n": 4,
+  "dr": 44.0,
+  "tr": 7474.0,
+  "do": 4831.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "stechnics.ru",
+   "aerkomp.ru"
+  ]
+ },
+ {
+  "domain": "spravmer.ru",
+  "n": 4,
+  "dr": 1.8,
+  "tr": 6427.0,
+  "do": 0.0,
+  "kto": [
+   "delaton.ru",
+   "dalgakiran.su",
+   "wmz.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "bobr.by",
+  "n": 4,
+  "dr": 41.0,
+  "tr": 5216.0,
+  "do": 8.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "remeza.com",
+   "teploprofi.com",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "e-xecutive.ru",
+  "n": 4,
+  "dr": 72.0,
+  "tr": 4637.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "gekkoldprom.ru",
+   "dileks.ru",
+   "ak2000.ru"
+  ]
+ },
+ {
+  "domain": "lifeglobe.net",
+  "n": 4,
+  "dr": 50.0,
+  "tr": 4552.0,
+  "do": 6.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "expodat.com",
+  "n": 4,
+  "dr": 50.0,
+  "tr": 3641.0,
+  "do": 12.0,
+  "kto": [
+   "berg-air.ru",
+   "rutector.ru",
+   "tica.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "kikonline.ru",
+  "n": 4,
+  "dr": 56.0,
+  "tr": 3575.0,
+  "do": 5.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "skif-air.ru",
+   "teploprofi.com",
+   "asobezh-msk.ru"
+  ]
+ },
+ {
+  "domain": "energobelarus.by",
+  "n": 4,
+  "dr": 33.0,
+  "tr": 3148.0,
+  "do": 3.0,
+  "kto": [
+   "remeza.com",
+   "nt-rt.ru",
+   "tica.ru",
+   "bitzer.ru"
+  ]
+ },
+ {
+  "domain": "artistecard.com",
+  "n": 4,
+  "dr": 70.0,
+  "tr": 2876.0,
+  "do": 10.0,
+  "kto": [
+   "promcomtech.ru",
+   "atlas-stt.ru",
+   "promcompressor.ru",
+   "iwelder.ru"
+  ]
+ },
+ {
+  "domain": "h.careers",
+  "n": 4,
+  "dr": 48.0,
+  "tr": 2385.0,
+  "do": 7.0,
+  "kto": [
+   "rutector.ru",
+   "baysar-russia.ru",
+   "tss-s.ru",
+   "teoil.ru"
+  ]
+ },
+ {
+  "domain": "vb.by",
+  "n": 4,
+  "dr": 50.0,
+  "tr": 2345.0,
+  "do": 4.0,
+  "kto": [
+   "erstvak.com",
+   "remeza.com",
+   "deltainzhiniring.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "prim.news",
+  "n": 4,
+  "dr": 39.0,
+  "tr": 2156.0,
+  "do": 7.0,
+  "kto": [
+   "ok-stanok.ru",
+   "delaton.ru",
+   "compressing.ru",
+   "rusinzh.ru"
+  ]
+ },
+ {
+  "domain": "samaraonline24.ru",
+  "n": 4,
+  "dr": 48.0,
+  "tr": 1516.0,
+  "do": 7.0,
+  "kto": [
+   "compressortyt.ru",
+   "deltainzhiniring.ru",
+   "pnevmoservice.com",
+   "delaton.ru"
+  ]
+ },
+ {
+  "domain": "usedcars.ru",
+  "n": 4,
+  "dr": 28.0,
+  "tr": 1259.0,
+  "do": 5.0,
+  "kto": [
+   "rutector.ru",
+   "stechnics.ru",
+   "compressorgroup.ru",
+   "compressing.ru"
+  ]
+ },
+ {
+  "domain": "potokmedia.ru",
+  "n": 4,
+  "dr": 56.0,
+  "tr": 1087.0,
+  "do": 8.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "ok-stanok.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "uazbuka.ru",
+  "n": 4,
+  "dr": 43.0,
+  "tr": 1005.0,
+  "do": 5.0,
+  "kto": [
+   "remeza.com",
+   "asobezh.ru",
+   "nt-rt.ru",
+   "generatora.net"
+  ]
+ },
+ {
+  "domain": "punkt-a.info",
+  "n": 4,
+  "dr": 52.0,
+  "tr": 916.0,
+  "do": 4.0,
+  "kto": [
+   "ok-stanok.ru",
+   "afalina.com",
+   "frigus-systems.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "производитель.рф",
+  "n": 4,
+  "dr": 39.0,
+  "tr": 882.0,
+  "do": 0.0,
+  "kto": [
+   "asobezh.ru",
+   "nt-rt.ru",
+   "zif.su",
+   "artaz.ru"
+  ]
+ },
+ {
+  "domain": "enex.market",
+  "n": 4,
+  "dr": 35.0,
+  "tr": 817.0,
+  "do": 8.0,
+  "kto": [
+   "erstvak.com",
+   "harrison-compressors.ru",
+   "remeza.org",
+   "wmz.ru"
+  ]
+ },
+ {
+  "domain": "reaa.ru",
+  "n": 4,
+  "dr": 39.0,
+  "tr": 815.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "pnevmo.ru",
+   "klapan-pik.ru",
+   "kviht.ru"
+  ]
+ },
+ {
+  "domain": "ucoz.de",
+  "n": 4,
+  "dr": 55.0,
+  "tr": 644.0,
+  "do": 1.0,
+  "kto": [
+   "bergair.ru",
+   "en-mach.ru",
+   "airsystem.ru",
+   "tehsolutions.ru"
+  ]
+ },
+ {
+  "domain": "mplast.by",
+  "n": 4,
+  "dr": 30.0,
+  "tr": 572.0,
+  "do": 5.0,
+  "kto": [
+   "remeza.com",
+   "teploprofi.com",
+   "rutector.ru",
+   "kompresurs.ru"
+  ]
+ },
+ {
+  "domain": "hydro-pnevmo.ru",
+  "n": 4,
+  "dr": 7.0,
+  "tr": 542.0,
+  "do": 10.0,
+  "kto": [
+   "tss-s.ru",
+   "astar-compressors.ru",
+   "compressor-mash.ru",
+   "pnevmoland.ru"
+  ]
+ },
+ {
+  "domain": "progorodchelny.ru",
+  "n": 4,
+  "dr": 45.0,
+  "tr": 538.0,
+  "do": 10.0,
+  "kto": [
+   "top-compressor.ru",
+   "deltainzhiniring.ru",
+   "compressing.ru",
+   "artaz.ru"
+  ]
+ },
+ {
+  "domain": "electric-220.ru",
+  "n": 4,
+  "dr": 20.0,
+  "tr": 454.0,
+  "do": 0.0,
+  "kto": [
+   "gc-azimut.ru",
+   "dizelnye-generatory.com",
+   "dizelniy-generatory.ru",
+   "energo-diesel.ru"
+  ]
+ },
+ {
+  "domain": "resant.ru",
+  "n": 4,
+  "dr": 29.0,
+  "tr": 356.0,
+  "do": 20.0,
+  "kto": [
+   "top-compressor.ru",
+   "ok-stanok.ru",
+   "teploprofi.com",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "prokazan.ru",
+  "n": 4,
+  "dr": 60.0,
+  "tr": 321.0,
+  "do": 6.0,
+  "kto": [
+   "kompr.ru",
+   "ampika.ru",
+   "frigus-systems.ru",
+   "eosn.ru"
+  ]
+ },
+ {
+  "domain": "zeroweb.kr",
+  "n": 4,
+  "dr": 72.0,
+  "tr": 312.0,
+  "do": 6.0,
+  "kto": [
+   "berg-air.ru",
+   "fiac.su",
+   "atlas-stt.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "cqham.ru",
+  "n": 4,
+  "dr": 57.0,
+  "tr": 290.0,
+  "do": 5.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "kompr.ru",
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "manufacturers.ru",
+  "n": 4,
+  "dr": 16.0,
+  "tr": 274.0,
+  "do": 0.0,
+  "kto": [
+   "asobezh.ru",
+   "novotekpnz.ru",
+   "zif.su",
+   "wmz.ru"
+  ]
+ },
+ {
+  "domain": "mygazeta.com",
+  "n": 4,
+  "dr": 26.0,
+  "tr": 265.0,
+  "do": 6.0,
+  "kto": [
+   "erstvak.com",
+   "shnek.ru",
+   "gc-azimut.ru",
+   "smk-ksk.ru"
+  ]
+ },
+ {
+  "domain": "moyaspravka.ru",
+  "n": 4,
+  "dr": 11.0,
+  "tr": 245.0,
+  "do": 0.0,
+  "kto": [
+   "aerocompressors.ru",
+   "tss-s.ru",
+   "klapan-pik.ru",
+   "fabrika-kv.ru"
+  ]
+ },
+ {
+  "domain": "k-ur.ru",
+  "n": 4,
+  "dr": 30.0,
+  "tr": 206.0,
+  "do": 9.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "pnevmoservice.com",
+   "compressorgroup.ru",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "bbnt.ru",
+  "n": 4,
+  "dr": 19.0,
+  "tr": 198.0,
+  "do": 0.0,
+  "kto": [
+   "energocontinent.ru",
+   "novotekpnz.ru",
+   "dalgakiran.su",
+   "aec-profi.ru"
+  ]
+ },
+ {
+  "domain": "fastbase.com",
+  "n": 4,
+  "dr": 48.0,
+  "tr": 152.0,
+  "do": 5.0,
+  "kto": [
+   "remeza.com",
+   "compressorgroup.ru",
+   "v-p-k.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "fc-barca.com",
+  "n": 4,
+  "dr": 1.6,
+  "tr": 135.0,
+  "do": 0.0,
+  "kto": [
+   "gkpnevmo.ru",
+   "dizelniy-generatory.ru",
+   "mge-group.ru",
+   "prom-kompressory.ru"
+  ]
+ },
+ {
+  "domain": "gefera.ru",
+  "n": 4,
+  "dr": 65.0,
+  "tr": 130.0,
+  "do": 0.0,
+  "kto": [
+   "asobezh.ru",
+   "tica.ru",
+   "aerocompressors.ru",
+   "dalgakiran.ru"
+  ]
+ },
+ {
+  "domain": "reporter63.ru",
+  "n": 4,
+  "dr": 51.0,
+  "tr": 119.0,
+  "do": 14.0,
+  "kto": [
+   "promnasos.com",
+   "afalina.com",
+   "delaton.ru",
+   "kompresurs.ru"
+  ]
+ },
+ {
+  "domain": "junxing-archery.com",
+  "n": 4,
+  "dr": 33.0,
+  "tr": 109.0,
+  "do": 0.0,
+  "kto": [
+   "promcomtech.ru",
+   "all-pump.ru",
+   "en-mach.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "myanimelist.net",
+  "n": 3,
+  "dr": 84.0,
+  "tr": 3657916.0,
+  "do": 0.0,
+  "kto": [
+   "en-mach.ru",
+   "tica.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "habr.com",
+  "n": 3,
+  "dr": 88.0,
+  "tr": 1409145.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "tica.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "telegram.me",
+  "n": 3,
+  "dr": 94.0,
+  "tr": 1097254.0,
+  "do": 54.0,
+  "kto": [
+   "remeza.com",
+   "ok-stanok.ru",
+   "remeza.org"
+  ]
+ },
+ {
+  "domain": "mdpi.com",
+  "n": 3,
+  "dr": 93.0,
+  "tr": 813747.0,
+  "do": 6.0,
+  "kto": [
+   "compressortyt.ru",
+   "nt-rt.ru",
+   "klapan-pik.ru"
+  ]
+ },
+ {
+  "domain": "cinfa.com",
+  "n": 3,
+  "dr": 68.0,
+  "tr": 736202.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "all-pump.ru",
+   "en-mach.ru"
+  ]
+ },
+ {
+  "domain": "netlify.app",
+  "n": 3,
+  "dr": 93.0,
+  "tr": 690892.0,
+  "do": 3.0,
+  "kto": [
+   "ru-kompressor.com",
+   "iteropro.ru",
+   "iwelder.ru"
+  ]
+ },
+ {
+  "domain": "xsrv.jp",
+  "n": 3,
+  "dr": 90.0,
+  "tr": 596860.0,
+  "do": 1.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "all-pump.ru"
+  ]
+ },
+ {
+  "domain": "gravatar.com",
+  "n": 3,
+  "dr": 97.0,
+  "tr": 376444.0,
+  "do": 0.0,
+  "kto": [
+   "en-mach.ru",
+   "tica.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "cyclowiki.org",
+  "n": 3,
+  "dr": 70.0,
+  "tr": 287945.0,
+  "do": 12.0,
+  "kto": [
+   "nt-rt.ru",
+   "rutector.ru",
+   "bitzer.ru"
+  ]
+ },
+ {
+  "domain": "belarushockey.com",
+  "n": 3,
+  "dr": 39.0,
+  "tr": 120216.0,
+  "do": 6.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "gc-azimut.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "devpost.com",
+  "n": 3,
+  "dr": 88.0,
+  "tr": 95928.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "umin.su",
+   "grattech.ru"
+  ]
+ },
+ {
+  "domain": "upnvj.ac.id",
+  "n": 3,
+  "dr": 71.0,
+  "tr": 72007.0,
+  "do": 0.0,
+  "kto": [
+   "promcomtech.ru",
+   "en-mach.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "sq.com.ua",
+  "n": 3,
+  "dr": 66.0,
+  "tr": 67685.0,
+  "do": 7.0,
+  "kto": [
+   "erstvak.com",
+   "gc-azimut.ru",
+   "tdtechmash.ru"
+  ]
+ },
+ {
+  "domain": "grokipedia.com",
+  "n": 3,
+  "dr": 79.0,
+  "tr": 57254.0,
+  "do": 14.0,
+  "kto": [
+   "gc-azimut.ru",
+   "nt-rt.ru",
+   "uralgrit.com"
+  ]
+ },
+ {
+  "domain": "1sept.ru",
+  "n": 3,
+  "dr": 71.0,
+  "tr": 41925.0,
+  "do": 10.0,
+  "kto": [
+   "gc-azimut.ru",
+   "tss-s.ru",
+   "nt-welding.ru"
+  ]
+ },
+ {
+  "domain": "gorodpavlodar.kz",
+  "n": 3,
+  "dr": 33.0,
+  "tr": 38388.0,
+  "do": 6.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "rutector.ru",
+   "compressing.ru"
+  ]
+ },
+ {
+  "domain": "otofun.net.vn",
+  "n": 3,
+  "dr": 53.0,
+  "tr": 37040.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "nt-rt.ru",
+   "harrison-compressors.ru"
+  ]
+ },
+ {
+  "domain": "dp.ru",
+  "n": 3,
+  "dr": 77.0,
+  "tr": 30954.0,
+  "do": 0.0,
+  "kto": [
+   "rusinzh.ru",
+   "ego-npp.spb.ru",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "sevastopol.su",
+  "n": 3,
+  "dr": 63.0,
+  "tr": 24642.0,
+  "do": 5.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmo-sklad.ru",
+   "v-p-k.ru"
+  ]
+ },
+ {
+  "domain": "zeoworks.com",
+  "n": 3,
+  "dr": 23.0,
+  "tr": 23604.0,
+  "do": 10.0,
+  "kto": [
+   "bergair.ru",
+   "en-mach.ru",
+   "spitzenreiter.ru"
+  ]
+ },
+ {
+  "domain": "ruxpert.ru",
+  "n": 3,
+  "dr": 44.0,
+  "tr": 21311.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "asobezh.ru",
+   "shnek.ru"
+  ]
+ },
+ {
+  "domain": "pg21.ru",
+  "n": 3,
+  "dr": 54.0,
+  "tr": 21198.0,
+  "do": 9.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "prostikom.net",
+  "n": 3,
+  "dr": 8.0,
+  "tr": 16230.0,
+  "do": 5.0,
+  "kto": [
+   "berg-air.ru",
+   "atlas-stt.ru",
+   "sts-rf.ru"
+  ]
+ },
+ {
+  "domain": "politnavigator.net",
+  "n": 3,
+  "dr": 53.0,
+  "tr": 14018.0,
+  "do": 14.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "erstvak.com",
+   "dileks-air.ru"
+  ]
+ },
+ {
+  "domain": "codeigniter.com",
+  "n": 3,
+  "dr": 84.0,
+  "tr": 13059.0,
+  "do": 3.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "all-pump.ru",
+   "bergair.ru"
+  ]
+ },
+ {
+  "domain": "otvertka.kz",
+  "n": 3,
+  "dr": 42.0,
+  "tr": 11462.0,
+  "do": 14.0,
+  "kto": [
+   "remeza.com",
+   "v-p-k.ru",
+   "remeza-logistic.ru"
+  ]
+ },
+ {
+  "domain": "desiblitz.com",
+  "n": 3,
+  "dr": 59.0,
+  "tr": 11084.0,
+  "do": 5.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "en-mach.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "nlb.by",
+  "n": 3,
+  "dr": 60.0,
+  "tr": 10519.0,
+  "do": 11.0,
+  "kto": [
+   "nt-rt.ru",
+   "tica.ru",
+   "dalgakiran.ru"
+  ]
+ },
+ {
+  "domain": "vpk.name",
+  "n": 3,
+  "dr": 56.0,
+  "tr": 10402.0,
+  "do": 5.0,
+  "kto": [
+   "gc-azimut.ru",
+   "teploprofi.com",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "factroom.ru",
+  "n": 3,
+  "dr": 50.0,
+  "tr": 9761.0,
+  "do": 3.0,
+  "kto": [
+   "teploprofi.com",
+   "rutector.ru",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "21.by",
+  "n": 3,
+  "dr": 49.0,
+  "tr": 7152.0,
+  "do": 12.0,
+  "kto": [
+   "gc-azimut.ru",
+   "deltainzhiniring.ru",
+   "tss-s.ru"
+  ]
+ },
+ {
+  "domain": "yarnews.net",
+  "n": 3,
+  "dr": 52.0,
+  "tr": 6854.0,
+  "do": 6.0,
+  "kto": [
+   "compressortyt.ru",
+   "pnevmoteh.ru",
+   "delaton.ru"
+  ]
+ },
+ {
+  "domain": "pressfeed.ru",
+  "n": 3,
+  "dr": 64.0,
+  "tr": 6844.0,
+  "do": 35.0,
+  "kto": [
+   "decompnw.ru",
+   "ok-stanok.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "hattiesburgms.com",
+  "n": 3,
+  "dr": 56.0,
+  "tr": 4863.0,
+  "do": 3.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "en-mach.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "ucoz.org",
+  "n": 3,
+  "dr": 71.0,
+  "tr": 4635.0,
+  "do": 5.0,
+  "kto": [
+   "decompnw.ru",
+   "kompr.ru",
+   "all-pump.ru"
+  ]
+ },
+ {
+  "domain": "checheninfo.ru",
+  "n": 3,
+  "dr": 46.0,
+  "tr": 4538.0,
+  "do": 4.0,
+  "kto": [
+   "shnek.ru",
+   "top-compressor.ru",
+   "rusgroupp.ru"
+  ]
+ },
+ {
+  "domain": "enkor24.ru",
+  "n": 3,
+  "dr": 25.0,
+  "tr": 4370.0,
+  "do": 6.0,
+  "kto": [
+   "remeza.com",
+   "remeza.org",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "orgfree.com",
+  "n": 3,
+  "dr": 71.0,
+  "tr": 4140.0,
+  "do": 3.0,
+  "kto": [
+   "energocontinent.ru",
+   "ampika.ru",
+   "pnevmo.ru"
+  ]
+ },
+ {
+  "domain": "dwg.ru",
+  "n": 3,
+  "dr": 46.0,
+  "tr": 4134.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "listly.io",
+  "n": 3,
+  "dr": 30.0,
+  "tr": 3892.0,
+  "do": 0.0,
+  "kto": [
+   "rutector.ru",
+   "ampika.ru",
+   "sts-rf.ru"
+  ]
+ },
+ {
+  "domain": "orenburg.media",
+  "n": 3,
+  "dr": 53.0,
+  "tr": 3143.0,
+  "do": 4.0,
+  "kto": [
+   "gc-azimut.ru",
+   "delaton.ru",
+   "service-scanner.ru"
+  ]
+ },
+ {
+  "domain": "dimpoisk.ru",
+  "n": 3,
+  "dr": 26.0,
+  "tr": 2805.0,
+  "do": 5.0,
+  "kto": [
+   "compressortyt.ru",
+   "kompresurs.ru",
+   "kwt.market"
+  ]
+ },
+ {
+  "domain": "province.ru",
+  "n": 3,
+  "dr": 55.0,
+  "tr": 2765.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "rutector.ru",
+   "nt-welding.ru"
+  ]
+ },
+ {
+  "domain": "progorod58.ru",
+  "n": 3,
+  "dr": 49.0,
+  "tr": 2754.0,
+  "do": 7.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "promcompressor.ru"
+  ]
+ },
+ {
+  "domain": "т.website",
+  "n": 3,
+  "dr": 66.0,
+  "tr": 2664.0,
+  "do": 43.0,
+  "kto": [
+   "decompnw.ru",
+   "nt-rt.ru",
+   "dizelnye-generatory.com"
+  ]
+ },
+ {
+  "domain": "cont.ws",
+  "n": 3,
+  "dr": 64.0,
+  "tr": 2633.0,
+  "do": 7.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "shnek.ru",
+   "service-scanner.ru"
+  ]
+ },
+ {
+  "domain": "novosibdom.ru",
+  "n": 3,
+  "dr": 40.0,
+  "tr": 2608.0,
+  "do": 5.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "linkclub.or.jp",
+  "n": 3,
+  "dr": 71.0,
+  "tr": 2599.0,
+  "do": 5.0,
+  "kto": [
+   "promcomtech.ru",
+   "all-pump.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "psu.by",
+  "n": 3,
+  "dr": 55.0,
+  "tr": 2590.0,
+  "do": 7.0,
+  "kto": [
+   "nt-rt.ru",
+   "dizelnye-generatory.com",
+   "nt-welding.ru"
+  ]
+ },
+ {
+  "domain": "ruffnews.ru",
+  "n": 3,
+  "dr": 48.0,
+  "tr": 2588.0,
+  "do": 7.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "spmi.ru",
+  "n": 3,
+  "dr": 62.0,
+  "tr": 2479.0,
+  "do": 6.0,
+  "kto": [
+   "gc-azimut.ru",
+   "nt-rt.ru",
+   "drobesfera.ru"
+  ]
+ },
+ {
+  "domain": "yopt.org",
+  "n": 3,
+  "dr": 24.0,
+  "tr": 2456.0,
+  "do": 0.0,
+  "kto": [
+   "zolt.pro",
+   "harrison-compressors.ru",
+   "artaz.ru"
+  ]
+ },
+ {
+  "domain": "promvest.info",
+  "n": 3,
+  "dr": 45.0,
+  "tr": 2435.0,
+  "do": 20.0,
+  "kto": [
+   "compressortyt.ru",
+   "teploprofi.com",
+   "kviht.ru"
+  ]
+ },
+ {
+  "domain": "selcdn.ru",
+  "n": 3,
+  "dr": 82.0,
+  "tr": 2322.0,
+  "do": 3200.0,
+  "kto": [
+   "berg-air.ru",
+   "nt-rt.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "museulinguaportuguesa.org.br",
+  "n": 3,
+  "dr": 41.0,
+  "tr": 2318.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "all-pump.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "nuczu.edu.ua",
+  "n": 3,
+  "dr": 52.0,
+  "tr": 2171.0,
+  "do": 4.0,
+  "kto": [
+   "erstvak.com",
+   "teploprofi.com",
+   "nt-welding.ru"
+  ]
+ },
+ {
+  "domain": "cmsmagazine.ru",
+  "n": 3,
+  "dr": 72.0,
+  "tr": 2134.0,
+  "do": 5.0,
+  "kto": [
+   "promcomtech.ru",
+   "pnevmoteh.ru",
+   "dileks.ru"
+  ]
+ },
+ {
+  "domain": "fermer.ru",
+  "n": 3,
+  "dr": 50.0,
+  "tr": 2026.0,
+  "do": 5.0,
+  "kto": [
+   "tss-s.ru",
+   "energo-diesel.ru",
+   "klapan-pik.ru"
+  ]
+ },
+ {
+  "domain": "motorka.org",
+  "n": 3,
+  "dr": 25.0,
+  "tr": 1915.0,
+  "do": 4.0,
+  "kto": [
+   "compressortyt.ru",
+   "ampika.ru",
+   "smk-ksk.ru"
+  ]
+ },
+ {
+  "domain": "xaa.pl",
+  "n": 3,
+  "dr": 67.0,
+  "tr": 1646.0,
+  "do": 3.0,
+  "kto": [
+   "decompnw.ru",
+   "en-mach.ru",
+   "spitzenreiter.ru"
+  ]
+ },
+ {
+  "domain": "omgtu.ru",
+  "n": 3,
+  "dr": 56.0,
+  "tr": 1488.0,
+  "do": 10.0,
+  "kto": [
+   "nt-rt.ru",
+   "zif.su",
+   "bitzer.ru"
+  ]
+ },
+ {
+  "domain": "triberr.com",
+  "n": 3,
+  "dr": 71.0,
+  "tr": 1456.0,
+  "do": 0.0,
+  "kto": [
+   "en-mach.ru",
+   "tica.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "streettracklife.com",
+  "n": 3,
+  "dr": 28.0,
+  "tr": 1455.0,
+  "do": 24.0,
+  "kto": [
+   "berg-air.ru",
+   "stechnics.ru",
+   "air-vint.ru"
+  ]
+ },
+ {
+  "domain": "kafanews.com",
+  "n": 3,
+  "dr": 44.0,
+  "tr": 1446.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "megaobzor.com",
+  "n": 3,
+  "dr": 57.0,
+  "tr": 1301.0,
+  "do": 6.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "gc-azimut.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "andreyex.ru",
+  "n": 3,
+  "dr": 45.0,
+  "tr": 1172.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "top-compressor.ru",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "adact.ru",
+  "n": 3,
+  "dr": 30.0,
+  "tr": 1161.0,
+  "do": 0.0,
+  "kto": [
+   "asobezh.ru",
+   "rutector.ru",
+   "indstr.ru"
+  ]
+ },
+ {
+  "domain": "caxapa.ru",
+  "n": 3,
+  "dr": 36.0,
+  "tr": 1142.0,
+  "do": 3.0,
+  "kto": [
+   "nt-rt.ru",
+   "rutector.ru",
+   "zenova.ru"
+  ]
+ },
+ {
+  "domain": "pastelink.net",
+  "n": 3,
+  "dr": 73.0,
+  "tr": 1055.0,
+  "do": 0.0,
+  "kto": [
+   "tica.ru",
+   "grattech.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "220-volt.ru",
+  "n": 3,
+  "dr": 70.0,
+  "tr": 989.0,
+  "do": 6.0,
+  "kto": [
+   "remeza.com",
+   "nt-rt.ru",
+   "sts-rf.ru"
+  ]
+ },
+ {
+  "domain": "culturavrn.ru",
+  "n": 3,
+  "dr": 53.0,
+  "tr": 988.0,
+  "do": 4.0,
+  "kto": [
+   "teploprofi.com",
+   "afalina.com",
+   "rus-diesel.ru"
+  ]
+ },
+ {
+  "domain": "rubaltic.ru",
+  "n": 3,
+  "dr": 55.0,
+  "tr": 977.0,
+  "do": 6.0,
+  "kto": [
+   "erstvak.com",
+   "teploprofi.com",
+   "dizelniy-generatory.ru"
+  ]
+ },
+ {
+  "domain": "communa.ru",
+  "n": 3,
+  "dr": 47.0,
+  "tr": 974.0,
+  "do": 7.0,
+  "kto": [
+   "ok-stanok.ru",
+   "rutector.ru",
+   "compressor.market"
+  ]
+ },
+ {
+  "domain": "prom.st",
+  "n": 3,
+  "dr": 84.0,
+  "tr": 938.0,
+  "do": 131.0,
+  "kto": [
+   "remeza.com",
+   "nt-rt.ru",
+   "eosn.ru"
+  ]
+ },
+ {
+  "domain": "qrz.ru",
+  "n": 3,
+  "dr": 66.0,
+  "tr": 893.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "eosn.ru",
+   "energo-diesel.ru"
+  ]
+ },
+ {
+  "domain": "forum2x2.ru",
+  "n": 3,
+  "dr": 64.0,
+  "tr": 865.0,
+  "do": 2.0,
+  "kto": [
+   "promcomtech.ru",
+   "bergair.ru",
+   "novotekpnz.ru"
+  ]
+ },
+ {
+  "domain": "tarambana.net",
+  "n": 3,
+  "dr": 43.0,
+  "tr": 770.0,
+  "do": 2.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "en-mach.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "polrestagorontalokota.com",
+  "n": 3,
+  "dr": 24.0,
+  "tr": 686.0,
+  "do": 1.0,
+  "kto": [
+   "all-pump.ru",
+   "en-mach.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "46info.ru",
+  "n": 3,
+  "dr": 33.0,
+  "tr": 623.0,
+  "do": 0.0,
+  "kto": [
+   "kompr.ru",
+   "v-p-k.ru",
+   "tss-s.ru"
+  ]
+ },
+ {
+  "domain": "vrk1.ru",
+  "n": 3,
+  "dr": 21.0,
+  "tr": 623.0,
+  "do": 6.0,
+  "kto": [
+   "pnevmoservice.com",
+   "wgs-gcvep.ru",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "eosn.ru",
+  "n": 3,
+  "dr": 18.0,
+  "tr": 617.0,
+  "do": 256.0,
+  "kto": [
+   "berg-air.ru",
+   "rutector.ru",
+   "sts-rf.ru"
+  ]
+ },
+ {
+  "domain": "pg12.ru",
+  "n": 3,
+  "dr": 40.0,
+  "tr": 578.0,
+  "do": 8.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "jkg-portal.com.ua",
+  "n": 3,
+  "dr": 40.0,
+  "tr": 577.0,
+  "do": 7.0,
+  "kto": [
+   "rutector.ru",
+   "rus-diesel.ru",
+   "tss-s.ru"
+  ]
+ },
+ {
+  "domain": "zebra.pk",
+  "n": 3,
+  "dr": 20.0,
+  "tr": 573.0,
+  "do": 1.0,
+  "kto": [
+   "en-mach.ru",
+   "zolt.pro",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "gk-vpk.ru",
+  "n": 3,
+  "dr": 30.0,
+  "tr": 548.0,
+  "do": 5.0,
+  "kto": [
+   "nt-rt.ru",
+   "afalina.com",
+   "tss-s.ru"
+  ]
+ },
+ {
+  "domain": "city-ck.com",
+  "n": 3,
+  "dr": 26.0,
+  "tr": 464.0,
+  "do": 4.0,
+  "kto": [
+   "rus-diesel.ru",
+   "gekkoldprom.ru",
+   "euronasos.ru"
+  ]
+ },
+ {
+  "domain": "progoroduhta.ru",
+  "n": 3,
+  "dr": 49.0,
+  "tr": 396.0,
+  "do": 7.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "automatikaplus.ru",
+  "n": 3,
+  "dr": 30.0,
+  "tr": 369.0,
+  "do": 0.0,
+  "kto": [
+   "dileks.ru",
+   "aso-bezh.ru",
+   "mge-group.ru"
+  ]
+ },
+ {
+  "domain": "speedway-world.pl",
+  "n": 3,
+  "dr": 50.0,
+  "tr": 356.0,
+  "do": 3.0,
+  "kto": [
+   "bergair.ru",
+   "en-mach.ru",
+   "mge-group.ru"
+  ]
+ },
+ {
+  "domain": "nta-pfo.ru",
+  "n": 3,
+  "dr": 49.0,
+  "tr": 321.0,
+  "do": 3.0,
+  "kto": [
+   "erstvak.com",
+   "pnevmo-sklad.ru",
+   "remeza-compressor.ru"
+  ]
+ },
+ {
+  "domain": "forumotion.me",
+  "n": 3,
+  "dr": 41.0,
+  "tr": 310.0,
+  "do": 2.0,
+  "kto": [
+   "compressortyt.ru",
+   "bergair.ru",
+   "tehsolutions.ru"
+  ]
+ },
+ {
+  "domain": "bvi50plus.com",
+  "n": 3,
+  "dr": 42.0,
+  "tr": 281.0,
+  "do": 2.0,
+  "kto": [
+   "promcomtech.ru",
+   "premium-vozduh.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "techvesti.ru",
+  "n": 3,
+  "dr": 20.0,
+  "tr": 265.0,
+  "do": 8.0,
+  "kto": [
+   "compressor.market",
+   "nt-welding.ru",
+   "sts-rf.ru"
+  ]
+ },
+ {
+  "domain": "pg13.ru",
+  "n": 3,
+  "dr": 48.0,
+  "tr": 242.0,
+  "do": 7.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "prmaster.su",
+  "n": 3,
+  "dr": 11.0,
+  "tr": 238.0,
+  "do": 26.0,
+  "kto": [
+   "bergair.ru",
+   "tsa.su",
+   "aso-bezh.ru"
+  ]
+ },
+ {
+  "domain": "perekos.net",
+  "n": 3,
+  "dr": 21.0,
+  "tr": 211.0,
+  "do": 6.0,
+  "kto": [
+   "gekkoldprom.ru",
+   "pikenergo.ru",
+   "ttk-rus.ru"
+  ]
+ },
+ {
+  "domain": "solacebase.com",
+  "n": 3,
+  "dr": 37.0,
+  "tr": 197.0,
+  "do": 0.0,
+  "kto": [
+   "all-pump.ru",
+   "en-mach.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "nistp.ru",
+  "n": 3,
+  "dr": 41.0,
+  "tr": 159.0,
+  "do": 9.0,
+  "kto": [
+   "compressortyt.ru",
+   "compressorgroup.ru",
+   "starkraft.ru"
+  ]
+ },
+ {
+  "domain": "x-true.info",
+  "n": 3,
+  "dr": 33.0,
+  "tr": 159.0,
+  "do": 11.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "rutector.ru",
+   "promcompressor.ru"
+  ]
+ },
+ {
+  "domain": "b2b-broker.ru",
+  "n": 3,
+  "dr": 28.0,
+  "tr": 153.0,
+  "do": 4.0,
+  "kto": [
+   "ampika.ru",
+   "astar-compressors.ru",
+   "promtula.ru"
+  ]
+ },
+ {
+  "domain": "wanep.org",
+  "n": 3,
+  "dr": 52.0,
+  "tr": 145.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "all-pump.ru",
+   "pressair.ru"
+  ]
+ },
+ {
+  "domain": "nepropadu.ru",
+  "n": 3,
+  "dr": 27.0,
+  "tr": 130.0,
+  "do": 0.0,
+  "kto": [
+   "ampika.ru",
+   "energo-diesel.ru",
+   "generatora.net"
+  ]
+ },
+ {
+  "domain": "sayanogorsk.info",
+  "n": 3,
+  "dr": 30.0,
+  "tr": 116.0,
+  "do": 10.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "pnevmoservice.com",
+   "delaton.ru"
+  ]
+ },
+ {
+  "domain": "allremont59.ru",
+  "n": 3,
+  "dr": 13.0,
+  "tr": 104.0,
+  "do": 5.0,
+  "kto": [
+   "v-p-k.ru",
+   "remeza-logistic.ru",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "yopolis.ru",
+  "n": 3,
+  "dr": 36.0,
+  "tr": 103.0,
+  "do": 6.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "deltainzhiniring.ru",
+   "pnevmoservice.com"
+  ]
+ },
+ {
+  "domain": "mail.ru",
+  "n": 2,
+  "dr": 92.0,
+  "tr": 18950932.0,
+  "do": 3.0,
+  "kto": [
+   "nt-rt.ru",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "eu.com",
+  "n": 2,
+  "dr": 91.0,
+  "tr": 2038156.0,
+  "do": 3.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "promcompressor.ru"
+  ]
+ },
+ {
+  "domain": "rbc.ua",
+  "n": 2,
+  "dr": 77.0,
+  "tr": 1735451.0,
+  "do": 3.0,
+  "kto": [
+   "zenova.ru",
+   "dalgakiran.ru"
+  ]
+ },
+ {
+  "domain": "heylink.me",
+  "n": 2,
+  "dr": 92.0,
+  "tr": 1694068.0,
+  "do": 0.0,
+  "kto": [
+   "en-mach.ru",
+   "grattech.ru"
+  ]
+ },
+ {
+  "domain": "scamadviser.com",
+  "n": 2,
+  "dr": 80.0,
+  "tr": 1649904.0,
+  "do": 5.0,
+  "kto": [
+   "afalina.com",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "leetcode.com",
+  "n": 2,
+  "dr": 88.0,
+  "tr": 1408868.0,
+  "do": 2.0,
+  "kto": [
+   "erstvak.com",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "spb.ru",
+  "n": 2,
+  "dr": 89.0,
+  "tr": 1207845.0,
+  "do": 6.0,
+  "kto": [
+   "uralgrit.com",
+   "generatora.net"
+  ]
+ },
+ {
+  "domain": "hh.ru",
+  "n": 2,
+  "dr": 90.0,
+  "tr": 1145322.0,
+  "do": 3.0,
+  "kto": [
+   "erstvak.com",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "onliner.by",
+  "n": 2,
+  "dr": 76.0,
+  "tr": 922710.0,
+  "do": 7.0,
+  "kto": [
+   "remeza.com",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "brandfetch.com",
+  "n": 2,
+  "dr": 73.0,
+  "tr": 635769.0,
+  "do": 2.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "dizelnye-generatory.com"
+  ]
+ },
+ {
+  "domain": "windows.net",
+  "n": 2,
+  "dr": 92.0,
+  "tr": 565677.0,
+  "do": 2.0,
+  "kto": [
+   "promcompressor.ru",
+   "iteropro.ru"
+  ]
+ },
+ {
+  "domain": "opovo.com.br",
+  "n": 2,
+  "dr": 76.0,
+  "tr": 446207.0,
+  "do": 2.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "hh.kz",
+  "n": 2,
+  "dr": 74.0,
+  "tr": 210440.0,
+  "do": 0.0,
+  "kto": [
+   "berg-air.ru",
+   "dalgakiran.ru"
+  ]
+ },
+ {
+  "domain": "mystrikingly.com",
+  "n": 2,
+  "dr": 89.0,
+  "tr": 191431.0,
+  "do": 2.0,
+  "kto": [
+   "tica.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "1c.ru",
+  "n": 2,
+  "dr": 84.0,
+  "tr": 186404.0,
+  "do": 2.0,
+  "kto": [
+   "rutector.ru",
+   "ctg-parts.ru"
+  ]
+ },
+ {
+  "domain": "glavnoe.in.ua",
+  "n": 2,
+  "dr": 56.0,
+  "tr": 140635.0,
+  "do": 4.0,
+  "kto": [
+   "gc-azimut.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "yandexcloud.net",
+  "n": 2,
+  "dr": 84.0,
+  "tr": 139620.0,
+  "do": 2.0,
+  "kto": [
+   "nt-rt.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "ssru.ac.th",
+  "n": 2,
+  "dr": 65.0,
+  "tr": 126076.0,
+  "do": 7.0,
+  "kto": [
+   "promcomtech.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "amic.ru",
+  "n": 2,
+  "dr": 69.0,
+  "tr": 111445.0,
+  "do": 1.0,
+  "kto": [
+   "pnevmo-sklad.ru",
+   "dizelniy-generatory.ru"
+  ]
+ },
+ {
+  "domain": "infourok.ru",
+  "n": 2,
+  "dr": 72.0,
+  "tr": 109434.0,
+  "do": 1.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "gallerix.ru",
+  "n": 2,
+  "dr": 66.0,
+  "tr": 97154.0,
+  "do": 2.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "xrea.com",
+  "n": 2,
+  "dr": 86.0,
+  "tr": 96678.0,
+  "do": 2.0,
+  "kto": [
+   "en-mach.ru",
+   "remeza-logistic.ru"
+  ]
+ },
+ {
+  "domain": "taplink.cc",
+  "n": 2,
+  "dr": 87.0,
+  "tr": 94265.0,
+  "do": 0.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "v-p-k.ru"
+  ]
+ },
+ {
+  "domain": "access-ticket.com",
+  "n": 2,
+  "dr": 48.0,
+  "tr": 88649.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "udec.cl",
+  "n": 2,
+  "dr": 77.0,
+  "tr": 73778.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "all-pump.ru"
+  ]
+ },
+ {
+  "domain": "provenexpert.com",
+  "n": 2,
+  "dr": 91.0,
+  "tr": 66219.0,
+  "do": 2.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "tsa.su"
+  ]
+ },
+ {
+  "domain": "at.ua",
+  "n": 2,
+  "dr": 77.0,
+  "tr": 63252.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "ok-stanok.ru"
+  ]
+ },
+ {
+  "domain": "weichert.com",
+  "n": 2,
+  "dr": 70.0,
+  "tr": 60115.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "es.tl",
+  "n": 2,
+  "dr": 74.0,
+  "tr": 55005.0,
+  "do": 2.0,
+  "kto": [
+   "promcomtech.ru",
+   "energo-diesel.ru"
+  ]
+ },
+ {
+  "domain": "hvylya.net",
+  "n": 2,
+  "dr": 53.0,
+  "tr": 46332.0,
+  "do": 4.0,
+  "kto": [
+   "gc-azimut.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "maxforlive.com",
+  "n": 2,
+  "dr": 68.0,
+  "tr": 44589.0,
+  "do": 2.0,
+  "kto": [
+   "umin.su",
+   "grattech.ru"
+  ]
+ },
+ {
+  "domain": "mppolice.gov.in",
+  "n": 2,
+  "dr": 60.0,
+  "tr": 42218.0,
+  "do": 4.0,
+  "kto": [
+   "promcomtech.ru",
+   "fiac.su"
+  ]
+ },
+ {
+  "domain": "tpu.ru",
+  "n": 2,
+  "dr": 73.0,
+  "tr": 41953.0,
+  "do": 3.0,
+  "kto": [
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "cirebonkab.go.id",
+  "n": 2,
+  "dr": 59.0,
+  "tr": 33531.0,
+  "do": 3.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "akarpov.ru",
+  "n": 2,
+  "dr": 29.0,
+  "tr": 32453.0,
+  "do": 2.0,
+  "kto": [
+   "nt-welding.ru",
+   "2bar.ru"
+  ]
+ },
+ {
+  "domain": "disqus.com",
+  "n": 2,
+  "dr": 92.0,
+  "tr": 32067.0,
+  "do": 2.0,
+  "kto": [
+   "grattech.ru",
+   "nasosymarket.ru"
+  ]
+ },
+ {
+  "domain": "altapress.ru",
+  "n": 2,
+  "dr": 70.0,
+  "tr": 31834.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmo-sklad.ru"
+  ]
+ },
+ {
+  "domain": "ezilon.com",
+  "n": 2,
+  "dr": 58.0,
+  "tr": 29613.0,
+  "do": 2.0,
+  "kto": [
+   "nt-rt.ru",
+   "airpressa.com"
+  ]
+ },
+ {
+  "domain": "offroad-bulgaria.com",
+  "n": 2,
+  "dr": 43.0,
+  "tr": 29051.0,
+  "do": 4.0,
+  "kto": [
+   "asobezh.ru",
+   "starkraft.ru"
+  ]
+ },
+ {
+  "domain": "shitaraba.net",
+  "n": 2,
+  "dr": 66.0,
+  "tr": 27572.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "ucrazy.org",
+  "n": 2,
+  "dr": 72.0,
+  "tr": 26686.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "smk-ksk.ru"
+  ]
+ },
+ {
+  "domain": "eanews.ru",
+  "n": 2,
+  "dr": 65.0,
+  "tr": 25556.0,
+  "do": 2.0,
+  "kto": [
+   "pnevmo-sklad.ru",
+   "afalina.com"
+  ]
+ },
+ {
+  "domain": "do.am",
+  "n": 2,
+  "dr": 72.0,
+  "tr": 24812.0,
+  "do": 1.0,
+  "kto": [
+   "dizelniy-generatory.ru",
+   "tdtechmash.ru"
+  ]
+ },
+ {
+  "domain": "flywheelsites.com",
+  "n": 2,
+  "dr": 86.0,
+  "tr": 24157.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "iwelder.ru"
+  ]
+ },
+ {
+  "domain": "multitran.com",
+  "n": 2,
+  "dr": 74.0,
+  "tr": 21195.0,
+  "do": 3.0,
+  "kto": [
+   "zenova.ru",
+   "euronasos.ru"
+  ]
+ },
+ {
+  "domain": "telegra.ph",
+  "n": 2,
+  "dr": 88.0,
+  "tr": 21162.0,
+  "do": 95.0,
+  "kto": [
+   "atlas-stt.ru",
+   "iwelder.ru"
+  ]
+ },
+ {
+  "domain": "taltech.ee",
+  "n": 2,
+  "dr": 76.0,
+  "tr": 20158.0,
+  "do": 6.0,
+  "kto": [
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "wikireality.ru",
+  "n": 2,
+  "dr": 55.0,
+  "tr": 19750.0,
+  "do": 6.0,
+  "kto": [
+   "ok-stanok.ru",
+   "frigus-systems.ru"
+  ]
+ },
+ {
+  "domain": "om1.ru",
+  "n": 2,
+  "dr": 62.0,
+  "tr": 19156.0,
+  "do": 2.0,
+  "kto": [
+   "erstvak.com",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "bsuir.by",
+  "n": 2,
+  "dr": 57.0,
+  "tr": 18805.0,
+  "do": 5.0,
+  "kto": [
+   "erstvak.com",
+   "tsa.su"
+  ]
+ },
+ {
+  "domain": "primpress.ru",
+  "n": 2,
+  "dr": 58.0,
+  "tr": 18730.0,
+  "do": 3.0,
+  "kto": [
+   "teploprofi.com",
+   "dileks.ru"
+  ]
+ },
+ {
+  "domain": "udf.name",
+  "n": 2,
+  "dr": 42.0,
+  "tr": 18669.0,
+  "do": 6.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru"
+  ]
+ },
+ {
+  "domain": "ruward.ru",
+  "n": 2,
+  "dr": 67.0,
+  "tr": 17870.0,
+  "do": 3.0,
+  "kto": [
+   "compressor.market",
+   "rukavnie-filtri.ru"
+  ]
+ },
+ {
+  "domain": "rt-online.ru",
+  "n": 2,
+  "dr": 57.0,
+  "tr": 17451.0,
+  "do": 3.0,
+  "kto": [
+   "compressortyt.ru",
+   "gc-azimut.ru"
+  ]
+ },
+ {
+  "domain": "tvcenter.ru",
+  "n": 2,
+  "dr": 49.0,
+  "tr": 15607.0,
+  "do": 2.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "dizelniy-generatory.ru"
+  ]
+ },
+ {
+  "domain": "airwar.ru",
+  "n": 2,
+  "dr": 58.0,
+  "tr": 15485.0,
+  "do": 22.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru"
+  ]
+ },
+ {
+  "domain": "tntu.edu.ua",
+  "n": 2,
+  "dr": 52.0,
+  "tr": 15387.0,
+  "do": 0.0,
+  "kto": [
+   "ampika.ru",
+   "pnevmomagazin.ru"
+  ]
+ },
+ {
+  "domain": "spbstu.ru",
+  "n": 2,
+  "dr": 74.0,
+  "tr": 15350.0,
+  "do": 24.0,
+  "kto": [
+   "promnasos.com",
+   "kviht.ru"
+  ]
+ },
+ {
+  "domain": "atw.hu",
+  "n": 2,
+  "dr": 75.0,
+  "tr": 15081.0,
+  "do": 23.0,
+  "kto": [
+   "pnevmo-sklad.ru",
+   "atlas-stt.ru"
+  ]
+ },
+ {
+  "domain": "sokr.ru",
+  "n": 2,
+  "dr": 44.0,
+  "tr": 11027.0,
+  "do": 0.0,
+  "kto": [
+   "v-p-k.ru",
+   "wmz.ru"
+  ]
+ },
+ {
+  "domain": "ucn.cl",
+  "n": 2,
+  "dr": 70.0,
+  "tr": 10576.0,
+  "do": 1.0,
+  "kto": [
+   "promcomtech.ru",
+   "all-pump.ru"
+  ]
+ },
+ {
+  "domain": "dealmed.ru",
+  "n": 2,
+  "dr": 59.0,
+  "tr": 10368.0,
+  "do": 4.0,
+  "kto": [
+   "remeza.com",
+   "remeza.org"
+  ]
+ },
+ {
+  "domain": "officelife.by",
+  "n": 2,
+  "dr": 51.0,
+  "tr": 7886.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmo-sklad.ru"
+  ]
+ },
+ {
+  "domain": "vavilovsar.ru",
+  "n": 2,
+  "dr": 44.0,
+  "tr": 7863.0,
+  "do": 3.0,
+  "kto": [
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "electricalschool.info",
+  "n": 2,
+  "dr": 51.0,
+  "tr": 7695.0,
+  "do": 4.0,
+  "kto": [
+   "teploprofi.com",
+   "dizelniy-generatory.ru"
+  ]
+ },
+ {
+  "domain": "tehinstrument.ru",
+  "n": 2,
+  "dr": 12.0,
+  "tr": 6426.0,
+  "do": 33.0,
+  "kto": [
+   "remeza.com",
+   "sts-rf.ru"
+  ]
+ },
+ {
+  "domain": "ulpressa.ru",
+  "n": 2,
+  "dr": 59.0,
+  "tr": 5968.0,
+  "do": 4.0,
+  "kto": [
+   "erstvak.com",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "guitarplayer.ru",
+  "n": 2,
+  "dr": 30.0,
+  "tr": 5689.0,
+  "do": 6.0,
+  "kto": [
+   "dalgakiran.su",
+   "generatora.net"
+  ]
+ },
+ {
+  "domain": "1istochnik.ru",
+  "n": 2,
+  "dr": 43.0,
+  "tr": 5362.0,
+  "do": 5.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "hosting101.ru",
+  "n": 2,
+  "dr": 63.0,
+  "tr": 5225.0,
+  "do": 0.0,
+  "kto": [
+   "shnek.ru",
+   "tsa.su"
+  ]
+ },
+ {
+  "domain": "ar25.org",
+  "n": 2,
+  "dr": 42.0,
+  "tr": 5097.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru"
+  ]
+ },
+ {
+  "domain": "nuos.edu.ua",
+  "n": 2,
+  "dr": 42.0,
+  "tr": 4391.0,
+  "do": 2.0,
+  "kto": [
+   "nt-rt.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "sanrio.com.tw",
+  "n": 2,
+  "dr": 32.0,
+  "tr": 4316.0,
+  "do": 2.0,
+  "kto": [
+   "berg-air.ru",
+   "air-vint.ru"
+  ]
+ },
+ {
+  "domain": "uust.ru",
+  "n": 2,
+  "dr": 59.0,
+  "tr": 4274.0,
+  "do": 6.0,
+  "kto": [
+   "nt-rt.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "soundboardguy.com",
+  "n": 2,
+  "dr": 16.0,
+  "tr": 4163.0,
+  "do": 0.0,
+  "kto": [
+   "stechnics.ru",
+   "tica.ru"
+  ]
+ },
+ {
+  "domain": "kp40.ru",
+  "n": 2,
+  "dr": 57.0,
+  "tr": 4132.0,
+  "do": 3.0,
+  "kto": [
+   "rutector.ru",
+   "kompresurs.ru"
+  ]
+ },
+ {
+  "domain": "prochepetsk.ru",
+  "n": 2,
+  "dr": 37.0,
+  "tr": 3996.0,
+  "do": 4.0,
+  "kto": [
+   "erstvak.com",
+   "deltainzhiniring.ru"
+  ]
+ },
+ {
+  "domain": "stoneforest.ru",
+  "n": 2,
+  "dr": 45.0,
+  "tr": 3928.0,
+  "do": 5.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "deltainzhiniring.ru"
+  ]
+ },
+ {
+  "domain": "vbgcity.ru",
+  "n": 2,
+  "dr": 41.0,
+  "tr": 3645.0,
+  "do": 4.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "spitzenreiter.ru"
+  ]
+ },
+ {
+  "domain": "grozny-inform.ru",
+  "n": 2,
+  "dr": 60.0,
+  "tr": 3121.0,
+  "do": 8.0,
+  "kto": [
+   "pnevmo-sklad.ru",
+   "deltainzhiniring.ru"
+  ]
+ },
+ {
+  "domain": "globalnsk.ru",
+  "n": 2,
+  "dr": 25.0,
+  "tr": 3101.0,
+  "do": 1.0,
+  "kto": [
+   "compressortyt.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "ascon.ru",
+  "n": 2,
+  "dr": 67.0,
+  "tr": 3065.0,
+  "do": 3.0,
+  "kto": [
+   "nt-rt.ru",
+   "zenova.ru"
+  ]
+ },
+ {
+  "domain": "velolive.com",
+  "n": 2,
+  "dr": 35.0,
+  "tr": 3017.0,
+  "do": 3.0,
+  "kto": [
+   "promnasos.com",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "nashtransport.ru",
+  "n": 2,
+  "dr": 40.0,
+  "tr": 3007.0,
+  "do": 2.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "kompr.ru"
+  ]
+ },
+ {
+  "domain": "catalogmineralov.ru",
+  "n": 2,
+  "dr": 44.0,
+  "tr": 2887.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "ok-stanok.ru"
+  ]
+ },
+ {
+  "domain": "lingvoforum.net",
+  "n": 2,
+  "dr": 29.0,
+  "tr": 2625.0,
+  "do": 2.0,
+  "kto": [
+   "asobezh.ru",
+   "2bar.ru"
+  ]
+ },
+ {
+  "domain": "segodnia.ru",
+  "n": 2,
+  "dr": 45.0,
+  "tr": 2618.0,
+  "do": 3.0,
+  "kto": [
+   "erstvak.com",
+   "deltainzhiniring.ru"
+  ]
+ },
+ {
+  "domain": "ithy.com",
+  "n": 2,
+  "dr": 44.0,
+  "tr": 2558.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "abok.ru",
+  "n": 2,
+  "dr": 64.0,
+  "tr": 2525.0,
+  "do": 10.0,
+  "kto": [
+   "rutector.ru",
+   "tica.ru"
+  ]
+ },
+ {
+  "domain": "univ-tebessa.dz",
+  "n": 2,
+  "dr": 38.0,
+  "tr": 2506.0,
+  "do": 1.0,
+  "kto": [
+   "promcomtech.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "gramofoni.fi",
+  "n": 2,
+  "dr": 48.0,
+  "tr": 2435.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "en-mach.ru"
+  ]
+ },
+ {
+  "domain": "stomart.ru",
+  "n": 2,
+  "dr": 44.0,
+  "tr": 2212.0,
+  "do": 6.0,
+  "kto": [
+   "remeza.org",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "pinshape.com",
+  "n": 2,
+  "dr": 73.0,
+  "tr": 2178.0,
+  "do": 2.0,
+  "kto": [
+   "en-mach.ru",
+   "tica.ru"
+  ]
+ },
+ {
+  "domain": "glolasercentres.com",
+  "n": 2,
+  "dr": 14.0,
+  "tr": 2137.0,
+  "do": 0.0,
+  "kto": [
+   "all-pump.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "chemport.ru",
+  "n": 2,
+  "dr": 44.0,
+  "tr": 2076.0,
+  "do": 3.0,
+  "kto": [
+   "rutector.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "sgugit.ru",
+  "n": 2,
+  "dr": 51.0,
+  "tr": 2036.0,
+  "do": 3.0,
+  "kto": [
+   "atlas-co.ru",
+   "pnevmoteh.ru"
+  ]
+ },
+ {
+  "domain": "motolodka.ru",
+  "n": 2,
+  "dr": 32.0,
+  "tr": 2011.0,
+  "do": 23.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "feslmalhdf.com",
+  "n": 2,
+  "dr": 4.4,
+  "tr": 1942.0,
+  "do": 0.0,
+  "kto": [
+   "airsystem.ru",
+   "iteropro.ru"
+  ]
+ },
+ {
+  "domain": "fixim.ru",
+  "n": 2,
+  "dr": 10.0,
+  "tr": 1924.0,
+  "do": 0.0,
+  "kto": [
+   "v-p-k.ru",
+   "service-scanner.ru"
+  ]
+ },
+ {
+  "domain": "starslife.ru",
+  "n": 2,
+  "dr": 42.0,
+  "tr": 1868.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "gtu.ge",
+  "n": 2,
+  "dr": 61.0,
+  "tr": 1846.0,
+  "do": 6.0,
+  "kto": [
+   "erstvak.com",
+   "vacuum-group.ru"
+  ]
+ },
+ {
+  "domain": "mediasole.ru",
+  "n": 2,
+  "dr": 36.0,
+  "tr": 1837.0,
+  "do": 0.0,
+  "kto": [
+   "remeza-russia.ru",
+   "genetek.ru"
+  ]
+ },
+ {
+  "domain": "syzran-small.ru",
+  "n": 2,
+  "dr": 50.0,
+  "tr": 1791.0,
+  "do": 4.0,
+  "kto": [
+   "rutector.ru",
+   "novotekpnz.ru"
+  ]
+ },
+ {
+  "domain": "metalinfo.ru",
+  "n": 2,
+  "dr": 69.0,
+  "tr": 1711.0,
+  "do": 5.0,
+  "kto": [
+   "uralgrit.com",
+   "klapan-pik.ru"
+  ]
+ },
+ {
+  "domain": "tradedir.ru",
+  "n": 2,
+  "dr": 34.0,
+  "tr": 1673.0,
+  "do": 0.0,
+  "kto": [
+   "rutector.ru",
+   "sts-rf.ru"
+  ]
+ },
+ {
+  "domain": "1gb.ua",
+  "n": 2,
+  "dr": 64.0,
+  "tr": 1605.0,
+  "do": 10.0,
+  "kto": [
+   "gc-azimut.ru",
+   "tsa.su"
+  ]
+ },
+ {
+  "domain": "ko44.ru",
+  "n": 2,
+  "dr": 37.0,
+  "tr": 1575.0,
+  "do": 0.0,
+  "kto": [
+   "teploprofi.com",
+   "eosn.ru"
+  ]
+ },
+ {
+  "domain": "compressorgroup.ru",
+  "n": 2,
+  "dr": 27.0,
+  "tr": 1499.0,
+  "do": 4.0,
+  "kto": [
+   "rutector.ru",
+   "remeza.org"
+  ]
+ },
+ {
+  "domain": "corponor.gov.co",
+  "n": 2,
+  "dr": 42.0,
+  "tr": 1450.0,
+  "do": 1.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "naukaru.ru",
+  "n": 2,
+  "dr": 63.0,
+  "tr": 1379.0,
+  "do": 7.0,
+  "kto": [
+   "nt-rt.ru",
+   "promnasos.com"
+  ]
+ },
+ {
+  "domain": "monocle.ru",
+  "n": 2,
+  "dr": 58.0,
+  "tr": 1363.0,
+  "do": 5.0,
+  "kto": [
+   "ampika.ru",
+   "tss-s.ru"
+  ]
+ },
+ {
+  "domain": "siteapi.org",
+  "n": 2,
+  "dr": 83.0,
+  "tr": 1329.0,
+  "do": 3.0,
+  "kto": [
+   "remeza.com",
+   "nt-rt.ru"
+  ]
+ },
+ {
+  "domain": "fsh.mi.th",
+  "n": 2,
+  "dr": 21.0,
+  "tr": 1305.0,
+  "do": 4.0,
+  "kto": [
+   "v-p-k.ru",
+   "remeza-logistic.ru"
+  ]
+ },
+ {
+  "domain": "kuban.ru",
+  "n": 2,
+  "dr": 49.0,
+  "tr": 1245.0,
+  "do": 0.0,
+  "kto": [
+   "shnek.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "metrologu.ru",
+  "n": 2,
+  "dr": 43.0,
+  "tr": 1242.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "lcr.ch",
+  "n": 2,
+  "dr": 20.0,
+  "tr": 1202.0,
+  "do": 1.0,
+  "kto": [
+   "all-pump.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "reference-global.com",
+  "n": 2,
+  "dr": 82.0,
+  "tr": 1166.0,
+  "do": 4.0,
+  "kto": [
+   "erstvak.com",
+   "dizelnye-generatory.com"
+  ]
+ },
+ {
+  "domain": "1economic.ru",
+  "n": 2,
+  "dr": 47.0,
+  "tr": 1118.0,
+  "do": 2.0,
+  "kto": [
+   "nt-rt.ru",
+   "dizelnye-generatory.com"
+  ]
+ },
+ {
+  "domain": "e-plastic.ru",
+  "n": 2,
+  "dr": 33.0,
+  "tr": 1111.0,
+  "do": 0.0,
+  "kto": [
+   "shnek.ru",
+   "ok-stanok.ru"
+  ]
+ },
+ {
+  "domain": "rguk.ru",
+  "n": 2,
+  "dr": 54.0,
+  "tr": 1107.0,
+  "do": 3.0,
+  "kto": [
+   "nt-rt.ru",
+   "tsa.su"
+  ]
+ },
+ {
+  "domain": "polosedan-club.com",
+  "n": 2,
+  "dr": 26.0,
+  "tr": 1097.0,
+  "do": 0.0,
+  "kto": [
+   "sts-rf.ru",
+   "pnevmoland.ru"
+  ]
+ },
+ {
+  "domain": "khab-vesti.ru",
+  "n": 2,
+  "dr": 51.0,
+  "tr": 1084.0,
+  "do": 6.0,
+  "kto": [
+   "erstvak.com",
+   "pnevmo-sklad.ru"
+  ]
+ },
+ {
+  "domain": "rudata.ru",
+  "n": 2,
+  "dr": 32.0,
+  "tr": 1084.0,
+  "do": 4.0,
+  "kto": [
+   "asobezh.ru",
+   "gc-azimut.ru"
+  ]
+ },
+ {
+  "domain": "vnd12.ru",
+  "n": 2,
+  "dr": 37.0,
+  "tr": 1063.0,
+  "do": 2.0,
+  "kto": [
+   "teploprofi.com",
+   "aircompressorhub.ru"
+  ]
+ },
+ {
+  "domain": "abes-dn.org.br",
+  "n": 2,
+  "dr": 58.0,
+  "tr": 992.0,
+  "do": 46.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "btu.kharkiv.ua",
+  "n": 2,
+  "dr": 34.0,
+  "tr": 970.0,
+  "do": 2.0,
+  "kto": [
+   "teploprofi.com",
+   "bitzer.ru"
+  ]
+ },
+ {
+  "domain": "vlasti.net",
+  "n": 2,
+  "dr": 46.0,
+  "tr": 958.0,
+  "do": 18.0,
+  "kto": [
+   "gc-azimut.ru",
+   "teploprofi.com"
+  ]
+ },
+ {
+  "domain": "agrobelarus.by",
+  "n": 2,
+  "dr": 33.0,
+  "tr": 951.0,
+  "do": 1.0,
+  "kto": [
+   "remeza.com",
+   "harrison-compressors.ru"
+  ]
+ },
+ {
+  "domain": "a3-eng.com",
+  "n": 2,
+  "dr": 22.0,
+  "tr": 919.0,
+  "do": 7.0,
+  "kto": [
+   "v-p-k.ru",
+   "remeza-logistic.ru"
+  ]
+ },
+ {
+  "domain": "belmarket.by",
+  "n": 2,
+  "dr": 45.0,
+  "tr": 884.0,
+  "do": 3.0,
+  "kto": [
+   "erstvak.com",
+   "gc-azimut.ru"
+  ]
+ },
+ {
+  "domain": "metall.life",
+  "n": 2,
+  "dr": 28.0,
+  "tr": 848.0,
+  "do": 2.0,
+  "kto": [
+   "remeza24.ru",
+   "filtri-oem.ru"
+  ]
+ },
+ {
+  "domain": "bylkov.ru",
+  "n": 2,
+  "dr": 26.0,
+  "tr": 839.0,
+  "do": 2.0,
+  "kto": [
+   "afalina.com",
+   "promcompressor.ru"
+  ]
+ },
+ {
+  "domain": "pchelovod.info",
+  "n": 2,
+  "dr": 32.0,
+  "tr": 809.0,
+  "do": 7.0,
+  "kto": [
+   "pnevmoteh.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "mylifeandkids.com",
+  "n": 2,
+  "dr": 45.0,
+  "tr": 801.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "alternativesyouth.org",
+  "n": 2,
+  "dr": 39.0,
+  "tr": 784.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "en-mach.ru"
+  ]
+ },
+ {
+  "domain": "reefcentral.ru",
+  "n": 2,
+  "dr": 30.0,
+  "tr": 755.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "zenova.ru"
+  ]
+ },
+ {
+  "domain": "mytaganrog.com",
+  "n": 2,
+  "dr": 31.0,
+  "tr": 744.0,
+  "do": 5.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "ok-stanok.ru"
+  ]
+ },
+ {
+  "domain": "profrent.su",
+  "n": 2,
+  "dr": 17.0,
+  "tr": 738.0,
+  "do": 4.0,
+  "kto": [
+   "remeza.com",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "mma2.ng",
+  "n": 2,
+  "dr": 26.0,
+  "tr": 698.0,
+  "do": 0.0,
+  "kto": [
+   "en-mach.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "visualbornholm.com",
+  "n": 2,
+  "dr": 20.0,
+  "tr": 663.0,
+  "do": 0.0,
+  "kto": [
+   "all-pump.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "pnri.co.id",
+  "n": 2,
+  "dr": 29.0,
+  "tr": 600.0,
+  "do": 1.0,
+  "kto": [
+   "all-pump.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "3mv.ru",
+  "n": 2,
+  "dr": 30.0,
+  "tr": 591.0,
+  "do": 2.0,
+  "kto": [
+   "afalina.com",
+   "eosn.ru"
+  ]
+ },
+ {
+  "domain": "car-info.com",
+  "n": 2,
+  "dr": 7.0,
+  "tr": 572.0,
+  "do": 0.0,
+  "kto": [
+   "v-p-k.ru",
+   "remeza-logistic.ru"
+  ]
+ },
+ {
+  "domain": "ecoportal.su",
+  "n": 2,
+  "dr": 45.0,
+  "tr": 558.0,
+  "do": 4.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "propribory.ru",
+  "n": 2,
+  "dr": 34.0,
+  "tr": 557.0,
+  "do": 228.0,
+  "kto": [
+   "nt-rt.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "gsk-servis.ru",
+  "n": 2,
+  "dr": 1.4,
+  "tr": 521.0,
+  "do": 0.0,
+  "kto": [
+   "sts-rf.ru",
+   "wmz.ru"
+  ]
+ },
+ {
+  "domain": "new-sebastopol.com",
+  "n": 2,
+  "dr": 38.0,
+  "tr": 502.0,
+  "do": 4.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "afalina.com"
+  ]
+ },
+ {
+  "domain": "detsky-mir.com",
+  "n": 2,
+  "dr": 28.0,
+  "tr": 490.0,
+  "do": 7.0,
+  "kto": [
+   "ok-stanok.ru",
+   "aerocompressors.ru"
+  ]
+ },
+ {
+  "domain": "traxonsky.com",
+  "n": 2,
+  "dr": 16.0,
+  "tr": 463.0,
+  "do": 1.0,
+  "kto": [
+   "all-pump.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "2ch.su",
+  "n": 2,
+  "dr": 41.0,
+  "tr": 449.0,
+  "do": 0.0,
+  "kto": [
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "gde-sto.ru",
+  "n": 2,
+  "dr": 0.3,
+  "tr": 444.0,
+  "do": 0.0,
+  "kto": [
+   "eosn.ru",
+   "e-kp.ru"
+  ]
+ },
+ {
+  "domain": "ultra-com.net",
+  "n": 2,
+  "dr": 30.0,
+  "tr": 435.0,
+  "do": 0.0,
+  "kto": [
+   "gc-azimut.ru",
+   "generatora.net"
+  ]
+ },
+ {
+  "domain": "studzona.com",
+  "n": 2,
+  "dr": 31.0,
+  "tr": 422.0,
+  "do": 4.0,
+  "kto": [
+   "compressorgroup.ru",
+   "delaton.ru"
+  ]
+ },
+ {
+  "domain": "sibran.ru",
+  "n": 2,
+  "dr": 50.0,
+  "tr": 392.0,
+  "do": 6.0,
+  "kto": [
+   "erstvak.com",
+   "nt-rt.ru"
+  ]
+ },
+ {
+  "domain": "sergiev-posad.ru",
+  "n": 2,
+  "dr": 30.0,
+  "tr": 345.0,
+  "do": 3.0,
+  "kto": [
+   "gekkoldprom.ru",
+   "rusgroupp.ru"
+  ]
+ },
+ {
+  "domain": "3rm.info",
+  "n": 2,
+  "dr": 40.0,
+  "tr": 342.0,
+  "do": 4.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "pnevmo-sklad.ru"
+  ]
+ },
+ {
+  "domain": "place123.net",
+  "n": 2,
+  "dr": 73.0,
+  "tr": 339.0,
+  "do": 0.0,
+  "kto": [
+   "harrison-compressors.ru",
+   "grattech.ru"
+  ]
+ },
+ {
+  "domain": "etosibir.ru",
+  "n": 2,
+  "dr": 24.0,
+  "tr": 333.0,
+  "do": 2.0,
+  "kto": [
+   "sp-energoservice.ru",
+   "shnek.ru"
+  ]
+ },
+ {
+  "domain": "wj3.ru",
+  "n": 2,
+  "dr": 32.0,
+  "tr": 331.0,
+  "do": 0.0,
+  "kto": [
+   "erstvak.com",
+   "generatora.net"
+  ]
+ },
+ {
+  "domain": "themetix.com",
+  "n": 2,
+  "dr": 27.0,
+  "tr": 311.0,
+  "do": 0.0,
+  "kto": [
+   "novotekpnz.ru",
+   "wmz.ru"
+  ]
+ },
+ {
+  "domain": "samovod.ru",
+  "n": 2,
+  "dr": 20.0,
+  "tr": 303.0,
+  "do": 2.0,
+  "kto": [
+   "decompnw.ru",
+   "wgs-gcvep.ru"
+  ]
+ },
+ {
+  "domain": "color1.ru",
+  "n": 2,
+  "dr": 9.0,
+  "tr": 277.0,
+  "do": 19.0,
+  "kto": [
+   "remeza.com",
+   "remeza.group"
+  ]
+ },
+ {
+  "domain": "ussur.net",
+  "n": 2,
+  "dr": 21.0,
+  "tr": 268.0,
+  "do": 12.0,
+  "kto": [
+   "skif-air.ru",
+   "delaton.ru"
+  ]
+ },
+ {
+  "domain": "groupe-huillier.fr",
+  "n": 2,
+  "dr": 33.0,
+  "tr": 252.0,
+  "do": 0.0,
+  "kto": [
+   "berg-air.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "bergon-nature-jardin.com",
+  "n": 2,
+  "dr": 26.0,
+  "tr": 246.0,
+  "do": 1.0,
+  "kto": [
+   "all-pump.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "oppozit.ru",
+  "n": 2,
+  "dr": 29.0,
+  "tr": 245.0,
+  "do": 3.0,
+  "kto": [
+   "asobezh.ru",
+   "kraftmarket24.ru"
+  ]
+ },
+ {
+  "domain": "krrot.net",
+  "n": 2,
+  "dr": 13.0,
+  "tr": 232.0,
+  "do": 0.0,
+  "kto": [
+   "energocontinent.ru",
+   "svarma.ru"
+  ]
+ },
+ {
+  "domain": "parthenon-house.ru",
+  "n": 2,
+  "dr": 27.0,
+  "tr": 228.0,
+  "do": 2.0,
+  "kto": [
+   "teploprofi.com",
+   "gekkoldprom.ru"
+  ]
+ },
+ {
+  "domain": "actieforum.com",
+  "n": 2,
+  "dr": 51.0,
+  "tr": 220.0,
+  "do": 2.0,
+  "kto": [
+   "tsa.su",
+   "tehsolutions.ru"
+  ]
+ },
+ {
+  "domain": "motogon.ru",
+  "n": 2,
+  "dr": 26.0,
+  "tr": 209.0,
+  "do": 159.0,
+  "kto": [
+   "kompr.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "mhcasia.com",
+  "n": 2,
+  "dr": 35.0,
+  "tr": 207.0,
+  "do": 2.0,
+  "kto": [
+   "all-pump.ru",
+   "zolt.pro"
+  ]
+ },
+ {
+  "domain": "clubcoua.com",
+  "n": 2,
+  "dr": 14.0,
+  "tr": 201.0,
+  "do": 7.0,
+  "kto": [
+   "regionfox.ru",
+   "astar-compressors.ru"
+  ]
+ },
+ {
+  "domain": "pushkino.org",
+  "n": 2,
+  "dr": 31.0,
+  "tr": 189.0,
+  "do": 3.0,
+  "kto": [
+   "promcompressor.ru",
+   "drobesfera.ru"
+  ]
+ },
+ {
+  "domain": "pajero4x4.ru",
+  "n": 2,
+  "dr": 32.0,
+  "tr": 188.0,
+  "do": 3.0,
+  "kto": [
+   "nt-rt.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "pchel.net",
+  "n": 2,
+  "dr": 24.0,
+  "tr": 183.0,
+  "do": 0.0,
+  "kto": [
+   "regionfox.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "himachalscape.com",
+  "n": 2,
+  "dr": 9.0,
+  "tr": 182.0,
+  "do": 0.0,
+  "kto": [
+   "fiac.su",
+   "atlas-stt.ru"
+  ]
+ },
+ {
+  "domain": "eagle.co.ug",
+  "n": 2,
+  "dr": 44.0,
+  "tr": 182.0,
+  "do": 1.0,
+  "kto": [
+   "en-mach.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "jetos.com",
+  "n": 2,
+  "dr": 28.0,
+  "tr": 181.0,
+  "do": 2.0,
+  "kto": [
+   "asobezh.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "shymkent-mektebi.kz",
+  "n": 2,
+  "dr": 32.0,
+  "tr": 173.0,
+  "do": 7.0,
+  "kto": [
+   "promcomtech.ru",
+   "rus-diesel.ru"
+  ]
+ },
+ {
+  "domain": "m-chagall.ru",
+  "n": 2,
+  "dr": 19.0,
+  "tr": 171.0,
+  "do": 2.0,
+  "kto": [
+   "dizelnye-generatory.com",
+   "remeza24.ru"
+  ]
+ },
+ {
+  "domain": "deafnet.ru",
+  "n": 2,
+  "dr": 35.0,
+  "tr": 171.0,
+  "do": 3.0,
+  "kto": [
+   "gekkoldprom.ru",
+   "umin.su"
+  ]
+ },
+ {
+  "domain": "medvkostrome.ru",
+  "n": 2,
+  "dr": 35.0,
+  "tr": 163.0,
+  "do": 8.0,
+  "kto": [
+   "all-pump.ru",
+   "compressorgroup.ru"
+  ]
+ },
+ {
+  "domain": "forrecovery.org",
+  "n": 2,
+  "dr": 44.0,
+  "tr": 162.0,
+  "do": 0.0,
+  "kto": [
+   "premium-vozduh.ru",
+   "en-mach.ru"
+  ]
+ },
+ {
+  "domain": "joomlaforum.ru",
+  "n": 2,
+  "dr": 45.0,
+  "tr": 156.0,
+  "do": 0.0,
+  "kto": [
+   "pnevmo.ru",
+   "zenova.ru"
+  ]
+ },
+ {
+  "domain": "rumproject.com",
+  "n": 2,
+  "dr": 12.0,
+  "tr": 155.0,
+  "do": 7.0,
+  "kto": [
+   "fiac.su",
+   "atlas-stt.ru"
+  ]
+ },
+ {
+  "domain": "gorodlip.ru",
+  "n": 2,
+  "dr": 27.0,
+  "tr": 144.0,
+  "do": 5.0,
+  "kto": [
+   "sp-energoservice.ru",
+   "rus-diesel.ru"
+  ]
+ },
+ {
+  "domain": "prykoly.ru",
+  "n": 2,
+  "dr": 35.0,
+  "tr": 142.0,
+  "do": 2.0,
+  "kto": [
+   "top-compressor.ru",
+   "pnevmoservice.com"
+  ]
+ },
+ {
+  "domain": "primeraplana.or.cr",
+  "n": 2,
+  "dr": 23.0,
+  "tr": 139.0,
+  "do": 9.0,
+  "kto": [
+   "v-p-k.ru",
+   "remeza-logistic.ru"
+  ]
+ },
+ {
+  "domain": "job-yell.ru",
+  "n": 2,
+  "dr": 1.0,
+  "tr": 139.0,
+  "do": 0.0,
+  "kto": [
+   "eosn.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "karunyasugalaya.co.in",
+  "n": 2,
+  "dr": 7.0,
+  "tr": 137.0,
+  "do": 1.0,
+  "kto": [
+   "berg-air.ru",
+   "air-vint.ru"
+  ]
+ },
+ {
+  "domain": "nachalnik-m.ru",
+  "n": 2,
+  "dr": 5.0,
+  "tr": 131.0,
+  "do": 0.0,
+  "kto": [
+   "eosn.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "rusdozor.ru",
+  "n": 2,
+  "dr": 34.0,
+  "tr": 125.0,
+  "do": 4.0,
+  "kto": [
+   "deltainzhiniring.ru",
+   "rutector.ru"
+  ]
+ },
+ {
+  "domain": "tradewindsdr.com",
+  "n": 2,
+  "dr": 9.0,
+  "tr": 123.0,
+  "do": 2.0,
+  "kto": [
+   "aircompressorhub.ru",
+   "aerkomp.ru"
+  ]
+ },
+ {
+  "domain": "stavropolnews.ru",
+  "n": 2,
+  "dr": 15.0,
+  "tr": 121.0,
+  "do": 3.0,
+  "kto": [
+   "top-compressor.ru",
+   "baysar-russia.ru"
+  ]
+ },
+ {
+  "domain": "ljapis.ru",
+  "n": 2,
+  "dr": 1.5,
+  "tr": 116.0,
+  "do": 7.0,
+  "kto": [
+   "compressorgroup.ru",
+   "remeza24.ru"
+  ]
+ },
+ {
+  "domain": "enviform.cz",
+  "n": 2,
+  "dr": 25.0,
+  "tr": 115.0,
+  "do": 1.0,
+  "kto": [
+   "en-mach.ru",
+   "airsystem.ru"
+  ]
+ },
+ {
+  "domain": "kyron-clan.ru",
+  "n": 2,
+  "dr": 27.0,
+  "tr": 114.0,
+  "do": 0.0,
+  "kto": [
+   "shnek.ru",
+   "ampika.ru"
+  ]
+ },
+ {
+  "domain": "jportal.ru",
+  "n": 2,
+  "dr": 14.0,
+  "tr": 108.0,
+  "do": 0.0,
+  "kto": [
+   "ampika.ru",
+   "pnevmo.ru"
+  ]
+ },
+ {
+  "domain": "webkarta.net",
+  "n": 2,
+  "dr": 9.0,
+  "tr": 108.0,
+  "do": 0.0,
+  "kto": [
+   "pnevmo.ru",
+   "wmz.ru"
+  ]
+ },
+ {
+  "domain": "jeep-forum.ru",
+  "n": 2,
+  "dr": 11.0,
+  "tr": 107.0,
+  "do": 6.0,
+  "kto": [
+   "pnevmo.ru",
+   "remeza-russia.ru"
+  ]
+ },
+ {
+  "domain": "specsluzhby-all.ru",
+  "n": 2,
+  "dr": 34.0,
+  "tr": 106.0,
+  "do": 3.0,
+  "kto": [
+   "kurs-peskostrui.ru",
+   "wgs-gcvep.ru"
+  ]
+ },
+ {
+  "domain": "mnenie-sotrudnikov.ru",
+  "n": 2,
+  "dr": 2.4,
+  "tr": 105.0,
+  "do": 0.0,
+  "kto": [
+   "eosn.ru",
+   "dalgakiran.su"
+  ]
+ },
+ {
+  "domain": "mujerimpacta.cl",
+  "n": 2,
+  "dr": 26.0,
+  "tr": 104.0,
+  "do": 2.0,
+  "kto": [
+   "en-mach.ru",
+   "stechnics.ru"
+  ]
+ },
+ {
+  "domain": "oren1.ru",
+  "n": 2,
+  "dr": 28.0,
+  "tr": 102.0,
+  "do": 2.0,
+  "kto": [
+   "compressing.ru",
+   "drobesfera.ru"
+  ]
+ },
+ {
+  "domain": "theatrelavista.fr",
+  "n": 2,
+  "dr": 32.0,
+  "tr": 101.0,
+  "do": 4.0,
+  "kto": [
+   "berg-air.ru",
+   "air-vint.ru"
+  ]
+ }
 ]
