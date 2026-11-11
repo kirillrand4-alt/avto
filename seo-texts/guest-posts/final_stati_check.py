@@ -31,8 +31,8 @@ def main():
     urls = [l.strip() for l in open(os.path.join(DIR, 'final-1110-urls.txt'), encoding='utf-8') if l.strip()]
     allu = CTRL + EXTRA + urls
     out = {}
-    for i in range(0, len(allu), 500):
-        ch = allu[i:i + 500]
+    for i in range(0, len(allu), 100):   # с 11.11 Ahrefs режет пакет больше ~100-300 целей (TargetsLimitReached)
+        ch = allu[i:i + 100]
         body = {'targets': [{'target': u, 'mode': 'prefix', 'protocol': 'both'} for u in ch],
                 'filter': {'volumeMode': 'monthly'}}
         r = httpx.post(AD.URL, content=json.dumps(body), headers={**AD.HDR, 'cookie': ck}, timeout=300)
