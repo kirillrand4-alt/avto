@@ -42,7 +42,7 @@ def обращение(fio):
         if x.lower() in ИМЕНА: return x
     return None
 # ---- кандидаты: на отрасль до 6 по имени (лучшая роль) + до 4 без имени; модель отсеет несоответствие
-ПЛОХ_АДР = re.compile(r"(?i)@(site|example|test|mail)\.(ru|com)$|\.(ua|by|kz|uz|am|ge|az|md)$")
+ПЛОХ_АДР = re.compile(r"(?i)@(site|example|test)\.(ru|com)$|\.(ua|by|kz|uz|am|ge|az|md)$")
 def адрес_годен(em):
     em = (em or "").strip().lower()
     return bool(re.match(r"^[\w.+-]+@[\w.-]+\.(ru|рф|su|com|org|net|pro|biz|info)$", em)) and not ПЛОХ_АДР.search(em)
