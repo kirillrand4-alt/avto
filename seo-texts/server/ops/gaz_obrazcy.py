@@ -159,11 +159,12 @@ def годна(т, мин=8):
 ящики = [m for m in Config.load(r"C:\sender\sender.yaml").mailboxes() if str(getattr(m, "division", "")) == "kc"]
 вых = io.open(r"C:\sender\_ops\gaz-obrazcy.txt", "w", encoding="utf-8")
 сч = {"ок": 0}
-for отр in sorted({x[0] for x in выбор}):
+def _газ_отрасли(отр):
     пачка = [x for x in выбор if x[0] == отр]
     _г = [("N2" if "Азот" in (x[1].get("Газ") or "") else "O2") for x in пачка]
-    газ = max(set(_г), key=_г.count)
-    if len(set(_г)) > 1: print("  внимание: в отрасли %s смешан газ %s" % (отр[:40], {g: _г.count(g) for g in set(_г)}), flush=True)
+    return пачка, max(set(_г), key=_г.count), _г
+def _задание(отр):
+    пачка, газ, _ = _газ_отрасли(отр)
     строки = []
     for i, (_, р, _) in enumerate(пачка, 1):
         с = сайт(р)
@@ -171,6 +172,18 @@ for отр in sorted({x[0] for x in выбор}):
             i, отр, (р.get("Продукция") or "")[:300], с.get("Оборудование, линии", "")[:200] or "нет данных", с.get("Признаки газа на сайте", "") or "нет",
             с.get("Газы (паспорт)", "") or "нет", (р.get("Техпроцесс (где нужен газ)") or "")[:400], re.sub(r"\s+", " ", р.get("Боли") or "")[:500]))
     о = зов(ЗАДАНИЕ.replace("{gaz}", "азот" if газ == "N2" else "кислород").replace("{firmy}", "\n".join(строки)).replace("{{", "{").replace("}}", "}"))
+    print("%s: ответ модели получен (%d)" % (отр[:40], len(о)), flush=True)
+    return о
+from concurrent.futures import ThreadPoolExecutor
+ПОТОКОВ = int(next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--potokov=")), "6"))
+_отрасли = sorted({x[0] for x in выбор})
+with ThreadPoolExecutor(max_workers=ПОТОКОВ) as _пул:
+    ОТВЕТЫ = dict(zip(_отрасли, _пул.map(_задание, _отрасли)))
+for отр in _отрасли:
+    пачка = [x for x in выбор if x[0] == отр]
+    _, газ, _г = _газ_отрасли(отр)
+    if len(set(_г)) > 1: print("  внимание: в отрасли %s смешан газ %s" % (отр[:40], {g: _г.count(g) for g in set(_г)}), flush=True)
+    о = ОТВЕТЫ.get(отр) or {}
     вых.write("\n\n######## %s — газ %s ########\n" % (отр, газ))
     взято = {"имя": 0, "без": 0}; отсев = []
     for i, (_, р, по_имени) in enumerate(пачка, 1):
