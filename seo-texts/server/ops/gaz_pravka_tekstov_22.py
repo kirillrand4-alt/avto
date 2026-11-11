@@ -17,8 +17,22 @@ for кид, body, ed in ряды:
     for a, b in ЗАМ: н = н.replace(a, b)
     if н != body: правок.append((кид, н))
 print("pending: %d, к правке: %d, тронуты оператором (пропуск): %d" % (len(ряды), len(правок), тронуты))
+ТЕМЫ = None
+if "--temy" in sys.argv:   # 11.11: темы из канона gaz_kanon.ТЕМЫ (7 на газ), случайно, по газу письма
+    import random
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import gaz_kanon as K
+    ТЕМЫ = K.ТЕМЫ
 if "--primenit" in sys.argv:
     т = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    if ТЕМЫ:
+        n = 0
+        with c:
+            for кид, body, ed in c.execute("SELECT id, body, edited_body FROM confirm_reviews WHERE campaign_id=22 AND status='pending'").fetchall():
+                if ed and ed != body: continue
+                газ = "O2" if "кислородн" in (body or "").split("\n\n")[1 if (body or "").count("\n\n") else 0] else "N2"
+                c.execute("UPDATE confirm_reviews SET subject=?, updated_at=? WHERE id=?", (random.choice(ТЕМЫ[газ]), т, кид)); n += 1
+        print("темы переразложены:", n)
     with c:
         for кид, н in правок:
             c.execute("UPDATE confirm_reviews SET body=?, edited_body=CASE WHEN edited_body IS NULL THEN NULL ELSE ? END, updated_at=? WHERE id=? AND status='pending'", (н, н, т, кид))
