@@ -76,6 +76,9 @@ def main():
     for з in jl(os.path.join(DIR, 'ca-glubokiy2.jsonl')):
         if з.get('inn'):
             агент[з['inn']] = з
+    # 11.11: агент «ЛПР при известном сайте» (принятое перепроверкой, ca-lpr-agent2.jsonl) — отдельно, источник свой
+    агент_лпр = {з['inn']: з for з in jl(os.path.join(DIR, 'ca-lpr-agent2.jsonl')) if з.get('inn')} \
+        if os.path.exists(os.path.join(DIR, 'ca-lpr-agent2.jsonl')) else {}
     еис = collections.defaultdict(list)
     for x in jl(os.path.join(ПАПКА, 'ca-zakupki-chistye.jsonl')):
         еис[x['inn']].append(x)
@@ -114,12 +117,13 @@ def main():
                          'Почта': x.get('почта') or '', 'Источник': 'сайт компании',
                          'Страница': (x.get('страницы') or [''])[0]})
         аг = агент.get(инн) or {}
-        for x in (аг.get('номера') or []) + (аг.get('почты') or []):
-            if not isinstance(x, dict) or x.get('чей') == 'другая':
-                continue
-            свои.append({'ФИО': x.get('фио') or '', 'Должность': x.get('должность') or '', 'Роль': x.get('класс') or '',
-                         'ЛПР': '', 'Телефон': x.get('номер') or '', 'Доб.': '', 'Почта': x.get('почта') or '',
-                         'Источник': 'агент (проверен)', 'Страница': x.get('url') or ''})
+        for ист, а_ in (('агент (проверен)', аг), ('агент ЛПР по сайту (проверен)', агент_лпр.get(инн) or {})):
+            for x in (а_.get('номера') or []) + (а_.get('почты') or []):
+                if not isinstance(x, dict) or x.get('чей') == 'другая':
+                    continue
+                свои.append({'ФИО': x.get('фио') or '', 'Должность': x.get('должность') or '', 'Роль': x.get('класс') or '',
+                             'ЛПР': '', 'Телефон': x.get('номер') or '', 'Доб.': '', 'Почта': x.get('почта') or '',
+                             'Источник': ист, 'Страница': x.get('url') or ''})
         for x in еис.get(инн, []):
             свои.append({'ФИО': x.get('фио') or '', 'Должность': x.get('должность') or 'контактное лицо закупок',
                          'Роль': 'Закупки / снабжение', 'ЛПР': '', 'Телефон': x.get('телефон') or '', 'Доб.': '',

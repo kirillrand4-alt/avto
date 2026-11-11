@@ -34,8 +34,9 @@ import kc_pochty as KP  # noqa: E402  (почты агента)
 import kc_audit2 as A2  # noqa: E402  (слова — отличительные слова названия)
 import kc_sayty as KS  # noqa: E402  (ядра)
 
-ВХ = os.path.join(DIR, НАБОР + '-glubokiy.jsonl')
-ВЫХОД = os.path.join(DIR, НАБОР + '-glubokiy2.jsonl')
+# 11.11: KC_PEREPROV_VH / KC_PEREPROV_VYHOD — другой вход/выход (агент «ЛПР при известном сайте»: lpr-agent -> lpr-agent2)
+ВХ = os.path.join(DIR, НАБОР + '-' + os.environ.get('KC_PEREPROV_VH', 'glubokiy.jsonl'))
+ВЫХОД = os.path.join(DIR, НАБОР + '-' + os.environ.get('KC_PEREPROV_VYHOD', 'glubokiy2.jsonl'))
 ЗАКУПКИ = re.compile(r'zakupki\.gov|roseltorg|b2b-center|etpgpb|fabrikant|rts-tender|sberbank-ast|tektorg', re.I)
 _лок = threading.Lock()
 
@@ -160,7 +161,7 @@ def main():
         os.remove(ВЫХОД)
     with ThreadPoolExecutor(int(os.environ.get('KC_POTOKOV_SHAGA', '12'))) as ex:  # 09.10: на полном прогоне 24
         list(ex.map(lambda x: одна(x, сп[x['inn']]), [x for x in вх.values() if x['inn'] in сп]))
-    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', НАБОР + '-glubokiy2.jsonl'))
+    shutil.copyfile(ВЫХОД, os.path.join(r'C:\seostat\drop\drop-storage', os.path.basename(ВЫХОД)))
     рез = [json.loads(s) for s in io.open(ВЫХОД, encoding='utf-8')]
     print('===ИТОГ===')
     print(json.dumps({'компаний': len(рез), 'сайт_завода_подтверждён': sum(1 for r in рез if r.get('сайт_завода_чей')),

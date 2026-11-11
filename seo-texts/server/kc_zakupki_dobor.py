@@ -36,6 +36,14 @@ _лок = threading.Lock()
 
 ЕИС_ИНТЕРВАЛ = float(os.environ.get('KC_EIS_INTERVAL', '1.5'))
 _еис_лок, _еис_посл = threading.Lock(), [0.0]
+# 11.11: ЕИС отвечает и «999 Forbidden» (у ~1,9 тыс. компаний набора ca) — тоже блок, не «закупок нет»: повтор, отметка
+# «сделано» не ставится. KC_ZAKUPKI_TOLKO_OSHIBKI=1 — медленный повтор только таких компаний (1 поток, интервал 8 с)
+БЛОК = ('403', '434', '999')
+ТОЛЬКО_ОШИБКИ = os.environ.get('KC_ZAKUPKI_TOLKO_OSHIBKI') == '1'
+
+
+def блок(зак):
+    return any(any(к in str(c.get('ошибка') or '') for к in БЛОК) for c in зак or [])
 
 
 def _еис_с_паузой(исходный):
@@ -51,8 +59,8 @@ def _еис_с_паузой(исходный):
             try:
                 return исходный(url, *a, **k)
             except Exception as e:  # noqa: BLE001
-                if попытка < 2 and ('403' in str(e) or '434' in str(e)):
-                    time.sleep(120)
+                if попытка < 2 and any(к in str(e) for к in БЛОК):
+                    time.sleep(120 if '999' not in str(e) else 300)
                     continue
                 raise
     return обёртка
@@ -99,8 +107,9 @@ def main():
             continue
         # 11.10: первый добор meyer7 — ЕИС ответил «403 Forbidden» на 4971 из 5202 (блок адреса сервера): такие отметки
         # не считаются сделанными, при следующем запуске — повтор
-        if з.get('закупки_добор') and not any(('403' in str(x.get('ошибка') or '') or '434' in str(x.get('ошибка') or ''))
-                                              for x in з.get('закупки') or []):
+        if з.get('закупки_добор') and not блок(з.get('закупки')):
+            continue
+        if ТОЛЬКО_ОШИБКИ and not блок(з.get('закупки')):
             continue
         задачи.append((к, з))
     задачи.sort(key=lambda x: -(x[0].get('выручка') or 0))
@@ -124,12 +133,12 @@ def main():
                 зак = KK.закупки(к)
             except Exception as e:  # noqa: BLE001
                 зак = [{'ошибка': repr(e)[:100]}]
-            if not any('434' in str(c.get('ошибка') or '') for c in зак):
+            if not блок(зак) or (not ТОЛЬКО_ОШИБКИ and not any('434' in str(c.get('ошибка') or '') for c in зак)):
                 break
-            time.sleep(60 * (попытка + 1))
+            time.sleep((300 if ТОЛЬКО_ОШИБКИ else 60) * (попытка + 1))
         if any(c.get('url') for c in зак):
             записать(dict(з, закупки=зак, закупки_добор=time.strftime('%Y-%m-%d %H:%M')))
-        elif not any(('403' in str(c.get('ошибка') or '') or '434' in str(c.get('ошибка') or '')) for c in зак):
+        elif not блок(зак):
             # 11.10: без карточек — не полная копия записи (файл обхода и так 370 МБ), а отметка «сделано» (резюм)
             with _лок:
                 with io.open(СДЕЛАНО, 'a', encoding='utf-8') as f:
