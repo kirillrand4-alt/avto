@@ -364,14 +364,11 @@ def док_текст(url):
         return ''
     try:
         if данные[:4] == b'%PDF':
-            try:
-                import fitz
-                with fitz.open(stream=данные, filetype='pdf') as d:
-                    return '\n'.join(d[i].get_text() for i in range(min(40, d.page_count)))[:200_000]
-            except ImportError:
-                import pypdf
-                ч = pypdf.PdfReader(io.BytesIO(данные))
-                return '\n'.join((ч.pages[i].extract_text() or '') for i in range(min(40, len(ч.pages))))[:200_000]
+            # 11.11: fitz (MuPDF) на битом PDF уронил процесс доли обхода целиком (нативный сбой, без трассировки) —
+            # читаем чистым Python (pypdf): худший случай — исключение, а не смерть процесса
+            import pypdf
+            ч = pypdf.PdfReader(io.BytesIO(данные))
+            return '\n'.join((ч.pages[i].extract_text() or '') for i in range(min(40, len(ч.pages))))[:200_000]
         if данные[:2] == b'PK':
             with zipfile.ZipFile(io.BytesIO(данные)) as z:
                 x = z.read('word/document.xml').decode('utf-8', 'replace')
