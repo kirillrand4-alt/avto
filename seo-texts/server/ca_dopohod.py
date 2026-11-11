@@ -14,7 +14,8 @@ ca-kontakty.jsonl не было двух писателей.
   3. агент «ЛПР при известном сайте» (kc_agent_glubokiy, KC_AGENT_REZHIM=lpr) — у кого сайт открылся, а ЛПР всё ещё нет,
      от 120 млн: Sol от 500 млн, Luna 120–500 млн (решение 09.10), по очереди — один писатель; вакансии не ищет;
   4. kc_agent_pereproverka.py: ca-lpr-agent.jsonl -> ca-lpr-agent2.jsonl;
-  5. выгрузки ca_vygruzka_polnaya.py и ca_vygruzka.py (+ дроп).
+  5. выгрузки ca_vygruzka_polnaya.py и ca_vygruzka.py (+ дроп);
+  6. медленный повтор ЕИС (kc_zakupki_dobor, KC_ZAKUPKI_TOLKO_OSHIBKI=1), проверка ЕИС, выгрузки ещё раз.
 Только сбор контактов (холд рассылок — CLAUDE.md).
 """
 import io, json, os, subprocess, sys, time
@@ -156,6 +157,12 @@ def main():
                                                               KC_PEREPROV_VYHOD='lpr-agent2.jsonl'))
     шаг('выгрузка полная', 'ca_vygruzka_polnaya.py', ENV)
     шаг('выгрузка', 'ca_vygruzka.py', ENV)
+    # медленный повтор ЕИС («999 Forbidden» и др.) — последним: в журнал пишет только он; затем перевыгрузка
+    шаг('ЕИС повтор', 'kc_zakupki_dobor.py', dict(ENV, KC_ZAKUPKI_TOLKO_OSHIBKI='1', KC_ZAKUPKI_POTOKOV='1',
+                                                 KC_EIS_INTERVAL='8', KC_ZAKUPKI_DOBOR_OT='0'))
+    шаг('проверка ЕИС', 'ca_zakupki_proverka.py', ENV)
+    шаг('выгрузка полная 2', 'ca_vygruzka_polnaya.py', ENV)
+    шаг('выгрузка 2', 'ca_vygruzka.py', ENV)
     отметка(этап='готово')
 
 
