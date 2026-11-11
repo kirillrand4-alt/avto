@@ -420,14 +420,17 @@ for и in выбраны:
                 к.commit()
             return ид
         rid = с_повтором(_получатель)
+    ключ = "%s|%s|%d" % (и, em, КАМП)
+    if к.execute("SELECT 1 FROM confirm_reviews WHERE dedup_key=?", (ключ,)).fetchone():
+        пропущено["карточка уже есть"] += 1; continue
+    if к.execute("SELECT 1 FROM confirm_reviews WHERE campaign_id=? AND lower(email)=? AND status IN ('pending','approved','sent')", (КАМП, em)).fetchone():
+        # общий ящик двух ИНН (11.11: 18 таких адресов получили по две карточки) — одно письмо на адрес
+        пропущено["на адрес уже есть карточка другого ИНН"] += 1; continue
     mid, _шаг, почему = с_повтором(q._ensure_message, КАМП, int(rid))
     if not mid:
         запись["otsev"] = "сообщение не завелось: %s" % почему; пиши(ЖУР_КАРТ, запись); пропущено["сообщение не завелось"] += 1; continue
     панель = json.dumps({"letter_division": "kc", "mailbox_id": mb.mailbox_id, "vruchnuyu": ИМЯ_КАМП, "company": {"name": имя_комп},
                          **({"adres_za_drugim_inn": запись["drugoy_inn"]} if запись.get("drugoy_inn") else {})}, ensure_ascii=False)
-    ключ = "%s|%s|%d" % (и, em, КАМП)
-    if к.execute("SELECT 1 FROM confirm_reviews WHERE dedup_key=?", (ключ,)).fetchone():
-        пропущено["карточка уже есть"] += 1; continue
 
     def _карточка():
         with store._lock:
