@@ -23,11 +23,16 @@ import urllib.parse
 # страницы из карты сайта: контакты/реквизиты, руководство и сотрудники, филиалы и представительства, отделы, снабжение
 КАРТА_ТЕМА = re.compile(r'kontakt|contact|контакт|rekvizit|реквизит|rukovod|руковод|management|leadership|direkc|дирекц|'
                         r'administr|администрац|team|komand|команд|sotrudnik|сотрудник|struktur|структур|otdel|отдел|'
-                        r'podrazdel|подразд|filial|филиал|predstavit|представит|ofis|офис|branch|region|регион|'
+                        r'podrazdel|подразд|filial|филиал|predstavitel|представител|ofis|офис|branch|region|регион|'
                         r'zakup|закуп|snab|снабж|tender|тендер|postavshik|поставщик|supplier|partner|партн|'
                         r'spravochn|справочн|telefon|телефон|o-kompanii|о-компании|about|o-nas|о-нас|company', re.I)
 КАРТА_ПЕРВЫЕ = re.compile(r'kontakt|contact|контакт|rekvizit|реквизит|rukovod|руковод|management|filial|филиал|'
-                          r'predstavit|представит|otdel|отдел|snab|снабж|zakup|закуп', re.I)
+                          r'predstavitel|представител|otdel|отдел|snab|снабж|zakup|закуп', re.I)
+# 11.11, смоук на сервере (vtf.ru): из карты шли новости «…представит новый логотип» и товары «stress-management» —
+# разделы новостей, статей, каталога и товаров не берём
+КАРТА_НЕ = re.compile(r'/(news|novost|новост|blog|press|smi|article|stat[iy]|статьи|goods|tovar|товар|catalog|katalog|'
+                      r'каталог|product|produkc|продукц|shop|magazin|магазин|uslug|услуг|service|events?|sobyti|событи|'
+                      r'tag|tags|search|poisk|page/\d)', re.I)
 _ФАЙЛ = re.compile(r'\.(pdf|jpe?g|png|gif|webp|svg|docx?|xlsx?|zip|rar|mp4|xml|gz)(?:$|[?#])', re.I)
 
 
@@ -102,7 +107,7 @@ def карта_сайта(старт, скачать, предел=12, файл�
             if _хост(u) != свой or _ФАЙЛ.search(u):
                 continue
             п = urllib.parse.unquote(urllib.parse.urlsplit(u).path)
-            if КАРТА_ТЕМА.search(п) and not ВАКАНСИИ.search(п) and u not in адреса:
+            if КАРТА_ТЕМА.search(п) and not ВАКАНСИИ.search(п) and not КАРТА_НЕ.search(п) and u not in адреса:
                 адреса.append(u)
     адреса.sort(key=lambda u: (not КАРТА_ПЕРВЫЕ.search(urllib.parse.unquote(u)), u.count('/'), len(u)))
     return адреса[:предел]
@@ -112,6 +117,9 @@ def карта_сайта(старт, скачать, предел=12, файл�
 
 CHROME = [r'C:\Users\Administrator\AppData\Local\ms-playwright\chromium-1243\chrome-win64\chrome.exe',
           r'C:\Program Files\Google\Chrome\Application\chrome.exe']
+ПАРКОВКА = re.compile(r'Домен не прилинкован|домен припаркован|Домен .{0,40}продаётся|домен продается|domain is for sale|'
+                      r'This domain (?:is|may be) for sale|Сайт не опубликован|Сайт заблокирован|Hosting is not configured|'
+                      r'Index of /|Default Web Site Page|Welcome to nginx|Apache2 .{0,20}Default Page', re.I)
 КАПЧА = re.compile(r'captcha|smartcaptcha|cf-challenge|challenge-platform|Подтвердите, что вы не робот|Проверка браузера|'
                    r'Just a moment|Access denied|Доступ ограничен', re.I)
 _места = threading.BoundedSemaphore(int(os.environ.get('KC_BRAUZEROV', '2')))
@@ -183,6 +191,8 @@ class Браузер:
         for u in варианты(старт):
             посл = self.скачать(u, 45000)
             if посл[0] == 'ok' and len(re.sub(r'<[^>]+>', ' ', посл[1])) > 300:
+                if ПАРКОВКА.search(посл[2] + ' ' + посл[1][:20000]):
+                    return '', ('ошибка: заглушка хостинга (браузер)', '', '')
                 return u, посл
             if self.стр is None:  # Chromium не запустился — дальше не пробуем
                 break
