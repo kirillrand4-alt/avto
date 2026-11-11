@@ -24,12 +24,15 @@ URL = 'https://ahrefs.groupbuyseo.org/v4/seRefdomains'
 BODY = json.load(open(os.path.join(DIR, 'ahrefs-refdomains-body.json'), encoding='utf-8'))
 OUT = os.path.join(DIR, 'konkurenty-refdomains.jsonl')
 LIMIT = int(os.environ.get('RD_LIMIT', '500'))
+# Размер страницы: просим сразу до 500 за запрос (лимит Ahrefs считается по запросам).
+# Если сервер режет страницу (вернул ровно 100 вместо 500), переходим на его размер.
+PAGE = int(os.environ.get('RD_PAGE', '500'))
 HDR = {**AD.HDR, 'x-client-version': 'release-20261110-bk61752-b13230aaa10f8',
        'x-should-be-get': 'true',
        'referer': 'https://ahrefs.groupbuyseo.org/site-explorer/refdomains'}
 
 
-def body_for(target, offset):
+def body_for(target, offset, size):
     b = copy.deepcopy(BODY)
     t = target.rstrip('/') + '/'
     b['se_params']['target'] = t
@@ -37,24 +40,27 @@ def body_for(target, offset):
     b['se_params'].pop('since', None)
     b['se_params']['history_mode'] = 'Live'
     b['params']['offset'] = offset
+    b['params']['size'] = size
     b['backlinks_params']['size'] = 1     # нужны домены, а не сами ссылки
     return b
 
 
 def fetch(c, target):
-    out = []
-    for off in range(0, LIMIT, 100):
-        r = c.post(URL, content=json.dumps(body_for(target, off)))
+    out, off, page = [], 0, PAGE
+    while off < LIMIT:
+        size = min(page, LIMIT - off)
+        r = c.post(URL, content=json.dumps(body_for(target, off, size)))
         d = r.json()
         if not (isinstance(d, list) and d[0] == 'Ok'):
             raise RuntimeError(f'{target}: {str(d)[:200]}')
         rows = d[1].get('rows') or d[1].get('refdomains') or []
-        if off == 0:
-            print(f'{target}: ключи ответа {list(d[1].keys())[:6]}', flush=True)
-        for row in rows:
-            out.append(row)
-        if len(rows) < 100:
+        out.extend(rows)
+        if len(rows) < size and len(rows) in (100, 200, 250) and page > len(rows):
+            page = len(rows)              # сервер режет страницу - листаем его размером
+            print(f'{target}: сервер отдаёт по {page} за запрос', flush=True)
+        elif len(rows) < size:
             break
+        off += len(rows)
     return out
 
 
