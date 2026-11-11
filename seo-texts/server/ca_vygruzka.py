@@ -47,6 +47,8 @@ import ca_cel  # noqa: E402
     r'opt|roznica|retail|shop|store|logist\w*|dostavka|delivery|kanc\w*|general|no-?reply|noreply|webmaster|press|smi|job|'
     r'jobs|rabota|resume|vacancy|personal|otk|lab\w*|quality|kachestvo|tech\w*|teh\w*|proizv\w*|production|glavinzh\w*|ogk|'
     r'ok|yur\w*|legal|ur|security|sb|it|zavod|plant|company|firm\w*)\d*$', re.I)
+# 11.11, владелец: «телефон сейчас не нужен» — строки без телефона не отсеиваем
+НЕОБЯЗ = {'Телефон', 'Чей телефон'}
 ГАЗ = {'O2': 'Кислород (O2): станция Enger PSA, 93±3 %', 'N2': 'Азот (N2): станция Enger PSA, 98–99,999 %'}
 
 
@@ -142,7 +144,8 @@ def main():
                 свой = тел(x) if x.get('номер') else тел_по_фио.get(фио.lower(), '')
                 люди.append({'ФИО': фио, 'Должность': (x.get('должность') or x.get('роль') or '').strip(),
                              'Почта': x['почта'], 'Телефон': свой or общий,
-                             'Чей телефон': 'личный' if свой else 'общий компании', 'Источник контакта': 'сайт компании'})
+                             'Чей телефон': 'личный' if свой else ('общий компании' if общий else 'нет'),
+                             'Источник контакта': 'сайт компании'})
         for x in еис.get(инн, []):
             if личная(x.get('почта')):
                 свой = (x.get('телефон') or '').strip()
@@ -160,7 +163,7 @@ def main():
                 continue
             видел.add(ключ)
             r = dict(общее, **ч)
-            пустые = [k for k, v in r.items() if not str(v).strip()]
+            пустые = [k for k, v in r.items() if not str(v).strip() and k not in НЕОБЯЗ]
             if пустые:
                 for k in пустые:
                     причины['пусто: ' + k] += 1
@@ -227,7 +230,7 @@ def main():
              'Продукция': продукция.get(инн, ''), 'Почта': почта,
              'Тип почты': ['личная', 'служба (снабжение/техническая)', 'общая', 'прочая', 'продажи/прочие службы'][вес(почта)],
              'Телефон': телефон, 'Почему без ЛПР': 'агент отработал' if инн in агент_был else 'обход и проверки пройдены, агент не нужен'}
-        пустые = [k for k, v in r.items() if not str(v).strip()]
+        пустые = [k for k, v in r.items() if not str(v).strip() and k not in НЕОБЯЗ]
         if пустые:
             for k in пустые:
                 причины['компания пусто: ' + k] += 1
