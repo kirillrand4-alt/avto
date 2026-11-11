@@ -41,6 +41,8 @@ from sender.store import Store                 # noqa: E402
 import gaz_kanon as K                          # noqa: E402
 csv.field_size_limit(10 ** 9)
 РАБОТА = "--rabota" in sys.argv
+# владелец 11.11: «генерацию можешь запускать по тем, у кого проба прошла» — только карточки по готовым журналам
+ТОЛЬКО_КАРТ = "--tolko-kartochki" in sys.argv
 МОДЕЛЬ = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--model=")), "claude-opus-5-5")
 ПОТОКОВ = int(next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--potokov=")), "6"))
 ИМЯ_КАМП = "КЦ газ 11.11"
@@ -264,7 +266,7 @@ def пачка_суда(пачка):
     return n
 
 
-ждут = [и for и in КОМПАНИИ if и not in СУД]
+ждут = [] if ТОЛЬКО_КАРТ else [и for и in КОМПАНИИ if и not in СУД]
 группы = defaultdict(list)
 for и in ждут:
     группы[(КОМПАНИИ[и]["отр"], КОМПАНИИ[и]["газ"])].append(и)
@@ -320,7 +322,7 @@ def в_базы(адрес, вер, ответ_):
         слить_обзвон()
 
 
-шаг = {и: 0 for и in прошли if и not in ЛЕС}
+шаг = {} if ТОЛЬКО_КАРТ else {и: 0 for и in прошли if и not in ЛЕС}
 посл_домен = {}
 сч_проб = Counter()
 print("лесенка: компаний %d (уже решено %d)" % (len(шаг), len([и for и in прошли if и in ЛЕС])), flush=True)

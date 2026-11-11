@@ -53,7 +53,9 @@ for р in читать("CA-ENGER-ZALIVKA.csv") + читать("CA-ENGER-ZALIVKA-
 суд = {}
 for з in журнал(ЖУР_СУД):
     суд[з["inn"]] = з
-СТРОГО = "--strogo" in sys.argv
+СТРОГО = "--strogo" in sys.argv or "--strogo-osnovnye" in sys.argv
+# владелец 11.11: «1750 тоже перепроверь строгой проверкой, кого захочет выгнать — посмотри, автоматически не убирай»
+ОСНОВНЫЕ = "--strogo-osnovnye" in sys.argv
 ЖУР_СТР = os.path.join(ОПС, "gaz-kc-strogo.jsonl")
 сделано = {з["inn"] for з in журнал(ЖУР_ПП)}
 if СТРОГО:
@@ -63,6 +65,9 @@ if СТРОГО:
     for з in журнал(ЖУР_ПП): пп[з["inn"]] = з
     уже = {з["inn"] for з in журнал(ЖУР_СТР)}
     кого = [и for и, з in пп.items() if з.get("ok") and и in база and и not in уже]
+    if ОСНОВНЫЕ:
+        пп = суд
+        кого = [и for и, з in суд.items() if з.get("ok") and not з.get("pereproverka") and и in база and и not in уже]
 else:
     кого = [и for и, з in суд.items() if not з.get("ok") and not з.get("konk") and и in база and и not in сделано]
 if СТРОГО: print("СТРОГАЯ проверка возвращённых", flush=True)
@@ -132,7 +137,7 @@ def пачка(сп):
             з = {"inn": и, "otr": отр, "gaz": газ, "ok": ok, "pochemu": (x.get("pochemu") or "")[:200], "f": пп[и].get("f", ""), "model": МОДЕЛЬ,
                  "ts": datetime.now(timezone.utc).isoformat()}
             пиши(ЖУР_СТР, з)
-            if not ok:   # перекрываем «да» перепроверки в журнале суда (последняя запись по ИНН главнее)
+            if not ok and not ОСНОВНЫЕ:   # перекрываем «да» перепроверки в журнале суда (последняя запись по ИНН главнее)
                 пиши(ЖУР_СУД, {"inn": и, "ok": False, "konk": False, "model_ok": False, "pochemu": "строгая проверка: " + з["pochemu"], "f": "",
                                "beda": "", "otr": отр, "gaz": газ, "model": МОДЕЛЬ + "+strogo", "strogo": True, "ts": з["ts"]})
             with _замок:
@@ -176,6 +181,17 @@ if СТРОГО:
     for з in стр:
         по[з["otr"]]["да" if з["ok"] else "нет"] += 1
         if len(прим[з["otr"]]["да" if з["ok"] else "нет"]) < 4: прим[з["otr"]]["да" if з["ok"] else "нет"].append(з)
+    if ОСНОВНЫЕ:   # отчёт по основным: ВСЕ, кого строгая хочет выгнать, — на просмотр владельцу (ничего не убрано)
+        осн = [з for з in стр if суд.get(з["inn"], {}).get("ok") and not суд.get(з["inn"], {}).get("pereproverka")]
+        вых = io.open(os.path.join(ОПС, "gaz-strogo-osnovnye.txt"), "w", encoding="utf-8")
+        вых.write("СТРОГАЯ ПРОВЕРКА ОСНОВНЫХ: %s (НИЧЕГО НЕ УБРАНО — на просмотр)\n" % dict(Counter("ok" if з["ok"] else "хочет выгнать" for з in осн)))
+        for з in sorted([з for з in осн if not з["ok"]], key=lambda з: з["otr"]):
+            р = база.get(з["inn"], {})
+            вых.write("%s | %s | %s | %s | фраза: %s | почему: %s\n" % (з["inn"], з["otr"][:18], (р.get("Компания") or "")[:40], (р.get("Продукция") or "")[:110],
+                                                                   (з.get("f") or "")[:110], з["pochemu"][:120]))
+        вых.close()
+        shutil.copy2(os.path.join(ОПС, "gaz-strogo-osnovnye.txt"), os.path.join(ДРОП, "gaz-strogo-osnovnye.txt"))
+        print("ГОТОВО СТРОГО ОСНОВНЫЕ: %s" % dict(итог), flush=True); sys.exit(0)
     вых = io.open(os.path.join(ОПС, "gaz-strogo.txt"), "w", encoding="utf-8")
     вых.write("СТРОГАЯ ПРОВЕРКА ВОЗВРАЩЁННЫХ: %s\n" % dict(Counter("подтверждено" if з["ok"] else "отказ" for з in стр)))
     for отр, c in sorted(по.items(), key=lambda x: -x[1]["да"]):
