@@ -85,10 +85,17 @@ def main():
     сиг = {з['inn']: з for з in jl(os.path.join(ПАПКА, 'ca-signaly.jsonl')) if з.get('inn')}
     сделки = json.load(io.open(os.path.join(ДРОП, 'sdelki-vse-1410.json'), encoding='utf-8'))
     база = {}
+    # 12.11 (сверка с панелью: 261 из 567 адресов панели, которых нет у нас, — из базы обзвона): почты и телефоны базы
+    # обзвона — отдельным источником; почты, которые проба отвергла («нет MX», «нет ящика»), не берём
+    база_к, проба = {}, {}
     try:
         con = sqlite3.connect('file:C:/sender/obzvon-index.db?mode=ro', uri=True, timeout=120)
-        for инн, н in con.execute('select inn, base_label from obzvon'):
+        for инн, н, eb, es, pb in con.execute('select inn, base_label, emails_base, emails_site, phones_base from obzvon'):
             база[str(инн)] = н or ''
+            if str(инн) in сп:
+                база_к[str(инн)] = (н or '', ' | '.join(x for x in (eb, es) if x), pb or '')
+        for адр, вер in con.execute('select email, verdict from email_probe'):
+            проба[(адр or '').lower()] = вер or ''
         con.close()
     except Exception:  # noqa: BLE001
         pass
@@ -129,6 +136,26 @@ def main():
                          'Роль': 'Закупки / снабжение', 'ЛПР': '', 'Телефон': x.get('телефон') or '', 'Доб.': '',
                          'Почта': x.get('почта') or '', 'Источник': 'закупки ЕИС (%s)' % x.get('вердикт', ''),
                          'Страница': x.get('url') or ''})
+        if инн in база_к:
+            метка, пп, тт = база_к[инн]
+            for адр in dict.fromkeys(м.group(0).lower() for м in re.finditer(r'[\w.+-]+@[\w-]+(?:\.[\w-]+)+', пп)):
+                if проба.get(адр) in ('нет MX', 'нет ящика'):
+                    continue
+                свои.append({'ФИО': '', 'Должность': '', 'Роль': '', 'ЛПР': '', 'Телефон': '', 'Доб.': '', 'Почта': адр,
+                             'Источник': 'база обзвона (%s)' % метка, 'Проверка почты': проба.get(адр, ''), 'Страница': ''})
+            for т in dict.fromkeys(re.sub(r'\D', '', x)[-10:] for x in тт.split('|') if len(re.sub(r'\D', '', x)) >= 10):
+                свои.append({'ФИО': '', 'Должность': '', 'Роль': '', 'ЛПР': '', 'Телефон': '+7' + т, 'Доб.': '', 'Почта': '',
+                             'Источник': 'база обзвона (%s)' % метка, 'Страница': ''})
+        # одинаковый адрес/номер из нескольких источников — одна строка (первый источник: сайт, агент, ЕИС, база)
+        _был_п, _был_т, _св = set(), set(), []
+        for ч in свои:
+            п_, т_ = ч['Почта'].lower(), re.sub(r'\D', '', ч['Телефон'])[-10:]
+            if ч['Источник'].startswith('база обзвона') and ((п_ and п_ in _был_п) or (т_ and т_ in _был_т)):
+                continue
+            _был_п.add(п_) if п_ else None
+            _был_т.add(т_) if т_ else None
+            _св.append(ч)
+        свои = _св
         видел = set()
         for ч in свои:
             ключ = (re.sub(r'\D', '', ч['Телефон'])[-10:], ч['Доб.'], ч['Почта'].lower(), ч['ФИО'].lower())
@@ -173,7 +200,8 @@ def main():
             'Сделки Битрикса': '; '.join(sorted({'%s: %s' % (d[0], d[1]) for d in сделки.get(инн) or []})),
             'База обзвона': база.get(инн, ''), 'Статус обработки': статус})
     кол_к = list(компании[0].keys())
-    кол_ч = ['ИНН', 'Компания', 'ФИО', 'Должность', 'Роль', 'ЛПР', 'Телефон', 'Доб.', 'Почта', 'Тип почты', 'Источник', 'Страница']
+    кол_ч = ['ИНН', 'Компания', 'ФИО', 'Должность', 'Роль', 'ЛПР', 'Телефон', 'Доб.', 'Почта', 'Тип почты', 'Проверка почты',
+             'Источник', 'Страница']
     for имя_, строки, кол in (('CA-ENGER-BAZA-kompanii.csv', компании, кол_к), ('CA-ENGER-BAZA-kontakty.csv', контакты, кол_ч)):
         with io.open(os.path.join(ПАПКА, имя_), 'w', encoding='utf-8-sig', newline='') as f:
             w = csv.DictWriter(f, fieldnames=кол, delimiter=';', extrasaction='ignore')
