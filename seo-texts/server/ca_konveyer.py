@@ -43,6 +43,12 @@ ENV = dict(os.environ, POISK_NABOR='ca', KC_NABOR='ca', KC_CEL='kc', PILOT_S_SHA
            PILOT_MODEL='gpt-6-luna', PROVIDER_FALLBACK_CHEAP='gpt-5.6-luna')
 
 
+# переопределения окружения волны (11.11: вторая волна без xmlriver — баланс 57 ₽ < 60): ca\ca-konveyer-env.json
+_п = os.path.join(ПАПКА, 'ca-konveyer-env.json')
+if os.path.exists(_п):
+    ENV.update({k: str(v) for k, v in json.load(open(_п, encoding='utf-8')).items()})
+
+
 def отметка(**k):
     k['обновлено'] = time.strftime('%Y-%m-%d %H:%M:%S')
     with open(os.path.join(ПАПКА, 'ca-konveyer-obertka.json'), 'w', encoding='utf-8') as f:
