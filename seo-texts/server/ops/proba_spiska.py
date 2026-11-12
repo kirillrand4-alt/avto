@@ -4,7 +4,7 @@
 нет MX / принимает всё, моложе 30 дней) переиспользуем. Временные ответы — второй круг через 15 мин.
 Вход: jsonl на сервере с полем emails (по умолчанию _ops/meyer-provaly2.jsonl, только записи без stop).
 Журнал _ops/proba-<имя>.jsonl (резюмируемо), итог в лог.
-    proba_spiska.py --zapusk [--vhod=meyer-provaly2.jsonl] [--imya=meyer-provaly]"""
+    proba_spiska.py --zapusk [--vhod=meyer-provaly2.jsonl] [--imya=meyer-provaly] [--povtor-mx]"""
 import io, json, os, re, sqlite3, subprocess, sys, threading, time
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -60,9 +60,11 @@ def одна(args):
     пиши({"email": адрес, "krug": круг, "itog": в, "kod": код, "otvet": ответ, "mx": мх, "vremenny": P.временный(в, код, ответ)})
 
 
+ПОВТОР_MX = "--povtor-mx" in sys.argv   # перепроверить «MX нет и по DoH» новым правилом (владелец 12.11)
 очередь = []
 for e in адреса:
-    if e in сделано: continue
+    if e in сделано and not (ПОВТОР_MX and "MX нет и по DoH" in str(сделано[e].get("otvet", ""))): continue
+    if ПОВТОР_MX and e not in сделано: continue
     v, ts = кэш.get(e, ("", ""))
     if v in ("есть", "нет ящика", "нет MX", "принимает всё") and ts[:10] >= порог:
         пиши({"email": e, "krug": 0, "itog": v, "otvet": "кэш addr_probe от %s" % ts[:10], "vremenny": False}); continue
@@ -70,7 +72,7 @@ for e in адреса:
 print("адресов %d, уже в журнале %d, к пробе %d" % (len(адреса), len(сделано), len(очередь)), flush=True)
 # крупные домены — вперемешку с прочими, чтобы потоки не стояли в очереди к одному домену
 очередь.sort(key=lambda e: (e.rsplit("@", 1)[1] in КРУПНЫЕ, e.rsplit("@", 1)[1]))
-with ThreadPoolExecutor(max_workers=8) as пул: list(пул.map(одна, [(e, 1) for e in очередь]))
+with ThreadPoolExecutor(max_workers=8) as пул: list(пул.map(одна, [(e, 3 if ПОВТОР_MX else 1) for e in очередь]))
 вр = [e for e, з in сделано.items() if з.get("vremenny") and з.get("krug") == 1]
 if вр:
     print("второй круг: %d временных, ждём 15 мин" % len(вр), flush=True); time.sleep(900)

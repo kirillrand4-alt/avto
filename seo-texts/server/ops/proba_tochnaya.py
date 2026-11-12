@@ -15,6 +15,37 @@ def база():
     return _база
 
 
+def _doh(имя, тип):
+    """→ (Status, [записи]) по первому ответившему DoH, либо None."""
+    for урл in ("https://dns.google/resolve?name=%s&type=%s", "https://cloudflare-dns.com/dns-query?name=%s&type=%s"):
+        try:
+            д = json.load(urllib.request.urlopen(urllib.request.Request(урл % (имя, тип), headers={"accept": "application/dns-json"}), timeout=20))
+            return д.get("Status"), [a.get("data") for a in д.get("Answer", []) if a.get("data")]
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+def почты_нет(домен):
+    """Владелец 12.11: если домена не существует совсем — честно «нет MX». Приговор только при согласии ДВУХ
+    независимых DoH (Google и Cloudflare): NXDOMAIN, либо домен есть, но нет ни MX, ни A/AAAA (по RFC 5321 слать некуда).
+    → текст обоснования или "" (не доказано)."""
+    ответы = []
+    for урл in ("https://dns.google/resolve?name=%s&type=%s", "https://cloudflare-dns.com/dns-query?name=%s&type=%s"):
+        try:
+            з = lambda т: json.load(urllib.request.urlopen(urllib.request.Request(урл % (домен, т), headers={"accept": "application/dns-json"}), timeout=20))
+            мх, а, аааа = з("MX"), з("A"), з("AAAA")
+        except Exception:  # noqa: BLE001
+            return ""
+        if мх.get("Status") == 3: ответы.append("NXDOMAIN"); continue
+        есть = lambda д, т: any(x.get("type") == т for x in д.get("Answer", []))
+        if мх.get("Status") == 0 and not есть(мх, 15) and not есть(а, 1) and not есть(аааа, 28): ответы.append("нет MX и A")
+        else: return ""
+    if len(ответы) == 2:
+        return "домен не существует (NXDOMAIN по Google и Cloudflare)" if ответы == ["NXDOMAIN", "NXDOMAIN"] else "у домена нет ни MX, ни A (Google и Cloudflare)"
+    return ""
+
+
 def mx_doh(домен):
     for урл in ("https://dns.google/resolve?name=%s&type=MX", "https://cloudflare-dns.com/dns-query?name=%s&type=MX"):
         try:
@@ -51,7 +82,10 @@ def проба(адрес):
     домен = адрес.rsplit("@", 1)[1]
     мх = mx_doh(домен)
     if мх is None: return "неясно", None, "DoH не ответил", ""
-    if not мх: return "неясно", None, "MX нет и по DoH (приговор не выносим)", ""
+    if not мх:
+        почему = почты_нет(домен)
+        if почему: return "нет MX", None, почему, ""
+        return "неясно", None, "MX нет и по DoH, но домен резолвится (по RFC почта на A-адрес возможна)", ""
     посл = ("неясно", None, "", "")
     for хост in мх[:2]:
         for от, tls in ((ОТ, True), (ОТ, False), ("", True)):
@@ -82,7 +116,7 @@ def временный(в, код, ответ):
 
 
 def в_базы(адрес, вер, код, ответ, мх):
-    if мх: база()._save(адрес, вер, код, ответ, мх)
+    if мх or вер == "нет MX": база()._save(адрес, вер, код, ответ, мх or "")
     ts = int(time.time())
     try:
         cx = sqlite3.connect(r"C:\sender\enrich.db", timeout=60); cx.execute("PRAGMA busy_timeout=60000")
