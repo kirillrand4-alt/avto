@@ -63,7 +63,7 @@ def одна(args):
 ПОВТОР_MX = "--povtor-mx" in sys.argv   # перепроверить «MX нет и по DoH» новым правилом (владелец 12.11)
 очередь = []
 for e in адреса:
-    if e in сделано and not (ПОВТОР_MX and "MX нет и по DoH" in str(сделано[e].get("otvet", ""))): continue
+    if e in сделано and not (ПОВТОР_MX and re.search(r"MX нет и по DoH|Sender address r|DoH не ответил", str(сделано[e].get("otvet", "")))): continue
     if ПОВТОР_MX and e not in сделано: continue
     v, ts = кэш.get(e, ("", ""))
     if v in ("есть", "нет ящика", "нет MX", "принимает всё") and ts[:10] >= порог:

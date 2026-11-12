@@ -101,7 +101,8 @@ def проба(адрес):
                 return "неясно", None, "адрес не-ASCII, проба неприменима", хост
             except (smtplib.SMTPException, OSError, socket.timeout) as ex:
                 посл = ("неясно", None, str(ex)[:150], хост); break
-            if ответ.startswith("MAIL FROM") and от:
+            # отправителя отбили на RCPT (postfix reject_unknown_sender_domain: у parsercompressor.online нет MX) — пробуем пустым
+            if от and (ответ.startswith("MAIL FROM") or "sender address rejected" in ответ.lower()):
                 посл = ("неясно", код, ответ[:150], хост); continue
             в = классифицировать(код, ответ)
             if в == "есть" and ловушка: в = "принимает всё"; ответ += " | домен принимает любой адрес"
