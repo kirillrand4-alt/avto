@@ -199,7 +199,9 @@ class Браузер:
         return '', посл
 
     def закрыть(self):
-        for f in (lambda: self.б and self.б.close(), lambda: self.pw and self.pw.stop()):
+        # 12.11, допроход: перехватчик запросов (route) при закрытии браузера сыпал CancelledError в лог — снимаем его
+        for f in (lambda: self.к and self.к.unroute_all(behavior='ignoreErrors'), lambda: self.б and self.б.close(),
+                  lambda: self.pw and self.pw.stop()):
             try:
                 f()
             except Exception:  # noqa: BLE001
