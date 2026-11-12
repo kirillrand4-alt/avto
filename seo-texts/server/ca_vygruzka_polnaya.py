@@ -76,6 +76,8 @@ def main():
     for з in jl(os.path.join(DIR, 'ca-glubokiy2.jsonl')):
         if з.get('inn'):
             агент[з['inn']] = з
+    # 12.11: добор источниками разборщика news-скана (поиск страниц сотрудников, справочники, ВК, сайты за капчей)
+    добор = {з['inn']: з for з in jl(os.path.join(ПАПКА, 'ca-ec-dobor.jsonl')) if з.get('inn') and з.get('итог') == 'ok'}
     # 11.11: агент «ЛПР при известном сайте» (принятое перепроверкой, ca-lpr-agent2.jsonl) — отдельно, источник свой
     агент_лпр = {з['inn']: з for з in jl(os.path.join(DIR, 'ca-lpr-agent2.jsonl')) if з.get('inn')} \
         if os.path.exists(os.path.join(DIR, 'ca-lpr-agent2.jsonl')) else {}
@@ -136,6 +138,10 @@ def main():
                          'Роль': 'Закупки / снабжение', 'ЛПР': '', 'Телефон': x.get('телефон') or '', 'Доб.': '',
                          'Почта': x.get('почта') or '', 'Источник': 'закупки ЕИС (%s)' % x.get('вердикт', ''),
                          'Страница': x.get('url') or ''})
+        for x in (добор.get(инн) or {}).get('контакты') or []:
+            свои.append({'ФИО': x.get('фио') or '', 'Должность': x.get('должность') or '', 'Роль': '', 'ЛПР': '',
+                         'Телефон': x.get('телефон') or '', 'Доб.': '', 'Почта': x.get('почта') or '',
+                         'Источник': 'добор: ' + (x.get('источник') or ''), 'Страница': x.get('url') or ''})
         if инн in база_к:
             метка, пп, тт = база_к[инн]
             for адр in dict.fromkeys(м.group(0).lower() for м in re.finditer(r'[\w.+-]+@[\w-]+(?:\.[\w-]+)+', пп)):
