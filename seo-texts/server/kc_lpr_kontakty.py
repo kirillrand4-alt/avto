@@ -2,7 +2,8 @@
 r"""Контакты ЛПР по списку ИНН со всех баз сервера (12.11, владелец: «собери подтверждённые номера со всех баз со ссылкой на
 страницу, с ФИО принимающих решение — техдиректор, инженер, закупщики и все подобные — со всей информацией о компании»).
 
-Вход: ca\kc-lpr-inn.json (список ИНН). Источники (только чтение):
+Вход: ca\kc-lpr-inn.json (список ИНН) или (по умолчанию) все компании всех баз; KC_LPR_SPISOK=1 — только список (владелец 12.11: «нужны любые ЛПР из баз,
+там изначально потенциальные клиенты»). Источники (только чтение):
   * журналы обхода всех наборов (<набор>-kontakty.jsonl, последняя запись ok по ИНН в каждом наборе): номер/почта не чужие
     (чей != другая), есть страница-источник;
   * итоги агентов, принятые перепроверкой (<набор>-glubokiy2.jsonl, ca-lpr-agent2.jsonl);
@@ -47,7 +48,9 @@ def лпр(*тексты, отметка_лпр=''):
 
 
 def main():
-    нужно = set(json.load(open(os.path.join(ПАПКА, 'kc-lpr-inn.json'), encoding='utf-8')))
+    ВСЕ = os.environ.get('KC_LPR_SPISOK') != '1'  # по умолчанию — все компании всех баз
+    нужно = None if ВСЕ else set(json.load(open(os.path.join(ПАПКА, 'kc-lpr-inn.json'), encoding='utf-8')))
+    подходит = (lambda и: bool(и)) if ВСЕ else (lambda и: и in нужно)
     out = io.open(os.path.join(ДРОП, 'kc-lpr-kontakty.jsonl'), 'w', encoding='utf-8')
     комп = {}
     сч = {'контактов': 0}
@@ -61,35 +64,40 @@ def main():
     рег = re.compile(r'"inn":\s*"(\d{10,12})"')
     for i, п in enumerate(журналы):
         набор = os.path.basename(п).replace('-kontakty.jsonl', '')
-        посл = {}
+        посл = {}  # инн -> (контакты последней ok-записи, сведения) — только извлечённое, не вся запись (память)
         for s in io.open(п, encoding='utf-8', errors='replace'):
             м = рег.search(s[:200])
-            if not м or м.group(1) not in нужно:
+            if not м or not подходит(м.group(1)):
+                continue
+            if '"ok"' not in s:
                 continue
             try:
                 з = json.loads(s)
             except ValueError:
                 continue
-            if з.get('итог') == 'ok':
-                посл[з['inn']] = з
-        for инн, з in посл.items():
-            к = комп.setdefault(инн, {'ИНН': инн, 'наборы': []})
-            к['наборы'].append(набор)
-            for поле in ('сайт', 'описание', 'продукция', 'мощности'):
-                if з.get(поле) and not к.get(поле):
-                    к[поле] = з[поле] if поле != 'сайт' else з[поле]
+            if з.get('итог') != 'ok':
+                continue
+            кон = []
             for x in з.get('номера') or []:
                 if x.get('чей') == 'другая' or not (x.get('номер') or x.get('почта')):
                     continue
                 стр = [u for u in (x.get('страницы') or []) if str(u).startswith('http')]
-                if not стр:
+                if not стр or not лпр(x.get('роль'), x.get('должность'), x.get('фио'), отметка_лпр=x.get('лпр')):
                     continue
-                if not лпр(x.get('роль'), x.get('должность'), x.get('фио'), отметка_лпр=x.get('лпр')):
-                    continue
-                пиши(инн, ФИО=x.get('фио') or '', должность=x.get('должность') or '', роль=x.get('роль') or '',
-                     ЛПР=x.get('лпр') or '', телефон=x.get('номер') or '', доб=x.get('доб') or '', почта=x.get('почта') or '',
-                     страница=стр[0], подтверждение='найден на странице сайта компании' + (' (обогатитель)' if x.get('_ec') else ''),
-                     источник='обход: ' + набор, подпись=(x.get('контекст') or '')[-250:])
+                кон.append(dict(ФИО=x.get('фио') or '', должность=x.get('должность') or '', роль=x.get('роль') or '',
+                                ЛПР=x.get('лпр') or '', телефон=x.get('номер') or '', доб=x.get('доб') or '', почта=x.get('почта') or '',
+                                страница=стр[0], подтверждение='найден на странице сайта компании' + (' (обогатитель)' if x.get('_ec') else ''),
+                                источник='обход: ' + набор, подпись=(x.get('контекст') or '')[-200:]))
+            посл[з['inn']] = (кон, {поле: str(з.get(поле) or '')[:300] for поле in ('сайт', 'описание', 'продукция', 'мощности')})
+        for инн, (кон, инфо) in посл.items():
+            к = комп.setdefault(инн, {'ИНН': инн, 'наборы': []})
+            к['наборы'].append(набор)
+            for поле, v in инфо.items():
+                if v and not к.get(поле):
+                    к[поле] = v
+            for x in кон:
+                пиши(инн, **x)
+        del посл
         отметка(этап='журналы', файл=i + 1, из=len(журналы), компаний=len(комп), **сч)
     # ---- 2. агенты (принятые перепроверкой) ----
     for п in glob.glob(os.path.join(DIR, '*-glubokiy2.jsonl')) + glob.glob(os.path.join(DIR, '*lpr-agent2.jsonl')):
@@ -100,7 +108,7 @@ def main():
             except ValueError:
                 continue
             инн = str(з.get('inn') or '')
-            if инн not in нужно:
+            if not подходит(инн):
                 continue
             for x in (з.get('номера') or []) + (з.get('почты') or []):
                 if not isinstance(x, dict) or not лпр(x.get('класс'), x.get('должность'), x.get('фио')):
@@ -112,21 +120,22 @@ def main():
     отметка(этап='агенты', компаний=len(комп), **сч)
     # ---- 3. enrich.db ----
     con = sqlite3.connect('file:C:/sender/enrich.db?mode=ro', uri=True, timeout=120)
-    ин = ','.join("'%s'" % x for x in нужно)
+    ин = ','.join("'%s'" % x for x in нужно) if нужно else ''
+    где = (' where inn in (%s)' % ин) if нужно else ''
     for инн, ч, пост, роль, тел, почта, ист, url, чья in con.execute(
-            'select inn, person, post, role, phone, email, source, source_url, prinadlezhnost_inn from people where inn in (%s)' % ин):
+            'select inn, person, post, role, phone, email, source, source_url, prinadlezhnost_inn from people' + где):
         if (тел or почта) and url and лпр(пост, роль):
             if чья and str(чья) != str(инн):
                 continue
             пиши(инн, ФИО=ч or '', должность=пост or '', роль=роль or '', ЛПР='', телефон=тел or '', доб='', почта=почта or '',
                  страница=url, подтверждение='enrich: человек со страницы-источника', источник='enrich.people: ' + (ист or ''), подпись='')
     for инн, тел, ч, роль, ист, url in con.execute(
-            'select inn, phone, person, role, source, source_url from phone_contacts where inn in (%s)' % ин):
+            'select inn, phone, person, role, source, source_url from phone_contacts' + где):
         if тел and url and (ч or роль) and лпр(роль, ч):
             пиши(инн, ФИО=ч or '', должность='', роль=роль or '', ЛПР='', телефон=тел, доб='', почта='', страница=url,
                  подтверждение='enrich: телефон со страницы-источника', источник='enrich.phone_contacts: ' + (ист or ''), подпись='')
     for инн, почта, роль, ч, ист, url, раздел in con.execute(
-            'select inn, email, role, person, source, source_url, razdel from emails where inn in (%s)' % ин):
+            'select inn, email, role, person, source, source_url, razdel from emails' + где):
         if почта and url and лпр(роль, ч, раздел):
             пиши(инн, ФИО=ч or '', должность=раздел or '', роль=роль or '', ЛПР='', телефон='', доб='', почта=почта, страница=url,
                  подтверждение='enrich: почта со страницы-источника', источник='enrich.emails: ' + (ист or ''), подпись='')
@@ -140,7 +149,7 @@ def main():
                 x = json.loads(s)
             except ValueError:
                 continue
-            if str(x.get('inn') or '') in нужно and (x.get('телефон') or x.get('почта')):
+            if подходит(str(x.get('inn') or '')) and (x.get('телефон') or x.get('почта')):
                 пиши(str(x['inn']), ФИО=x.get('фио') or '', должность=x.get('должность') or 'контактное лицо закупок',
                      роль='Закупки / снабжение', ЛПР='да', телефон=x.get('телефон') or '', доб='', почта=x.get('почта') or '',
                      страница=x.get('url') or '', подтверждение='ЕИС: ' + str(x.get('вердикт') or ''), источник='закупки ЕИС', подпись='')
@@ -149,7 +158,9 @@ def main():
     try:
         con = sqlite3.connect('file:C:/sender/obzvon-index.db?mode=ro', uri=True, timeout=120)
         for инн, н, нп, рег, адр, дир, сайты in con.execute(
-                'select inn, name_short, name_full, region, address, director, sites from obzvon where inn in (%s)' % ин):
+                'select inn, name_short, name_full, region, address, director, sites from obzvon' + где):
+            if ВСЕ and str(инн) not in комп:
+                continue  # все базы: сведения обзвона — только для компаний, по которым есть контакты/обход
             к = комп.setdefault(str(инн), {'ИНН': str(инн), 'наборы': []})
             к.update({'название (база обзвона)': н or нп or '', 'регион': рег or '', 'адрес': адр or '', 'директор (ЕГРЮЛ)': дир or ''})
             if сайты and not к.get('сайт'):
