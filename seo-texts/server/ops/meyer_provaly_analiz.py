@@ -4,12 +4,14 @@
 ИНН в файле нет — берём: DEAL_ID → ИНН (sdelki-napr-1410), почта → ИНН (enrich.emails, sender.recipients),
 название компании → ИНН (по тем же сделкам). Даты и прочие сделки компании — sdelki-vse-1410 (ИНН → все сделки).
 Результат по компаниям — _ops/meyer-provaly.jsonl (+ сводка). Контакты в вывод не печатаем.
-    meyer_provaly_analiz.py"""
+    meyer_provaly_analiz.py [--tolko-prodazha]"""
 import csv, io, json, os, re, sqlite3
 from collections import Counter, defaultdict
 from datetime import date
 Д = r"C:\seostat\drop\drop-storage"; ОПС = r"C:\sender\_ops"
 ГОД_НАЗАД = "2025-11-12"
+import sys
+ТОЛЬКО_ПРОДАЖА = "--tolko-prodazha" in sys.argv   # владелец 12.11: сначала «только продажа», затем «привлечение тоже берём»
 def норм(к):
     к = (к or "").lower().replace("ё", "е")
     к = re.sub(r"(?i)\b(ооо|оао|зао|пао|ао|ип|кфх|сппк|спк|ск|тд|гк|нпо|нпп|фгуп|муп|гуп|ооо\.|llc|ltd)\b", " ", к)
@@ -103,8 +105,8 @@ for ключ, к in комп.items():
         кат = "есть живая/успешная сделка Meyer"
     elif not ст.get("Провалена"):
         кат = "нет проваленных"
-    elif not any(с.get("СТАТУС") == "Провалена" and с.get("ВОРОНКА") == "MEYER-Продажа" for с in сд):
-        кат = "провалы только в Привлечении/СЦ — не трогаем (владелец 12.11)"
+    elif ТОЛЬКО_ПРОДАЖА and not any(с.get("СТАТУС") == "Провалена" and с.get("ВОРОНКА") == "MEYER-Продажа" for с in сд):
+        кат = "провалы только в Привлечении/СЦ — не трогаем"
     elif послед >= ГОД_НАЗАД or (not послед_свод and послед_ид >= "2025-09-12"):
         кат = "провал моложе года"
     elif not послед:
