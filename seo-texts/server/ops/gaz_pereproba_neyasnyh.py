@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """Повторная проба адресов, снятых из кампании 22 за «неясно»/«отказ пробе» (владелец 12.11: вариант 3).
   * отказы из-за нашей обратной записи (PTR/hostname) — не перепробуем: без PTR ответ будет тот же;
-  * «MX не найден» / getaddrinfo — MX спрашиваем у трёх публичных DNS (8.8.8.8, 1.1.1.1, 77.88.8.8); нашли — пробуем;
+  * MX для ВСЕХ адресов берём через DNS-over-HTTPS (dns.google, запасной cloudflare): 12.11 на сервере включён туннель
+    Happ (xray), его DNS 172.19.0.2 на MX-запросы не отвечает вовсе (даже для mail.ru), а UDP к 8.8.8.8 перехватывается;
+    MX не нашёлся и по DoH — приговор НЕ выносим, остаётся «неясно»;
   * таймауты, обрывы, прочие отказы — проба заново с ожиданием 45 с, HELO = parsercompressor.online (имя ведёт на наш IP).
 Новый вердикт пишется в три базы (addr_probe, enrich.emails, obzvon email_probe). «есть»/«принимает всё» — карточку
 возвращаем в прежнее состояние (одобрена → сообщение снова в расписании; ждала — снова ждёт). Прочие остаются снятыми.
-Журнал _ops/gaz-pereproba-neyasnyh.jsonl (резюмируемо).   gaz_pereproba_neyasnyh.py --zapusk | [--bez-vozvrata]"""
+Журнал _ops/gaz-pereproba-neyasnyh.jsonl (резюмируемо).   gaz_pereproba_neyasnyh.py --zapusk [--zanovo] [--bez-vozvrata]"""
 import io, json, os, re, sqlite3, subprocess, sys, time
 from collections import Counter
 from datetime import datetime, timezone
@@ -20,6 +22,8 @@ from sender.addr_probe import AddrProbe   # noqa: E402
 ЖУР = os.path.join(ОПС, "gaz-pereproba-neyasnyh.jsonl")
 БД = r"C:\sender\sender.db"
 сделано = set()
+if "--zanovo" in sys.argv and os.path.exists(ЖУР):
+    os.rename(ЖУР, ЖУР + ".%d" % int(time.time()))
 if os.path.exists(ЖУР):
     for с in io.open(ЖУР, encoding="utf-8"):
         try: сделано.add(json.loads(с)["email"])
@@ -32,15 +36,18 @@ c = sqlite3.connect(БД, timeout=60)
 проба = AddrProbe(БД, helo="parsercompressor.online", timeout=45.0, pause_sec=3.0, per_domain=10 ** 6)
 
 
-def mx_публичные(домен):
-    for сервер in ("8.8.8.8", "1.1.1.1", "77.88.8.8"):
+def mx_doh(домен):
+    import urllib.request
+    for урл in ("https://dns.google/resolve?name=%s&type=MX", "https://cloudflare-dns.com/dns-query?name=%s&type=MX"):
         try:
-            out = subprocess.run(["nslookup", "-type=MX", домен, сервер], capture_output=True, text=True, timeout=25, errors="replace").stdout
-            м = re.findall(r"mail exchanger = (\S+)", out)
-            if м: return м[0].rstrip("."), сервер
+            з = urllib.request.Request(урл % домен, headers={"accept": "application/dns-json"})
+            д = json.load(urllib.request.urlopen(з, timeout=20))
+            мх = sorted((int(a["data"].split()[0]), a["data"].split()[-1].rstrip(".")) for a in д.get("Answer", []) if a.get("type") == 15)
+            мх = [х for _, х in мх if х]
+            return (мх[0] if мх else None), урл.split("/")[2]
         except Exception:  # noqa: BLE001
-            pass
-    return None, ""
+            continue
+    return None, "DoH не ответил"
 
 
 def в_базы(адрес, вер, ответ_):
@@ -83,16 +90,14 @@ for адрес, з in снятые.items():
     if re.search(r"(?i)hostname|PTR|reverse|IP name lookup", а):
         итог = {"email": адрес, "karta": з["karta"], "itog": "пропуск: отказ по нашей обратной записи", "bylo": а[:150]}
     else:
-        домен = адрес.rsplit("@", 1)[-1]; откуда = ""
-        if re.search(r"MX не найден|getaddrinfo", а):
-            хост, откуда = mx_публичные(домен)
-            if not хост:
-                итог = {"email": адрес, "karta": з["karta"], "itog": "MX нет ни у одного публичного DNS", "bylo": а[:150]}
-                пиши = True
-                with io.open(ЖУР, "a", encoding="utf-8") as ф:
-                    ф.write(json.dumps(итог, ensure_ascii=False) + "\n"); ф.flush(); os.fsync(ф.fileno())
-                сч[итог["itog"]] += 1; continue
-            проба._mx[домен] = хост
+        домен = адрес.rsplit("@", 1)[-1]
+        хост, откуда = mx_doh(домен)
+        if not хост:
+            итог = {"email": адрес, "karta": з["karta"], "itog": "MX не найден и по DoH (%s) — оставлено неясно" % откуда, "bylo": а[:150]}
+            with io.open(ЖУР, "a", encoding="utf-8") as ф:
+                ф.write(json.dumps(итог, ensure_ascii=False) + "\n"); ф.flush(); os.fsync(ф.fileno())
+            сч[итог["itog"]] += 1; continue
+        проба._mx[домен] = хост
         try:
             рез = проба.probe(адрес, force=True)
         except Exception as ex:  # noqa: BLE001
