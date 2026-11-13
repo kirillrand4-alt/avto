@@ -299,6 +299,7 @@ print("суд готов:", dict(итог_суда), flush=True)
 
 # ---------------- 2. лесенка проб ----------------
 from sender.addr_probe import build_addr_probe   # noqa: E402
+import proba_tochnaya as P                          # noqa: E402
 _петля = build_addr_probe(store, cfg)
 проба = getattr(_петля, "probe", None) or getattr(_петля, "probe_")
 проба.per_domain = 10 ** 6          # темп держим сами
@@ -334,7 +335,9 @@ def в_базы(адрес, вер, ответ_):
 
 
 # владелец 13.11: «все мертвы» прошлого раза — заново по лесенке (мёртвые адреса уже отсеяны, в лесенке только новые)
-шаг = {} if ТОЛЬКО_КАРТ else {и: 0 for и in прошли if и not in ЛЕС or ЛЕС[и].get("status") == "все мертвы"}
+# 13.11: выбранные сегодня на «неясно» старой пробы — перерешаем точной
+def _перерешать(з): return з.get("status") == "все мертвы" or (з.get("verdict") == "неясно" and str(з.get("ts", ""))[:10] >= "2026-11-13")
+шаг = {} if ТОЛЬКО_КАРТ else {и: 0 for и in прошли if и not in ЛЕС or _перерешать(ЛЕС[и])}
 посл_домен = {}
 сч_проб = Counter()
 print("лесенка: компаний %d (уже решено %d)" % (len(шаг), len([и for и in прошли if и in ЛЕС])), flush=True)
@@ -347,6 +350,8 @@ while шаг:
             пиши(ЖУР_ЛЕС, з); ЛЕС[и] = з; del шаг[и]; продвинулись = True; continue
         адрес = лес[i]["email"]
         есть = проба.cached(адрес)
+        if есть and str(есть.get("verdict") or "") == "неясно":
+            есть = None    # 13.11: «неясно» старой пробы (DNS туннеля Happ не отдаёт MX) — перепроверяем точной
         if есть:
             вер = str(есть.get("verdict") or "неясно")
         else:
@@ -355,11 +360,11 @@ while шаг:
                 continue
             посл_домен[домен] = time.monotonic()
             try:
-                рез = проба.probe(адрес)
+                вер, _код, _отв, _мх = P.проба(адрес)    # 13.11: точная проба (PTR, DoH, catch-all), а не addr_probe
             except Exception as ex:  # noqa: BLE001
-                рез = {"verdict": "неясно", "answer": str(ex)[:200]}
-            вер = str(рез.get("verdict") or "неясно")
-            в_базы(адрес, вер, рез.get("answer") or "")
+                вер, _код, _отв, _мх = "неясно", None, str(ex)[:200], ""
+            P.в_базы(адрес, вер, _код, _отв, _мх)
+            рез = {"verdict": вер, "answer": _отв}
             сч_проб[вер] += 1
         продвинулись = True
         if вер in МЁРТВ:
