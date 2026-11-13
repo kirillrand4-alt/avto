@@ -4,13 +4,14 @@
   --zametka "текст"   — сейчас: запись в историю лида (видна в карточке, блок «История»);
   --podnyat "текст"   — в срок (запускает запланированная задача 01.02.2027): лид снова «новый» и наверху ленты
                         (created_at = сейчас; прежняя дата — в истории), в «Потребность» дописано напоминание.
-    napominanie_lid.py <email> [--zametka "..." | --podnyat "..."]"""
+    napominanie_lid.py <email | id лида> [--zametka "..." | --podnyat "..."]"""
 import json, sqlite3, sys
 from datetime import datetime, timezone
 em = sys.argv[1].strip().lower()
 c = sqlite3.connect(r"C:\sender\sender.db", timeout=60); c.execute("PRAGMA busy_timeout=60000"); c.row_factory = sqlite3.Row
-лиды = c.execute("SELECT id, status, company_name, inn, created_at, need FROM leads WHERE lower(email)=? ORDER BY id DESC", (em,)).fetchall()
-print("лиды:", [dict(x) for x in лиды])
+лиды = c.execute("SELECT id, status, company_name, inn, created_at, need FROM leads WHERE %s ORDER BY id DESC" % ("id=?" if em.isdigit() else "lower(email)=?"),
+                 (int(em) if em.isdigit() else em,)).fetchall()
+print("лиды:", [{k: (str(x[k])[:60] if k == "need" else x[k]) for k in x.keys()} for x in лиды])
 if not лиды: raise SystemExit("лид не найден")
 л = лиды[0]; т = datetime.now(timezone.utc).isoformat(timespec="seconds")
 арг = lambda к: sys.argv[sys.argv.index(к) + 1] if к in sys.argv else ""
