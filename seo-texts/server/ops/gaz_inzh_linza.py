@@ -10,8 +10,9 @@ import csv, io, json, os, re, shutil, sqlite3, subprocess, sys, threading, time
 from collections import Counter
 from datetime import datetime, timezone
 ОПС = r"C:\sender\_ops"
+КАМП = int(next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--kampaniya=")), "22"))   # 13.11: линзы и для кампании 23
 if "--zapusk" in sys.argv:
-    л = io.open(os.path.join(ОПС, "gaz-linza.log"), "a", encoding="utf-8")
+    л = io.open(os.path.join(ОПС, "gaz-linza" + ("" if КАМП == 22 else "-%d" % КАМП) + ".log"), "a", encoding="utf-8")
     п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__)] + [x for x in sys.argv[1:] if x != "--zapusk"],
                          cwd=r"C:\sender", stdout=л, stderr=л, creationflags=0x00000008 | 0x00000200)
     time.sleep(5); print("запущен, pid %d" % п.pid); sys.exit(0)
@@ -20,7 +21,7 @@ import gen_provider as GP  # noqa: E402
 csv.field_size_limit(10 ** 9)
 МОДЕЛЬ = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--model=")), "claude-opus-5-5")
 ПОТОКОВ = int(next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--potokov=")), "6"))
-ЖУР = os.path.join(ОПС, "gaz-kc-linza.jsonl")
+ЖУР = os.path.join(ОПС, "gaz-kc-linza" + ("" if КАМП == 22 else "-%d" % КАМП) + ".jsonl")
 ДРОП = r"C:\seostat\drop\drop-storage"
 _замок = threading.Lock()
 
@@ -35,7 +36,7 @@ for р in читать("CA-ENGER-ZALIVKA.csv") + читать("CA-ENGER-ZALIVKA-
         база[и] = р
 сайт = {цифры(р.get("ИНН")): р for р in читать("CA-ENGER-BAZA-kompanii.csv")}
 c = sqlite3.connect("file:C:\\sender\\sender.db?mode=ro", uri=True, timeout=60)
-карт = c.execute("SELECT id, inn, body FROM confirm_reviews WHERE campaign_id=22 AND status='pending'").fetchall()
+карт = c.execute("SELECT id, inn, body FROM confirm_reviews WHERE campaign_id=? AND status='pending'", (КАМП,)).fetchall()
 СВЯЗКА = re.compile(r"\s(Под такие задачи|Для этого как раз|Как раз под такие процессы|Под резку как раз|Под такие процессы)\b")
 уже = set()
 if os.path.exists(ЖУР):
@@ -110,12 +111,12 @@ with ThreadPoolExecutor(max_workers=ПОТОКОВ) as пул:
 for с in io.open(ЖУР, encoding="utf-8"):
     try: все.append(json.loads(с))
     except ValueError: pass
-вых = io.open(os.path.join(ОПС, "gaz-linza.txt"), "w", encoding="utf-8")
+вых = io.open(os.path.join(ОПС, "gaz-linza" + ("" if КАМП == 22 else "-%d" % КАМП) + ".txt"), "w", encoding="utf-8")
 вых.write("ИНЖЕНЕРНАЯ ЛИНЗА по фразам кампании 22: %s (НИЧЕГО НЕ СНЯТО)\n" % dict(Counter("ok" if з["ok"] else "замечание" for з in все)))
 for з in [з for з in все if not з["ok"]]:
     р = база.get(з["inn"], {})
     вых.write("#%s | %s | %s\n   фраза: %s\n   проблема: %s\n   исправить: %s\n" % (з["karta"], (р.get("Компания") or "")[:45], (р.get("Продукция") or "")[:100],
                                                                           з["fraza"], з["problem"], з["fix"] or "(газ им не нужен — снять)"))
 вых.close()
-shutil.copy2(os.path.join(ОПС, "gaz-linza.txt"), os.path.join(ДРОП, "gaz-linza.txt"))
+shutil.copy2(os.path.join(ОПС, "gaz-linza" + ("" if КАМП == 22 else "-%d" % КАМП) + ".txt"), os.path.join(ДРОП, "gaz-linza" + ("" if КАМП == 22 else "-%d" % КАМП) + ".txt"))
 print("ГОТОВО ЛИНЗА: %s" % dict(итог), flush=True)
