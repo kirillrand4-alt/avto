@@ -45,7 +45,7 @@ csv.field_size_limit(10 ** 9)
 ТОЛЬКО_КАРТ = "--tolko-kartochki" in sys.argv
 МОДЕЛЬ = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--model=")), "claude-opus-5-5")
 ПОТОКОВ = int(next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--potokov=")), "6"))
-ИМЯ_КАМП = "КЦ газ 11.11"
+ИМЯ_КАМП = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--kampaniya=")), "КЦ газ 11.11")
 ЖУР_СУД, ЖУР_ЛЕС, ЖУР_КАРТ = (os.path.join(ОПС, x) for x in ("gaz-kc-sud.jsonl", "gaz-kc-lesenka.jsonl", "gaz-kc-kartochki.jsonl"))
 ХОД_ФАЙЛ = os.path.join(ОПС, "gaz-kc-hod.json")
 МЁРТВ = ("нет ящика", "нет MX")
@@ -389,7 +389,7 @@ else:
 q = build_ai_quota(store, cfg)
 ящики = [m for m in cfg.mailboxes() if str(getattr(m, "division", "")) == "kc"]
 КАРТ = {з["inn"] for з in читать_журнал(ЖУР_КАРТ) if з.get("karta")}
-в_кампании = {цифры(x[0]) for x in к.execute("SELECT inn FROM confirm_reviews WHERE campaign_id=?", (КАМП,))}
+в_кампании = {цифры(x[0]) for x in к.execute("SELECT inn FROM confirm_reviews WHERE campaign_id IN (?, (SELECT id FROM campaigns WHERE name='КЦ газ 11.11'))", (КАМП,))}  # владелец 13.11: новая партия — отдельная кампания, ИНН прошлой не берём
 заведено, пропущено = 0, Counter()
 for и in выбраны:
     if и in КАРТ or и in в_кампании:
