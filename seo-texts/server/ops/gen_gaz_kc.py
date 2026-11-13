@@ -223,6 +223,17 @@ print("отсев компаний:", dict(ОТСЕВ.most_common()), flush=True
 print("отсев адресов в лесенках:", dict(АДР_ОТСЕВ.most_common()), flush=True)
 print("к суду модели: %d компаний; глубина лесенки: %s" % (len(КОМПАНИИ), dict(Counter(len(x["лес"]) for x in КОМПАНИИ.values()))), flush=True)
 ход(этап="подготовка", компаний=len(КОМПАНИИ), отсев=dict(ОТСЕВ))
+if "--vygruzit-adresa" in sys.argv:
+    # владелец 13.11: пробу по всем компаниям сразу, не дожидаясь суда; «все мертвы» прошлого раза — по новым адресам
+    _лес = {з["inn"]: з for з in читать_журнал(os.path.join(ОПС, "gaz-kc-lesenka.jsonl"))}
+    n = 0
+    with io.open(os.path.join(ОПС, "gaz-1311-adresa.jsonl"), "w", encoding="utf-8") as ф:
+        for и, ком in КОМПАНИИ.items():
+            if _лес.get(и, {}).get("status") == "выбран": continue
+            ф.write(json.dumps({"inn": и, "emails": [x["email"] for x in ком["лес"]], "byli_mertvy": _лес.get(и, {}).get("status") == "все мертвы"}, ensure_ascii=False) + "\n"); n += 1
+        ф.flush(); os.fsync(ф.fileno())
+    print("выгружено компаний для пробы: %d (из них прошлые «все мертвы»: %d)" % (n, sum(1 for и in КОМПАНИИ if _лес.get(и, {}).get("status") == "все мертвы")))
+    sys.exit(0)
 if not РАБОТА:
     print("сухой прогон: модель, проба и карточки не запускались. Боевой — --zapusk"); sys.exit(0)
 
@@ -322,7 +333,8 @@ def в_базы(адрес, вер, ответ_):
         слить_обзвон()
 
 
-шаг = {} if ТОЛЬКО_КАРТ else {и: 0 for и in прошли if и not in ЛЕС}
+# владелец 13.11: «все мертвы» прошлого раза — заново по лесенке (мёртвые адреса уже отсеяны, в лесенке только новые)
+шаг = {} if ТОЛЬКО_КАРТ else {и: 0 for и in прошли if и not in ЛЕС or ЛЕС[и].get("status") == "все мертвы"}
 посл_домен = {}
 сч_проб = Counter()
 print("лесенка: компаний %d (уже решено %d)" % (len(шаг), len([и for и in прошли if и in ЛЕС])), flush=True)
