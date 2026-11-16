@@ -67,16 +67,25 @@ if "--otpravit" in sys.argv:
         time.sleep(15)
 
 if "--proverit" in sys.argv:
+    # все папки ящика, последние 40 писем в каждой, сверка Message-ID в заголовке (поиск IMAP по заголовку у Яндекса не работает)
     for з in [json.loads(x) for x in io.open(ЖУР, encoding="utf-8")]:
         if not з["rez"].startswith("отправлено"): continue
-        mb = ящ[з["kuda"]]; где = "не найдено"
+        mb = ящ[з["kuda"]]; где = "не найдено"; нужн = з["mid"].strip().strip("<>").lower()
         try:
             im = imaplib.IMAP4_SSL(mb.imap_host, mb.imap_port, timeout=60); im.login(mb.login, os.environ.get(mb.password_env, ""))
-            for папка in ("INBOX", "Spam", '"&BCEEPwQwBDw-"'):
+            папки = []
+            for стр in im.list()[1] or []:
+                м = re.search(rb'"([^"]+)"\s*$|(\S+)\s*$', стр)
+                if м: папки.append((м.group(1) or м.group(2)).decode())
+            for п in папки:
                 try:
-                    if im.select(папка, readonly=True)[0] != "OK": continue
-                    т, д = im.search(None, "HEADER", "Message-ID", з["mid"].strip("<>"))
-                    if т == "OK" and д and д[0].split(): где = папка.replace('"&BCEEPwQwBDw-"', "Спам"); break
+                    т, д = im.select('"%s"' % п, readonly=True)
+                    if т != "OK": continue
+                    n = int(д[0] or 0)
+                    if not n: continue
+                    т, д = im.fetch("%d:%d" % (max(1, n - 39), n), "(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])")
+                    if any(isinstance(x, tuple) and нужн in x[1].decode("latin-1").lower() for x in д):
+                        где = п; break
                 except Exception:  # noqa: BLE001
                     continue
             im.logout()
