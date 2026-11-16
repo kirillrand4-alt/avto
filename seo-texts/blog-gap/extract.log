@@ -23,3 +23,7 @@ ERR https://zenova.ru/articles/zenova-rb-testiruem JSONDecodeError("Expecting ',
 сбой провайдера, ретрай 3/7 через 60 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
 сбой провайдера, ретрай 3/7 через 60 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
 сбой провайдера, ретрай 3/7 через 60 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
