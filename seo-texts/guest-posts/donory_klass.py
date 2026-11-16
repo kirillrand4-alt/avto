@@ -42,6 +42,11 @@ def main():
     done = set()
     if os.path.exists(OUT):
         done = {json.loads(l)['domain'] for l in open(OUT, encoding='utf-8')}
+    if len(sys.argv) > 1:  # передоразметить указанные домены (строгая мерка)
+        redo = set(sys.argv[1:])
+        keep = [l for l in open(OUT, encoding='utf-8') if json.loads(l)['domain'] not in redo]
+        open(OUT, 'w', encoding='utf-8').writelines(keep)
+        done -= redo
     with open(OUT, 'a', encoding='utf-8') as f:
         for l in open(os.path.join(DIR, 'donory-pozicii.jsonl'), encoding='utf-8'):
             d = json.loads(l)
@@ -57,6 +62,8 @@ def main():
                    'prom': sh(lambda x: x[1] == 'prom'), 'prom_smezh': sh(lambda x: x[1] in ('prom', 'smezh')),
                    'statya': sh(lambda x: x[2] == 'statya'), 'toxic': sh(lambda x: int(x[3]) == 1),
                    'statya_prom': sh(lambda x: x[2] == 'statya' and x[1] in ('prom', 'smezh')),
+                   'statya_strict': sh(lambda x: x[2] == 'statya' and x[1] == 'prom'),
+                   'labels': {str(i): m[i][1:4] for i in m},
                    'razdel': lab.get('razdel_statej', ''),
                    'top_statyi': [[r[0], r[1], r[2]] for r in st_rows[:5]]}
             f.write(json.dumps(rec, ensure_ascii=False) + '\n')
