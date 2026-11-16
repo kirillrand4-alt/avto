@@ -57,8 +57,15 @@ def categories():
 
 
 def cat_lines(cats):
-    return '\n'.join(f"{u} | {c['h1']} | товаров {c.get('n_products', 0)}{' | ПРИОРИТЕТ' if c['prio'] else ''}"
-                     for u, c in sorted(cats.items()))
+    prof = {r['url']: r for r in jl('cat-profile.jsonl')}
+
+    def line(u, c):
+        p = prof.get(u)
+        s = f"{u} | {c['h1']} | товаров {c.get('n_products', 0)}"
+        if p:
+            s += f" | срез: {p.get('srez', '')} | продаёт: {p.get('prodaet', '')} | для: {p.get('zadachi', '')}"
+        return s + (' | ПРИОРИТЕТ' if c['prio'] else '')
+    return '\n'.join(line(u, c) for u, c in sorted(cats.items()))
 
 
 PICK = """Ты делаешь внутреннюю перелинковку: статья блога prokompressor.ru -> разделы каталога.
@@ -82,7 +89,7 @@ PICK = """Ты делаешь внутреннюю перелинковку: с�
 Ответ строго JSON:
 {{"links":[{{"para":N,"anchor":"...","url":"/catalog/.../","type":"exact|partial|descriptive","new_sentence":"" ,"why":"..."}}]}}
 
-РАЗДЕЛЫ КАТАЛОГА (url | H1 | товаров):
+РАЗДЕЛЫ КАТАЛОГА (url | H1 | товаров | срез | что продаёт | для каких задач):
 {cats}
 
 СТАТЬЯ: {url}
