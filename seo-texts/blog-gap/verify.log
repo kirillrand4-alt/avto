@@ -1,0 +1,19 @@
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615284371262528
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615284387562535
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615284416128497
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615294802293388
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615294782205578
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615294744589553
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 5/7 через 150 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615315300779250
+сбой провайдера, ретрай 5/7 через 150 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615315321138296
+проверено 1224
