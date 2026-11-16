@@ -374,13 +374,13 @@ def st_brief():
     def topic(tid):
         if tid in done or tid == 'off':
             return
-        its = sorted(by[tid], key=lambda x: -x['score'])[:120]
+        its = sorted(by[tid], key=lambda x: -x['score'])[:int(os.environ.get('SM_BN', '120'))]
         lines = '\n'.join(
             f"{i} | {x['q']} | {x['v']} | {x['our_url'] or '-'} | "
             + '; '.join(f for c in x['comp'][:3] for f in (c[3] or [])[:2])[:300]
             for i, x in enumerate(its))
         try:
-            res = ask(BRIEF.format(name=names.get(tid, tid), cats=cats, lines=lines), 12000)
+            res = ask(BRIEF.format(name=names.get(tid, tid), cats=cats, lines=lines), int(os.environ.get('SM_BTOK', '12000')))
         except Exception as e:
             print('ERR', tid, repr(e)[:120], flush=True)
             return
@@ -412,18 +412,31 @@ def st_report():
     rows = gap_rows()
     briefs = jl('brief.jsonl')
     DL = {1: 'упомянуто', 2: 'раскрыто', 3: 'с цифрами'}
+    ncomp = {r['q']: r['n_comp'] for r in rows}
+    LOW = {'news', 'market', 'household', 'other'}
+    arts = []
+    for b in briefs:
+        for s in b['stati']:
+            qs = [q for p in s.get('podtemy', []) for q in p.get('voprosy', [])]
+            mx = max([ncomp.get(q, 0) for q in qs] or [0])
+            score = mx * 3 + sum(ncomp.get(q, 0) for q in qs) / 5 - (10 if b['topic'] in LOW else 0)
+            arts.append((score, mx, b, s))
+    arts.sort(key=lambda a: -a[0])
     with open(P('TZ-KOPIRAITER.csv'), 'w', encoding='utf-8-sig', newline='') as f:
         w = csv.writer(f, delimiter=';')
-        w.writerow(['Тема', 'Статья (H1)', 'Интент', 'Новая/дописать', 'Подтема (H2)', 'Вопросы клиента',
-                    'Что раскрыть', 'Статьи конкурентов (глубина)', 'Ссылки в каталог'])
-        for b in briefs:
-            for s in b['stati']:
-                for p in s.get('podtemy', []):
-                    w.writerow([b['name'], s.get('h1', ''), s.get('intent', ''),
-                                ('дописать ' + s['dorabotat']) if s.get('dorabotat') else 'новая',
-                                p.get('h2', ''), '\n'.join(p.get('voprosy', [])), p.get('raskryt', ''),
-                                '\n'.join(f"{u} ({DL.get(d, d)})" for u, d in p.get('konkurenty', [])),
-                                ' '.join(s.get('katalog', []))])
+        w.writerow(['№', 'Приоритет', 'Макс. конкурентов на вопрос', 'Тема', 'Статья (H1)', 'Интент',
+                    'Новая/дописать', 'Подтема (H2)', 'Вопросы клиента', 'Что раскрыть',
+                    'Статьи конкурентов (глубина)', 'Ссылки в каталог'])
+        for i, (score, mx, b, s) in enumerate(arts, 1):
+            pr = 'A' if mx >= 6 else 'B' if mx >= 3 else 'C'
+            if b['topic'] in LOW:
+                pr = 'C'
+            for p in s.get('podtemy', []):
+                w.writerow([i, pr, mx, b['name'], s.get('h1', ''), s.get('intent', ''),
+                            ('дописать ' + s['dorabotat']) if s.get('dorabotat') else 'новая',
+                            p.get('h2', ''), '\n'.join(p.get('voprosy', [])), p.get('raskryt', ''),
+                            '\n'.join(f"{u} ({DL.get(d, d)})" for u, d in p.get('konkurenty', [])),
+                            ' '.join(s.get('katalog', []))])
     L = ['# Смыслы блога prokompressor.ru против конкурентов', '',
          f"- Наших статей размечено: {len(ours)}; конкурентов с блогами по теме: {len(comp_dom)}; "
          f"статей всего: {len(sm)}.",
@@ -431,7 +444,13 @@ def st_report():
          f"- Не закрываем: {sum(1 for r in rows if r['v'] == 'net')}, поверхностно: "
          f"{sum(1 for r in rows if r['v'] == 'chastichno')} (после перепроверки по нашим статьям).",
          f"- ТЗ копирайтеру: {sum(len(b['stati']) for b in briefs)} статей, полная таблица - "
-         "`TZ-KOPIRAITER.csv`.", '', '## План статей по темам', '']
+         "`TZ-KOPIRAITER.csv` (отсортирована по приоритету).", '',
+         '## Топ-40 статей по приоритету', '',
+         'Приоритет = сколько сайтов-конкурентов закрывают вопрос, которого нет у нас (A: 6+, B: 3-5, C: остальное).', '']
+    for i, (score, mx, b, s) in enumerate(arts[:40], 1):
+        mark = f"дописать {s['dorabotat']}" if s.get('dorabotat') else 'новая'
+        L.append(f"{i}. **{s.get('h1', '')}** ({mark}; конкурентов до {mx}; тема: {b['name']})")
+    L += ['', '## План статей по темам', '']
     for b in sorted(briefs, key=lambda b: -len(b['stati'])):
         L.append(f"### {b['name']}")
         for s in b['stati']:

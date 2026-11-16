@@ -1,9 +1,54 @@
 # Смыслы блога prokompressor.ru против конкурентов
 
 - Наших статей размечено: 114; конкурентов с блогами по теме: 42; статей всего: 1237.
-- Канонических вопросов клиента (после сведения дублей): 2841.
-- Не закрываем: 844, поверхностно: 916 (после перепроверки по нашим статьям).
-- ТЗ копирайтеру: 362 статей, полная таблица - `TZ-KOPIRAITER.csv`.
+- Канонических вопросов клиента (после сведения дублей): 3095.
+- Не закрываем: 839, поверхностно: 1026 (после перепроверки по нашим статьям).
+- ТЗ копирайтеру: 376 статей, полная таблица - `TZ-KOPIRAITER.csv` (отсортирована по приоритету).
+
+## Топ-40 статей по приоритету
+
+Приоритет = сколько сайтов-конкурентов закрывают вопрос, которого нет у нас (A: 6+, B: 3-5, C: остальное).
+
+1. **Классификация компрессоров: объёмные и динамические, по принципу действия и конструкции** (новая; конкурентов до 15; тема: Классификация и сравнение типов компрессоров)
+2. **Устройство винтового компрессора: из каких узлов состоит и как работает** (дописать /blog/poleznaya-informatsiya/vintovoi-kompressor/; конкурентов до 12; тема: Винтовые компрессоры: устройство, принцип работы, исполнения)
+3. **Сжатый воздух в промышленности: где применяется и чем выгоднее электричества и гидравлики** (дописать /blog/poleznaya-informatsiya/kompressory_dla_pishevogo_proizvodstva/; конкурентов до 10; тема: Компрессоры для отраслей и задач)
+4. **Устройство поршневого компрессора: из каких узлов состоит и как работает** (дописать /blog/poleznaya-informatsiya/porshnevoi-kompressor/; конкурентов до 9; тема: Поршневые компрессоры: устройство и принцип работы)
+5. **Подбор компрессора под пневмоинструмент автосервиса, гаража и мастерской** (дописать /blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/; конкурентов до 8; тема: Расчёт производительности и подбор компрессора)
+6. **Как выбрать компрессор для дома, дачи, гаража и мастерской** (дописать /blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/; конкурентов до 11; тема: Бытовые и гаражные компрессоры)
+7. **Компрессор, насос, воздуходувка и холодильный компрессор: в чём разница** (дописать /blog/poleznaya-informatsiya/kompressory_dla_pishevogo_proizvodstva/; конкурентов до 8; тема: Классификация и сравнение типов компрессоров)
+8. **Классификация поршневых компрессоров: виды, типы и исполнения** (дописать /blog/poleznaya-informatsiya/porshnevoi-kompressor/; конкурентов до 7; тема: Поршневые компрессоры: устройство и принцип работы)
+9. **Привод поршневого компрессора: ременной, прямой, электро или ДВС** (новая; конкурентов до 7; тема: Поршневые компрессоры: устройство и принцип работы)
+10. **Многоступенчатое сжатие в поршневом компрессоре: как работает и зачем** (дописать /blog/poleznaya-informatsiya/dvukhstup/; конкурентов до 7; тема: Поршневые компрессоры: устройство и принцип работы)
+11. **Роторные и специальные типы компрессоров: винтовой, пластинчатый, жидкостно-кольцевой, мембранный, зубчатый, кулачковый** (дописать /blog/poleznaya-informatsiya/razvitie-bezmaslyanykh-tekhnologiy-v-kompressornykh-sistemakh/; конкурентов до 7; тема: Классификация и сравнение типов компрессоров)
+12. **Масляные и безмасляные компрессоры: подробное сравнение по ресурсу, чистоте воздуха, шуму, обслуживанию и цене** (дописать /blog/poleznaya-informatsiya/Bezmaslyanye_vintovye_kompressory_vse_ob_ih_plusah_i_minusah/; конкурентов до 7; тема: Масляные и безмасляные компрессоры)
+13. **Производительность компрессора: по всасыванию, по нагнетанию и реальная подача** (дописать /blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/; конкурентов до 7; тема: Расчёт производительности и подбор компрессора)
+14. **Устройство и типы ресиверов: материалы, конструкция, горизонтальный и вертикальный** (новая; конкурентов до 6; тема: Ресиверы и сосуды под давлением)
+15. **Безмасляный компрессор для покраски: зачем нужен и как выбрать** (новая; конкурентов до 7; тема: Масляные и безмасляные компрессоры)
+16. **Как выбрать воздушный шланг и рукав для компрессора** (новая; конкурентов до 6; тема: Пневмосеть: трубопроводы, утечки, потери давления)
+17. **Как производят воздушные ресиверы: от раскроя металла до испытаний** (новая; конкурентов до 5; тема: Ресиверы и сосуды под давлением)
+18. **Подключение винтового компрессора к электросети: нормы, 220 или 380 В, однофазный или трёхфазный** (дописать /blog/poleznaya-informatsiya/10-pravil-servis/; конкурентов до 6; тема: Электродвигатель и электрическая часть)
+19. **Компрессор для пескоструйной обработки: давление, расход и сопло** (дописать /blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/; конкурентов до 6; тема: Расчёт производительности и подбор компрессора)
+20. **Сертификаты и документы на воздушный ресивер: ТР ТС 032/2013, паспорт сосуда, разрешительная документация** (новая; конкурентов до 6; тема: Безопасность, нормативы и документы)
+21. **Объём ресивера для покраски и пескоструя: сколько литров нужно** (новая; конкурентов до 6; тема: Ресиверы и сосуды под давлением)
+22. **Масляный и безмасляный поршневой компрессор: устройство и зачем масло** (дописать /blog/poleznaya-informatsiya/maslyaniy-filtr/; конкурентов до 6; тема: Поршневые компрессоры: устройство и принцип работы)
+23. **Регистрация ресивера и сосудов под давлением в Ростехнадзоре: когда нужна и как оформить** (дописать /blog/poleznaya-informatsiya/MKS.Kompressornaya_stanciya_kotoroy_nevedomy_prepyatstviya/; конкурентов до 6; тема: Безопасность, нормативы и документы)
+24. **Замена масла в компрессоре: пошаговая инструкция и интервалы** (дописать /blog/poleznaya-informatsiya/kak-chasto-menyat-maslo-v-vintovom-kompressore/; конкурентов до 5; тема: Компрессорное масло и смазка)
+25. **Как подобрать объём ресивера для компрессора: расчёт, таблицы, примеры** (дописать /blog/poleznaya-informatsiya/kak-vybrat-receiver/; конкурентов до 5; тема: Ресиверы и сосуды под давлением)
+26. **Дожимной компрессор (бустер): что это, как устроен и как работает** (новая; конкурентов до 5; тема: Компрессоры высокого давления и бустеры)
+27. **Как менять воздушный и масляный фильтр компрессора: признаки износа и порядок** (дописать /blog/poleznaya-informatsiya/vozdushnii-filtr/; конкурентов до 5; тема: Техническое обслуживание и ресурс)
+28. **Эксплуатация дизельного компрессора в тяжёлых и северных условиях** (новая; конкурентов до 5; тема: Дизельные передвижные компрессоры)
+29. **Динамические компрессоры: центробежные, осевые и их отличие от объёмных** (дописать /blog/poleznaya-informatsiya/zentrobezhnyy_compressor_prinzip_raboty/; конкурентов до 5; тема: Спиральные и центробежные компрессоры)
+30. **Исполнения и комплектации винтового компрессора: рама, ресивер, осушитель, корпус, опции** (дописать /blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/; конкурентов до 5; тема: Винтовые компрессоры: устройство, принцип работы, исполнения)
+31. **Пусконаладка и ввод компрессора в эксплуатацию: порядок запуска и проверки** (новая; конкурентов до 5; тема: Монтаж, помещение и ввод в эксплуатацию)
+32. **Проектирование пневмосети: с чего начать и как рассчитать трубопроводы** (дописать /blog/poleznaya-informatsiya/truboprovod/; конкурентов до 5; тема: Пневмосеть: трубопроводы, утечки, потери давления)
+33. **Дизельный передвижной компрессор: устройство, принцип работы и классификация** (дописать /blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/; конкурентов до 5; тема: Дизельные передвижные компрессоры)
+34. **Электродвигатель винтового компрессора: класс энергоэффективности, степень защиты и изоляции** (дописать /blog/poleznaya-informatsiya/stepeni_zaschity_dvigateley/; конкурентов до 5; тема: Электродвигатель и электрическая часть)
+35. **Регламент замены расходников винтового компрессора: сроки по часам наработки** (дописать /blog/poleznaya-informatsiya/obsluzhivanie-pnevmoseti-reglamentnye-raboty-raskhodniki-i-sroki/; конкурентов до 5; тема: Запчасти и расходные материалы)
+36. **Стоимость владения и расход топлива дизельного компрессора** (дописать /blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/; конкурентов до 5; тема: Дизельные передвижные компрессоры)
+37. **Основание, фундамент и виброизоляция компрессора: что подготовить перед монтажом** (дописать /blog/poleznaya-informatsiya/pochemu-nelzya-ignorirovat-vibratsiyu-kompressora/; конкурентов до 5; тема: Монтаж, помещение и ввод в эксплуатацию)
+38. **Какой класс чистоты сжатого воздуха нужен для вашего производства** (новая; конкурентов до 5; тема: Качество и подготовка сжатого воздуха)
+39. **Как выбрать поршневой компрессор: гараж, стройка, пескоструй, предприятие** (дописать /blog/poleznaya-informatsiya/porshnevoi-kompressor/; конкурентов до 4; тема: Поршневые компрессоры: устройство и принцип работы)
+40. **Как рассчитать и подобрать рефрижераторный осушитель воздуха под компрессор** (дописать /blog/poleznaya-informatsiya/gayd-vybiraem-osushitel-vozdukha-dlya-kompressora-/; конкурентов до 4; тема: Осушители сжатого воздуха)
 
 ## План статей по темам
 
@@ -646,6 +691,66 @@
   - Сеть питания 220 В против 380 В: https://dileks.ru/blog/stati/kak-vybrat-vintovoy-kompressor-dlya-proizvodstva-polnoe-rukovodstvo/
 - **Спиральные компрессоры: когда выбирать и какие параметры учитывать** (дописать /blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/)
   - Параметры подбора спирального компрессора: https://aerocompressors.ru/stati/spiralnye-kompressory-tehnologiya-raboty-i-sfery-primeneniya/
+
+### Компрессоры для отраслей и задач
+- **Сжатый воздух в промышленности: где применяется и чем выгоднее электричества и гидравлики** (дописать /blog/poleznaya-informatsiya/kompressory_dla_pishevogo_proizvodstva/)
+  - Где применяют сжатый воздух: отрасли и задачи: https://air-vint.ru/blog/sovety-pokupatelyam/kompressory-i-ikh-klassifikatsiya/, https://www.remeza.org/company/articles/kompressory_vidy_i_osobennosti_/, https://www.e-kp.ru/info/articles/bezhetskiy-oruzheyno-pulemetnyy-zavod-kompressornyy-zavod-aso/
+  - Сжатый воздух как источник энергии: принцип работы: https://www.2bar.ru/blog/zachem-nuzhen-vozdushnyy-kompressor/, https://kompresurs.ru/blog/podgotovka-szhatogo-vozdukha/
+  - Преимущества сжатого воздуха перед электричеством и гидравликой: https://aircompressorhub.ru/company/blog/6304/, https://dileks.ru/blog/sovety/refrizheratornye-osushiteli-osobennosti-i-primenenie/, https://www.2bar.ru/blog/zachem-nuzhen-vozdushnyy-kompressor/
+- **Типы пневмоинструмента и выбор компрессора для автосервиса и шиномонтажа** (дописать /blog/poleznaya-informatsiya/kakoq_kompressor_vybrat_dlya_avtoservisa/)
+  - Виды пневмоинструмента по принципу действия: https://aerocompressors.ru/stati/preimuwestva_pnevmoinstrumenta/, https://promtula.ru/stati/primenenie-szhatogo-vozduha-pnevmaticheskij-instrument/
+  - Пневмоинструмент для шиномонтажа и роль компрессора: https://gkpnevmo.ru/information/article/kompressory-dlya-shinomontazha/, https://aerocompressors.ru/stati/pravilnyj_instrument_dlya_avtoservisa/
+  - Для каких задач подходят маслозаполненные компрессоры: https://www.remeza.org/company/articles/kakoy_kompressor_kupit_maslozapolnennyy_ili_bezmaslyanyy/, https://aircompressorhub.ru/company/blog/6294/
+- **Качество и подготовка сжатого воздуха для покраски, автосервиса и мебельного производства** (дописать /blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/)
+  - Классы чистоты воздуха для разных задач: https://www.v-p-k.ru/blog/pochemu-tak-vazhna-vozdukhopodgotovka/, https://dileks.ru/blog/sovety/podbor-kompressornogo-oborudovaniya/
+  - Как давление влияет на качество покраски: https://www.2bar.ru/blog/kakoy-kompressor-luchshe-dlya-pokraski/, https://ariacom.ru/stati/kak_pravil_no_podobrat_vintovoj_kompressor_dlya_okrasochnyh_rabot/
+  - Скорость воздуха для сушки кузова: https://zenova.ru/articles/vozduhoduvka-vmesto-turbosushki
+- **Компрессор для пескоструйной обработки: расчёт производительности, сопла и шланги** (дописать /blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/)
+  - Расход воздуха по диаметру сопла и давлению: https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/gid-po-peskostruynym-rabotam/, https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-peskostruya/
+  - Как выбрать диаметр сопла под задачу и степень очистки: https://gsk-servis.ru/blog/sovety-pokupatelyam/kak-vybrat-peskostruynoe-soplo/, https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/gid-po-peskostruynym-rabotam/
+  - Как износ сопла влияет на расход воздуха: https://rdrus.ru/blog/tekhnicheskie-stati/kak-podobrat-dizelnyy-kompressor-polnoe-rukovodstvo/, https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-peskostruya/
+  - Диаметр шлангов и рукавов, сопел: https://gkpnevmo.ru/information/article/kompressory-dlya-peskostruynykh-rabot/, https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/gid-po-peskostruynym-rabotam/
+  - Производительность под инжекторный аппарат: https://kurs-peskostrui.ru/blogs/blog/chernovik-stati-ot-15122022-1246
+  - Оборудование подготовки воздуха для пескоструя: https://kurs-peskostrui.ru/blogs/blog/kurs-vypolnil-puskonaladku-oborudovaniya-obitaemoy-kamery-na-predpriyatii-po-izgotovleniyu-metizov-v-tule, https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/oborudovanie-dlya-podgotovki-szhatogo-vozdukha-dlya-peskostruynykh-rabot/, https://ariacom.ru/stati/kak_podobrat_kompressor_dlya_peskostrujnogo_apparata/
+  - Ошибки при недостаточной производительности: https://kurs-peskostrui.ru/blogs/stati/vybiraem-kompressor-dlya-peskostruynogo-apparata, https://gkpnevmo.ru/information/article/kompressor-dlya-peskostruya-vazhnyy-vybor/
+- **Как выбрать пескоструйный аппарат и спроектировать пескоструйную камеру**
+  - Как выбрать пескоструйный аппарат: бытовой, профессиональный, промышленный: https://drobesfera.ru/blogs/blog/kak-vybrat-peskostruynyy-apparat
+  - Устройство обитаемой пескоструйной камеры под ключ: https://kurs-peskostrui.ru/blogs/blog/masshtabnaya-otgruzka-oborudovaniya-zakazchiku-v-samaru, https://drobesfera.ru/blogs/blog/innovatsii-i-kachestvo-vzglyad-iznutri-na-proizvodstvo-zavoda-pnevmostroytehnika
+- **Компрессор для лазерной резки: воздух или азот, подбор под станок** (дописать /blog/poleznaya-informatsiya/vashemu-lazeru-nuzhen-pravilnyy-kompressor/)
+  - Когда воздух заменяет азот и для каких материалов: https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/, https://rdrus.ru/blog/tekhnicheskie-stati/kak-vybrat-kompressor-dlya-lazernogo-stanka-polnoe-rukovodstvo-po-podboru/
+  - Требования к азоту: давление и чистота: https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/
+  - Подбор производительности и мощности под станок: https://rdrus.ru/blog/articles/kakaya-proizvoditelnost-kompressora-nuzhna-dlya-stanka-lazer/
+  - Какие данные станка нужны для подбора: https://rdrus.ru/blog/tekhnicheskie-stati/kak-vybrat-kompressor-dlya-lazernogo-stanka-polnoe-rukovodstvo-po-podboru/
+  - Частые ошибки подбора и монтажа: https://rdrus.ru/blog/tekhnicheskie-stati/kak-pravilno-podobrat-kompressor-dlya-lazernoy-rezki-metalla/
+- **Технические характеристики компрессоров: мощность, давление, производительность** (дописать /blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/)
+  - Диапазоны мощности, давления и производительности: https://www.2bar.ru/blog/kompressory-porshnevye-bekomsan-na-tsementovozy-i-mukovozy/, https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-lazernogo-stanka/
+  - Для какого производства подходит компрессор 15 кВт: https://dileks.ru/blog/stati/kak-vybrat-vintovoy-kompressor-dlya-proizvodstva-polnoe-rukovodstvo/
+  - Винтовой с ресивером и осушителем для металлообработки: http://asobezh.ru/blog/realizovannye-proekty/bezhetskie-kompressory-dlya-proizvoditelya-metallicheskikh-dverey-ooo-stal-grupp/, https://aerocompressors.ru/stati/vintovye_kompressory_dlya_metalloobrabotki/
+- **Компрессоры для пищевой и фармацевтической промышленности** (дописать /blog/poleznaya-informatsiya/kompressory_dla_pishevogo_proizvodstva/)
+  - Типы компрессоров и масла для пищевой отрасли: https://aircompressorhub.ru/company/blog/6300/, https://compressor-ga.ru/company/articles/2660/
+  - Винтовые компрессоры для круглосуточной работы на пищевом производстве: http://asobezh.ru/blog/diler/ooo-kompressor-resurs-10-let-uspeshnogo-sotrudnichestva/, https://kompresurs.ru/blog/bezhetskiy-zavod-aso-10-let-uspeshnogo-sotrudnichestva/
+- **Передвижные и автономные компрессоры для цементовозов, стройки и сельхоза**
+  - Компрессор с приводом от ВОМ/КОМ трактора: http://asobezh.ru/blog/products/kompressor-ot-vom-traktora-kak-reshit-zadachu-avtonomnogo-vozdukha-v-pole-i-na-stroyke-bez-lishnikh-/, https://www.2bar.ru/blog/kompressory-s-privodom-ot-kom/
+  - Запуск автономного компрессора на цементовозе: https://www.2bar.ru/blog/kak-zapustit-avtonomnyy-kompressor-na-tsementovoze/
+  - Энергопотребление компрессора цементовоза: https://www.2bar.ru/blog/pochemu-kompressory-bekomsan---luchshiy-vybor-dlya-tsementovozov-i-mukovozov/
+  - Последствия несоответствия производительности/давления пневмосистеме: https://aerocompressors.ru/stati/kak-vybrat-kompressor-dlya-peskostrujnyh-rabot_-polnoe-rukovodstvo/, https://www.2bar.ru/blog/kompressor-na-tsementovoz-bekomsan/
+- **Сжатый воздух на цементном производстве: КИПиА, пневмотранспорт и аэрация**
+  - Требования к воздуху для управления и КИПиА: https://dileks.ru/blog/sovety/kak-sokratit-raskhody-na-elektroenergiyu/
+  - Компрессор для пневмотранспорта и аэрации цемента: https://dileks.ru/blog/sovety/kak-sokratit-raskhody-na-elektroenergiyu/
+- **Опрессовка трубопроводов сжатым воздухом: технология и выбор компрессора**
+  - Что такое опрессовка воздухом и чем отличается от водяной: https://gkpnevmo.ru/information/article/vybiraem-kompressor-dlya-opressovki/, https://aerocompressors.ru/stati/nadyozhnoe_elektrosnabzhenie_predpriyatiya_kak_vybrat_i_ustanovit_dizel_nyj_generator2/, https://ariacom.ru/stati/kompressor_dlya_opressovki_truboprovodov/
+  - Какой компрессор подходит для опрессовки и промывки: https://ariacom.ru/stati/kompressor_dlya_opressovki_truboprovodov/, https://gkpnevmo.ru/information/article/vybiraem-kompressor-dlya-opressovki/, https://aerocompressors.ru/stati/nadyozhnoe_elektrosnabzhenie_predpriyatiya_kak_vybrat_i_ustanovit_dizel_nyj_generator2/
+- **Генераторы кислорода на производстве: чистота и применение по отраслям**
+  - Кислород для медицины: чистота и генератор на месте: https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/
+  - Кислород в рыбоводстве: https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/
+  - Кислород в водоподготовке: https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/
+  - Кислород в металлургии: https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/
+  - Кислород в производстве стекла: https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/
+- **Аэрация очистных сооружений и рыбоводства: подбор компрессора и воздуходувки** (дописать /blog/poleznaya-informatsiya/transportirovka-sukhikh-veshchestv-szhatym-vozdukhom/)
+  - Как подобрать компрессор для аэрации: https://www.remeza24.ru/blog/vybor-kompressora/vintovye-nizkogo-davleniya/
+- **FAQ: электрические и медицинские компрессоры**
+  - Для каких инструментов и отраслей подходят электрические компрессоры: https://www.2bar.ru/blog/kompressory-s-elektroprivodom/, https://aerocompressors.ru/stati/elektricheskie_kompressory/
+  - Опции медицинских компрессоров: https://www.remeza.org/company/articles/meditsinskie_kompressory_remeza_serii_km/
 
 ### Компрессорное масло и смазка
 - **Как выбрать компрессорное масло: состав, вязкость, присадки и свойства** (дописать /blog/poleznaya-informatsiya/kak-proverit-uroven-masla-v-kompressore-prosto-o-glavnom-/)

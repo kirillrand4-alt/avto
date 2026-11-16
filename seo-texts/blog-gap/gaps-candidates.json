@@ -1105,6 +1105,130 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где применяются винтовые компрессоры и для каких задач/потребителей используется сжатый воздух?",
+  "our_depth": 0,
+  "n_comp": 13,
+  "comp_max_depth": 2,
+  "score": 27.69,
+  "comp": [
+   [
+    "rdrus.ru",
+    2,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/vintovye-kompressory-ustroystvo-i-printsip-raboty/",
+    [
+     "Металлургия, пищевые предприятия, деревообработка, СТО, фармацевтика, электроника",
+     "Для чистого воздуха подходят безмасляные или масляные модели с расширенной очисткой"
+    ]
+   ],
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/printsipy_raboty_kompressorov_i_ikh_primenenie/",
+    [
+     "Кондиционирование, холодильные установки, пневматические системы, газотурбинные двигатели"
+    ]
+   ],
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/vybiraem-vintovoy-kompressor-chto-uchityvat",
+    [
+     "Химия и нефтехимия, металлургия, добыча полезных ископаемых, энергетика, микроэлектроника, медицина, фармацевтика, пищевая и лёгкая промышленность"
+    ]
+   ],
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/vintovye_kompressory/",
+    [
+     "Подходят для строительства и производства, особенно для цехов заводов и фабрик с непрерывной подачей воздуха",
+     "Низкий уровень шума позволяет ставить их почти в любых промышленных помещениях"
+    ]
+   ],
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/sovety/vintovoy-kompressor-ustroystvo-skhema-i-printsip-raboty/",
+    [
+     "Строительство, автомобилестроение, металлургия, химическая, пищевая, фармацевтическая, горная и деревообрабатывающая промышленность"
+    ]
+   ],
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/aso-v-smi/kompressornoe-oborudovanie-dlya-promyshlennogo-primeneniya/",
+    [
+     "конвейеры, упаковка, робототехника, текстильная и полиграфическая промышленность",
+     "пескоструйная очистка, пневмотранспорт стройматериалов, электростанции, печи"
+    ]
+   ],
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressor-bekomsan-esinti-102-s-elektrodvigatelem/",
+    [
+     "Машиностроение, металлообработка, деревообработка, пищевое производство, упаковка, автосервисы, стройка, логистика"
+    ]
+   ],
+   [
+    "kompressor-group.ru",
+    2,
+    "https://kompressor-group.ru/stati/kompressory-vintovye-airpol/",
+    [
+     "Машиностроение, судостроение, фармацевтика, автомобилестроение, дорожное строительство"
+    ]
+   ],
+   [
+    "kompresurs.ru",
+    2,
+    "https://kompresurs.ru/blog/obsluzhivanie-vintovogo-kompressora/",
+    [
+     "химия, металлургия, деревообработка, машиностроение, строительство, медицина",
+     "автосервис: покраска, накачка шин, абразивная чистка",
+     "пищевая отрасль, производство тары и керамики"
+    ]
+   ],
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/bolshoe-postuplenie-vintovyh-kompressorov-v-kurse",
+    [
+     "Пескоструйное, дорожное, строительное и окрасочное оборудование",
+     "Пневмоинструмент и станки",
+     "Производственные процессы больших и малых предприятий"
+    ]
+   ],
+   [
+    "air-tank.ru",
+    1,
+    "https://berg-rus.ru/blog/stati/chto-takoe-vintovoy-kompressor-i-kak-on-rabotaet/",
+    [
+     "Производство, пищевая и фармацевтика, автосектор, строительство, металлургия, медицина"
+    ]
+   ],
+   [
+    "almig-ru.com",
+    1,
+    "https://almig-ru.com/blog/tipy-kompressorov/vintovoj-kompressor-ustrojstvo-shema-i-princzip-raboty/",
+    [
+     "Строительство, автомобилестроение, металлургия, химия",
+     "Пищевая, фармацевтика, горно-шахтная, деревообработка"
+    ]
+   ],
+   [
+    "promtula.ru",
+    1,
+    "https://promtula.ru/stati/vintovye-kompressory-dalgakyran/",
+    [
+     "Деревообработка, пищевая промышленность, бытовая химия, производство упаковки",
+     "Для малых и средних предприятий"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "maintenance",
   "topic_name": "Техническое обслуживание и ресурс",
   "q": "Может ли компрессор работать непрерывно/круглосуточно и нужен ли ему отдых (режим работы, ПВ)?",
@@ -2008,6 +2132,104 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях и для каких задач применяются промышленные/воздушные компрессоры в целом?",
+  "our_depth": 0,
+  "n_comp": 10,
+  "comp_max_depth": 2,
+  "score": 21.5,
+  "comp": [
+   [
+    "air-vint.ru",
+    2,
+    "https://air-vint.ru/blog/sovety-pokupatelyam/kompressory-i-ikh-klassifikatsiya/",
+    [
+     "Автосервис: накачка шин, продувка, покраска",
+     "Промышленные пневмосистемы, медицина (стоматология), стройка",
+     "Магистральные газопроводы и быт с пневмоинструментом"
+    ]
+   ],
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/kompressory_vidy_i_osobennosti_/",
+    [
+     "Нефтегазовая, химическая, пищевая промышленность",
+     "Сжатие газов для хранения, транспортировки и обработки",
+     "Нужны высокая производительность, надёжность и эффективность"
+    ]
+   ],
+   [
+    "e-kp.ru",
+    2,
+    "https://www.e-kp.ru/info/articles/bezhetskiy-oruzheyno-pulemetnyy-zavod-kompressornyy-zavod-aso/",
+    [
+     "Пневмоинструмент, краскопульты, пескоструй, продувка, накачка шин, пневмотранспорт, нефтегазовая отрасль"
+    ]
+   ],
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/vidy-promyshlennykh-kompressorov/",
+    [
+     "Осевые — авиация, энергетика, газотурбинные установки"
+    ]
+   ],
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/6304/",
+    [
+     "пищевая и фармацевтика: винтовые с фильтрацией или спиральные безмасляные",
+     "нефтегаз и химия: центробежные и винтовые",
+     "строительство и горная добыча (мобильные установки): поршневые",
+     "электроника и чистые помещения: спиральные"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    1,
+    "https://gkpnevmo.ru/information/article/princip_raboty/",
+    [
+     "Производство, гаражи, автомастерские, строительство"
+    ]
+   ],
+   [
+    "dileks.ru",
+    1,
+    "https://dileks.ru/blog/stati/gde-vzyat-szhatyy-vozdukh-dlya-vashey-tekhnologii/",
+    [
+     "Чистка оптики, накачка колес, пневмоинструмент, получение тепла в энергетике"
+    ]
+   ],
+   [
+    "5m3.ru",
+    1,
+    "https://www.5m3.ru/articles/berg.html",
+    [
+     "Медицинские, для автосервиса, выдува ПЭТ, лазерной резки, пескоструя, пищевки, ЧПУ, стройки"
+    ]
+   ],
+   [
+    "ors-instrument24.ru",
+    1,
+    "https://ors-instrument24.ru/blogs/blog/kakie-byvayut-kompressora-i-v-chem-ih-otlichiya",
+    [
+     "Пневмоинструменты, покраска, надувные изделия"
+    ]
+   ],
+   [
+    "kompresurs.ru",
+    1,
+    "https://kompresurs.ru/blog/podgotovka-szhatogo-vozdukha/",
+    [
+     "Чистка оборудования и помещений, стройка, шахты, пневмоинструмент в быту"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "oilfree",
   "topic_name": "Масляные и безмасляные компрессоры",
   "q": "Каковы плюсы и минусы безмасляных компрессоров?",
@@ -2869,6 +3091,95 @@
     1,
     "https://www.remeza24.ru/blog/vybor-kompressora/",
     []
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач подходят поршневые компрессоры и где применяются в промышленности и быту?",
+  "our_depth": 0,
+  "n_comp": 9,
+  "comp_max_depth": 2,
+  "score": 19.89,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/printsipy_raboty_kompressorov_i_ikh_primenenie/",
+    [
+     "Автомобильная промышленность, пневматический инструмент, промышленные процессы"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/primenenie_kompressorov/",
+    [
+     "Применяются в криогенных, гидравлических и холодильных системах, на электростанциях, для заправки баллонов, в машиностроении, сталелитейной отрасли, строительстве, текстильном производстве и на военных объектах"
+    ]
+   ],
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/preimuschestva-i-nedostatki-porshnevogo-kompressora",
+    [
+     "Быт, СТО, мастерские с пневмоинструментом, промышленность, сельское хозяйство",
+     "Подходит при небольших объёмах и длительных перерывах в работе инструмента"
+    ]
+   ],
+   [
+    "klapan-pik.ru",
+    2,
+    "https://klapan-pik.ru/articles/kakoy_kompressor_luchshe_vintovoy_ili_porshnevoy/",
+    [
+     "Металлургия, химическая промышленность, добыча нефти и газа"
+    ]
+   ],
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/obzory-tovarov/piston_compr/",
+    [
+     "Промышленное производство, полупромышленные и бытовые задачи",
+     "Там, где нужно высокое давление"
+    ]
+   ],
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/printsip-raboty-porshnevogo-kompressora/",
+    [
+     "Промышленность, автосервис, медицина, строительство",
+     "Питание пневмоинструмента, покраска, продувка"
+    ]
+   ],
+   [
+    "compressing.ru",
+    2,
+    "https://compressing.ru/blog/plusy-i-minusy-porshnevogo-kompressora",
+    [
+     "Фасовочные помещения, угольные склады, помол зерна",
+     "Сжатие агрессивных газов",
+     "Применение до 100 куб. м/мин на предприятиях СНГ"
+    ]
+   ],
+   [
+    "kompresurs.ru",
+    2,
+    "https://kompresurs.ru/blog/kak-vybrat-porshnevoy-kompressor/",
+    [
+     "Химпром, нефтедобыча, пищевая индустрия, металлургия",
+     "Сжатие воздуха, аргона, аммиака, водорода, кислорода и др."
+    ]
+   ],
+   [
+    "aircompressorhub.ru",
+    1,
+    "https://aircompressorhub.ru/company/blog/6364/",
+    [
+     "Пневмоинструмент, окрасочные работы, небольшие мастерские, производства с высоким давлением"
+    ]
    ]
   ]
  },
@@ -5095,6 +5406,87 @@
      "Большинство ресиверов относятся к 4 группе сосудов под давлением",
      "Произведение давления на объём не должно превышать 1,0 — тогда регистрация не требуется",
      "Допустимая температура не выше 200°С"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "По каким параметрам и какой тип (дизельный/электрический) компрессора выбирать для пескоструйной обработки?",
+  "our_depth": 2,
+  "n_comp": 8,
+  "comp_max_depth": 3,
+  "score": 14.38,
+  "comp": [
+   [
+    "drobesfera.ru",
+    3,
+    "https://drobesfera.ru/blogs/blog/kompressor-moschnostyu-37-kvt-i-proizvoditelnostyu-6200-litrov-v-minutu",
+    [
+     "Компрессор 37 кВт и 6200 л/мин обеспечивает один пост с соплом 9,5 мм и воздух для шлема оператора"
+    ]
+   ],
+   [
+    "aerocompressors.ru",
+    3,
+    "https://aerocompressors.ru/stati/kak-vybrat-kompressor-dlya-peskostrujnyh-rabot_-polnoe-rukovodstvo/",
+    [
+     "6–8 бар для большинства работ, для твердых материалов и сложных загрязнений выше"
+    ]
+   ],
+   [
+    "dileks.ru",
+    3,
+    "https://dileks.ru/blog/stati/kak-vybrat-vintovoy-kompressor-dlya-proizvodstva-polnoe-rukovodstvo/",
+    [
+     "давление не менее 6–8 бар, расход от 1500 л/мин",
+     "нужна постоянная производительность и ресивер достаточного объёма",
+     "рекомендуют маслозаполненный блок"
+    ]
+   ],
+   [
+    "ariacom.ru",
+    3,
+    "https://ariacom.ru/stati/kak_podobrat_kompressor_dlya_peskostrujnogo_apparata/",
+    [
+     "Ключевые параметры: рабочее давление и производительность",
+     "Для малых мастерских от 700 л/мин, для крупных от 3000 л/мин"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/dizelnye-kompressory-dlya-peskostruynykh-rabot/",
+    [
+     "Для локальных задач выбирают компактные модели вроде Atlas Copco XAS 47, удобные в транспортировке"
+    ]
+   ],
+   [
+    "novatecs.ru",
+    2,
+    "https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/podgotovka-szhatogo-vozdukha-dlya-peskostruynoy-obrabotki/",
+    [
+     "учитывать загруженность оборудования, сроки работ, характер обрабатываемых поверхностей, возможности сервиса",
+     "экономия на компрессоре снижает скорость работ и увеличивает расход абразива"
+    ]
+   ],
+   [
+    "pressair.ru",
+    2,
+    "https://pressair.ru/poleznaya-informatsiya/kompressor-for-blasting.html",
+    [
+     "Основные параметры - производительность и давление",
+     "Производительность влияет на скорость очистки и расход абразива"
+    ]
+   ],
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/stati/gayd-po-vyboru-peskostruynogo-apparata",
+    [
+     "Подходит винтовой или поршневой компрессор",
+     "Компрессор прослужит долго и подходит для другого пневмоинструмента"
     ]
    ]
   ]
@@ -9165,6 +9557,55 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как выбрать компрессор для станка/комплекса лазерной резки (давление, параметры, ресивер)?",
+  "our_depth": 0,
+  "n_comp": 4,
+  "comp_max_depth": 3,
+  "score": 11.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    3,
+    "http://asobezh.ru/blog/official/vintovoy-kompressor-dlya-stanka-lazernoy-rezki-obespechivaem-tochnost-i-effektivnost-vashego-proizvo/",
+    [
+     "Для резки металла обычно не менее 14 атм",
+     "Специальные компрессоры для лазерной резки имеют рабочее давление 14-16 атм",
+     "Чем выше давление, тем толще металл можно резать"
+    ]
+   ],
+   [
+    "5m3.ru",
+    3,
+    "https://www.5m3.ru/articles/novinki-kompressorov-remeza.html",
+    [
+     "Рабочее давление 16 бар",
+     "Объём ресивера 500 литров"
+    ]
+   ],
+   [
+    "compressor-pk.ru",
+    3,
+    "https://compressor-pk.ru/info/articles/kompressory-dalgakiran-dlya-lazernoy-rezki/",
+    [
+     "Винтовой компрессор 1000 л/мин, 14,5 бар, 11 кВт",
+     "Требуется очень сухой и чистый воздух",
+     "Резка сжатым воздухом в 2-3 раза быстрее кислородной"
+    ]
+   ],
+   [
+    "remeza24.ru",
+    3,
+    "https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-lazernogo-stanka/",
+    [
+     "Поддув 10-16 бар",
+     "Обычный компрессор на 8-10 бар не подходит"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "types_compare",
   "topic_name": "Классификация и сравнение типов компрессоров",
   "q": "Какие компрессоры надёжнее и имеют больший ресурс: винтовые или поршневые (наработка, моторесурс, срок службы)?",
@@ -12435,6 +12876,98 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие преимущества у сжатого воздуха перед электричеством и гидравликой в промышленности?",
+  "our_depth": 0,
+  "n_comp": 4,
+  "comp_max_depth": 2,
+  "score": 9.75,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/6304/",
+    [
+     "безопасность: нет риска поражения током, меньше риска возгорания",
+     "простое устройство и обслуживание пневмооборудования",
+     "универсальность применения"
+    ]
+   ],
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/sovety/refrizheratornye-osushiteli-osobennosti-i-primenenie/",
+    [
+     "Негорюч, легко транспортируется, низкая себестоимость"
+    ]
+   ],
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/zachem-nuzhen-vozdushnyy-kompressor/",
+    [
+     "Быстрее гидравлики, медленнее электричества",
+     "Нет опасности поражения током и возгорания масел",
+     "Вырабатывается внутри предприятия - больше контроля"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    1,
+    "https://gkpnevmo.ru/information/article/vybiraem_kompressor_dlya_avtoservisa/",
+    [
+     "Пневмоинструмент легче, надежнее и мощнее электрического"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие компрессоры подходят для пищевой, медицинской и фармацевтической промышленности и можно ли там использовать винтовой?",
+  "our_depth": 0,
+  "n_comp": 4,
+  "comp_max_depth": 2,
+  "score": 9.75,
+  "comp": [
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/preimuschestva-kompressora-s-vintovym-blokom",
+    [
+     "Комплектация многих моделей обеспечивает воздух высокого качества для пищевой, фармацевтической, химической отраслей, медицины и электроники"
+    ]
+   ],
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kak-vybrat-bezmaslyanyy-kompressor/",
+    [
+     "Требуется воздух высочайшей чистоты без масла",
+     "Подходят мембранные и безмасляные модели"
+    ]
+   ],
+   [
+    "5m3.ru",
+    2,
+    "https://www.5m3.ru/articles/dopolnitelnaya-garantiya-na-kompressory-remeza.html",
+    [
+     "Медицинские компрессоры для стоматологии, лабораторий, ИВЛ и наркозно-дыхательного оборудования",
+     "Разрешены к применению на основании регистрационного удостоверения Росздравнадзора"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    1,
+    "https://gkpnevmo.ru/information/article/proizvoditeli_kompressorov/",
+    [
+     "Безмасляные компрессоры Atlas Copco используются в пищевой, медицинской, фармацевтической отраслях"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "screw",
   "topic_name": "Винтовые компрессоры: устройство, принцип работы, исполнения",
   "q": "Как устроен винтовой блок и какие бывают профили роторов?",
@@ -13075,6 +13608,44 @@
     "https://www.2bar.ru/blog/porshnevye-kompressory-deshevle-i-vygodnee-vintovykh/",
     [
      "Поршневой рассчитывают минимум на 50% выше требуемого потока"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор нужен для пескоструйного аппарата и какая производительность/давление требуется?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 3,
+  "score": 9.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    3,
+    "https://kurs-peskostrui.ru/blogs/aktsii/skidka-na-elektricheskiy-kompressor-crossair-dali-moschnostyu-185-kvt",
+    [
+     "Компрессор 18,5 кВт с производительностью 3000 л/мин достаточен для пескоструйных аппаратов объёмом 25, 75, 100, 160 и 200 л",
+     "Такого компрессора хватает и для некоторых пескоструйных камер"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    3,
+    "https://gkpnevmo.ru/information/article/dizelnye-kompressory-atlas-copco-obzor-modeley/",
+    [
+     "XAVS 1000 (12-14 бар, до 28,9 м³/мин) подходит для тяжелого пескоструя",
+     "XATS 1200 (8,6 бар, 34,6 м³/мин) для крупных пескоструйных работ"
+    ]
+   ],
+   [
+    "drobesfera.ru",
+    3,
+    "https://drobesfera.ru/blogs/blog/kakoy-kompressor-podoydet-k-peskostruynoy-ustanovke",
+    [
+     "Для поста 17-20 м2/час нужен компрессор 5-6 м3/мин при 6-8 бар",
+     "Рассматриваются только напорные аппараты, не инжекторные"
     ]
    ]
   ]
@@ -13863,6 +14434,162 @@
     [
      "Замена целесообразна, если стоимость комплектующих превышает цену новой головки",
      "Долго работавший компрессор перебирать не имеет смысла"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор, тип и оборудование нужны для пескоструйных работ и что входит в комплект?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 3,
+  "score": 8.67,
+  "comp": [
+   [
+    "rdrus.ru",
+    3,
+    "https://rdrus.ru/blog/articles/sravnivaem-populyarnye-modeli-dizelnyh-peredvizhnyh-kompress/",
+    [
+     "Давление не менее 8–10 бар",
+     "Расход воздуха от 10 м³/мин",
+     "Лучше винтовой - стабильная подача без перерывов"
+    ]
+   ],
+   [
+    "kurs-peskostrui.ru",
+    3,
+    "https://kurs-peskostrui.ru/blogs/blog/test-peskostruynogo-komplekta-s-kompressorom-dlya-vyezdnyh-rabot",
+    [
+     "Пескоструйный аппарат 100 л, винтовой дизельный компрессор 55 кВт, ресивер 110 л",
+     "Рукав пескоструйный в бухтах 5, 10, 20 или 40 м, сопло Вентури с резьбой 6,4 мм",
+     "Крабовое соединение CQP-2, соплодержатель NHP-2, фильтр-влагомаслоотделитель"
+    ]
+   ],
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/kak-vybrat-peskostruynyy-apparat",
+    [
+     "В комплект для цеха входят осушитель, ресивер 900 л, воздушные шланги 32 и 18 мм и защита оператора"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Что такое опрессовка трубопроводов воздухом, когда и как её проводят и чем отличается от водяной?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 3,
+  "score": 8.67,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    3,
+    "https://gkpnevmo.ru/information/article/vybiraem-kompressor-dlya-opressovki/",
+    [
+     "Давление в контуре нагнетается в 1,5-2 раза выше рабочего",
+     "Падение давления на манометре при выдержке указывает на утечку"
+    ]
+   ],
+   [
+    "aerocompressors.ru",
+    3,
+    "https://aerocompressors.ru/stati/nadyozhnoe_elektrosnabzhenie_predpriyatiya_kak_vybrat_i_ustanovit_dizel_nyj_generator2/",
+    [
+     "Испытательное давление, как правило, вдвое выше рабочего",
+     "Выдержка с контролем по манометру 15–20 минут",
+     "Утечки находят мыльным раствором или по звуку"
+    ]
+   ],
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/kompressor_dlya_opressovki_truboprovodov/",
+    [
+     "Нагнетание воздуха под давлением выше рабочего",
+     "Контроль длится 15–20 минут",
+     "Утечки локализуют мыльным раствором"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор нужен для профессиональной покраски с высокими требованиями к качеству поверхности?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 3,
+  "score": 8.67,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    3,
+    "https://gkpnevmo.ru/information/article/vybiraem_kompressor_dlya_pokraski/",
+    [
+     "рекомендуются винтовые компрессоры средней и высокой ценовой категории",
+     "мощность 2,2-5,5 кВт, производительность 240-620 л/мин, давление до 10 атм"
+    ]
+   ],
+   [
+    "remeza24.ru",
+    3,
+    "https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-pokraski/",
+    [
+     "ОСК требует 2–3,5 м³/мин",
+     "ВК20Е-8: 15 кВт, 2,55 м³/мин; ВК30-8: 22 кВт, 3,5 м³/мин",
+     "Резерв обязателен"
+    ]
+   ],
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/kak_pravil_no_podobrat_vintovoj_kompressor_dlya_okrasochnyh_rabot/",
+    [
+     "Для окраски оптимальны винтовые компрессоры",
+     "Непрерывная подача без пульсаций, стабильное давление, низкий шум"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие компрессоры используются на строительных площадках и для питания отбойных молотков?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 3,
+  "score": 8.67,
+  "comp": [
+   [
+    "ariacom.ru",
+    3,
+    "https://ariacom.ru/stati/vintovye_dizel_nye_kompressory_dlya_stroitel_noj_plowadki_kak_vybrat/",
+    [
+     "SAX 57 подходит для отбойных молотков, перфораторов, пескоструя",
+     "Производительность определяется количеством подключаемого инструмента"
+    ]
+   ],
+   [
+    "air-tank.ru",
+    3,
+    "https://berg-rus.ru/blog/stati/kakoy-kompressor-nuzhen-dlya-otboynogo-molotka/",
+    [
+     "Давление 6-7 бар",
+     "Расход от 1000 до 5000 л/мин в зависимости от мощности",
+     "Ресивер от 100 литров"
+    ]
+   ],
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/aso-v-smi/kompressornoe-oborudovanie-dlya-promyshlennogo-primeneniya/",
+    [
+     "поршневые К3 поставлялись на стройку АЭС в Египте для отбойных молотков и пневмоинструмента в арматурном цехе"
     ]
    ]
   ]
@@ -15149,6 +15876,45 @@
     [
      "Повышает давление воздуха предварительного сжатия",
      "Повышает локальное давление до 40-400 бар"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой тип компрессора подходит для опрессовки трубопроводов и можно ли использовать один для промывки и опрессовки?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 3,
+  "score": 8.33,
+  "comp": [
+   [
+    "ariacom.ru",
+    3,
+    "https://ariacom.ru/stati/kompressor_dlya_opressovki_truboprovodov/",
+    [
+     "Для типовых задач достаточно давления до 7 бар и 5–10 м³/мин",
+     "Для магистральных трубопроводов нужны установки 12–15 бар",
+     "Оптимальны дизельные винтовые установки"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/vybiraem-kompressor-dlya-opressovki/",
+    [
+     "Наиболее эффективны дизельные винтовые компрессоры",
+     "Дают непрерывную подачу воздуха без пульсаций и полную автономность"
+    ]
+   ],
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/nadyozhnoe_elektrosnabzhenie_predpriyatiya_kak_vybrat_i_ustanovit_dizel_nyj_generator2/",
+    [
+     "Универсальные компрессоры часто не обеспечивают нужное давление и его стабильность",
+     "Оптимальны дизельные винтовые компрессоры: мощные и автономные"
     ]
    ]
   ]
@@ -17861,6 +18627,44 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач в пищевой и напиточной промышленности используется сжатый воздух (упаковка, розлив, маркировка, продувка)?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 2,
+  "score": 8.0,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/6292/",
+    [
+     "Упаковка и розлив, пневмотранспорт сыпучих, мойка и дезинфекция, аэрация при ферментации, продувка и сушка, управление клапанами и приводами"
+    ]
+   ],
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/trebovaniya_k_kachestvu_szhatogo_vozduha/",
+    [
+     "Привод пневматических механизмов",
+     "Наполнение упаковки газированными напитками, обработка мяса при производстве колбас"
+    ]
+   ],
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/neobhodimye_trebovaniya_k_kachestvu_szhatogo_vozduha/",
+    [
+     "Клапаны с пневмоуправлением, пневмоконвейеры",
+     "Аэрирование жидкостей, упаковка",
+     "Качество продукта зависит от качества воздуха"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "maintenance",
   "topic_name": "Техническое обслуживание и ресурс",
   "q": "К чему приводит отсутствие/несвоевременное ТО компрессора?",
@@ -19509,6 +20313,43 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как подобрать компрессор для пневмоинструмента (гайковёрты, краскопульты, шлифмашины)?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 2,
+  "score": 7.67,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kak-podobrat-vozdushnyy-kompressor/",
+    [
+     "Нужно знать расход воздуха и давление каждого инструмента из паспорта",
+     "Учитывать продолжительность работы: кратковременное и непрерывное использование требуют разного компрессора"
+    ]
+   ],
+   [
+    "air-tank.ru",
+    2,
+    "https://berg-rus.ru/blog/stati/kakoy-privod-kompressora-luchshe-remennoy-ili-pryamoy/",
+    [
+     "Ременной нужен для шлифмашины, гайковёрта, непрерывной продувки",
+     "Ремни проскальзывают при закусывании блока, защищая двигатель"
+    ]
+   ],
+   [
+    "compressor-ga.ru",
+    1,
+    "https://compressor-ga.ru/company/articles/2580/",
+    [
+     "Пневмоинструмент: дрель, шуруповёрт, гайковёрт, шлифмашина"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "safety",
   "topic_name": "Безопасность, нормативы и документы",
   "q": "Какие разрешительные документы и регистрация нужны для передвижного компрессора на шасси (ГИБДД, Ростехнадзор, ЭПТС, права)?",
@@ -19879,6 +20720,42 @@
     [
      "Центробежный вентилятор охлаждает корпус",
      "Двигатель с усиленным обдувом корпуса"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях требуется контроль/осушка влажности сжатого воздуха и какой осушитель подходит?",
+  "our_depth": 0,
+  "n_comp": 3,
+  "comp_max_depth": 2,
+  "score": 7.33,
+  "comp": [
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/filtry-v-konstruktsii-kompressora",
+    [
+     "Фармацевтика, медицина, пищевая и химическая промышленность, стоматология",
+     "Тонкая очистка нужна в хирургии, стоматологии, для выдува ПЭТ-тары"
+    ]
+   ],
+   [
+    "remeza.org",
+    1,
+    "https://www.remeza.org/company/articles/osushitel_szhatogo_vozdukha_tsena/",
+    [
+     "Сельское хозяйство, фармацевтика, транспорт, металлургия, электроника имеют свои нормы влажности"
+    ]
+   ],
+   [
+    "dileks.ru",
+    1,
+    "https://dileks.ru/blog/sovety/refrizheratornyy-ili-adsorbtsionnyy-osushitel/",
+    [
+     "Фармацевтика, пищевая промышленность, автоматизированные производства, окрасочные комплексы"
     ]
    ]
   ]
@@ -21549,6 +22426,97 @@
     [
      "Растёт спрос на изделия по индивидуальному проекту",
      "Специалисты завода прорабатывают с клиентом все вопросы под конкретные потребности"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какого диаметра должны быть шланги/рукава и сопла для пескоструйного аппарата?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 3,
+  "score": 7.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    3,
+    "https://gkpnevmo.ru/information/article/kompressory-dlya-peskostruynykh-rabot/",
+    [
+     "Воздушный шланг 15-19 мм",
+     "Шланг подачи абразива обычно армированный 15 мм",
+     "Оптимальный диаметр сопла 4-5 мм"
+    ]
+   ],
+   [
+    "novatecs.ru",
+    3,
+    "https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/gid-po-peskostruynym-rabotam/",
+    [
+     "Внутреннее сечение шланга должно превышать пропускную способность сопла в 3–4 раза",
+     "Для острого абразива (карьерный песок) нужна четырёхслойная оплётка, для округлого — двухслойная",
+     "Нужны предохранительные тросы и проверка рабочего давления рукава"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Сколько сжатого воздуха расходует пескоструйное сопло в зависимости от диаметра и давления и как рассчитать расход?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 3,
+  "score": 7.0,
+  "comp": [
+   [
+    "novatecs.ru",
+    3,
+    "https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/gid-po-peskostruynym-rabotam/",
+    [
+     "Таблица для сопел 6, 8, 10 и 12 мм при давлении 3,5–7 кгс/см²",
+     "Сопло 12 мм при 7 кгс/см²: 8,9 м³/мин воздуха и 900 кг/ч абразива",
+     "Табличные данные теоретические, для нового чистого сопла; по мере износа и забивания расход меняется"
+    ]
+   ],
+   [
+    "remeza24.ru",
+    3,
+    "https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-peskostruya/",
+    [
+     "Сопло 6 мм ≈ 2,0-2,5 м³/мин",
+     "Сопло 8 мм ≈ 3,5-4,5 м³/мин",
+     "Сопло 10 мм ≈ 6-7 м³/мин, 12 мм ≈ 9-10 и выше"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие характеристики по мощности и давлению бывают у компрессоров и как расшифровываются теххарактеристики?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 3,
+  "score": 7.0,
+  "comp": [
+   [
+    "2bar.ru",
+    3,
+    "https://www.2bar.ru/blog/kompressory-porshnevye-bekomsan-na-tsementovozy-i-mukovozy/",
+    [
+     "Мощность до 200 кВт",
+     "Давление до 40 бар"
+    ]
+   ],
+   [
+    "remeza24.ru",
+    3,
+    "https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-lazernogo-stanka/",
+    [
+     "ВК15Т: 11 кВт, 1,0 м³/мин, 64 дБ, 585 кг",
+     "ВК20Т: 15 кВт, 1,45 м³/мин, 66 дБ"
     ]
    ]
   ]
@@ -23523,6 +24491,154 @@
     [
      "Гарантия производителя на подержанные компрессоры редко действует",
      "Ремонт и замену деталей оплачивает покупатель"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Когда при лазерной резке можно использовать воздух вместо азота и для каких материалов?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 3,
+  "score": 6.5,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    3,
+    "https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/",
+    [
+     "Подходит для тонкой углеродистой стали до 5 мм, оцинкованной стали, латуни и меди до 2-3 мм",
+     "Алюминий воздухом резать не рекомендуется",
+     "Кромка среднего или низкого качества, возможны окалина и оксиды"
+    ]
+   ],
+   [
+    "rdrus.ru",
+    2,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/kak-vybrat-kompressor-dlya-lazernogo-stanka-polnoe-rukovodstvo-po-podboru/",
+    [
+     "Для тонкой углеродистой стали воздух часто заменяет покупной газ",
+     "Изменение цвета кромки нержавейки и алюминия допустимо, если деталь потом красят или обрабатывают",
+     "Для декоративных изделий с открытой кромкой чаще нужен азот"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Что будет при неправильном выборе или недостаточной производительности компрессора для пескоструя?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 3,
+  "score": 6.5,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    3,
+    "https://kurs-peskostrui.ru/blogs/stati/vybiraem-kompressor-dlya-peskostruynogo-apparata",
+    [
+     "Гаражные поршневые компрессоры дают около 400–420 л/мин или меньше",
+     "Для промышленных пескоструев от 4 м³/час такого компрессора недостаточно"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/kompressor-dlya-peskostruya-vazhnyy-vybor/",
+    [
+     "Эффективность абразивной обработки минимальна",
+     "Перерасход абразива и впустую потраченные силы"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие требования к сжатому воздуху и его классу чистоты на пищевых и фармацевтических предприятиях?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 3,
+  "score": 6.5,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    3,
+    "https://aerocompressors.ru/stati/trebovaniya_k_kachestvu_szhatogo_vozduha/",
+    [
+     "Воздух, контактирующий с продукцией: класс 1.2.1 по ISO 8573-1",
+     "Воздух без контакта с продуктом: допустим класс 1.4.1"
+    ]
+   ],
+   [
+    "v-p-k.ru",
+    2,
+    "https://www.v-p-k.ru/blog/pochemu-tak-vazhna-vozdukhopodgotovka/",
+    [
+     "Для пищевой и фармацевтической отраслей используется 0 класс"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой диаметр пескоструйного сопла выбрать и каких результатов очистки/расхода абразива ожидать?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 3,
+  "score": 6.5,
+  "comp": [
+   [
+    "gsk-servis.ru",
+    3,
+    "https://gsk-servis.ru/blog/sovety-pokupatelyam/kak-vybrat-peskostruynoe-soplo/",
+    [
+     "Таблица для давления 8 бар по степеням очистки SA 2, SA 2½, SA 3",
+     "Приведены средняя производительность (м²/ч) и средний расход абразива (кг/м²) в зависимости от расхода воздуха"
+    ]
+   ],
+   [
+    "novatecs.ru",
+    2,
+    "https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/gid-po-peskostruynym-rabotam/",
+    [
+     "Для крупных поверхностей (днища кораблей, опоры мостов, фасады) подходит сопло 12 мм",
+     "Большое сопло повышает скорость работы и производительность, но требует мощного компрессора"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое давление (атмосферы) нужно для пескоструйной обработки?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 3,
+  "score": 6.5,
+  "comp": [
+   [
+    "pressair.ru",
+    3,
+    "https://pressair.ru/poleznaya-informatsiya/kompressor-for-blasting.html",
+    [
+     "4-5 бар для камня и бетона",
+     "6-8 бар для металла",
+     "9-13 бар для толстых покрытий, свыше 13 бар для подачи на расстояние"
+    ]
+   ],
+   [
+    "remeza24.ru",
+    2,
+    "https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-peskostruya/",
+    [
+     "Достаточно 6-8 бар у сопла",
+     "Компрессор на 13-15 бар для пескоструя бессмысленен",
+     "Потери в магистрали 0,5-1 бар"
     ]
    ]
   ]
@@ -29913,6 +31029,439 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как износ пескоструйного сопла влияет на требуемую производительность/расход воздуха?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    2,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/kak-podobrat-dizelnyy-kompressor-polnoe-rukovodstvo/",
+    [
+     "По мере износа отверстие сопла увеличивается, и расход воздуха растет",
+     "При прежней подаче компрессора давление у сопла падает и скорость обработки снижается"
+    ]
+   ],
+   [
+    "remeza24.ru",
+    2,
+    "https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-peskostruya/",
+    [
+     "Абразив растачивает канал, диаметр растёт",
+     "Изношенное 8 мм сопло потребляет как 10 мм"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Из каких узлов состоит обитаемая пескоструйная (дробеструйная) камера под ключ и как она устроена?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    2,
+    "https://kurs-peskostrui.ru/blogs/blog/masshtabnaya-otgruzka-oborudovaniya-zakazchiku-v-samaru",
+    [
+     "Пескоструйный аппарат с рукавами, СИЗ, вакуумная система рекуперации абразива с фильтром-циклоном",
+     "Винтовой электрический компрессор, рефрижераторный осушитель, магистральные фильтры",
+     "Самоочищающийся фильтр-пылеуловитель для очистки воздуха в цехе"
+    ]
+   ],
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/innovatsii-i-kachestvo-vzglyad-iznutri-na-proizvodstvo-zavoda-pnevmostroytehnika",
+    [
+     "Абразив через решётчатый пол попадает в нишу, скребковые транспортеры перемещают его под платформой",
+     "Элеватор поднимает абразив в ёмкость над пескоструйным аппаратом для повторного использования"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач подходят маслозаполненные компрессоры?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/kakoy_kompressor_kupit_maslozapolnennyy_ili_bezmaslyanyy/",
+    [
+     "Автосервисы, металлообработка, строительство, промышленное производство"
+    ]
+   ],
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/6294/",
+    [
+     "Автосервисы, стройка, промышленность с непрерывной работой, сельское хозяйство, большие мастерские"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор выбрать для небольшой мастерской, гаража или покраски одной детали?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/vintovoy_ili_porshnevoy_kompressor_chto_luchshe_vybrat/",
+    [
+     "Для небольших мастерских с редким использованием подходит поршневой компрессор"
+    ]
+   ],
+   [
+    "v-p-k.ru",
+    2,
+    "https://www.v-p-k.ru/blog/vybor-porshnevogo-kompressora-dlya-garazhnoj-pokraski/",
+    [
+     "Покраска краскопультом, продувка жиклера, антикоррозийная обработка",
+     "Пневмошлифовка, полировка, гайковерт, подкачка шин"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие потребители сжатого воздуха бывают в автосервисе и для чего он используется?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/5701/",
+    [
+     "Основные группы: пневмоинструмент (гайковерты), обдув, покраска, пескоструйная обработка"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/vybiraem_kompressor_dlya_avtoservisa/",
+    [
+     "Механическая обработка поверхностей, подготовка под покраску, подкачка колес, окрасочно-сушильные камеры, некоторые автомойки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой пневмоинструмент и оборудование используется при шиномонтаже и зачем нужен компрессор?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/kompressory-dlya-shinomontazha/",
+    [
+     "Пневмогайковерт, шлифмашина, полировальная машина, шуруповерт",
+     "Компрессор — основной агрегат участка, обеспечивает бесперебойную работу пневмоинструмента"
+    ]
+   ],
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/pravilnyj_instrument_dlya_avtoservisa/",
+    [
+     "Демонтаж и монтаж колеса: CP 7748TL, CP 7748, CP 8848, CP 8915",
+     "Ремонт покрышки: CP 873",
+     "Подъем автомобиля: CP 80020/30"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие преимущества у пневмоинструмента по сравнению с электроинструментом и где он незаменим?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/preimuwestva_pnevmoinstrumenta/",
+    [
+     "пневмодрель в 3-4 раза меньше и легче электрической той же мощности",
+     "срок службы в разы, иногда в десятки раз выше, чем у электроинструмента",
+     "рабочий меньше устает и выполняет больший объем работы"
+    ]
+   ],
+   [
+    "promtula.ru",
+    2,
+    "https://promtula.ru/stati/vybor-pnevmoinstrumenta/",
+    [
+     "Нет поражения током и искрообразования",
+     "Тише, легче, компактнее при равной мощности"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие бывают типы/виды пневмоинструмента и по принципу действия?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/preimuwestva_pnevmoinstrumenta/",
+    [
+     "ударного действия, роторно-пластинчатый, распыляющий и прочие",
+     "к ударному относятся отбойные молотки, бетоноломы, гвоздезабивные пистолеты",
+     "к роторно-пластинчатому относятся дрели, гайковерты, шлифмашины"
+    ]
+   ],
+   [
+    "promtula.ru",
+    2,
+    "https://promtula.ru/stati/primenenie-szhatogo-vozduha-pnevmaticheskij-instrument/",
+    [
+     "Вращательного действия",
+     "Ударного действия",
+     "Ударно-вращательного действия"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой осушитель выбрать для медицинской, пищевой или электронной промышленности?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/metod_osusheniya_szhatogo_vozduha_tochka_rosy/",
+    [
+     "Адсорбционные осушители дают воздух высокого класса чистоты для медицины, пищевой и электронной отраслей"
+    ]
+   ],
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/osushitel_kak_vybrat_model_otvechayuwuyu_vashim_trebovaniyam_i_byudzhetu/",
+    [
+     "Адсорбционные осушители для глубокой сушки",
+     "Высокая степень очистки для медицинской, пищевой, электронной отраслей"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Зачем нужно очищать сжатый воздух для пескоструйных работ?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "novatecs.ru",
+    2,
+    "https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/oborudovanie-dlya-podgotovki-szhatogo-vozdukha-dlya-peskostruynykh-rabot/",
+    [
+     "Загрязнения (пыль, ржавчина, масло, вода) сокращают производительность и срок бесперебойной работы оборудования до 7 раз",
+     "Качество пескоструя зависит от давления и количества воздуха в сопле"
+    ]
+   ],
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/kak_podobrat_kompressor_dlya_peskostrujnogo_apparata/",
+    [
+     "Масло смешивается с воздухом, абразив слипается и забивает сопло"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой класс качества/очистки воздуха нужен для автосервиса, окрасочных работ и мебельного производства?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "v-p-k.ru",
+    2,
+    "https://www.v-p-k.ru/blog/pochemu-tak-vazhna-vozdukhopodgotovka/",
+    [
+     "4 класс для стандартных пневмосистем, автосервисов и мебельного производства"
+    ]
+   ],
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/sovety/podbor-kompressornogo-oborudovaniya/",
+    [
+     "Покраска — класс 2",
+     "Автосервис и мебельное производство — класс 4 (твёрдые частицы не более 25 мкм)"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач применяют передвижной компрессор с приводом от ВОМ/КОМ трактора?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/products/kompressor-ot-vom-traktora-kak-reshit-zadachu-avtonomnogo-vozdukha-v-pole-i-na-stroyke-bez-lishnikh-/",
+    [
+     "Обдув и очистка радиаторов сельхозтехники в поле, подкачка колёс комбайнов",
+     "Питание отбойных молотков, бетоноломов, продувочных пистолетов при дорожных работах",
+     "Опрессовка и продувка трубопроводов"
+    ]
+   ],
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressory-s-privodom-ot-kom/",
+    [
+     "Коммунальная техника, дорожные службы, аварийные бригады, нефтегаз, стройка",
+     "Пневмоинструмент, продувка, пескоструй"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Что будет, если производительность или давление компрессора не соответствуют пневмосистеме (цементовоз, пескоструй)?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/kak-vybrat-kompressor-dlya-peskostrujnyh-rabot_-polnoe-rukovodstvo/",
+    [
+     "дефицит воздуха снижает производительность и делает обработку нестабильной"
+    ]
+   ],
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressor-na-tsementovoz-bekomsan/",
+    [
+     "Недостаточная производительность увеличивает время разгрузки",
+     "Несоответствие рабочего давления снижает эффективность системы"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как влияет давление на качество покраски и почему важна его стабильность?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kakoy-kompressor-luchshe-dlya-pokraski/",
+    [
+     "Высокое давление обеспечивает равномерное покрытие",
+     "Низкое давление может дать пятнистое покрытие"
+    ]
+   ],
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/kak_pravil_no_podobrat_vintovoj_kompressor_dlya_okrasochnyh_rabot/",
+    [
+     "Равномерное распыление зависит от отсутствия колебаний давления",
+     "Перепады давления и влага вызывают дефекты покрытия"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для чего нужен сжатый воздух и как он работает как источник энергии?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 6.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/zachem-nuzhen-vozdushnyy-kompressor/",
+    [
+     "Сжатый воздух приводит в действие пневмоинструмент и устройства",
+     "Применяется в автосервисе, на промышленных предприятиях и стройплощадках"
+    ]
+   ],
+   [
+    "kompresurs.ru",
+    2,
+    "https://kompresurs.ru/blog/podgotovka-szhatogo-vozdukha/",
+    [
+     "Аэрация почвы",
+     "Электроника, химия, пищевка, фармацевтика и медицина",
+     "Хранение и передача энергии"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "energy",
   "topic_name": "Энергоэффективность компрессорной и рекуперация тепла",
   "q": "Оправдана ли замена устаревшего оборудования на энергоэффективное (новое поколение) и насколько оно экономичнее?",
@@ -33233,6 +34782,176 @@
     "https://kurs-peskostrui.ru/blogs/aktsii/skidka-na-elektricheskiy-kompressor-crossair-dali-moschnostyu-185-kvt",
     [
      "Винтовой компрессор относится к промышленному оборудованию с большей производительностью"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие компрессоры и масла применяются в пищевой промышленности и подходят ли масла H1 для фармацевтики?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 5.5,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/6300/",
+    [
+     "Напитки, продукты питания, мясо- и птицепереработка, молочная, пивоваренная, фармацевтическая отрасли",
+     "Типы: винтовые, поршневые, центробежные, безмасляные"
+    ]
+   ],
+   [
+    "compressor-ga.ru",
+    1,
+    "https://compressor-ga.ru/company/articles/2660/",
+    [
+     "Масла «Пищевые» не пригодны к употреблению в пищу",
+     "Загрязнение продукта такими маслами может повредить здоровью"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких пневмоинструментов и отраслей подходят электрические/электроприводные компрессоры?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 5.5,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressory-s-elektroprivodom/",
+    [
+     "Промышленность, автосервис, стройка, медицина, сельское хозяйство"
+    ]
+   ],
+   [
+    "aerocompressors.ru",
+    1,
+    "https://aerocompressors.ru/stati/elektricheskie_kompressory/",
+    [
+     "применяются во множестве отраслей",
+     "подходят для большинства пневмоинструментов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой винтовой компрессор с ресивером и осушителем подойдёт для небольшого металлообрабатывающего производства?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 5.5,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/realizovannye-proekty/bezhetskie-kompressory-dlya-proizvoditelya-metallicheskikh-dverey-ooo-stal-grupp/",
+    [
+     "АСО-ВК применяются на металлообрабатывающем производстве, работают 24/7 с 2020 года"
+    ]
+   ],
+   [
+    "aerocompressors.ru",
+    1,
+    "https://aerocompressors.ru/stati/vintovye_kompressory_dlya_metalloobrabotki/",
+    [
+     "ARIACOM NT15 20DF 500: маслозаполненный одноступенчатый, 15 кВт, ресивер 500 л, встроенные рефрижераторный осушитель и фильтры"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое компрессорное оборудование используют на предприятии по производству замороженных овощей и подходят ли винтовые для круглосуточной работы на пищевом производстве?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 5.5,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/diler/ooo-kompressor-resurs-10-let-uspeshnogo-sotrudnichestva/",
+    [
+     "ООО «Альянс» (Адыгея): два винтовых компрессора АСО-ВК37/8 (2021 и 2023 гг.) и четыре ресивера РВ900/10",
+     "Компрессоры обеспечивают работу холодильных установок и производство пара"
+    ]
+   ],
+   [
+    "kompresurs.ru",
+    1,
+    "https://kompresurs.ru/blog/bezhetskiy-zavod-aso-10-let-uspeshnogo-sotrudnichestva/",
+    [
+     "Два винтовых компрессора АСО-ВК37/8",
+     "Четыре ресивера РВ900/10",
+     "Обеспечивают производство пара и работу холодильных установок"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое оборудование и дополнительное оснащение нужно для работы компрессора/пневмоинструмента?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 5.5,
+  "comp": [
+   [
+    "promtula.ru",
+    2,
+    "https://promtula.ru/stati/primenenie-szhatogo-vozduha-pnevmaticheskij-instrument/",
+    [
+     "Компрессор, ресивер, фильтры, лубрикаторы, водоотделители, трубы и шланги",
+     "Нужна очистка, осушка и стабильное давление воздуха"
+    ]
+   ],
+   [
+    "5m3.ru",
+    1,
+    "https://www.5m3.ru/articles/kompleksnyy1115kyb-podhod.html",
+    [
+     "Ресиверы, осушители, магистральные фильтры, системы подготовки воздуха, КИП"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Почему важно качество сжатого воздуха для пищевого и медицинского производства и какие риски несёт масло?",
+  "our_depth": 0,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 5.5,
+  "comp": [
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/o_szhatom_vozduhe/",
+    [
+     "Масляный туман может попасть в продукты или организм человека",
+     "Масляный туман сложно отделить от потока воздуха"
+    ]
+   ],
+   [
+    "compressor-ga.ru",
+    1,
+    "https://compressor-ga.ru/company/articles/2660/",
+    [
+     "Риск загрязнения продукта и тяжёлых последствий для компании"
     ]
    ]
   ]
@@ -40927,6 +42646,498 @@
      "Гарантия 12 месяцев с момента поставки, но не дольше 18 месяцев со дня выпуска",
      "Долгий простой на складе перепродавца сокращает гарантию",
      "Дату выпуска стоит узнать до оплаты"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какая производительность и давление компрессора нужны для пневмомолота, краскопульта, отбойного молотка и пескоструйного аппарата?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    3,
+    "https://rdrus.ru/blog/articles/na-chto-smotret-pri-vybore-peredvizhnogo-kompressora-dlya-st/",
+    [
+     "Пневмомолот: 350–600 л/мин, 6–7 бар",
+     "Краскопульт: 150–300 л/мин, 3–4 бар",
+     "Пескоструй: 500–1000 л/мин, 6–8 бар"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как подобрать производительность/мощность компрессора под лазерный станок (материал, мощность источника, диаметр сопла, тип лазера)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    3,
+    "https://rdrus.ru/blog/articles/kakaya-proizvoditelnost-kompressora-nuzhna-dlya-stanka-lazer/",
+    [
+     "Дерево, пластик: 200–400 л/мин",
+     "Сталь, нержавейка: 400–700 л/мин",
+     "Алюминий, медь: 600–900 л/мин"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое оборудование для получения и подготовки сжатого воздуха нужно для пескоструйной камеры/участка?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    3,
+    "https://kurs-peskostrui.ru/blogs/blog/kurs-vypolnil-puskonaladku-oborudovaniya-obitaemoy-kamery-na-predpriyatii-po-izgotovleniyu-metizov-v-tule",
+    [
+     "Винтовой электрический компрессор 30 кВт",
+     "Два вертикальных ресивера по 500 л",
+     "Рефрижераторный осушитель и 2 магистральных фильтра"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Компрессор какой мощности подобрать к пескоструйному аппарату в зависимости от объёма и диаметра сопла?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    3,
+    "https://kurs-peskostrui.ru/blogs/blog/tseny-nizhe-na-gotovye-komplekty-dlya-ulichnyh-peskostruynyh-rabot",
+    [
+     "Аппараты 25–100 л с соплом 4,8 или 6,4 мм комплектуются винтовым компрессором 15 кВт",
+     "Аппараты 160–250 л с рукавом 32х48 мм и соплом 6,4 мм комплектуются компрессором 22 или 30 кВт",
+     "Аппарат 100 л с рукавом 25х39 мм длиной 40 м комплектуется компрессором 30 кВт"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какая производительность компрессора нужна для инжекторного пескоструйного аппарата?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    3,
+    "https://kurs-peskostrui.ru/blogs/blog/chernovik-stati-ot-15122022-1246",
+    [
+     "Инжекторному аппарату на 30 л нужен компрессор от 500 л/мин",
+     "В комплект к инжекторному аппарату подобран компрессор 5,5 кВт и 700 л/мин"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие опции доступны для медицинских компрессоров?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "remeza.org",
+    3,
+    "https://www.remeza.org/company/articles/meditsinskie_kompressory_remeza_serii_km/",
+    [
+     "Осушитель с точкой росы -20°C",
+     "Шумозащитный кожух",
+     "Исполнение в виде тандема"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких отраслей подходят безмасляные воздуходувки низкого давления (аэрация, пневмотранспорт)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    3,
+    "https://aircompressorhub.ru/company/blog/6391/",
+    [
+     "Аэрация сточных вод при 0.5–1.0 бар: масло губит активный ил",
+     "Экономия энергии на аэрации 30–50% против устаревших воздуходувок",
+     "Применяется и в пневмотранспорте сыпучих (цемент, мука, пластик)"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Когда на стройке лучше использовать винтовой компрессор?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    3,
+    "https://gkpnevmo.ru/information/article/kompressory-dlya-stroitelstva-vybor-pod-zadachi/",
+    [
+     "Подходит для длительной непрерывной работы, 3-40 м³/мин, 7-25 бар",
+     "КПД выше, чем у поршневых, пульсации минимальны"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какая скорость воздуха на выходе нужна для сушки кузова автомобиля?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "zenova.ru",
+    3,
+    "https://zenova.ru/articles/vozduhoduvka-vmesto-turbosushki",
+    [
+     "Идеальный диапазон 50–90 м/с",
+     "При меньшей скорости остаются капли, при большей вода разбивается в туман и оседает снова"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое рабочее давление и типы компрессоров используются в промышленности?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    3,
+    "https://drobesfera.ru/blogs/blog/vybor-bytovogo-i-promyshlennogo-kompressora-po-rabochemu-davleniyu",
+    [
+     "Чаще всего 6-15 бар",
+     "Применяются поршневые и винтовые станции"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как выбрать пескоструйный аппарат, от чего зависит его скорость и чем отличаются бытовые, профессиональные и промышленные?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    3,
+    "https://drobesfera.ru/blogs/blog/kak-vybrat-peskostruynyy-apparat",
+    [
+     "Основной параметр пескоструйного аппарата — скорость работы (м2/час)",
+     "На скорость влияют тип аппарата и мощность компрессора",
+     "Номинальная скорость указана для очистки ровного листа до SA 2½"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какая чистота кислорода требуется для медицины и зачем нужен генератор кислорода на месте?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    3,
+    "https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/",
+    [
+     "Медицина — 95%",
+     "Производство на месте обеспечивает достаточный объём и снижает затраты"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Зачем кислород нужен в рыбоводстве и какая чистота требуется?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    3,
+    "https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/",
+    [
+     "Чистота 90–93%",
+     "Поддержание высокого уровня кислорода в воде для роста и отсутствия болезней"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для чего кислород используется в водоподготовке и какая чистота нужна?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    3,
+    "https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/",
+    [
+     "Чистота 90–95%",
+     "Кислород нужен для производства озона, очищающего воду"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как кислород применяется в металлургии и какая чистота нужна?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    3,
+    "https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/",
+    [
+     "Чистота до 95%",
+     "Сталелитейная промышленность — крупнейший потребитель",
+     "Увеличивает переработку золота и руды, снижает расход цианида"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как кислород улучшает процесс производства стекла и какая чистота нужна?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    3,
+    "https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/",
+    [
+     "Чистота 95%",
+     "Повышает температуру пламени и эффективность печи",
+     "Снижает азотсодержащие загрязнители и энергозатраты"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое давление и чистота азота нужны для качественной лазерной резки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    3,
+    "https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/",
+    [
+     "Давление около 30–35 бар",
+     "Чистота азота обычно 99,5–99,99%",
+     "В таблице указан азот ≥99,95%"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие требования к давлению и чистоте воздуха для систем управления и КИПиА на цементном производстве?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "dileks.ru",
+    3,
+    "https://dileks.ru/blog/sovety/kak-sokratit-raskhody-na-elektroenergiyu/",
+    [
+     "Давление 6-8 бар",
+     "Класс чистоты 1-2 по ГОСТ 17433-80, остаточное масло <0,01 мг/м³",
+     "Точка росы ниже -40°C"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор выбрать для пневмотранспорта и аэрации цемента (давление, расход)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "dileks.ru",
+    3,
+    "https://dileks.ru/blog/sovety/kak-sokratit-raskhody-na-elektroenergiyu/",
+    [
+     "Расход до 20-50 м³/мин, давление 2-6 бар",
+     "Допустимо присутствие масла (класс 3-4)"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для какого производства подходит винтовой компрессор 15 кВт?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "dileks.ru",
+    3,
+    "https://dileks.ru/blog/stati/kak-vybrat-vintovoy-kompressor-dlya-proizvodstva-polnoe-rukovodstvo/",
+    [
+     "производительность 1800–2500 л/мин при давлении до 10 бар",
+     "подходит для нескольких станков, окрасочных постов, автомоек, мебельных цехов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как правильно запустить автономный компрессор на цементовозе и что проверить перед запуском?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "2bar.ru",
+    3,
+    "https://www.2bar.ru/blog/kak-zapustit-avtonomnyy-kompressor-na-tsementovoze/",
+    [
+     "Прогрев двигателя 2-3 минуты на холостых",
+     "Рабочее давление для выгрузки обычно 2-3 атмосферы",
+     "Заслонки открывать с минимального положения"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Сколько электроэнергии потребляет компрессор для цементовоза?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "2bar.ru",
+    3,
+    "https://www.2bar.ru/blog/pochemu-kompressory-bekomsan---luchshiy-vybor-dlya-tsementovozov-i-mukovozov/",
+    [
+     "В среднем 18–30 кВт"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как подобрать компрессор для аэрации очистных сооружений и рыбоводства?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "remeza24.ru",
+    3,
+    "https://www.remeza24.ru/blog/vybor-kompressora/vintovye-nizkogo-davleniya/",
+    [
+     "Метр воды ~0,1 бар; бассейн 5 м требует ~0,5 бар только на жидкость",
+     "Часто достаточно ступени 1,5 бар",
+     "Масляный аэрозоль недопустим для биоценоза и рыбы"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор выбрать для медицины, стоматологии и лаборатории (чистый воздух, низкий шум)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 5.0,
+  "comp": [
+   [
+    "remeza.org",
+    3,
+    "https://www.remeza.org/company/articles/meditsinskie_kompressory_remeza_serii_km/",
+    [
+     "Одна установка: КМ-24.F114 или КМ-24.OLD10",
+     "Четыре кресла: КМ-100.VS204Т или КМ-100.OLD20Т"
     ]
    ]
   ]
@@ -57331,6 +59542,1922 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как работает пескоструйная обработка, где применяется и какие поверхности можно обрабатывать?",
+  "our_depth": 1,
+  "n_comp": 2,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    2,
+    "https://kurs-peskostrui.ru/blogs/vypolnennye-proekty/peskostruynyy-komplekt-s-dizelnym-kompressorom-dlya-pozharnoy-chasti",
+    [
+     "Улучшает адгезию и продлевает срок службы лакокрасочного покрытия"
+    ]
+   ],
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/vybiraem_kompressory_dlya_peskostrujnyh_rabot/",
+    [
+     "абразив распыляется сжатым воздухом и создаёт на поверхности насечки",
+     "применяется в автосервисах, на стройке, для матирования стекла"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие ошибки чаще всего допускают при выборе и подключении/монтаже компрессора к лазерному станку?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    2,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/kak-pravilno-podobrat-kompressor-dlya-lazernoy-rezki-metalla/",
+    [
+     "экономят на многоступенчатой подготовке воздуха",
+     "не учитывают длину и сечение магистралей и реальный расход",
+     "пренебрегают заменой фильтров и масла"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие данные лазерного станка нужны для подбора компрессора?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    2,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/kak-vybrat-kompressor-dlya-lazernogo-stanka-polnoe-rukovodstvo-po-podboru/",
+    [
+     "Давление в точке подключения станка, а не на выходе компрессора",
+     "Максимальное потребление в самом требовательном режиме",
+     "Допустимое содержание влаги, масла и твёрдых частиц; мощность лазера сама по себе ответа не даёт"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие требования к сжатому воздуху предъявляет лазерная резка?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    2,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/vintovye-kompressory-nizkogo-i-vysokogo-davleniya-v-chem-raznitsa-i-gde-primenyayutsya/",
+    [
+     "Давление и расход зависят от толщины металла, мощности станка и диаметра сопла",
+     "Для качества реза нужны низкая влажность и отсутствие примесей"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какую конфигурацию компрессорной выбрать под задачу (мастерская, автосервис, цех, пищевое/электронное производство)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    2,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/kak-vybrat-vintovoy-kompressor-dlya-predpriyatiya-polnoe-rukovodstvo/",
+    [
+     "Для пищевой и фармацевтической линии нужен безмасляный компрессор или подтверждённая система очистки",
+     "Для электроники нужны безмасляная установка, глубокая осушка и тонкая фильтрация",
+     "Для быстрорастущего предприятия лучше несколько модульных компрессоров вместо одного мощного"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как организовать работу пневмоинструментом на крыше, если компрессор нельзя поднять наверх?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/peredvizhnoy_trudyaga_sb4_s_23_lb30a/",
+    [
+     "Компрессор остаётся внизу, а шланг с катушки разматывается и позволяет поднять пневмоинструмент на крышу",
+     "Катушка со шлангом есть в «западной версии»"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какую роль выполняют компрессоры в пневмосистемах общественного транспорта (тормоза, подвеска) и их преимущества?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/kompressory_dlya_obshchestvennogo_transporta/",
+    [
+     "Компрессор поддерживает давление в пневмосистеме, питает тормоза, пневмоподвеску, двери и сигнализацию"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где применяются ротационные компрессоры?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/kompressory_vidy_i_osobennosti_/",
+    [
+     "Кондиционирование воздуха, газотурбинные двигатели, нефтегазовая промышленность"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор подойдёт для покраски, аэрографии, медицинского и пищевого применения?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/kakoy_kompressor_vybrat_dlya_doma_tipy_kharakteristiki_sovety/",
+    [
+     "Подходит безмасляный компрессор, так как воздух без примесей масла"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор выбрать для автосервиса, производственных линий и пищевой/химической промышленности?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/vintovoy_ili_porshnevoy_kompressor_chto_luchshe_vybrat/",
+    [
+     "Рекомендуется винтовой: тише, долговечнее и экономичнее при постоянной эксплуатации",
+     "Подходит для производства, покрасочных линий и автосервисов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для чего нужны компрессоры в пивоварении, виноделии и производстве молочных продуктов?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/6292/",
+    [
+     "Аэрация сусла и вина для оптимальной ферментации",
+     "Аэрация йогурта и сыра"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор выбрать для пищевого производства при непрерывной работе и больших расходах воздуха?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/6292/",
+    [
+     "Винтовые подходят для больших объёмов при непрерывной работе",
+     "Центробежные применяют на крупных производствах с непрерывной работой"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких объектов и задач подходят передвижные компрессоры?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    2,
+    "https://aircompressorhub.ru/company/blog/6357/",
+    [
+     "Строительные площадки, ремонтные работы, аварийные ситуации",
+     "Подходят там, где нет постоянной пневмосети и не нужен постоянный расход воздуха"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Сколько и какое пневмооборудование/инструмент можно подключить к дизельному компрессору?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/kompressor-khas-88-kd-vash-pomoshchnik-zimoy/",
+    [
+     "XAS 88 KD позволяет подключить до 4 отбойных молотков или бетоноломов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях используются компрессоры ЗИФ?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/kompressory-zif-nadezhnaya-ekonomiya/",
+    [
+     "горнодобывающая промышленность, строительство, сельское хозяйство, заводские цеха"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких буровых и смежных задач применяют компрессоры и как работает пневмоударное бурение?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/kompressory-dlya-bureniya-tekhnicheskie-osobennosti-i-preimushchestva/",
+    [
+     "Продувка скважины охлаждает долото и выносит шлам",
+     "Питание пневмоударников, вибропогружателей, перфораторов и бурильных молотков"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач подходят маломощные дизельные компрессоры?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/klassifikatsiya-dizelnykh-kompressorov-po-moshchnosti-i-davleniyu/",
+    [
+     "бытовые и сервисные задачи, лёгкий пневмоинструмент, небольшие стройработы",
+     "компактные и мобильные, но не рассчитаны на высокие нагрузки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач нужен дизельный компрессор высокого давления и большой мощности?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/klassifikatsiya-dizelnykh-kompressorov-po-moshchnosti-i-davleniyu/",
+    [
+     "бурение скважин, горные работы, крупные производственные процессы",
+     "от 12 бар и 150 кВт и выше, рассчитаны на длительную непрерывную работу"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач требуется бустер высокой производительности?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    2,
+    "https://gkpnevmo.ru/information/article/vybor-bustera-raschyet-po-davleniyu-i-proizvoditelnosti/",
+    [
+     "Бурение, нефтегаз, геологоразведка, испытания трубопроводов, крупные производства",
+     "Нужен большой расход воздуха в течение длительного времени"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Нужен ли подогрев воздуха для сушки автомобиля?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "zenova.ru",
+    2,
+    "https://zenova.ru/articles/vozduhoduvka-vmesto-turbosushki",
+    [
+     "Горячий воздух воду почти не нагревает из-за её теплоёмкости",
+     "Тёплый воздух сушит немного быстрее, подогрев подсушивает сам воздух"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие компрессоры используются в автосервисе, шиномонтаже и гараже?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/tipy-kompressorov-ih-konstruktivnye-i-funktsionalnye-otlichiya",
+    [
+     "Поршневые маслонаполненные передвижные с ременным приводом от одно- или трёхфазного двигателя"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Можно ли смонтировать пескоструйную камеру без фундамента и сварки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/innovatsii-i-kachestvo-vzglyad-iznutri-na-proizvodstvo-zavoda-pnevmostroytehnika",
+    [
+     "Есть быстроразборные основания для монтажа на ровный бетонный пол цеха",
+     "Конструкция доставляется в стандартной фуре, сварка при монтаже не нужна"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие бывают пескоструйные/абразивоструйные камеры и чем отличаются барабанные и напорные с поворотным столом?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/innovatsii-i-kachestvo-vzglyad-iznutri-na-proizvodstvo-zavoda-pnevmostroytehnika",
+    [
+     "Барабанная камера с горизонтальным барабаном регулирует скорость вращения и насыщенность абразиво-воздушной смеси",
+     "В напорной камере с поворотным столом двигатели оснащены частотными регуляторами, управление через ЖК-дисплей"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких отраслей и задач подходят поршневые и винтовые компрессоры (сравнение)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/kakoy-kompressor-luchshe-vintovoy-ili-porshnevoy",
+    [
+     "поршневые — бытовой инструмент, СТО, шиномонтаж, мини-цеха, стройплощадки",
+     "винтовые — промышленность, сельское хозяйство, медицина"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Чем опасна влага в сжатом воздухе для станков плазменной и лазерной резки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/vazhnost-vozduhopodgotovki-i-soblyudenie-trebovaniy-k-tochke-rosy",
+    [
+     "Влага, масло и мелкие частицы на линзе недопустимы"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для чего нужны системы обратного вакуума (СОВ) при пескоструйной обработке и какие у них варианты?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    2,
+    "https://drobesfera.ru/blogs/blog/poseschenie-veduschego-proizvoditelya-stroitelnogo-i-peskostruynogo-oborudovaniya-proizvodstvennaya-kompaniya-pnevmostroytehnika",
+    [
+     "Служат для сбора и рекуперации абразива",
+     "Два варианта: для лёгких абразивов (песок, купершлак) и для тяжёлых (стальная и чугунная дробь)"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как влияет производительность компрессора на скорость и качество пескоструйной обработки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    2,
+    "https://kurs-peskostrui.ru/blogs/stati/vybiraem-kompressor-dlya-peskostruynogo-apparata",
+    [
+     "Производительность компрессора не менее важна, чем сам аппарат"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как устроен и работает пневматический отбойный молоток?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/preimuwestva_pnevmoinstrumenta/",
+    [
+     "ствол выполняет функцию цилиндра, ударник - поршня",
+     "сжатый воздух разгоняет ударник, он бьет по хвостовику пики",
+     "концевая пружина удерживает пику и возвращает ударник в исходное положение"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких работ применяют охлаждённый осушенный воздух от передвижного компрессора?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/opcionalnaya_gibkost_kompressorov_atlas_kopko_xas/",
+    [
+     "Пескоструйные и окрасочные работы, сухая абразивоструйная очистка, разгрузка бетона, испытания трубопроводов, задувка оптоволоконных кабелей"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой пневмоинструмент нужен для работ с подвеской и тормозной системой?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/pravilnyj_instrument_dlya_avtoservisa/",
+    [
+     "Направляющие тормозного суппорта: CP 7736 / 734H",
+     "Плотная компоновка подвески: CP 7732C",
+     "Винты крепления тормозного диска: CP 2041"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой пневмоинструмент подойдёт для работ с двигателем, КПП и выхлопной системой?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/pravilnyj_instrument_dlya_avtoservisa/",
+    [
+     "Болты поддонов: CP 886 / CP 2141",
+     "Навесное оборудование, шкивы: CP 7737, CP 7732C",
+     "Выхлопная система и нейтрализаторы: CP 7732C, CP 9121"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой пневмоинструмент использовать для кузовных работ, шлифовки и полировки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/pravilnyj_instrument_dlya_avtoservisa/",
+    [
+     "Удаление точечной сварки и окисления: CP 9779",
+     "Шлифовка и полировка кузова: CP 72X",
+     "Полировка фар и локальный ремонт: CP 7201"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где применяется кислород в промышленности и медицине в целом?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/oblasti_primeneniya_kisloroda/",
+    [
+     "Медицина, фармацевтика, аквакультура, выдувание стекла, сварка, генерация озона, снижение NOx в горелках"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются компрессорные станции?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/chto-takoe-kompressornaya-stanciya-vidy-ustrojstvo-i-principy-raboty/",
+    [
+     "Нефтегаз, промышленность (пневмоинструмент), химия, энергетика (газовые турбины), горная добыча"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для чего азот используется в пищевой промышленности и электронике?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/kak_rabotaet_generator_azota_sfera_primeneniya_i_preimuwestva/",
+    [
+     "Азотная упаковка предотвращает окисление и продлевает срок годности",
+     "В электронике нужен для пайки и защиты компонентов от окисления"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях и для каких задач применяются адсорбционные осушители?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/adsorbcionnye_i_absorbcionnye_osushiteli_szhatogo_vozduha/",
+    [
+     "Фармацевтика, производство электроники и другие отрасли с высокими требованиями к воздуху"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются абсорбционные осушители и когда они энергоэффективны?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/adsorbcionnye_i_absorbcionnye_osushiteli_szhatogo_vozduha/",
+    [
+     "Холодильная и климатическая техника, электроника, фармацевтика, пищевая промышленность",
+     "Энергоэффективны при повышенных температуре и влажности"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач используется воздух давлением 40 бар (ПЭТ, пусковой воздух дизелей, проверка герметичности)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/vsyo_o_dozhimnyh_kompressorah_busterah/",
+    [
+     "Производство ПЭТ-бутылок, стартовый компрессор для крупных дизелей, распыление в деревообработке и стекольной промышленности"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач подходит дизельный компрессор на 35 бар (бурение, геологоразведка)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/obzor_dizelnogo_vintovogo_kompressora_atlas_copco_y_35/",
+    [
+     "высокое давление ускоряет бурение, сокращая время операций на 25–30%",
+     "применим для поиска нефтяных пластов, водоносных горизонтов, полезных ископаемых"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач подходит винтовой компрессор со встроенным осушителем и ресивером?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/obzor_elektricheskogo_vintovogo_kompressora_ariacom_nt3_df_240_s_osushitelem/",
+    [
+     "обслуживание систем пневмоавтоматики",
+     "непрерывная работа"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для какого оборудования и в каких отраслях применяются воздушные рукава?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/vozdushnye_rukava_dlya_kompressora_kak_vybrat_nadezhnoe_reshenie_dlya_raboty/",
+    [
+     "подача воздуха к перфораторам, отбойным молоткам и другому пневмоинструменту",
+     "строительство, дорожные работы, производство, промышленность"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие дефекты покрытия вызывают нестабильное давление, масло и влага при покраске?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    2,
+    "https://aerocompressors.ru/stati/kak_vybrat_vintovoj_kompressor_dlya_okrasochnyh_rabot_professional_nyj_podhod_k_podboru_oborudovaniya/",
+    [
+     "Шагрень, кратеры, матовость, перерасход ЛКМ, брак"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Нужна ли подготовка воздуха в засушливых районах и при использовании пластикового абразива?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "novatecs.ru",
+    2,
+    "https://novatecs.ru/articles/vse-pro-peskostruynoe-oborudovanie/oborudovanie-dlya-podgotovki-szhatogo-vozdukha-dlya-peskostruynykh-rabot/",
+    [
+     "Даже в засушливых районах есть влага и пыль",
+     "Для влагочувствительных установок (пластиковый абразив) рекомендуются коалесцентные фильтры с охладителями при любой влажности"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор подойдёт для шиномонтажа или интенсивной работы?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "v-p-k.ru",
+    2,
+    "https://www.v-p-k.ru/blog/kakoy-kompressor-vybrat-maslyanyy-ili-bezmaslyanyy/",
+    [
+     "При регулярной работе, как на шиномонтаже, подойдет масляный",
+     "Высокая производительность снижает затраты на электроэнергию"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой класс чистоты воздуха нужен для пневмоинструмента и упаковочного оборудования?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "v-p-k.ru",
+    2,
+    "https://www.v-p-k.ru/blog/pochemu-tak-vazhna-vozdukhopodgotovka/",
+    [
+     "3 класс: масло не более 0,01 мг/м³, частицы до 0,01 мкм"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое качество воздуха требуется для пескоструйных и дробеструйных работ?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "v-p-k.ru",
+    2,
+    "https://www.v-p-k.ru/blog/pochemu-tak-vazhna-vozdukhopodgotovka/",
+    [
+     "5 класс: допускается масло до 0,5 мг/м³ и повышенная влажность"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач достаточно воздуха низкого класса чистоты (6 класс)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "v-p-k.ru",
+    2,
+    "https://www.v-p-k.ru/blog/pochemu-tak-vazhna-vozdukhopodgotovka/",
+    [
+     "6 класс: минимальные требования, автомастерские, стекольное производство, буровые и взрывные работы"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях и для каких газов применяются клапаны ПИК?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    2,
+    "https://klapan-pik.ru/articles/pryamotochnye_individualnye_klapana_klapan_pik/",
+    [
+     "Химическая, текстильная, машиностроительная отрасли",
+     "Подходят для воздушных и газовых компрессоров разных газов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются экспандеры для компрессоров?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    2,
+    "https://klapan-pik.ru/articles/ekspander_dlya_kompressora/",
+    [
+     "Энергетическая, химическая, нефтегазовая, пищевая промышленность"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой газ выбрать для лазерной резки в зависимости от материала и толщины?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    2,
+    "https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/",
+    [
+     "Кислород: толстая углеродистая сталь; азот: нержавейка и алюминий; аргон: титан и реактивные сплавы; воздух: тонкая сталь",
+     "Для стали толще 2-3 мм лучше кислород, для тонкой лучше азот"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Чем отличаются кислород, азот, аргон и сжатый воздух по качеству кромки, скорости и стоимости при лазерной резке?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    2,
+    "https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/",
+    [
+     "Кислород даёт максимальную скорость на толстой стали, но кромка с окалиной",
+     "Азот даёт чистую кромку, стоимость средняя или высокая",
+     "Аргон самый дорогой, воздух самый дешёвый"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Почему кислород ускоряет резку углеродистой стали и какие у него недостатки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    2,
+    "https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/",
+    [
+     "Экзотермическая реакция окисления даёт дополнительное тепло и ускоряет процесс",
+     "На кромке образуются окалина и оксидный слой, нужна очистка",
+     "Риск оплавления кромок резака при ошибках фокусировки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как выбрать газ для лазерной резки с точки зрения экономики?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    2,
+    "https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/",
+    [
+     "Воздух экономит на газе, но скорость может падать",
+     "Правильный газ снижает брак, затраты на постобработку и простои",
+     "Нужно учитывать инфраструктуру: генераторы и системы очистки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие требования предъявляют азот и аргон к герметичности лазерного станка?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "klapan-pik.ru",
+    2,
+    "https://klapan-pik.ru/articles/lazernaya_rezka_kakoy_gaz_luchshe_podkhodit/",
+    [
+     "Утечки газа снижают качество резки и увеличивают расход"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор (масляный или безмасляный) лучше выбрать для покраски, пескоструя и продувки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "hyundai-tools.ru",
+    2,
+    "https://hyundai-tools.ru/blog/kakoj-kompressor-luchshe-maslyanyj-ili-bezmaslyanyj-i-kakaya-mezhdu-nimi-raznica/",
+    [
+     "Если воздух входит в рабочий процесс (покраска, пескоструй, продувка, плазморез), масло в воздухе недопустимо, нужен безмасляный или с фильтрацией"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются рефрижераторные осушители?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/sovety/refrizheratornye-osushiteli-osobennosti-i-primenenie/",
+    [
+     "Машиностроение, металлургия, пищевая и фармацевтическая промышленность",
+     "Чаще всего на производствах с пневматическим оборудованием"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "К каким потерям приводит остановка компрессора на производстве?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/sovety/rezervnyy-vozdushnyy-kompressor-zachem-on-nuzhen-vashemu-predpriyatiyu/",
+    [
+     "Простой сборочного цеха и покраски, неустойка торговым сетям за срыв поставок",
+     "На пищевых производствах продукты и напитки быстро портятся без своевременной обработки и упаковки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких отраслей и задач применяются поршневые компрессоры с вертикальным ресивером?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/sovety/porshnevye-kompressory-aso-na-vertikalnom-resivere/",
+    [
+     "металло- и деревообработка, мебель, пластик, стройка, пескоструй, сельское хозяйство",
+     "пожаротушение в паркингах, опрессовка труб",
+     "питание перфораторов, гайковертов, краскопультов, отбойных молотков"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких процессов на цементном заводе нужен сжатый воздух?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/sovety/kak-sokratit-raskhody-na-elektroenergiyu/",
+    [
+     "Пневмоприводы задвижек, шиберов и заслонок в системах КИПиА",
+     "Аэрация силосов, пневмотранспорт цемента, разгрузка вагонов и судов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где и для чего применяется сжатый воздух на предприятиях (станки, инструмент, упаковка, СТО)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/stati/pnevmolinii-effektivnost-i-neobkhodimost/",
+    [
+     "Пищевая и химическая промышленность, СТО, машиностроение",
+     "Питает станки, ручной инструмент, упаковочные машины"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для чего компрессорное оборудование применяется в космической отрасли и на космодромах?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/stati/vintovoy-kompressor-v-kosmonavtike/",
+    [
+     "Испытания герметичности отсеков и спутников",
+     "Пневмоприводы стартовых комплексов",
+     "Наддув баков ракет, центры подготовки космонавтов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие требования к чистоте сжатого воздуха на космодромах и в аэрокосмической промышленности?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/stati/vintovoy-kompressor-v-kosmonavtike/",
+    [
+     "Класс 0 по маслу",
+     "Критичны стабильность давления, осушка и отсутствие масляных паров"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются воздушные ресиверы с расширенным температурным диапазоном?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/products/ot-10-c-do-100-c-uluchshennye-resivery-ot-zavoda-aso/",
+    [
+     "Машиностроение, химическая и нефтегазовая промышленность",
+     "Подходят для процессов с высоким давлением и несколькими температурными зонами"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач и отраслей подходят винтовые компрессоры на 16 бар (и чем отличаются от 8–10 бар)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/official/bezhetskiy-zavod-aso-informiruet-o-snizhenii-stoimosti-vintovykh-kompressorov/",
+    [
+     "16 бар нужны для пескоструя, продувки пресс-форм, мощного пневмоинструмента, промышленной окраски",
+     "обычных 8–10 бар для этих задач недостаточно"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются компрессоры российского производства и кто переоснащает производство ими?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/achievements/biznes-vybiraet-otechestvennoe-sozdannyy-na-bezhetskom-zavode-aso-resiver-priznan-odnim-iz-luchshikh/",
+    [
+     "Металлообработка, машиностроение, строительство, химическая и пищевая промышленность, асфальтосмесительные заводы",
+     "Поставки в Газпром, РЖД, Тверской вагонзавод"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой поршневой компрессор подойдёт для нескольких постов пневмоинструмента на деревообрабатывающем/строительном предприятии?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/technologii/porshnevoy-kompressor-k30m1/",
+    [
+     "К30М1 подаёт воздух сразу на несколько постов",
+     "применяется на деревообработке и стройке: от продувки до нанесения красок и лаков"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие компрессоры используют для дробеструйной камеры на машиностроительном заводе?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/realizovannye-proekty/bezhetskie-kompressory-dlya-krupneyshego-rossiyskogo-proizvoditelya-gruzovogo-transporta-ooo-tonar/",
+    [
+     "Камеру обслуживают шесть дробеструйных установок",
+     "Воздух подают винтовые компрессоры АСО-ВК75/8 и АСО-ВК90/10 с устройством плавного пуска"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор подойдёт для питания пневмоинструмента на участке сборки двигателей и КПП?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/realizovannye-proekty/bezhetskie-kompressory-dlya-krupneyshego-rossiyskogo-proizvoditelya-gruzovogo-transporta-ooo-tonar/",
+    [
+     "Используется винтовой компрессор АСО-ВК11/8-500"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какая компрессорная станция подойдёт для системы пылеподавления на грузовом терминале?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/realizovannye-proekty/vintovaya-modulnaya-kompressornaya-stantsiya-dlya-morskogo-gruzovogo-porta/",
+    [
+     "Станция предназначена для обеспечения сжатым воздухом системы пылеподавления серного терминала в морском порту",
+     "Винтовой блок Rotorcomp EVO15-G, 90 кВт"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие поршневые компрессоры применяются в нефтегазовой отрасли и во взрывоопасных зонах?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/aso-v-smi/kompressornoe-oborudovanie-dlya-promyshlennogo-primeneniya/",
+    [
+     "К33 со взрывозащищёнными двигателями",
+     "повышение давления у пластов для добычи нефти со старых скважин"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор подойдёт для лазерных комплексов и производства полипропиленовой/ПЭТ тары?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    2,
+    "http://asobezh.ru/blog/aso-v-smi/kompressornoe-oborudovanie-dlya-promyshlennogo-primeneniya/",
+    [
+     "винтовые АСО-ВК с рабочим давлением до 16 атм"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для чего нужен компрессор в системе пневматической разгрузки цементовоза?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressor-na-tsementovoz-bekomsan/",
+    [
+     "Подаёт сжатый воздух для разрыхления и перемещения цемента из цистерны в силос или бункер",
+     "Позволяет выгружать груз без механического извлечения"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как выбрать компрессор для цементовоза/муковоза (автоцистерн) и какие параметры важны при пневморазгрузке?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressor-na-tsementovoz-bekomsan/",
+    [
+     "Нужно уточнить модель, производительность, рабочее давление, тип привода и способ подключения, монтаж и совместимость с системой",
+     "Учитывать интенсивность использования, длительность циклов разгрузки и особенности материала"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие задачи решает компрессорное оборудование Bekomsan и где оно применяется?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressor-na-tsementovoz-bekomsan/",
+    [
+     "Пневморазгрузка цемента, подача воздуха в цистерну и трубопровод, поддержание режима перемещения груза, работа пневмооборудования на спецтранспорте"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях и для каких задач применяются промышленные винтовые компрессорные станции?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressornye-stantsii-jinheung/",
+    [
+     "Применяются на производстве, в стройке, металлургии, деревообработке, пищевой промышленности, автосервисах, нефтегазе",
+     "Питают пневмосистемы, станки, покрасочные и упаковочные линии"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач и отраслей подходит поршневой компрессор средней мощности?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressory-bekomsan-esinti-102/",
+    [
+     "Автосервис, строительство, производство",
+     "Сельское хозяйство, бытовые нужды",
+     "Краскопульты, гайковерты, пневмопрессы"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются компрессоры непрерывного действия?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressory-bezostanovochnoy-raboty/",
+    [
+     "Металлообработка, нефтехимия, пищевое производство, фармацевтика, энергетика"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются промышленные компрессоры этого бренда?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressory-bekomsan-nadezhnost-i-effektivnost-v-promyshlennosti/",
+    [
+     "Машиностроение, строительство, металлургия, пищевая промышленность"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где применяются компрессоры с гидроприводом?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressor-s-gidroprivodom-polnyy-gid-po-vyboru-i-primeneniyu/",
+    [
+     "Устанавливаются на спецтехнику, грузовики, буровые установки, цементовозы",
+     "Используются в строительстве, промышленности, энергетике, морской отрасли"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где применяются компрессоры без привода?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kompressory-bez-privoda/",
+    [
+     "Производство, сельское хозяйство, строительство, транспорт",
+     "Пневмоинструмент, пневмотранспорт кормов, отбойные молотки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как правильно вести выгрузку цемента по давлению?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "2bar.ru",
+    2,
+    "https://www.2bar.ru/blog/kak-zapustit-avtonomnyy-kompressor-na-tsementovoze/",
+    [
+     "Контроль по манометру",
+     "Открывать заслонки постепенно во избежание скачка давления"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Почему при нехватке производительности портится покраска и падает мощность инструмента?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "foxair.ru",
+    2,
+    "https://foxair.ru/blogs/blog/kak-vybrat-kompressor-dlya-garazha-8-vazhnyh-sovetov",
+    [
+     "Падение давления уменьшает факел краскопульта",
+     "Гайковерт теряет мощность при нехватке воздуха"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Чем отличается качество воздуха для разных типов пневмоинструмента?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/predvaritelnaya_podgotovka_szhatogo_vozduha_dlya_pnevmoinstrumenta/",
+    [
+     "Для приводного устройства не нужна максимальная очистка",
+     "Для распыления требования строже"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как классифицируется пневмоинструмент по ресурсу?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "promtula.ru",
+    2,
+    "https://promtula.ru/stati/vybor-pnevmoinstrumenta/",
+    [
+     "Бытовой, полупрофессиональный, профессиональный",
+     "Профессиональный рассчитан на 10+ лет ежедневной эксплуатации"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "На какие характеристики смотреть при выборе пневмоинструмента?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "promtula.ru",
+    2,
+    "https://promtula.ru/stati/primenenie-szhatogo-vozduha-pnevmaticheskij-instrument/",
+    [
+     "Мощность, производительность, эргономичность",
+     "Стоимость и сервис, наличие склада запчастей"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор подходит для обдува и продувки тары на линиях розлива?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza24.ru",
+    2,
+    "https://www.remeza24.ru/blog/vybor-kompressora/vintovye-nizkogo-davleniya/",
+    [
+     "Низкое давление, высокий постоянный расход",
+     "Безмасляное сжатие обеспечивает чистоту конструктивно"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Почему пескоструй потребляет много воздуха по сравнению с другим инструментом?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza24.ru",
+    2,
+    "https://www.remeza24.ru/blog/vybor-kompressora/kompressor-dlya-peskostruya/",
+    [
+     "Работа непрерывная, без пауз как у гайковёрта",
+     "Расход определяется сечением сопла и давлением"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор лучше работает на запылённых производствах?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "promtula.ru",
+    2,
+    "https://promtula.ru/stati/vintovoj-kompressor-ili-porshnevoj-kompressor/",
+    [
+     "Абразив вреден и для винтового, и для поршневого",
+     "Система префильтрации защищает внутренние полости",
+     "Панельные фильтры с нулевым сопротивлением не влияют на характеристики"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое испытательное давление задавать при опрессовке?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "ariacom.ru",
+    2,
+    "https://ariacom.ru/stati/kompressor_dlya_opressovki_truboprovodov/",
+    [
+     "Испытательное давление до двухкратного от номинального"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Что экономичнее для лазерной резки — азот или сжатый воздух?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "compressor-pk.ru",
+    2,
+    "https://compressor-pk.ru/info/articles/kompressory-dalgakiran-dlya-lazernoy-rezki/",
+    [
+     "Резка сжатым воздухом в 3-4 раза экономичнее резки азотом"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой комплект оборудования нужен для подготовки воздуха под лазерную резку?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "compressor-pk.ru",
+    2,
+    "https://compressor-pk.ru/info/articles/kompressory-dalgakiran-dlya-lazernoy-rezki/",
+    [
+     "Винтовой компрессор, ресивер 500 л 16 бар",
+     "Рефрижераторный осушитель DK 40, 16 бар",
+     "Магистральные фильтры грубой и тонкой очистки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач и пользователей применяются компрессоры высокого давления для дыхания и кому они нужны?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "kompresurs.ru",
+    2,
+    "https://kompresurs.ru/blog/primenenie-vozdukha-dlya-dykhaniya-pri-vysokom-davlenii/",
+    [
+     "Спортсмены-подводники, профессиональные водолазы, службы спасения",
+     "Станции погружения, суда, военно-морской флот"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какое оборудование используется для подачи сжатого воздуха в пейнтболе?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "kompresurs.ru",
+    2,
+    "https://kompresurs.ru/blog/primenenie-vozdukha-i-gazov-pri-vysokom-davlenii/",
+    [
+     "Мобильные и стационарные системы для пейнтбола",
+     "Заправка картриджей и баллонов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Можно ли установить компрессор высокого давления в спасательный или пожарный автомобиль?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "kompresurs.ru",
+    2,
+    "https://kompresurs.ru/blog/pozharnye-kompressory/",
+    [
+     "Установка компрессоров в спасательные автомобили",
+     "Мобильное использование на месте в пожарном автомобиле"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких задач подходит компрессор на 8 бар?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza24.ru",
+    2,
+    "https://www.remeza24.ru/blog/vybor-kompressora/kakoe-davlenie-kompressora-vybrat/",
+    [
+     "Пневмоинструмент, покраска, шиномонтаж, продувка, пневмоприводы станков",
+     "Типовой парк рассчитан на 6-6,3 бар, 8 бар закрывает с запасом"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор подойдёт строительным бригадам для отделки и строительства деревянных домов?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 4.0,
+  "comp": [
+   [
+    "remeza.org",
+    2,
+    "https://www.remeza.org/company/articles/peredvizhnoy_trudyaga_sb4_s_23_lb30a/",
+    [
+     "Компактный передвижной поршневой компрессор на тележке с двумя ресиверами по 11,5 л (всего 23 л) рассчитан на строительные бригады, работающие с деревянными домами",
+     "Специализированная модель, не универсальное решение"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "controls",
   "topic_name": "Автоматика, контроллеры и мониторинг",
   "q": "Есть ли у производителей компрессоров собственные системы удалённого контроля?",
@@ -63557,6 +67684,662 @@
   ]
  },
  {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Подходит ли винтовой компрессор для лазерных станков и какой тип выбрать?",
+  "our_depth": 1,
+  "n_comp": 1,
+  "comp_max_depth": 3,
+  "score": 3.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    3,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/kak-vybrat-kompressor-dlya-lazernogo-stanka-polnoe-rukovodstvo-po-podboru/",
+    [
+     "Для промышленной резки обычно выбирают винтовой компрессор для продолжительной нагрузки",
+     "Рабочее давление при резке металла 10–16 бар, потребление около 0,8–2,5 м³/мин",
+     "Подбирают по давлению на входе станка, фактической подаче и чистоте воздуха, а не по мощности двигателя"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Нужен ли резервный компрессор при круглосуточной работе лазера?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "rdrus.ru",
+    1,
+    "https://rdrus.ru/blog/tekhnicheskie-stati/kak-pravilno-podobrat-kompressor-dlya-lazernoy-rezki-metalla/",
+    [
+     "при круглосуточном производстве рекомендуется схема дублирования"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Из чего состоит пневмолиния для пескоструйной обработки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/oborudovanie-pod-klyuch-dlya-obitaemoy-kamery-otpravleno-v-tver",
+    [
+     "Электрический винтовой компрессор, рефрижераторный осушитель, магистральные фильтры, воздушные ресиверы РВ-500"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор и ресивер подходят для абразивоструйного аппарата объёмом 100–200 литров?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/kurs-vypolnil-puskonaladku-oborudovaniya-obitaemoy-kamery-na-predpriyatii-po-izgotovleniyu-metizov-v-tule",
+    [
+     "Аппарат 200 л укомплектован винтовым компрессором 30 кВт"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Компрессоры какой мощности применяют для питания пневмомагистрали пескоструйного участка?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/v-nalichii-oborudovanie-dlya-obitaemyh-kamer-drobestruynoy-ochistki",
+    [
+     "Винтовые компрессоры мощностью от 5,5 до 37 кВт",
+     "Есть модели с частотным приводом (VSD) на 22 и 37 кВт, 8 бар"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор нужен, если одновременно работают несколько потребителей, и можно ли подключить их к одному винтовому компрессору?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/vsyo-dlya-kachestvennogo-szhatogo-vozduha-v-nalichii",
+    [
+     "Рекомендуется производительный винтовой компрессор, особенно при одновременном подключении нескольких потребителей"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Подходят ли винтовые компрессоры IRONMAC для пескоструйного оборудования и пневмоинструмента?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/ironmac-novyy-brend-kompressornogo-oborudovaniya-v-nashem-assortimente",
+    [
+     "Компрессоры востребованы у пользователей пескоструйного оборудования и пневмоинструмента за сочетание цены и надёжности"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где применяются промышленные винтовые компрессоры небольшой мощности?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/bolshoe-postuplenie-kompressorov-otgruzim-v-den-zakaza",
+    [
+     "Автосервисы, мастерские, гаражи, промышленные производства"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Почему имеющегося компрессора может не хватить для напорного пескоструйного аппарата?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/chernovik-stati-ot-15122022-1246",
+    [
+     "Компрессора, который уже есть у пользователя, часто не хватает, чтобы обеспечить пескоструйный аппарат сжатым воздухом",
+     "К напорным аппаратам объёмом 25–250 л подбирают компрессор по мощности и производительности"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Подходит ли электрический винтовой компрессор для пескоструйной установки, камеры и рекуперации абразива?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kurs-peskostrui.ru",
+    1,
+    "https://kurs-peskostrui.ru/blogs/blog/bolshoe-postuplenie-elektricheskih-vintovyh-kompressorov",
+    [
+     "Компрессоры CrossAir Dali заявлены для работы с пневмооборудованием и пескоструйными установками"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор выбрать для бытовых нужд и для производств с чистым воздухом?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "air-vint.ru",
+    1,
+    "https://air-vint.ru/blog/sovety-pokupatelyam/kakoy-kompressor-luchshe-maslyanyy-ili-bezmaslyanyy/",
+    [
+     "Для дома и чистых производств желательны безмасляные установки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие компрессоры используются в холодильных установках и шоковой заморозке продуктов?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    1,
+    "https://aircompressorhub.ru/company/blog/6292/",
+    [
+     "Компрессор — ключевой элемент холодильных установок и систем шоковой заморозки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой бренд компрессоров выбрать для горнодобывающей промышленности и строительства?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "aircompressorhub.ru",
+    1,
+    "https://aircompressorhub.ru/company/blog/6327/",
+    [
+     "Atlas Copco специализируется на компрессорах для горной добычи; Sullair применяют в строительстве и горнодобыче"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Подойдёт ли электрический поршневой компрессор для небольшого производства с ограниченной площадью?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    1,
+    "https://gkpnevmo.ru/information/article/preimuwestva_elektricheskih_porshnevyh/",
+    [
+     "Неэффективен на небольшом производстве с ограниченной площадью из-за шума и вибрации"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор подходит для технологического процесса переработки цветного металла?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    1,
+    "https://gkpnevmo.ru/information/article/vintovye-kompressory-den-nadezhnost-i-dolgovechnost/",
+    [
+     "Для переработки цветного металла поставлен винтовой электрический компрессор ДЭН-90Ш+ производства Челябинского компрессорного завода"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие специальные компрессорные решения применяются на стройке (азотные станции, компрессоры для цементовозов, привод от ВОМ)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "gkpnevmo.ru",
+    1,
+    "https://gkpnevmo.ru/information/article/kompressory-dlya-stroitelstva-vybor-pod-zadachi/",
+    [
+     "Азотные станции для продувки и инертных сред",
+     "Компрессоры для цементовозов и муковозов для сыпучих материалов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие дополнительные опции бывают у пескоструйного оборудования?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "drobesfera.ru",
+    1,
+    "https://drobesfera.ru/blogs/blog/poseschenie-veduschego-proizvoditelya-stroitelnogo-i-peskostruynogo-oborudovaniya-proizvodstvennaya-kompaniya-pnevmostroytehnika",
+    [
+     "Бункеры-накопители с раздачей, приёмный бункер, циклон, подставки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие специальные компрессоры выпускает Remeza (медицинские, для транспорта)?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    1,
+    "https://aerocompressors.ru/stati/kompressory_remeza_remeza/",
+    [
+     "Медицинские, для троллейбусов и электропоездов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как выбрать ударный гайковёрт по требуемому моменту затяжки?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    1,
+    "https://aerocompressors.ru/stati/pravilnyj_instrument_dlya_avtoservisa/",
+    [
+     "Инструмент выбирают в соответствии с требуемым моментом затяжки"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие бывают типы ударных механизмов (муфт) у пневмогайковёртов и размеры хвостовиков?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    1,
+    "https://aerocompressors.ru/stati/pravilnyj_instrument_dlya_avtoservisa/",
+    [
+     "Типы: rocking dog clutch, 2 jaw clutch, pin clutch, single dog clutch, twin dog clutch",
+     "Квадратные хвостовики от 3/8” до 1 ½”"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие аксессуары (головки, балансиры, кожухи) подходят для ударного инструмента?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    1,
+    "https://aerocompressors.ru/stati/pravilnyj_instrument_dlya_avtoservisa/",
+    [
+     "Хромомолибденовая сталь, стойкая к ударным нагрузкам",
+     "Магний-фосфатное защитное покрытие, пожизненная гарантия"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где применяются адсорбционные осушители с вакуумной регенерацией?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "aerocompressors.ru",
+    1,
+    "https://aerocompressors.ru/stati/adsorbcionnye_i_absorbcionnye_osushiteli_szhatogo_vozduha/",
+    [
+     "Производство полупроводников и медикаментов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяется лазерная резка?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    1,
+    "http://asobezh.ru/blog/official/vintovoy-kompressor-dlya-stanka-lazernoy-rezki-obespechivaem-tochnost-i-effektivnost-vashego-proizvo/",
+    [
+     "Металлообработка, автомобилестроение, электроника, реклама, медицина, ювелирное дело"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Для каких отраслей подходят модульные компрессорные станции?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "asobezh.ru",
+    1,
+    "http://asobezh.ru/blog/realizovannye-proekty/modulnaya-kompressornaya-stantsiya-dlya-metallurgicheskoy-kompanii/",
+    [
+     "Нефтяная, строительная, деревообрабатывающая, машиностроительная, металлургическая, железнодорожная отрасли"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор подходит для нефтегазовой и химической промышленности?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "2bar.ru",
+    1,
+    "https://www.2bar.ru/blog/tipy-kompressorov-bekomsan-i-ikh-primenenie-v-razlichnykh-otraslyakh/",
+    [
+     "Центробежные и винтовые для сжатия и транспортировки газов"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какой компрессор выбрать для деревообработки, пищевого производства и стройматериалов?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "2bar.ru",
+    1,
+    "https://www.2bar.ru/blog/pochemu-kompressory-bekomsan---luchshiy-vybor-dlya-tsementovozov-i-mukovozov/",
+    [
+     "ESINTI 72 для стройматериалов и пищевой продукции"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Почему для покраски важен воздух без масла?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "compressor-ga.ru",
+    1,
+    "https://compressor-ga.ru/company/articles/2689/",
+    [
+     "Масло в смеси не обеспечивает качественный результат покраски"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Почему важно давление воздуха для пневмоинструмента и каким оно должно быть?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "ariacom.ru",
+    1,
+    "https://ariacom.ru/stati/predvaritelnaya_podgotovka_szhatogo_vozduha_dlya_pnevmoinstrumenta/",
+    [
+     "При высоком давлении опасность для оборудования",
+     "При низком сложно использовать инструмент"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Где применяется пневмоинструмент?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "promtula.ru",
+    1,
+    "https://promtula.ru/stati/udobstvo-i-praktichnost-osnovnye-otlichitelnye-kachestva-pnevmoinstrumenta/",
+    [
+     "Строительство, машиностроение, горнодобыча, автосервис"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие недостатки есть у пневмоинструмента?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "promtula.ru",
+    1,
+    "https://promtula.ru/stati/udobstvo-i-praktichnost-osnovnye-otlichitelnye-kachestva-pnevmoinstrumenta/",
+    [
+     "Затраты на монтаж оборудования",
+     "Необходимость подбора компрессора"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Можно ли укомплектовать компрессор для лазерной резки частотным преобразователем?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "5m3.ru",
+    1,
+    "https://www.5m3.ru/articles/novaya-opciya-chastotnyy-preobrazovatel-dlya-kompressorov-k-stankam-lazernoy-rezki.html",
+    [
+     "Опция доступна для моделей REMEZA ВК25Т-16-500Д2, ВК30Т-16-500Д2, ВК30Т-20-470Д2"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как обеспечить бесперебойную подачу воздуха при крупных мероприятиях?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kompresurs.ru",
+    1,
+    "https://kompresurs.ru/blog/primenenie-vozdukha-i-gazov-pri-vysokom-davlenii/",
+    [
+     "Профессиональные установки с накопителями сжатого воздуха"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Как организовать бесперебойную круглосуточную работу компрессорной на производстве?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "kompresurs.ru",
+    1,
+    "https://kompresurs.ru/blog/bezhetskiy-zavod-aso-10-let-uspeshnogo-sotrudnichestva/",
+    [
+     "Два винтовых компрессора обеспечивают круглосуточную работу без остановок"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "Какие требования к воздуху для дыхания (медицина) при размещении воздухозабора?",
+  "our_depth": 0,
+  "n_comp": 1,
+  "comp_max_depth": 1,
+  "score": 3.0,
+  "comp": [
+   [
+    "promtula.ru",
+    1,
+    "https://promtula.ru/stati/ustanovka-kompressornogo-oborudovaniya/",
+    [
+     "Загрязнение выхлопными газами смертельно опасно для дыхательного воздуха",
+     "В больницах предъявляются специальные требования к размещению воздухозабора"
+    ]
+   ]
+  ]
+ },
+ {
   "topic": "oilfree",
   "topic_name": "Масляные и безмасляные компрессоры",
   "q": "Тише ли безмасляный компрессор, чем маслозаполненный, и как снизить шум?",
@@ -64249,6 +69032,26 @@
     [
      "покупать у крупной компании с собственным складом и сервисным центром",
      "предпродажная проверка и устранение дефектов, возврат плохого оборудования поставщику"
+    ]
+   ]
+  ]
+ },
+ {
+  "topic": "applications",
+  "topic_name": "Компрессоры для отраслей и задач",
+  "q": "В каких отраслях применяются безмасляные винтовые компрессоры?",
+  "our_depth": 1,
+  "n_comp": 1,
+  "comp_max_depth": 2,
+  "score": 2.0,
+  "comp": [
+   [
+    "dileks.ru",
+    2,
+    "https://dileks.ru/blog/stati/tipy-bezmaslyanykh-kompressorov/",
+    [
+     "Фармацевтические заводы, электроника, крупные пищевые комбинаты, покрасочные линии",
+     "Подходят для непрерывной круглосуточной работы"
     ]
    ]
   ]
