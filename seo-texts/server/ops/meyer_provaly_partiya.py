@@ -178,7 +178,10 @@ def имя_подтверждено(им, ф_, компания):
 готово = set()
 if os.path.exists(ЖУР):   # записи без ответа модели (провайдер лёг/кончился баланс) выкидываем — пересоберутся
     _все = [json.loads(с) for с in io.open(ЖУР, encoding="utf-8") if с.strip()]
-    _хор = [з for з in _все if all(з.get(к, {}).get("verdict") not in (None, "нет ответа") for к in ("tehnolog", "skeptik", "redaktor"))]
+    _заглушка = lambda з: з.get("status") == "ошибка" and any(re.search(r"ИМЯ_ОТПРАВИТЕЛЯ|плейсхолдер|заполнител", (з.get(к, {}).get("pochemu") or ""))
+                                                              for к in ("tehnolog", "skeptik", "redaktor"))
+    _хор = [з for з in _все if all(з.get(к, {}).get("verdict") not in (None, "нет ответа") for к in ("tehnolog", "skeptik", "redaktor"))
+            and not _заглушка(з)]
     if len(_хор) != len(_все):
         with io.open(ЖУР + ".tmp", "w", encoding="utf-8") as ф:
             for з in _хор: ф.write(json.dumps(з, ensure_ascii=False) + "\n")
@@ -245,7 +248,7 @@ print("к сборке: %d (уже в журнале %d) %s" % (len(кандид
 
 def линзы(письмо, тема, x, прод, ф_, данные):
     о = зов("Профиль: %s, продукт: %s.\nФИО контакта: %s\nДанные компании: %s\nПисьмо:\nТема: %s\n\n%s"
-            % (x.get("kompaniya", ""), прод or "-", ф_ or "-", данные[:900], тема, письмо), "tehnolog", ЛИНЗЫ, 1800) or {}
+            % (x.get("kompaniya", ""), прод or "-", ф_ or "-", данные[:900], тема, письмо.replace(ИМЯ, "Андрей")), "tehnolog", ЛИНЗЫ, 1800) or {}
     return {к: (о.get(к) if isinstance(о.get(к), dict) else {"verdict": "нет ответа"}) for к in ("tehnolog", "skeptik", "redaktor")}
 
 
