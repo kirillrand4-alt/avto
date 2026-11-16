@@ -6,7 +6,8 @@
 карточкой, письмо — тот же текст и тема, что ушли на ошибочный адрес; ложится
 pending_review, отправляет оператор.
 
-    kopiya_na_adres.py <старый адрес> <новый адрес>
+    kopiya_na_adres.py <старый адрес> <новый адрес> [--privet=Имя_Отчество,_добрый_день!]  (пробелы — подчёркиванием)
+(16.11: замещающему по автоответу — первое приветствие письма меняется на обращение по имени)
 """
 import json
 import sqlite3
@@ -21,7 +22,7 @@ from sender.confirm import ConfirmSend  # noqa: E402
 from sender.suppression import Suppression  # noqa: E402
 from sender.addr_probe import build_addr_probe  # noqa: E402
 
-старый, новый = sys.argv[1].lower(), sys.argv[2].lower()
+старый, новый = sys.argv[1].lower(), sys.argv[2].lower().strip()
 cfg = Config.load(r"C:\sender\sender.yaml")
 store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
 q = build_ai_quota(store, cfg)
@@ -61,6 +62,10 @@ if not тело:
     cr = c.execute("SELECT coalesce(edited_body, body), coalesce(edited_subject, subject) FROM confirm_reviews "
                    "WHERE message_id=? ORDER BY id DESC LIMIT 1", (м["id"],)).fetchone()
     тело, тема = cr[0], cr[1]
+_пр = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--privet=")), "").replace("_", " ")
+if _пр:
+    import re as _re
+    тело = _re.sub(r"^(Добрый день|Здравствуйте)[^!\n]*!", _пр, тело, count=1)
 есть = c.execute("SELECT id FROM recipients WHERE lower(email)=?", (новый,)).fetchone()
 if есть:
     нов_id = есть[0]
