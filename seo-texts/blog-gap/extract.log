@@ -1,3 +1,9 @@
 статей к разметке 2013, уже 0
 50
 ERR https://prokompressor.ru/blog/poleznaya-informatsiya/zentrobezhnyy_compressor_prinzip_raboty/ AttributeError("'NoneType' object has no attribute 'group'")
+100
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=incomplete content=['text'] text='```json\n{"relevant":'
+ERR https://rdrus.ru/blog/articles/trebovaniya-k-kompressoru-dlya-lazernogo-stanka/ JSONDecodeError("Expecting ',' delimiter: line 4 column 304 (char 906)")
+150
+200
+250
