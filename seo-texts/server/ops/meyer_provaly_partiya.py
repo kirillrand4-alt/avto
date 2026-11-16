@@ -239,12 +239,13 @@ print("к сборке: %d (уже в журнале %d) %s" % (len(кандид
          "1) tehnolog:\n" + AL._TEH_LENS_TEHNOLOG_MEYER + "\n\n2) skeptik:\n" + AL._TEH_LENS_SKEPTIK_MEYER +
          "\n\n3) redaktor:\n" + РЕДАКТОР.split("ФИО контакта:")[0] +
          '\nОтвет СТРОГО JSON: {"tehnolog": {"verdict": "верно|сомнительно|ошибка", "pochemu": "кратко"}, '
-         '"skeptik": {"verdict": "...", "pochemu": "..."}, "redaktor": {"verdict": "...", "pochemu": "..."}}')
+         '"skeptik": {"verdict": "...", "pochemu": "..."}, "redaktor": {"verdict": "...", "pochemu": "..."}}\n'
+         'Каждое pochemu — не длиннее 20 слов. Только JSON, без пояснений вокруг.')
 
 
 def линзы(письмо, тема, x, прод, ф_, данные):
     о = зов("Профиль: %s, продукт: %s.\nФИО контакта: %s\nДанные компании: %s\nПисьмо:\nТема: %s\n\n%s"
-            % (x.get("kompaniya", ""), прод or "-", ф_ or "-", данные[:900], тема, письмо), "tehnolog", ЛИНЗЫ, 700) or {}
+            % (x.get("kompaniya", ""), прод or "-", ф_ or "-", данные[:900], тема, письмо), "tehnolog", ЛИНЗЫ, 1800) or {}
     return {к: (о.get(к) if isinstance(о.get(к), dict) else {"verdict": "нет ответа"}) for к in ("tehnolog", "skeptik", "redaktor")}
 
 
@@ -255,7 +256,7 @@ def собрать(кк):
     ф_ = фио.get(e, "")
     данные = ("последняя активность по сделкам: %s; " % (x.get("posled") or "")) + "; ".join(
         [x.get("kompaniya") or "", *x.get("nazvaniya", [])[:3], *x.get("kommentarii", [])[:3], *р.get("pp", []), *р.get("pr", [])])[:1500]
-    лич = зов(ЛИЧН_Д % (ф_ or "-", ш, x.get("kompaniya", ""), прод or "-", данные), "f", ЛИЧН, 400)
+    лич = зов(ЛИЧН_Д % (ф_ or "-", ш, x.get("kompaniya", ""), прод or "-", данные), "f", ЛИЧН, 900)
     if лич is None: return "нет ответа модели"
     рент = bool(лич.get("rentgen")) or (р.get("oborud") == "рентген")
     гр = группа.get(прод.lower()); ст = СТАНОК.get(гр, "")
@@ -286,7 +287,7 @@ def собрать(кк):
     if ш == "NET_ZADACH": исх = (a2, закр)
     else: исх = (a2, a3)
     доп = "\nКомпания торгует, а не производит: не пиши «производство», «ваше производство»." if лич.get("treyder") else ""
-    пф = зов(ПЕРЕФРАЗ_Д % (доп, исх[0], исх[1]), "a1", ПЕРЕФРАЗ.replace("%%", "%"), 600) or {}
+    пф = зов(ПЕРЕФРАЗ_Д % (доп, исх[0], исх[1]), "a1", ПЕРЕФРАЗ.replace("%%", "%"), 1500) or {}
     н1, н2 = (пф.get("a1") or "").strip().replace("—", "-"), (пф.get("a2") or "").strip().replace("—", "-")
     ок_пф = bool(н1 and н2 and "!" not in н1 + н2 and not re.search(r"бесплатн|акци|выгодн", (н1 + н2).lower()))
 
