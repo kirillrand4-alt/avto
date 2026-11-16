@@ -4,3 +4,37 @@
 сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
 сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
 сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+ERR https://rdrus.ru/blog/tekhnicheskie-stati/kak-vybrat-kompressor-dlya-lazernogo-stanka-polnoe-rukovodstvo-po-podboru/ JSONDecodeError("Expecting ',' delimiter: line 1 column 1402 (char 1401)")
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615163992205634
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615163989778463
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615174311527654
+сбой провайдера, ретрай 4/7 через 120 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615174293938094
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+ERR https://gkpnevmo.ru/information/article/kompressor-dlya-peskostruya-vazhnyy-vybor/ JSONDecodeError("Expecting ',' delimiter: line 10 column 4 (char 864)")
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: пустой/обрезанный ответ: stop_reason=incomplete content=['text'] text='```'
+ERR https://gkpnevmo.ru/information/article/dizelnye-kompressory-dlya-peskostruynykh-rabot/ JSONDecodeError("Expecting ',' delimiter: line 28 column 6 (char 1082)")
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615192913558565
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 5/7 через 150 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615194605311619
+сбой провайдера, ретрай 5/7 через 150 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615194614672028
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+ERR https://aerocompressors.ru/stati/remont_kompressorov_atlas_copco_filtry_i_zapchasti_atlas_copco/ JSONDecodeError("Expecting ',' delimiter: line 19 column 6 (char 1037)")
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
