@@ -172,10 +172,15 @@ def имя_подтверждено(им, ф_, компания):
 
 
 готово = set()
-if os.path.exists(ЖУР):
-    for с in io.open(ЖУР, encoding="utf-8"):
-        try: готово.add(json.loads(с)["kluch"])
-        except Exception: pass  # noqa: BLE001
+if os.path.exists(ЖУР):   # записи без ответа модели (провайдер лёг/кончился баланс) выкидываем — пересоберутся
+    _все = [json.loads(с) for с in io.open(ЖУР, encoding="utf-8") if с.strip()]
+    _хор = [з for з in _все if all(з.get(к, {}).get("verdict") not in (None, "нет ответа") for к in ("tehnolog", "skeptik", "redaktor"))]
+    if len(_хор) != len(_все):
+        with io.open(ЖУР + ".tmp", "w", encoding="utf-8") as ф:
+            for з in _хор: ф.write(json.dumps(з, ensure_ascii=False) + "\n")
+        os.replace(ЖУР + ".tmp", ЖУР)
+        print("выкинуто записей без ответа модели: %d" % (len(_все) - len(_хор)), flush=True)
+    готово = {з["kluch"] for з in _хор}
 кандидаты = []
 for к, р in кл.items():
     ш = ШАБЛОН.get(р.get("shablon")); x = комп.get(к)
@@ -240,7 +245,8 @@ def собрать(кк):
     ф_ = фио.get(e, "")
     данные = ("последняя активность по сделкам: %s; " % (x.get("posled") or "")) + "; ".join(
         [x.get("kompaniya") or "", *x.get("nazvaniya", [])[:3], *x.get("kommentarii", [])[:3], *р.get("pp", []), *р.get("pr", [])])[:1500]
-    лич = зов(ЛИЧН % (ф_ or "-", ш, x.get("kompaniya", ""), прод or "-", данные), "f") or {}
+    лич = зов(ЛИЧН % (ф_ or "-", ш, x.get("kompaniya", ""), прод or "-", данные), "f")
+    if лич is None: return "нет ответа модели"
     рент = bool(лич.get("rentgen")) or (р.get("oborud") == "рентген")
     гр = группа.get(прод.lower()); ст = СТАНОК.get(гр, "")
     if прод and not (прод_в_данных(прод, данные) and гр and гр != "нет" and ((рент and ст in ("рентген", "оба")) or (not рент and ст in ("фотосепаратор", "оба")))):
@@ -282,6 +288,7 @@ def собрать(кк):
     откат = False
     if ок_пф and any(v.get("verdict") == "ошибка" for v in вер.values()):
         вариант = текст(*исх); вер = линзы(вариант, тема, x, прод, ф_, данные); откат = True
+    if any(v.get("verdict") == "нет ответа" for v in вер.values()): return "нет ответа модели"
     статус = "ошибка" if any(v.get("verdict") == "ошибка" for v in вер.values()) else ("не писать" if лич.get("ne_pisat") else "ок")
     з = {"kluch": x["kluch"], "inn": x.get("inn"), "email": e, "shablon": ш, "razmetka": р.get("shablon"), "kompaniya": x.get("kompaniya"),
          "fio": ф_, "obrashchenie": им, "produkt": прод, "rentgen": рент, "treyder": bool(лич.get("treyder")), "lichnaya": лф,
