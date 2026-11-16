@@ -185,7 +185,7 @@ def st_canon():
                                       'depth': DEPTH.get(q.get('depth'), 1), 'type': q.get('type'),
                                       'facts': q.get('facts', [])})
     done = {r['topic'] for r in jl('canon.jsonl')}
-    CH = 350
+    CH = int(os.environ.get('SM_CH', '350'))
 
     def topic(tid):
         its = items[tid]

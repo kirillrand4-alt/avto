@@ -1222,3 +1222,1070 @@
 {"q": "Как предотвратить поломку/перегрев винтового блока и его ресурс?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
 {"q": "Можно ли следить за компрессором удалённо через мобильную связь?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/monitoring-kompressora/"}
 {"q": "Как выбрать защитный автомат (номинал и класс) для компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/10-pravil-servis/"}
+{"q": "Можно ли отремонтировать винтовой блок (роторную пару) самостоятельно или лучше вызвать сервис?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Какие бывают магистральные фильтры, какую очистку дают и где их устанавливать?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Допускается ли масло в сжатом воздухе и какие классы по содержанию масла установлены по ISO 8573-1?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Как рассчитать производительность поршневого компрессора с учётом остывания и запаса?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/rasschityvaem-proizvoditelnost-kompressora-dlya-predpriyatiya/"}
+{"q": "Как классифицируются компрессоры по рабочему давлению (низкое, стандартное, высокое)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Как сепарация/сепаратор и осушитель с ресивером обеспечивают качество воздуха и снижают утечки?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak-izbavitsya-ot-kondensata-v-pnevmolinii/"}
+{"q": "Какие типы компрессоров сильнее зависят от температуры и высоты над уровнем моря и насколько падает производительность?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev/"}
+{"q": "Как подобрать компрессор под масштаб предприятия (мастерская — крупное производство)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/rasschityvaem-proizvoditelnost-kompressora-dlya-predpriyatiya/"}
+{"q": "Что выгоднее: отремонтировать компрессорную головку/блок или купить новую, и когда ремонт нецелесообразен?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Для чего нужны коалесцирующие фильтры, как работают, какую очистку дают и где необходимы?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Какие бывают масляные фильтры компрессора и чем отличаются от воздушно-масляных сепараторов?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/maslyaniy-filtr/"}
+{"q": "Как падение давления на фильтре влияет на очистку и как подобрать фильтр по производительности с запасом?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "На какое рабочее давление и температуру рассчитаны магистральные фильтры (в т.ч. ФМ 40/16ГЦ, ФМ 60/16ГЦ)?", "v": "net", "url": ""}
+{"q": "Как выбрать фильтр сжатого воздуха под требования технологического процесса и нужный класс чистоты?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Что означают коды ошибок контроллера и как их расшифровать (общий вопрос)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Можно ли получить воздух класса 0 от масляного компрессора и что означает класс 0 по маслу?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Насколько чистый воздух дают винтовые маслозаполненные компрессоры и почему винтовой даёт меньше масла?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zagryaznenie/"}
+{"q": "Когда выбрать компрессор с фиксированной скоростью, а когда с частотным приводом?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Как расшифровать маркировку винтового компрессора (буквы, цифры, полная комплектация)?", "v": "net", "url": ""}
+{"q": "Как расшифровать маркировку поршневого компрессора (буквы и цифры)?", "v": "net", "url": ""}
+{"q": "Какой компрессор нужен для опрессовки систем отопления и трубопроводов и на что обращать внимание?", "v": "net", "url": ""}
+{"q": "Какая производительность компрессора нужна для гаража/мастерской и мощного пневмоинструмента?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Что такое дожимной компрессор (бустер) и для чего он нужен?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какое оборудование подготовки воздуха нужно для компрессора лазерного станка/станка резки?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vashemu-lazeru-nuzhen-pravilnyy-kompressor/"}
+{"q": "Что такое точка росы под давлением, чем отличается от атмосферной и как давление на неё влияет?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/gayd-vybiraem-osushitel-vozdukha-dlya-kompressora-/"}
+{"q": "Нужны ли фильтры до и после адсорбционного осушителя и какая предварительная фильтрация нужна?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zachem-nuzhny-adsorbtsionnye-osushiteli/"}
+{"q": "Зачем нужны фильтры в промышленном компрессоре, какие бывают и что будет без фильтрации?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Как по перепаду давления определить, что фильтр засорён и пора менять?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Какой фильтр удаляет запахи, пары и аэрозоли масла и воды из сжатого воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Какая ступенчатая фильтрация и система охлаждения применяется в винтовом компрессоре?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Почему компрессор не набирает давление и какие причины самые частые?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Что делать, если компрессор запускается, но не набирает нужное давление?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Почему у поршневого компрессора падает давление и производительность?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Standartnyye%20polomki%20porshnevykh%20kompressorov%20i%20sposoby%20ikh%20ustraneniya/"}
+{"q": "Какую точку росы обеспечивает рефрижераторный (холодильный) осушитель и достаточно ли +5°C?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/r-osushiteli/"}
+{"q": "Как ресивер влияет на качество, осушку и очистку сжатого воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Какие законы термодинамики лежат в основе работы компрессора и почему газ нагревается при сжатии?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zagryaznenie/"}
+{"q": "Какие основные типы компрессоров (винтовые, поршневые, спиральные, центробежные) и чем отличаются?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Как работает воздушный компрессор и из каких этапов/компонентов состоит?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/porshnevoi-kompressor/"}
+{"q": "Какой компрессор тише: с частотником или обычный, и как частотник влияет на шум?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Почему качество и аттестация сварки важны для ресиверов и каким стандартам должна соответствовать сварка и сварщики?", "v": "net", "url": ""}
+{"q": "Какие факторы и параметры учитывать при выборе промышленного компрессора для предприятия?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Какие бывают типы компрессоров по принципу действия (объёмные и динамические)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Как подобрать и рассчитать производительность компрессора под пневмоинструмент (включая краскопульт)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Как выбрать компрессор для дома, дачи, гаража и мастерской в зависимости от задач?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Каковы преимущества и недостатки поршневого компрессора и в каких задачах он лучше винтового?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/porshnevoi-kompressor/"}
+{"q": "Какой компрессор выбрать для дома/мастерской/производства (сравнение типов, плюсы-минусы)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda_vintovoy_kompressor_luchshee_reshenie/"}
+{"q": "Какие бывают виды воздушных компрессоров и для каких задач подходит каждый?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Какая производительность и давление нужны для краскопульта (в т.ч. HVLP) и покрасочных работ?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Что такое воздушный компрессор, для чего нужен сжатый воздух и в каких отраслях применяется?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_dla_pishevogo_proizvodstva/"}
+{"q": "Чем отличается производительность по входу/всасыванию от производительности на выходе/нагнетании и как пересчитать?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Что такое производительность компрессора, от чего зависит, в каких единицах измеряется и почему реальная отличается от паспортной?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Какие загрязнители содержит сжатый воздух на выходе компрессора и к чему они приводят?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Как устроен и работает роторно-пластинчатый компрессор и где применяется?", "v": "net", "url": ""}
+{"q": "Как подготовить сжатый воздух для покраски: какие фильтры, влагоотделители и класс чистоты нужны?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/gayd-vybiraem-osushitel-vozdukha-dlya-kompressora-/"}
+{"q": "Какие бывают типы промышленных компрессоров и чем они отличаются?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Чем дизельный/бензиновый компрессор (с ДВС) отличается от электрического и когда что выбрать?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Чем передвижной (мобильный, дизельный) компрессор отличается от стационарного/поршневого, плюсы-минусы и что выбрать?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokiy-sezon-dizelnykh-vintovykh-kompressorov-/"}
+{"q": "Какое рабочее давление нужно для пескоструя в зависимости от материала/поверхности?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Нужно ли регистрировать ресивер в Ростехнадзоре и какие ресиверы подлежат обязательной регистрации?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/MKS.Kompressornaya_stanciya_kotoroy_nevedomy_prepyatstviya/"}
+{"q": "Какой компрессор выбрать с учётом норм по шуму и вибрации (какой тише)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zadacha_snizit_shum_i_vibraciyu_na_proizvodstve/"}
+{"q": "Что даёт установка частотного преобразователя на компрессор и какие ПЧ применяют?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chastotnyy-preobrazovatel-dlya-kompressora-brendy-i-otlichiya/"}
+{"q": "Какие сертификаты, декларации и стандарты подтверждают качество и безопасность воздушных ресиверов?", "v": "net", "url": ""}
+{"q": "Как устроен и работает спиральный компрессор?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Как расход воздуха пескоструя зависит от диаметра сопла, давления и типа аппарата?", "v": "net", "url": ""}
+{"q": "Какие условия и факторы учесть при подборе компрессора для пескоструя?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Сколько масла остаётся в сжатом воздухе после маслозаполненного винтового компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zagryaznenie/"}
+{"q": "Какой класс чистоты по ISO 8573-1 требуется для лазерной/плазменной резки и какие требования к воздуху?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vashemu-lazeru-nuzhen-pravilnyy-kompressor/"}
+{"q": "Что такое классы очистки воздуха по ISO 8573-1, сколько их и по каким критериям классифицируют?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Какой компрессор выбрать для покраски краскопультом в зависимости от задач (хобби, ремонт, автосервис, производство)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Что такое точка росы сжатого воздуха и как она связана с качеством осушения и выбором осушителя?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/gayd-vybiraem-osushitel-vozdukha-dlya-kompressora-/"}
+{"q": "За счёт чего частотный привод экономит электроэнергию и какую экономию даёт?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Какой компрессор и привод выбрать для гаража, цеха или автосервиса?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kakoq_kompressor_vybrat_dlya_avtoservisa/"}
+{"q": "Как работают осевые компрессоры и где их используют?", "v": "net", "url": ""}
+{"q": "К каким последствиям приводит неосушенный и загрязнённый сжатый воздух для пневмосистемы и производства (включая пескоструй, покраску, пневмоинструмент)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Что выбрать: безмасляный или маслозаполненный компрессор и когда что?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/bezmaslyanye-kompressory-ekologicheskiy-vybor-ili-kompromiss/"}
+{"q": "Когда стоит выбрать винтовой компрессор с частотным регулированием?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Какие преимущества даёт частотник при переменной/нестабильной потребности в воздухе?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor_economit/"}
+{"q": "Какие документы (паспорт сосуда под давлением и др.) идут в комплекте с ресивером и что в них содержится?", "v": "net", "url": ""}
+{"q": "Как устроен дизельный компрессор, из каких узлов состоит и как работает?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Из чего складывается стоимость владения дизельным компрессором и как её снизить?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Какое оборудование подготовки воздуха подбирать вместе с компрессором (комплектно)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Какая температура нагнетания винтового компрессора нормальная, а какая аварийная?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
+{"q": "Приводит ли подготовка воздуха к потерям давления и производительности?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Какую точку росы достигает адсорбционный осушитель?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zachem-nuzhny-adsorbtsionnye-osushiteli/"}
+{"q": "Сколько частиц 1–5 мкм допускается по классам чистоты и какие классы по твёрдым частицам задаёт ISO 8573-1?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Каковы предельные значения содержания масла, частиц и влаги для каждого класса чистоты по ISO 8573-1?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "При какой точке росы не будет коррозии и как подготовкой воздуха предотвратить коррозию в пневмосети?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zagryaznenie/"}
+{"q": "Какое содержание масла обеспечивает трёхступенчатая сепарация и исправный сепаратор?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Какие системы охлаждения бывают у винтовых компрессоров?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Какие бывают виды лопастных (динамических) компрессоров?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zentrobezhnyy_compressor_prinzip_raboty/"}
+{"q": "Как классифицируют дизельные компрессоры по рабочему давлению?", "v": "net", "url": ""}
+{"q": "Как перевести единицы производительности/расхода (м³/мин, л/мин, м³/ч, CFM)?", "v": "net", "url": ""}
+{"q": "Какой компрессор и давление нужны для опрессовки трубопроводов разного диаметра и протяжённости?", "v": "net", "url": ""}
+{"q": "Как учесть потери производительности на регенерацию адсорбционного осушителя?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zachem-nuzhny-adsorbtsionnye-osushiteli/"}
+{"q": "Как рассчитать время накачки/разрядки и пополнения ресивера?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak-vybrat-receiver/"}
+{"q": "Какая производительность и давление у компрессора на конкретной головке/блоке и почему данные блока и машины различаются?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Как рассчитать реальную производительность с учётом ПВ, если указана только на всасывании?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Как выбрать рабочее давление компрессора под пневмоинструмент и парк оборудования?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Какое давление и вакуум реально держит воздуходувка?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Какую производительность по воздуху обеспечивает воздуходувка и как её подобрать под объём переработки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/transportirovka-sukhikh-veshchestv-szhatym-vozdukhom/"}
+{"q": "Какие фильтры применять для сжатого воздуха высокого давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какое давление создают компрессоры высокого давления для дыхательного воздуха?", "v": "net", "url": ""}
+{"q": "Какой гарантийный срок нормален для поршневого компрессора и каков его срок службы?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kakoq_kompressor_vybrat_dlya_avtoservisa/"}
+{"q": "Когда можно купить типовое оборудование со склада, а когда нужно изготовление по индивидуальному заказу?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/mozhnye_kompressory_i_unikalnye_proekty/"}
+{"q": "Как определяется и обозначается степень очистки воздуха фильтром?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Как часто и как обслуживать воздушный фильтр, можно ли его продувать?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Как контролировать состояние воздушного фильтра и когда его менять?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Какая защита от перегрева предусмотрена и что делать при частых срабатываниях?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/rele-peregruzki/"}
+{"q": "Какие требования по маслу и конденсату к воздуху на входе адсорбционного осушителя и как его подготовить?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/ad-osushiteli/"}
+{"q": "Какой компрессор выбрать для лазерного станка: поршневой или винтовой?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-lazera/"}
+{"q": "Что даёт частотный привод (VSD) и плавный пуск в передвижном/мобильном компрессоре?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Как устроена и как улучшить систему воздушного охлаждения поршневой компрессорной головки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Что регулирует термостатический клапан/термостат в системе охлаждения и смазки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
+{"q": "Сколько служат спиральные, дизельные, мембранные компрессоры?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kakoq_kompressor_vybrat_dlya_avtoservisa/"}
+{"q": "Когда применяются центробежные компрессоры и каковы их достоинства и недостатки?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/v-kakikh-sferakh-i-otraslyakh-primenyayut-tsentrobezhnye-kompressory/"}
+{"q": "Что известно о Бежецком компрессорном заводе АСО, его истории и продукции?", "v": "net", "url": ""}
+{"q": "Как по маркировке определить мощность, давление и объём ресивера компрессора?", "v": "net", "url": ""}
+{"q": "Как читать обозначение модели компрессора по буквам и цифрам?", "v": "net", "url": ""}
+{"q": "Какой компрессор для нефтегазовой отрасли, глубокого бурения и геологоразведки (мощный компрессор)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/mozhnye_kompressory_i_unikalnye_proekty/"}
+{"q": "Как определить реальный расход топлива и какой двигатель экономичнее?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "В чём преимущество дизельного компрессора по мобильности и что её обеспечивает?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Что учитывать при выборе компрессора для высоких температур/жаркого климата?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/peregrev/"}
+{"q": "Что такое мощность компрессора и чем она отличается от производительности, как влияет на работу?", "v": "net", "url": ""}
+{"q": "Что делать, если компрессор не держит давление для пескоструя / производительность ниже необходимой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Как провести анализ системы распределения воздуха и учесть расход потребителей перед выбором схемы?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/rasschityvaem-proizvoditelnost-kompressora-dlya-predpriyatiya/"}
+{"q": "Что учитывать при расчёте пневмотранспорта (длина трассы, высота подъёма, повороты)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/transportirovka-sukhikh-veshchestv-szhatym-vozdukhom/"}
+{"q": "Как устроена и по какому принципу работает роторная воздуходувка Рутса (двухроторная)?", "v": "net", "url": ""}
+{"q": "Почему воздуходувки Рутса обеспечивают безмасляное сжатие (есть ли масло в полости сжатия)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "В чём преимущества и недостатки роторных (Рутс) и турбовоздуходувок?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "В чём преимущества вихревых компрессоров и где их применяют?", "v": "net", "url": ""}
+{"q": "Как ремонтируют компрессор неизвестного производителя без документации и что входит в восстановление?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Зачем делать капитальный ремонт компрессора, когда он нужен и какие даёт результаты?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Из каких компонентов состоит полная система производства азота из сжатого воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/peredvizhnye-i-statsionarnye-azotnye-stantsii/"}
+{"q": "Какой чистоты азот можно получить от генератора?", "v": "net", "url": ""}
+{"q": "В каких отраслях применяются генераторы азота?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peredvizhnye-i-statsionarnye-azotnye-stantsii/"}
+{"q": "Чем отличается и как устроен компрессор со 100-литровым ресивером (в т.ч. в сравнении с 50 л)?", "v": "net", "url": ""}
+{"q": "Есть ли у Ремезы дожимные поршневые компрессоры и компрессоры среднего давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_belorusskie_kompressory_zavoevali_mesto_na_rynke_rf/"}
+{"q": "Какое давление может создавать поршневой компрессор?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Сколько стоит промышленный винтовой электрический компрессор (15–45 кВт, 18,5–22, 30 кВт)?", "v": "net", "url": ""}
+{"q": "Влияет ли установка неоригинальных запчастей/фильтров на гарантию?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Zapasnye_chasti_k_kompressoram/"}
+{"q": "Какие преимущества и недостатки у компрессора в полной комплектации (с осушителем и ресивером на раме)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Когда ремонт компрессора экономически нецелесообразен и лучше купить новый?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Сколько стоит выезд инженера и монтаж пневмолинии (компрессор, ресивер, осушитель)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/cena-na-compressor/"}
+{"q": "На что обратить внимание при покупке пневмоинструмента (бренд, отзывы, гарантия, расходники)?", "v": "net", "url": ""}
+{"q": "Предоставляется ли гарантия и сервис при покупке компрессора и запчастей, какие сроки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Почему из винтового блока/компрессора подтекает масло и чем это опасно?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Почему компрессор не набирает воздух при работающем двигателе и с чего начать диагностику?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Как правильно обозначить и прочитать класс чистоты/загрязнённости сжатого воздуха в документации?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Какими нормативными документами регулируется установка и эксплуатация стационарной компрессорной установки?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/ustanovka_vintovogo_kompressora_trebovaniya_k_pomeshchiy/"}
+{"q": "Может ли засорённый воздушный фильтр вызвать перегрев компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Нужен ли фильтр очистки воздуха от масла при покраске поршневым/масляным компрессором?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Зачем нужна регулярная замена магистральных фильтров и какие меняют при ТО?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/obsluzhivanie-pnevmoseti-reglamentnye-raboty-raskhodniki-i-sroki/"}
+{"q": "Какое оборудование и расходные материалы нужны для очистки сжатого воздуха от пыли, влаги и масла?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Какие фильтрующие элементы обеспечивают очистку с минимальными потерями давления и почему не стоит ставить слишком плотные фильтры?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Какие факторы влияют на срок службы фильтров и как его продлить?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Какие признаки неисправности впускных/выпускных клапанов, сальников и уплотнений?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Standartnyye%20polomki%20porshnevykh%20kompressorov%20i%20sposoby%20ikh%20ustraneniya/"}
+{"q": "Как контролировать утечки масла, воздуха и воды у компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-nelzya-ignorirovat-vibratsiyu-kompressora/"}
+{"q": "Как проверяется и контролируется состояние подшипников компрессора при ТО?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "К чему приводит использование неподходящего/старого масла и можно ли по перегреву понять, что масло пора менять?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak-chasto-menyat-maslo-v-vintovom-kompressore/"}
+{"q": "Какая система подготовки и очистки сжатого воздуха нужна для пескоструйной обработки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Как рассчитать параметры воздуходувки и насадки для пневмотранспорта (скорость, расход, размер насадки)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/transportirovka-sukhikh-veshchestv-szhatym-vozdukhom/"}
+{"q": "Какая характеристика поршневого компрессора главная: давление или производительность?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/rasschityvaem-proizvoditelnost-kompressora-dlya-predpriyatiya/"}
+{"q": "Как выбрать компрессор по рабочему давлению и какие модели поршневых бывают на 6/8/10/16/25 атм?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Как связаны диаметр трубопровода/сечение магистрали и подбор компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/truboprovod/"}
+{"q": "Как подобрать передвижной компрессор с приводом от ВОМ/КОМ/гидро/без привода под задачи?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какой ресурс у подшипникового узла воздуходувки и как на него влияет натяжение ремней?", "v": "net", "url": ""}
+{"q": "Чем портативные/мобильные компрессоры высокого давления отличаются от стационарных?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Есть ли гарантия на б/у компрессор и какая на новый?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Зависят ли требования к чистоте/классу сжатого воздуха от области применения и как подобрать класс под отрасль?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Что такое FAD и почему подбирать компрессор нужно по фактической подаче, а не по мощности/теоретической производительности?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Какие фильтры удаляют твёрдые частицы, где применяются сухие фильтры и когда их менять?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Что будет, если вовремя не менять воздушный/масляный фильтр компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/neprikosnovennyy-zapas-raskhodnye-materialy-dlya-kompressorov/"}
+{"q": "Какие задачи выполняют фильтры очистки воздуха для компрессоров?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Где размещать фильтры относительно компрессора, инструмента и в пневмосети для наилучшего эффекта?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Из чего состоит магистральный фильтр и как контролировать его загрязнение (индикация, перепад давления)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Почему компрессор стал медленнее накачивать ресивер и как это проверить?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Почему безмасляный компрессор сильно греется и как это учитывать?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/bezmaslyanye-kompressory-ekologicheskiy-vybor-ili-kompromiss/"}
+{"q": "Почему выходят из строя прокладки и уплотнительные кольца и к чему это приводит?", "v": "net", "url": ""}
+{"q": "Что означает попадание антифриза/жидкости/влаги в компрессорное масло?", "v": "net", "url": ""}
+{"q": "Какие признаки износа маслосепаратора винтового компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Почему изнашиваются подшипники двигателя и компрессорной головки и к чему это приводит?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-nelzya-ignorirovat-vibratsiyu-kompressora/"}
+{"q": "В каких случаях необходимо немедленно остановить компрессор?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Posle_avariynoy_ostanovri_vozmozhno_li_vosstanovit_compressor/"}
+{"q": "Почему винтовой компрессор издаёт посторонние шумы и о чём это говорит?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Каковы признаки перегрева винтового компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
+{"q": "По каким признакам понять, что винтовому компрессору пора в сервис?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Как проводится диагностика компрессора и что такое акт дефектации?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Почему компрессоры выходят из строя раньше заявленного ресурса?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Как понять, что у винтового компрессора упала производительность и почему?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Почему инструмент плохо работает при подключении к исправному компрессору?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Почему воздушный компрессор не запускается и что проверить в первую очередь?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Как проверить электропитание компрессора при отказе запуска?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Из-за чего перегревается двигатель компрессора и как это устранить?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/rele-peregruzki/"}
+{"q": "Почему компрессор отключается из-за давления в ресивере и что проверить?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Какие неисправности рефрижераторного осушителя повышают влажность/точку росы и как найти причину?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/podogrevateli/"}
+{"q": "Как по изменению параметров спрогнозировать поломки и зачем записывать показания?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/avtomatizatsiya-v-kompressornoy-zachem-i-kak-ustroena/"}
+{"q": "О чём говорит отклонение давления на манометре/предохранительном клапане?", "v": "net", "url": ""}
+{"q": "Какие стандарты и нормативы регламентируют классы чистоты/загрязнённости сжатого воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Какие дефекты покраски/ЛКП вызывает грязный или влажный сжатый воздух и как этого избежать?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Нужен ли влагомаслоотделитель в пневмолинии пескоструйного аппарата и зачем?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Какая подготовка воздуха нужна перед генератором азота?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peredvizhnye-i-statsionarnye-azotnye-stantsii/"}
+{"q": "Какой класс чистоты по ISO 8573-1 обеспечивают безмасляные компрессоры?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/tonkaya_rabota_kompressory_v_elektronike/"}
+{"q": "Откуда в сжатом воздухе поршневого/любого компрессора берутся масло и влага?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zagryaznenie/"}
+{"q": "Какая система подготовки воздуха нужна для чистого воздуха под ЧПУ/на производстве?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/tonkaya_rabota_kompressory_v_elektronike/"}
+{"q": "Почему нельзя подключать пневмоинструмент напрямую к компрессору и как подготовить воздух для пневмоинструмента?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Как разные загрязнители удаляются из сжатого воздуха и какие загрязнители учитывает ISO 8573-1?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Как определить необходимый уровень чистоты воздуха и когда класс становится обязательным требованием?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Что лучше для компрессора: ременной или прямой привод и для каких задач?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vintovoy-kompressor-remennoy-ili-pryamoy-privod-chto-vybrat/"}
+{"q": "Чем компрессор отличается от насоса?", "v": "net", "url": ""}
+{"q": "Как работает жидкостно-кольцевой компрессор и где применяется?", "v": "net", "url": ""}
+{"q": "Какие бывают шестеренчатые, мембранные, роторно-пластинчатые, жидкостно-кольцевые компрессоры и для чего?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/razvitie-bezmaslyanykh-tekhnologiy-v-kompressornykh-sistemakh/"}
+{"q": "Какие бывают электрические компрессоры по типу сжатия, напряжению и исполнению, и их преимущества?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "При каких расходе и давлении оптимальны винтовые компрессоры и с какой мощности их брать?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda_vintovoy_kompressor_luchshee_reshenie/"}
+{"q": "Чем динамический компрессор отличается от объёмного по поведению?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zentrobezhnyy_compressor_prinzip_raboty/"}
+{"q": "Что лучше выбрать: компрессор с воздушным или водяным охлаждением?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Как температура и влажность окружающей среды (в т.ч. на высоте) влияют на охлаждение компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev/"}
+{"q": "Как проверить/обслужить систему охлаждения винтового компрессора при перегреве и ТО?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
+{"q": "Зачем в мобильном компрессоре послеохладитель и как он влияет на конденсат и фильтрацию?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/podogrevateli/"}
+{"q": "Как система охлаждения влияет на ресурс, надёжность и срок службы компрессора и масла?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zachem-vozdushnomu-kompressoru-nuzhna-gradirnya-/"}
+{"q": "Какое охлаждение применяется у поршневых и винтовых компрессоров?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Что делать при недостаточной вентиляции помещения и как организовать вентиляцию в компрессорной?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Как работает компрессорная станция: этапы процесса от забора воздуха до подачи?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/MKS.Kompressornaya_stanciya_kotoroy_nevedomy_prepyatstviya/"}
+{"q": "Каковы преимущества централизованной компрессорной станции?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/obsluzhivanie-pnevmoseti-reglamentnye-raboty-raskhodniki-i-sroki/"}
+{"q": "Каким стандартам должны соответствовать эллиптические днища и обечайки сосудов под давлением и ТУ на их производство?", "v": "net", "url": ""}
+{"q": "Как обеспечивается безопасность при повреждении воздушного рукава и какие требования к рукавам?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/10-pravil-servis/"}
+{"q": "Насколько безопасен пневмоинструмент и какие меры безопасности соблюдать при работе с ним?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Какие требования безопасности и к персоналу соблюдать при обслуживании компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Как работают центробежные и спиральные компрессоры и где их применяют?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Какие бренды и марки компрессоров популярны на российском рынке?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/inostrannye-brendy-mogut-vernutsya-na-rynok-rf/"}
+{"q": "Что за производитель Remeza и кто официально его представляет и сертифицирует в России?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_belorusskie_kompressory_zavoevali_mesto_na_rynke_rf/"}
+{"q": "Какие винтовые блоки и комплектующие используются в компрессорах Remeza?", "v": "net", "url": ""}
+{"q": "Какие типы и серии компрессоров выпускает Atlas Copco и где они применяются?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Чем отличаются компрессоры разных производителей по цене и надёжности?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kitay_rulit/"}
+{"q": "Какие типы компрессоров выпускает бренд и какой у него ассортимент оборудования?", "v": "net", "url": ""}
+{"q": "Какое исполнение удобнее: на шасси, раме, салазках или без шасси?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какие преимущества даёт компрессор на шасси для выездных/подрядных работ и аренды?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Что входит в конструкцию компрессора на шасси и какие документы на него нужны (регистрация)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какие характеристики у популярных винтовых компрессоров среднего класса и какой у них привод/мощность?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Какой компрессор выбрать по уровню шума (городские/шумочувствительные зоны)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zadacha_snizit_shum_i_vibraciyu_na_proizvodstve/"}
+{"q": "Нужна ли подготовка воздуха (доохладитель, осушитель) и какая температура воздуха на выходе?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/podogrevateli/"}
+{"q": "Чем компрессор с приводом от ВОМ/КОМ трактора отличается от автономного и для каких задач?", "v": "net", "url": ""}
+{"q": "Какие модели компрессоров с частотником есть в линейке и их характеристики?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Как охлаждается воздух в спиральных компрессорах и нужно ли доохлаждение перед осушителем?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Почему ресивер работает как второй теплообменник и охлаждает воздух?", "v": "net", "url": ""}
+{"q": "Какая температура сжатого воздуха на выходе из доохладителя?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/podogrevateli/"}
+{"q": "Как система охлаждения влияет на нагрузку на осушитель?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/gayd-vybiraem-osushitel-vozdukha-dlya-kompressora-/"}
+{"q": "В чём разница между термостатами 71 °C и 83 °C и как не ошибиться?", "v": "net", "url": ""}
+{"q": "Как обеспечивается и как проверить защиту компрессора от перегрева?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Можно ли заказать модульную компрессорную станцию с индивидуальной компоновкой и дополнительным оборудованием (осушитель, ресивер)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/MKS.Kompressornaya_stanciya_kotoroy_nevedomy_prepyatstviya/"}
+{"q": "Есть ли у компрессорного оборудования IRONMAC сертификаты и каким стандартам/сертификатам оно должно соответствовать?", "v": "net", "url": ""}
+{"q": "Какой уровень шума и габариты у шумоизолированной винтовой воздуходувки в кожухе?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Какой уровень шума у дизельного передвижного компрессора и по каким нормам он измеряется?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какие требования к безопасности и стандартам предъявляются к ресиверам для хранения азота и насколько безопасен генератор азота?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peredvizhnye-i-statsionarnye-azotnye-stantsii/"}
+{"q": "Какой класс опасности и когда площадка с компрессором считается ОПО, действует ли порог мощности 14 кВт?", "v": "net", "url": ""}
+{"q": "Какие требования предъявляются к манометру на ресивере?", "v": "net", "url": ""}
+{"q": "На какое оборудование под давлением распространяются ФНП?", "v": "net", "url": ""}
+{"q": "Через сколько после остановки можно приступать к работам с горячими частями?", "v": "net", "url": ""}
+{"q": "Почему поршневой компрессор шумит сильнее винтового и спирального и зависит ли шум от мощности?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zadacha_snizit_shum_i_vibraciyu_na_proizvodstve/"}
+{"q": "Как децибелы соотносятся с восприятием громкости и чем паспортный уровень шума отличается от реального в цехе?", "v": "net", "url": ""}
+{"q": "Что такое звукопоглощение и какие материалы применяются?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zadacha_snizit_shum_i_vibraciyu_na_proizvodstve/"}
+{"q": "Какие технические характеристики у безмасляного спирального компрессора Remeza КС-10-8-270?", "v": "net", "url": ""}
+{"q": "Как получить большую производительность безмасляного сжатого воздуха на спиральных компрессорах?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/my-ubedilis-chto-u-nas-deystvitelno-silnye-partnery/"}
+{"q": "Что такое режим глубокого дросселирования центробежного компрессора и какую экономию он даёт?", "v": "net", "url": ""}
+{"q": "Что такое мембранный компрессор и где он применяется?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/razvitie-bezmaslyanykh-tekhnologiy-v-kompressornykh-sistemakh/"}
+{"q": "Чем спиральный компрессор отличается от поршневого и винтового?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Как бренд и страна производства компрессора влияют на стоимость и доступность запчастей?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/S_audi_na_geely/"}
+{"q": "Насколько китайские поршневые компрессоры Aurora дешевле Abac при сопоставимом качестве?", "v": "net", "url": ""}
+{"q": "Какие типы компрессоров выпускает Abac и что представляет собой ABAC Group на рынке?", "v": "net", "url": ""}
+{"q": "Какие компрессоры ATMOS серии ALBERT и для чего они подходят?", "v": "net", "url": ""}
+{"q": "Какие данные указаны на шильдике компрессора и как их прочитать?", "v": "net", "url": ""}
+{"q": "Как перевести единицы на шильдике компрессора (МПа в бары, л/мин в м³/мин)?", "v": "net", "url": ""}
+{"q": "Какие параметры имеют винтовые компрессоры, ресиверы и осушители GEPROM?", "v": "net", "url": ""}
+{"q": "Насколько отечественные винтовые компрессоры дешевле европейских и сравнимы ли по цене и эффективности?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Как правильно сопоставить модели разных серий по мощности двигателя?", "v": "net", "url": ""}
+{"q": "Что означают серии Т, SKTG и суффиксы -270/-470/-500 в маркировке компрессора и какие модели на этих ресиверах?", "v": "net", "url": ""}
+{"q": "На сколько хватает одной заправки и сколько может работать дизельный компрессор?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Для каких задач и характеристики винтовых дизельных передвижных компрессоров?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokiy-sezon-dizelnykh-vintovykh-kompressorov-/"}
+{"q": "Когда выбрать компактный поршневой дизельный компрессор и каковы его ограничения?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Что важнее для надёжности: бренд двигателя или шасси?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/tri_projekta%3Agde_i_kak_rabotayut_nashi_dizelnye_kompressory/"}
+{"q": "Характеристики дизельного винтового компрессора мощностью 55 кВт?", "v": "net", "url": ""}
+{"q": "Для каких работ подходит Atlas Copco XAS 88 / XAS 88 KD и его характеристики и конструкция?", "v": "net", "url": ""}
+{"q": "Как получить сухой воздух от поршневого компрессора и как выглядит схема подготовки после него?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak-izbavitsya-ot-kondensata-v-pnevmolinii/"}
+{"q": "Какой компрессор выбрать при высоких требованиях к чистоте сжатого воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Как низкая влажность сжатого воздуха влияет на систему и что даёт минимальное содержание влаги?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/podogrevateli/"}
+{"q": "Почему важно учитывать качество сжатого воздуха и наличие масла при выборе оборудования?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Какая норма уноса масла в пневмосеть для исправного компрессора и роль маслосепаратора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Какой тип компрессора нужен в зависимости от сжимаемого газа (воздух, газы, хладагенты)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/top_letnich_proektov_ot_kompressor_centra/"}
+{"q": "Какой компрессор выбрать для получения высокого давления?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какие производители/бренды предлагают компрессоры с VSD и частотным приводом?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chastotnyy-preobrazovatel-dlya-kompressora-brendy-i-otlichiya/"}
+{"q": "Чем отличаются и как работают компрессоры с воздушным и водяным охлаждением?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Как система охлаждения компрессора устроена для масла в винтовом компрессоре (смазка и охлаждение масла)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Есть ли у медицинских компрессоров сертификат и какие документы/разрешения нужны для применения в медицине?", "v": "net", "url": ""}
+{"q": "Кто имеет право проводить обслуживание компрессора и как ТО связано с безопасностью и нормативными требованиями?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Trebovaniya%20k%20personalu%20dlya%20kompressornoy%20stantsii%3A%20kompetentsii%2C%20navyki%2C%20lichnyye%20kachestva/"}
+{"q": "Что делать при посторонних шумах или сомнениях в работе компрессора и как готовиться к ремонту/демонтажу под давлением?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Posle_avariynoy_ostanovri_vozmozhno_li_vosstanovit_compressor/"}
+{"q": "Когда стоит выбрать спиральный компрессор и для каких задач он подходит?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Из каких материалов делают спирали и как это влияет на ресурс и износостойкость?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Насколько надёжны компрессоры с китайскими винтовыми блоками и как они сравниваются с европейскими?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/S_audi_na_geely/"}
+{"q": "Как подобрать аналог компрессора по маркировке или фото шильдика, если неизвестна модель?", "v": "net", "url": ""}
+{"q": "Какие марки винтовых компрессоров представлены на рынке и можно купить?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/inostrannye-brendy-mogut-vernutsya-na-rynok-rf/"}
+{"q": "Какой компрессор выбрать для постоянной работы, а какой для разовых проектов?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/podbor_podmennogo_vozdushnogo_kompressora_dlya_predpriyatiya/"}
+{"q": "Что проверить перед запуском/покупкой компрессора на совместимость с пневмоинструментом?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Чем отличается максимальное давление компрессора от рабочего и как оно связано с разгрузкой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/rasschityvaem-proizvoditelnost-kompressora-dlya-predpriyatiya/"}
+{"q": "Как правильно подобрать объём ресивера под компрессор и как он влияет на подбор?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak-vybrat-receiver/"}
+{"q": "Как устроена винтовая воздуходувка и чем она отличается от винтового компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Как проходит ремонт винтового блока (демонтаж, ремонт в цехе, установка) и дают ли на него гарантию?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Какие виды ремонта компрессоров (малый, средний, капитальный) выполняет сервисная компания и чем они отличаются?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Как выбрать компанию для ремонта и обслуживания винтовых компрессоров и кому доверить?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/abonentskoe-obsluzhivanie-ili-sobstvennyy-servisnyy-tsentr/"}
+{"q": "Возможен ли выездной ремонт, диагностика и ТО компрессора на территории заказчика и в каких регионах?", "v": "net", "url": ""}
+{"q": "Какие услуги по ремонту и обслуживанию компрессоров Atlas Copco предлагает дилер и какие модели (GA, GX, ZR, ZT, XAS) обслуживаются?", "v": "net", "url": ""}
+{"q": "Насколько генератор азота автоматизирован, сложен в эксплуатации и настройке?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peredvizhnye-i-statsionarnye-azotnye-stantsii/"}
+{"q": "Когда выгоднее поставить бустер для отдельного потребителя вместо повышения давления во всей сети?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Зачем нужна многоступенчатость в компрессорах высокого давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dvukhstup/"}
+{"q": "На что обратить внимание перед покупкой компрессора (общий чек-лист)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/100-kompressor/"}
+{"q": "Почему винтовой компрессор дороже поршневого/низшего класса?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda_vintovoy_kompressor_luchshee_reshenie/"}
+{"q": "Можно ли купить компрессор напрямую у завода и где выгоднее — у дилера или у производителя?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Какие бывают влагомаслоотделительные фильтры по степени очистки и как устроены?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Можно ли полностью удалить влагу из сжатого воздуха одним магистральным или коалесцирующим фильтром?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Как снизить содержание масла в сжатом воздухе и как фильтр удаляет масло и воду?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Какой перепад давления создаёт магистральный фильтр?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Какие частицы труднее всего отделить и как фильтры очищают воздух от частиц разного размера?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Как расшифровать маркировку картриджей фильтров HF серии E?", "v": "net", "url": ""}
+{"q": "В каком диапазоне давлений работают безмасляные винтовые воздуходувки и какие у них типовые мощности?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Чем отличаются по производительности и КПД европейская и китайская вихревые воздуходувки одной мощности, их плюсы и минусы?", "v": "net", "url": ""}
+{"q": "Как ведёт себя вихревая воздуходувка в режиме вакуума при росте глубины вакуума?", "v": "net", "url": ""}
+{"q": "Какое максимальное давление создают вихревые воздуходувки в режиме компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Почему результаты тестов воздуходувок могут отличаться при повторных замерах?", "v": "net", "url": ""}
+{"q": "Как сравнить паспортные параметры турбосушки и вихревой воздуходувки?", "v": "net", "url": ""}
+{"q": "Какое давление создают ротационные воздуходувки и газодувки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Как снизить уровень шума от воздуходувки?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zadacha_snizit_shum_i_vibraciyu_na_proizvodstve/"}
+{"q": "Почему при снижении давления растёт производительность винтового блока?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/rasschityvaem-proizvoditelnost-kompressora-dlya-predpriyatiya/"}
+{"q": "Какая производительность и мощность у разных типоразмеров воздуходувных компрессоров?", "v": "net", "url": ""}
+{"q": "Как пошагово заменить поршни и поршневые кольца в поршневом компрессоре?", "v": "net", "url": ""}
+{"q": "Выполняется ли диагностика компрессора бесплатно при ремонте в сервисном центре и сколько она стоит?", "v": "net", "url": ""}
+{"q": "Сколько стоит капитальный ремонт компрессорной головки поршневого компрессора и что входит в стоимость?", "v": "net", "url": ""}
+{"q": "Сколько стоит ремонт поршневого компрессора/головки после поломки коленвала по сравнению с новой головкой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Что такое сервисный план Atlas Copco 8 Plan и какие у него преимущества?", "v": "net", "url": ""}
+{"q": "Какова стоимость замены запчастей при серьёзной поломке поршневого компрессора Бежецкого завода C416M?", "v": "net", "url": ""}
+{"q": "Сколько раз можно восстанавливать загрузочный клапан до замены?", "v": "net", "url": ""}
+{"q": "Что выявляет визуально-измерительный контроль (ВИК) деталей компрессора и когда он применяется?", "v": "net", "url": ""}
+{"q": "Как измеряют шероховатость поверхности деталей и почему она важна для надёжности агрегата?", "v": "net", "url": ""}
+{"q": "Как организовать сервисную поддержку и поставку запчастей для компрессоров в регионах России?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Как правильно собрать поршневую компрессорную головку и какие моменты затяжки соблюдать?", "v": "net", "url": ""}
+{"q": "Какие скидки действуют при восстановлении поршневого блока?", "v": "net", "url": ""}
+{"q": "Какая чистота кислорода обычно нужна и производится методом КЦА?", "v": "net", "url": ""}
+{"q": "Безопаснее ли генератор азота, чем хранение баллонов?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peredvizhnye-i-statsionarnye-azotnye-stantsii/"}
+{"q": "Какие бывают генераторы азота и какую производительность и чистоту они обеспечивают?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peredvizhnye-i-statsionarnye-azotnye-stantsii/"}
+{"q": "До какой производительности выгодны заводские компоновки на ресивере?", "v": "net", "url": ""}
+{"q": "Какое давление и производительность нужны компрессору для дома, мастерской и цеха?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Какой объём ресивера нужен для покраски автомобиля?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Как продлить срок службы безмасляного компрессора и как часто давать ему отдыхать?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/razvitie-bezmaslyanykh-tekhnologiy-v-kompressornykh-sistemakh/"}
+{"q": "Какой уровень шума компрессора допустим для дома и гаража?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Какие модели компрессоров для дома и цеха стоит рассмотреть и сколько они стоят?", "v": "net", "url": ""}
+{"q": "Какой компрессор подойдёт для небольшого пескоструя в гараже или мастерской?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Какие технические характеристики у поршневых компрессоров Кратон?", "v": "net", "url": ""}
+{"q": "Какое рабочее давление и расход воздуха нужны для бытового пневмоинструмента (шины, краскопульт, пескоструй)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Какие характеристики у популярных моделей компрессоров со 100-литровым ресивером?", "v": "net", "url": ""}
+{"q": "Какое максимальное давление у компрессоров малой производительности?", "v": "net", "url": ""}
+{"q": "Для чего нужны автомобильные компрессоры и чем они отличаются от обычных поршневых?", "v": "net", "url": ""}
+{"q": "Какая производительность и давление у компрессора Bekomsan Esinti 72?", "v": "net", "url": ""}
+{"q": "Какая производительность бывает у бытовых поршневых компрессоров?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Какой компрессор подойдёт для несложных покрасочных работ без высоких требований к качеству (ворота, ограды)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Как выбрать компрессор высокого давления для заправки PCP-винтовки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Можно ли накачивать PCP-винтовку автомобильным компрессором?", "v": "net", "url": ""}
+{"q": "Какой компрессор выбрать для опрессовки промышленных трубопроводов большого диаметра?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какие модели бустеров на 150 бар существуют и чем они отличаются?", "v": "net", "url": ""}
+{"q": "Для каких проектов подходит бустер большой производительности?", "v": "net", "url": ""}
+{"q": "Какое рабочее давление нужно для разных отраслей и задач (16–400 бар)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Как бустер подключается к винтовому компрессору и какое давление он обеспечивает?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какой ресивер подойдёт для систем высокого давления (до 40 бар)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/MKS.Kompressornaya_stanciya_kotoroy_nevedomy_prepyatstviya/"}
+{"q": "До какого давления работают винтовые компрессоры?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какое входное и выходное давление обеспечивает бустер?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какой компрессор нужен для заправки баллонов воздухом для дайвинга?", "v": "net", "url": ""}
+{"q": "До какого давления можно сжимать и накапливать воздух для дыхания?", "v": "net", "url": ""}
+{"q": "Как подобрать производительность компрессора для дайвинг-клуба или индивидуального использования?", "v": "net", "url": ""}
+{"q": "Можно ли заказать комплект компрессорного и пескоструйного оборудования под ключ с пусконаладкой и обучением?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/mozhnye_kompressory_i_unikalnye_proekty/"}
+{"q": "Можно ли заказать/купить компрессор онлайн со склада с доставкой по России и ЕАЭС?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sroki/"}
+{"q": "Сколько стоит готовый пескоструйный комплект с винтовым компрессором?", "v": "net", "url": ""}
+{"q": "Какие способы оплаты и доставки: рассрочка, лизинг, транспортные компании?", "v": "net", "url": ""}
+{"q": "Чем лизинг отличается от кредита?", "v": "net", "url": ""}
+{"q": "Какие условия прописываются в договоре лизинга оборудования?", "v": "net", "url": ""}
+{"q": "Какие типичные условия лизинга: аванс, срок, ставка удорожания, сумма?", "v": "net", "url": ""}
+{"q": "Есть ли льготный или государственный лизинг на покупку оборудования?", "v": "net", "url": ""}
+{"q": "Что такое LCC/стоимость цикла жизни компрессора, как её рассчитать и почему нельзя ориентироваться только на цену?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Какие исполнения и комплектации бывают у компрессоров ATMOS/XAS 88?", "v": "net", "url": ""}
+{"q": "Сколько стоит комплект эжекторной/напорной пескоструйки с компрессором и что в него входит?", "v": "net", "url": ""}
+{"q": "Сколько стоит ремонт компрессорной головки поршневого компрессора?", "v": "net", "url": ""}
+{"q": "Какую гарантию дают на отремонтированную компрессорную головку?", "v": "net", "url": ""}
+{"q": "Сколько стоит компрессор со 100-литровым ресивером и каковы характеристики компрессора с ресивером и осушителем?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/cena-na-compressor/"}
+{"q": "Какая гарантия на ремонт/сервис компрессора и можно ли получить подменный компрессор на время ремонта?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Сколько стоят винтовые компрессоры разных производителей?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/cena-na-compressor/"}
+{"q": "Сколько стоят поршневые компрессоры разных типов?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/cena-na-compressor/"}
+{"q": "Какая гарантия на монтажные работы по установке компрессора?", "v": "net", "url": ""}
+{"q": "Как заказать воздушный ресивер у производителя и какой у него срок гарантии и службы?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Влияет ли регулярное ТО на сохранение гарантии и может ли некачественное обслуживание лишить гарантии?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Как и где купить осушители сжатого воздуха со склада производителя и какие услуги сопровождают покупку?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/gayd-vybiraem-osushitel-vozdukha-dlya-kompressora-/"}
+{"q": "Почему важна дата выпуска компрессора при приёмке и как она влияет на гарантию?", "v": "net", "url": ""}
+{"q": "Можно ли сразу запустить компрессор после аварийной остановки (в т.ч. по температуре)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Posle_avariynoy_ostanovri_vozmozhno_li_vosstanovit_compressor/"}
+{"q": "Какие бывают типы воздуходувок по принципу работы?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Сколько фильтров и ступеней фильтрации нужно для полной защиты оборудования и в каком порядке их ставить?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Как чистота воздуха и состояние фильтров влияют на износ компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/neprikosnovennyy-zapas-raskhodnye-materialy-dlya-kompressorov/"}
+{"q": "Нужен ли фильтр-регулятор на подводе воздуха к пневмооборудованию и зачем?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Чем отличается режим «стоп» от аварийной остановки компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Posle_avariynoy_ostanovri_vozmozhno_li_vosstanovit_compressor/"}
+{"q": "Почему компрессор перегревается и большой ресивер не помогает?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev/"}
+{"q": "Что делать при аварии по высокой температуре масла/масляно-воздушной смеси винтового блока?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
+{"q": "Что означает ошибка отсутствия/неверной фазы (фазировки) и как её исправить?", "v": "net", "url": ""}
+{"q": "Почему компрессор останавливается по перегреву и как устранить (в т.ч. под нагрузкой)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Что означают предупреждения/аварии о высоком давлении и высокой температуре и чем отличаются?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/10-pravil-servis/"}
+{"q": "Что означают коды ошибок контроллера MAM-860 и как посмотреть/сбросить ошибку?", "v": "net", "url": ""}
+{"q": "Что делать при ошибке обрыва/короткого замыкания датчика давления/температуры и как их отличить?", "v": "net", "url": ""}
+{"q": "Почему срабатывает авария по превышению давления в сети?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/10-pravil-servis/"}
+{"q": "Что делать при ошибке низкой температуры масла (R:3123, TUE, НИЗКАЯ-Т.) и в мороз?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Почему один и тот же код ошибки означает разное на разных компрессорах/контроллерах?", "v": "net", "url": ""}
+{"q": "Что означают префиксы кодов ошибок (E, A, R) и чем отличаются авария, предупреждение, запрет и сервис?", "v": "net", "url": ""}
+{"q": "Какие бывают сервисные коды напоминаний о замене расходников и к чему приводят просроченные расходники?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/neprikosnovennyy-zapas-raskhodnye-materialy-dlya-kompressorov/"}
+{"q": "Что означают коды ошибок по фазам (E:0040, E:0090–E:0093) и чем отличается неверное чередование от пропадания фазы?", "v": "net", "url": ""}
+{"q": "Почему компрессор не включается, хотя ошибок нет / не реагирует на пуск сразу после остановки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Как качество фильтров/осушителей и потери давления в них влияют на давление и производительность пневмосистемы?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Какие классы качества обеспечивают адсорбционные осушители холодноциклового типа?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zachem-nuzhny-adsorbtsionnye-osushiteli/"}
+{"q": "Зачем нужны охладитель-влагоотделитель и дополнительные фильтры на передвижном компрессоре?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Как сепаратор влияет на качество воздуха, защиту оборудования и снижение нагрузки на осушители и фильтры?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Как часто нужно проводить контроль качества сжатого воздуха?", "v": "net", "url": ""}
+{"q": "Что такое сжатый воздух, из каких газов состоит и какими параметрами описывается его состояние?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Пример реализованного проекта: камера абразивоструйной очистки замкнутого цикла с компрессорной станцией", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Какие модели винтовых компрессоров поступили на склад?", "v": "net", "url": ""}
+{"q": "Есть ли скидки/акции на ресиверы сжатого воздуха?", "v": "net", "url": ""}
+{"q": "Какие скидки и акции бывают на винтовые компрессоры?", "v": "net", "url": ""}
+{"q": "Какие условия и сроки у летней акции для покупателей компрессоров и пневмооборудования?", "v": "net", "url": ""}
+{"q": "Сколько баллов в акции дают за покупку компрессора, ресивера или осушителя?", "v": "net", "url": ""}
+{"q": "Какому региону засчитывается покупка, если оборудование заказано для подрядчика из другого региона?", "v": "net", "url": ""}
+{"q": "Насколько завод-производитель увеличил выпуск воздушных ресиверов за счёт бережливого производства (нацпроект ФЦК)?", "v": "net", "url": ""}
+{"q": "Поставляют ли российские производители компрессоры и ресиверы на экспорт, в том числе для атомных станций?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Какие акции и скидки бывают на покупку поршневых компрессоров?", "v": "net", "url": ""}
+{"q": "Какая производительность у бытовых и промышленных компрессоров?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Особенности и безопасность работы с электрическими компрессорами (отличия ТБ для типов)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Чем промышленные компрессоры отличаются от полупромышленных?", "v": "net", "url": ""}
+{"q": "Что лучше выбрать: пневматический или электрический инструмент?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Какую экономию даёт частотное регулирование (VSD) у воздуходувок при переменном расходе?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/transportirovka-sukhikh-veshchestv-szhatym-vozdukhom/"}
+{"q": "Надёжна ли электроника инвертора и каков срок службы частотного преобразователя?", "v": "net", "url": ""}
+{"q": "Что такое холостой ход компрессора и сколько он экономит?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor_economit/"}
+{"q": "Почему компрессор с частотником на двигателе 50 Гц неэффективен и чем он отличается от высокочастотного двигателя?", "v": "net", "url": ""}
+{"q": "Какой диапазон регулирования производительности у инверторного компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Где купить компрессоры Бежецкого завода АСО со склада в Центральном федеральном округе?", "v": "net", "url": ""}
+{"q": "Пример реализованного проекта с винтовыми компрессорами и ресиверами для пищевого предприятия", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/interesnye-proekty-zimy-i-vesny/"}
+{"q": "Где купить компрессоры, осушители и фильтры со склада на Дальнем Востоке (Хабаровск)?", "v": "net", "url": ""}
+{"q": "Пример реализованного проекта модульной компрессорной станции для металлургического предприятия", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/top_letnich_proektov_ot_kompressor_centra/"}
+{"q": "Как работает зубчатый компрессор?", "v": "net", "url": ""}
+{"q": "Какой компрессор выбрать для шиномонтажа?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kakoq_kompressor_vybrat_dlya_avtoservisa/"}
+{"q": "Чем отличается стоимость запчастей/обслуживания для разных типов компрессоров?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/abonentskoe-obsluzhivanie-ili-sobstvennyy-servisnyy-tsentr/"}
+{"q": "Какой тип компрессора и привод выбрать для опрессовки трубопроводов?", "v": "net", "url": ""}
+{"q": "Когда на автомойке заменить турбосушку на вихревую воздуходувку?", "v": "net", "url": ""}
+{"q": "Как работает кулачковый компрессор?", "v": "net", "url": ""}
+{"q": "Чем воздушный компрессор отличается от холодильного?", "v": "net", "url": ""}
+{"q": "Что выбрать при нехватке электрической мощности для поршневого компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Чем роторно-пластинчатый пневмоинструмент отличается от роторно-пластинчатого компрессора?", "v": "net", "url": ""}
+{"q": "В каком режиме работают поршневые компрессоры и когда лучше винтовой?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda_vintovoy_kompressor_luchshee_reshenie/"}
+{"q": "Какой тип компрессора производительнее: винтовой или поршневой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kakoq_kompressor_vybrat_dlya_avtoservisa/"}
+{"q": "Какие бывают виды сепараторов для компрессоров и чем отличаются для разных типов?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Какие преимущества у тандемных компрессорных установок перед одноголовочными?", "v": "net", "url": ""}
+{"q": "Что такое компрессор без привода (блок), из чего состоит и какие типы блоков?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Какие бывают компрессоры с гидроприводом и их плюсы-минусы против электрического?", "v": "net", "url": ""}
+{"q": "Какой компрессор выбрать при ограниченном пространстве и бюджете?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Что такое степень повышения давления и многоступенчатое сжатие (одно- и двухступенчатое)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dvukhstup/"}
+{"q": "Почему бытовые поршневые компрессоры дешевле и ремонтопригоднее винтовых?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kogda_vintovoy_kompressor_luchshee_reshenie/"}
+{"q": "Чем отличается маркировка серий ВК и SK?", "v": "net", "url": ""}
+{"q": "Какой тип компрессора лучше для отбойного молотка: поршневой или винтовой?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Какой тип компрессора наиболее энергоэффективен?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/energoeffektivnost-na-schetu-kazhdyy-kilovatt/"}
+{"q": "Регулирование вкл-выкл (On/Off): когда подходит и какие минусы?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-economit/"}
+{"q": "Какой способ регулирования производительности самый эффективный?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-economit/"}
+{"q": "Что такое частотный преобразователь, как он устроен и какие функции выполняет?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chastotnyy-preobrazovatel-dlya-kompressora-brendy-i-otlichiya/"}
+{"q": "Нужен ли для окраски/покрасочных работ компрессор с частотником или достаточно фиксированной скорости?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kogda_vintovoy_kompressor_luchshee_reshenie/"}
+{"q": "Как управлять группой компрессоров (частотный + постоянная производительность)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/my-ubedilis-chto-u-nas-deystvitelno-silnye-partnery/"}
+{"q": "Как работает модульное регулирование впуска компрессора?", "v": "net", "url": ""}
+{"q": "Как работает регулирование переменным рабочим объёмом?", "v": "net", "url": ""}
+{"q": "Нужен ли ресивер компрессору с частотным регулированием?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/tipichnye-oshibki-pri-proektirovanii-modulnykh-kompressornykh-stantsiy/"}
+{"q": "Чем выгоден частотный преобразователь в компрессоре для лазера?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vashemu-lazeru-nuzhen-pravilnyy-kompressor/"}
+{"q": "Чем плавный пуск отличается от частотного преобразователя и что выбрать для экономии?", "v": "net", "url": ""}
+{"q": "Как частотный привод помогает экономить энергию в компрессорах (общий принцип при переменной нагрузке)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Какое охлаждение лучше для компрессора высокого давления: воздушное или водяное?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Что лучше для охлаждения двигателя компрессора: крыльчатка на валу или отдельный электровентилятор?", "v": "net", "url": ""}
+{"q": "Как ременная передача влияет на охлаждение поршневой головки?", "v": "net", "url": ""}
+{"q": "Как поддерживать систему охлаждения и снижать температуру всасываемого воздуха?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zachem-vozdushnomu-kompressoru-nuzhna-gradirnya-/"}
+{"q": "Во сколько обходятся компрессоры с воздушным и водяным охлаждением (цена, установка, обслуживание)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Какой компрессор шумнее: с воздушным или водяным охлаждением?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Как подготовить систему охлаждения и смазки компрессора к запуску?", "v": "net", "url": ""}
+{"q": "Как организовать отвод тепла от винтового компрессора: вентиляция или жидкостное охлаждение?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Какое охлаждение винтового компрессора выбрать: воздушное или водяное?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Как регулировать водяное охлаждение компрессора в жаркий сезон?", "v": "net", "url": ""}
+{"q": "Для чего нужен охладитель сжатого воздуха перед пескоструем?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zachem-vozdushnomu-kompressoru-nuzhna-gradirnya-/"}
+{"q": "Как устроен и как работает масляный холодильник (маслоохладитель) компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Для чего нужен газоохладитель в поршневом компрессоре и как он работает?", "v": "net", "url": ""}
+{"q": "Какие бывают виды и конструкции газоохладителей и как они обозначаются?", "v": "net", "url": ""}
+{"q": "Для чего нужен концевой газоохладитель после последней ступени?", "v": "net", "url": ""}
+{"q": "Чем различаются промежуточный и концевой газоохладители?", "v": "net", "url": ""}
+{"q": "Как сочетать центробежные и винтовые компрессоры в одной станции?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Какие преимущества у блочной компоновки компрессора с осушителем и ресивером на одной раме и какие недостатки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/interesnye-proekty-zimy-i-vesny/"}
+{"q": "Чем отличаются стационарные, передвижные и контейнерные станции?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/MKS.Kompressornaya_stanciya_kotoroy_nevedomy_prepyatstviya/"}
+{"q": "В чём преимущества децентрализованной компрессорной системы?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/obsluzhivanie-pnevmoseti-reglamentnye-raboty-raskhodniki-i-sroki/"}
+{"q": "Какие меры безопасности нужны при сливе отработанного компрессорного масла?", "v": "net", "url": ""}
+{"q": "Какие средства защиты нужны оператору пескоструйного аппарата?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Чем определяются требования пневмопотребителей к качеству сжатого воздуха и какие нормативы действуют?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Можно ли использовать асбестовые прокладки в компрессоре?", "v": "net", "url": ""}
+{"q": "В какой цвет окрашивать трубопровод сжатого воздуха и какие нормативы действуют при проектировании/монтаже пневмомагистрали?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/truboprovod/"}
+{"q": "Какие испытания и контроль качества проходят воздушные ресиверы при изготовлении?", "v": "net", "url": ""}
+{"q": "Какая система пожаротушения нужна для контейнерной компрессорной станции?", "v": "net", "url": ""}
+{"q": "Обязательно ли ведение журнала показаний по нормативам и для прохождения проверок?", "v": "net", "url": ""}
+{"q": "Нужно ли проводить техническое освидетельствование ресивера?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/obsluzhivanie-pnevmoseti-reglamentnye-raboty-raskhodniki-i-sroki/"}
+{"q": "Каких ответственных нужно назначить при эксплуатации оборудования под давлением?", "v": "net", "url": ""}
+{"q": "Зачем нужна инструкция (паспорт) по эксплуатации компрессора и какая информация в ней содержится?", "v": "net", "url": ""}
+{"q": "Что запрещено при эксплуатации поршневого компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Какие меры защиты от движущихся частей компрессора нужно соблюдать?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Кто имеет право проводить работы в электрощите и силовых цепях компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Trebovaniya%20k%20personalu%20dlya%20kompressornoy%20stantsii%3A%20kompetentsii%2C%20navyki%2C%20lichnyye%20kachestva/"}
+{"q": "Какие меры безопасности соблюдать при замене фильтра?", "v": "net", "url": ""}
+{"q": "Какие меры безопасности соблюдать при замене масла?", "v": "net", "url": ""}
+{"q": "Какие правила безопасности соблюдать при работе с компрессором высокого давления (300 бар)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Что такое звукоизоляция и как она работает?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zadacha_snizit_shum_i_vibraciyu_na_proizvodstve/"}
+{"q": "Из каких этапов состоит процесс сжатия в спиральном компрессоре?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Какие системы защиты и вспомогательные компоненты нужны компрессору для надёжной работы?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Когда и как появились спиральные компрессоры?", "v": "net", "url": ""}
+{"q": "Насколько центробежные компрессоры чувствительны к качеству всасываемого воздуха?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Как работает экспандер и по какому принципу он преобразует энергию газа или пара?", "v": "net", "url": ""}
+{"q": "Чем ограничен диапазон регулирования производительности компрессора и что такое помпаж?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Как реагировать на предупреждения на дисплее, шум и вибрацию компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Posle_avariynoy_ostanovri_vozmozhno_li_vosstanovit_compressor/"}
+{"q": "Чем грозит запуск компрессора без подогрева в холод и частые ошибки при запуске?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Как определить износ масляного фильтра без датчика и чем грозит несвоевременная замена маслофильтра?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/maslyaniy-filtr/"}
+{"q": "Чем отличаются коды защиты двигателя (перегрузка, блокировка, дисбаланс фаз) и как их различить?", "v": "net", "url": ""}
+{"q": "Что делать при отказе датчика давления или температуры?", "v": "net", "url": ""}
+{"q": "Как сбросить ошибку после аварийного останова компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Что делать при ошибке перегрузки двигателя (MOTOR OVERLOAD)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/rele-peregruzki/"}
+{"q": "Что делать при ошибке неверного чередования фаз (PHASE REVERSE)?", "v": "net", "url": ""}
+{"q": "Почему компрессор выдаёт ошибку перегрева вентилятора и как устранить?", "v": "net", "url": ""}
+{"q": "Где посмотреть журнал аварий и текущую неисправность компрессора?", "v": "net", "url": ""}
+{"q": "Можно ли просто сбросить ошибку и продолжить работу без устранения причины?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Posle_avariynoy_ostanovri_vozmozhno_li_vosstanovit_compressor/"}
+{"q": "Почему срабатывает защита двигателя по току и в какой последовательности диагностировать перегрузку?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/rele-peregruzki/"}
+{"q": "Как натяжение ремней связано с перегрузкой двигателя и чем опасно неправильное натяжение?", "v": "net", "url": ""}
+{"q": "Что делать, если компрессор остановился и показывает код ошибки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Как сбросить ошибку на конкретных контроллерах (AIRMASTER Q1, MAM-6090, P1, Omega, S1, FX32A)?", "v": "net", "url": ""}
+{"q": "Что означает код высокого давления в маслосборнике (E:0139) и как устранить?", "v": "net", "url": ""}
+{"q": "Что будет, если пропускать ТО компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/neprikosnovennyy-zapas-raskhodnye-materialy-dlya-kompressorov/"}
+{"q": "Почему нельзя эксплуатировать компрессор на слишком низком давлении?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Нужны ли фильтры и осушитель для гаражного/бытового компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kakoq_kompressor_vybrat_dlya_avtoservisa/"}
+{"q": "Нужен ли осушитель и из чего состоит фильтрация при заправке пневматики?", "v": "net", "url": ""}
+{"q": "Нужна ли дополнительная подготовка и фильтрация воздуха при работе компрессора в запылённой среде?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Почему одного влагоотделителя и фильтров недостаточно для подготовки сжатого воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Какие опции можно добавить к винтовому компрессору для подготовки воздуха и экономии энергии?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Что проверить в пневмосети и подготовке воздуха перед заменой компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/obsluzhivanie-pnevmoseti-reglamentnye-raboty-raskhodniki-i-sroki/"}
+{"q": "Какие скрытые затраты возникают при подготовке сжатого воздуха (осушители, фильтры, конденсатоотводчики)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zachem-nuzhny-adsorbtsionnye-osushiteli/"}
+{"q": "Что такое воздухоподготовка и зачем она нужна?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Какая подготовка воздуха (осушка, фильтрация, ресивер) нужна для компрессорной цементного завода?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Какой класс очистки обеспечивают магистральные фильтры ФМ 40/16ГЦ и ФМ 60/16ГЦ?", "v": "net", "url": ""}
+{"q": "Какое оборудование подготовки и хранения воздуха устанавливают после винтового компрессора в контейнерной/станции?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/MKS.Kompressornaya_stanciya_kotoroy_nevedomy_prepyatstviya/"}
+{"q": "Какое дополнительное оборудование подбирается по классу очистки воздуха?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Как давление влияет на образование и осушку конденсата?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zachem-vozdushnomu-kompressoru-nuzhna-gradirnya-/"}
+{"q": "Как безмасляный компрессор справляется с масляными парами из окружающего воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Как обеспечить качество и чистоту воздуха для дыхания (погружения, нормы, лаборатория/газоанализатор)?", "v": "net", "url": ""}
+{"q": "Какие требования предъявляются к воздуху и оборудованию воздуходувок?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Что входит в исполнение компрессора с осушителем и магистральными фильтрами?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Какое исполнение осушителя выбрать под задачу (покраска, пневмоинструмент, ЧПУ, лазер)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/gayd-vybiraem-osushitel-vozdukha-dlya-kompressora-/"}
+{"q": "Как получить чистый или стерильный сжатый воздух?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/tonkaya_rabota_kompressory_v_elektronike/"}
+{"q": "Как в акции определяют победителей промежуточных этапов?", "v": "net", "url": ""}
+{"q": "Где можно пройти обучение по техническим особенностям и сервисному обслуживанию компрессоров?", "v": "net", "url": ""}
+{"q": "Какие российские и европейские компании используют компрессоры Бежецкого завода АСО?", "v": "net", "url": ""}
+{"q": "Как работает жидкостно-кольцевой компрессор?", "v": "net", "url": ""}
+{"q": "Чем динамический компрессор отличается от объёмного?", "v": "chastichno", "url": ""}
+{"q": "Как обеспечивается минимум утечек в спиральном компрессоре?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Чем отличаются центробежные (радиальные) компрессоры от осевых?", "v": "net", "url": ""}
+{"q": "Как выбрать производителя поршневого компрессора и на что обратить внимание?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/100-kompressor/"}
+{"q": "Какие особенности у винтовых компрессоров IRONMAC?", "v": "net", "url": ""}
+{"q": "Какие производители выпускают масляные и безмасляные компрессоры и чем они известны?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/razvitie-bezmaslyanykh-tekhnologiy-v-kompressornykh-sistemakh/"}
+{"q": "Какие модели поршневых компрессоров Remeza серии J есть на рынке и их особенности?", "v": "net", "url": ""}
+{"q": "Сопоставимы ли отечественные медицинские компрессоры с европейскими по качеству и цене?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory-osobogo-naznacheniya-kto-proizvodit-szhatyy-vozdukh-dlya-meduchrezhdeniy-/"}
+{"q": "Какие бренды промышленных компрессоров считаются ведущими и чем отличаются?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kitay_rulit/"}
+{"q": "Какие сильные и слабые стороны у компрессоров Atlas Copco?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/S_audi_na_geely/"}
+{"q": "Какие преимущества и недостатки у компрессоров Ingersoll Rand?", "v": "net", "url": ""}
+{"q": "Для каких условий подходят винтовые компрессоры Sullair?", "v": "net", "url": ""}
+{"q": "Чем известен Gardner Denver и какие у него особенности сервиса и технологий?", "v": "net", "url": ""}
+{"q": "Из каких комплектующих производятся винтовые компрессоры Fiac?", "v": "net", "url": ""}
+{"q": "Какие производители компрессоров считаются надёжными и какой бренд выбрать?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kitay_rulit/"}
+{"q": "Что известно о Челябинском компрессорном заводе (ЧКЗ)?", "v": "net", "url": ""}
+{"q": "Какие преимущества у компрессоров ЗИФ?", "v": "net", "url": ""}
+{"q": "Какие компрессоры подходят для постоянной профессиональной пескоструйной очистки с несколькими операторами?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Какой двигатель выбрать для дизельного компрессора: Kubota, Deutz или китайские?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/tri_projekta%3Agde_i_kak_rabotayut_nashi_dizelnye_kompressory/"}
+{"q": "Какие винтовые блоки пришли на смену Rotorcomp и GHH, и почему производители переходят на другие блоки?", "v": "net", "url": ""}
+{"q": "Какие компрессорные бренды комплектуются винтовыми блоками BAOSI?", "v": "net", "url": ""}
+{"q": "Как выбрать китайский компрессор и можно ли доверять китайским брендам?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kitay_rulit/"}
+{"q": "Почему качество китайских компрессоров одного бренда отличается от партии к партии?", "v": "net", "url": ""}
+{"q": "Что представляют собой винтовые компрессоры BERG, как давно на рынке и насколько надёжны?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/100-kompressor/"}
+{"q": "Где производятся компрессоры BERG и есть ли локализация производства в России?", "v": "net", "url": ""}
+{"q": "Чем BERG отличается от Comprag и как изменилась ситуация между этими брендами?", "v": "net", "url": ""}
+{"q": "Стоит ли использовать российские компрессорные масла Газпромнефть и соответствуют ли они по качеству?", "v": "net", "url": ""}
+{"q": "Откуда бренд Atlas Copco и как устроена его сервисная сеть?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/S_audi_na_geely/"}
+{"q": "Какие производители выпускают электрические винтовые и поршневые компрессоры?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kitay_rulit/"}
+{"q": "Какие серии компрессоров выпускает Atmos Chrast?", "v": "net", "url": ""}
+{"q": "Какие винтовые компрессоры Atlas Copco комплектуются осушителем, фильтрами и ресивером, и что есть в каталоге?", "v": "net", "url": ""}
+{"q": "Какие виды компрессоров CompAir поставляются на рынок и какие у них преимущества и гарантия?", "v": "net", "url": ""}
+{"q": "Чем заменить частотный преобразователь в компрессоре европейского производителя?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chastotnyy-preobrazovatel-dlya-kompressora-brendy-i-otlichiya/"}
+{"q": "Как узнать год выпуска и заводской номер компрессора?", "v": "net", "url": ""}
+{"q": "Какие модели и преимущества у спиральных компрессоров Renner?", "v": "net", "url": ""}
+{"q": "Что означает индекс/суффикс «М» в обозначении модели компрессора?", "v": "net", "url": ""}
+{"q": "Есть ли российские рефрижераторные осушители сжатого воздуха, их преимущества и соотношение с импортными?", "v": "net", "url": ""}
+{"q": "Почему предприятия выбирают отечественных производителей компрессорного оборудования?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Есть ли российские производители компрессоров с полным циклом от проектирования до монтажа и собственным КБ?", "v": "net", "url": ""}
+{"q": "Влияют ли осушители, фильтры, охладители и сепараторы на падение давления в системе?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Как подобрать штуцер для влагомаслоотделительного фильтра, купленного без штуцера?", "v": "net", "url": ""}
+{"q": "Что даёт компрессор с байпассными масляными и воздушными фильтрами?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/maslyaniy-filtr/"}
+{"q": "На какие характеристики смотреть при выборе влагомаслоотделителя?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Для чего служат воздушные и масляные фильтры компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Чем полезно оцинкование (горячее цинкование) корпуса магистрального фильтра и защита от коррозии?", "v": "net", "url": ""}
+{"q": "Подойдут ли оцинкованные магистральные фильтры для тяжёлых промышленных условий?", "v": "net", "url": ""}
+{"q": "Чем каплеотбойник отличается от коалесцирующего фильтра и когда его применять?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Какую роль выполняют фильтры и сепараторы в пневмолинии?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Почему при износе маслосепаратора растёт расход масла?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Можно ли заменить комбинацию из двух фильтров одним?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Как монтируются и соединяются магистральные фильтры в систему подготовки воздуха?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Как плотность фильтрующего материала влияет на эффективность очистки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Как заменить всасывающий воздушный фильтр компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Нужна ли магистральная фильтрация, если на компрессоре встроенный осушитель?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/interesnye-proekty-zimy-i-vesny/"}
+{"q": "Чем отличается корпус фильтра от картриджа и что является расходником?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/maslyaniy-filtr/"}
+{"q": "Что означают буквенные суффиксы в обозначении фильтров серии R?", "v": "net", "url": ""}
+{"q": "Почему фильтрация сжатого воздуха влияет на затраты и энергопотребление?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Какие бывают виды маслоотделителей и чем они отличаются?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/chto_nugno_dly_pravilnoy_podgotovki/"}
+{"q": "Почему свободная вода снижает эффективность фильтрации?", "v": "net", "url": ""}
+{"q": "Как температура влияет на характеристики фильтра?", "v": "net", "url": ""}
+{"q": "К чему приводит неквалифицированный/некачественный ремонт винтового блока?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "По каким признакам понять, что залито неправильное масло и почему оно вызывает перегрев?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
+{"q": "К чему приводит износ ремней и поршневых колец в компрессоре?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Standartnyye%20polomki%20porshnevykh%20kompressorov%20i%20sposoby%20ikh%20ustraneniya/"}
+{"q": "Что делать, если масло попадает в пневмосеть к потребителям?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Могут ли пневмопотребители с резким расходом вызвать вынос масла или разрыв сепаратора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "По каким признакам понять, что бустеру требуется обслуживание/ремонт и как отличить его неисправность от компрессора?", "v": "net", "url": ""}
+{"q": "Почему винтовой компрессор не запускается или плохо включается?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Что происходит с компрессором при падении/ударе и как диагностировать повреждения?", "v": "net", "url": ""}
+{"q": "Почему выходят из строя компрессоры Atlas Copco (в т.ч. GA) и как этого избежать?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "К чему приводит несвоевременная замена воздушного фильтра?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "О чём говорит неисправность загрузочного/впускного клапана и когда нужна диагностика?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Как перегрев влияет на качество сжатого воздуха и работу оборудования?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
+{"q": "Как понять, что у винтового компрессора изношены подшипники?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Как неисправности клапанов (минимального давления, впускного, продувочного) снижают производительность?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Почему проскальзывание/натяжение ремней снижает производительность и как выявить?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoy-kompressor-remennoy-ili-pryamoy-privod-chto-vybrat/"}
+{"q": "К чему приводит неправильный монтаж/несоответствие гайки резьбе поршня?", "v": "net", "url": ""}
+{"q": "Какие недостатки и риски у лубрикатора (перерасход масла, масляное голодание)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/maslyaniy-filtr/"}
+{"q": "К чему приводит неисправный или забитый сепаратор?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "К чему приводит работа компрессора с неисправностями?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Posle_avariynoy_ostanovri_vozmozhno_li_vosstanovit_compressor/"}
+{"q": "Как идёт импортозамещение в компрессорной технике и есть ли отечественные контроллеры и комплектующие?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Какое оборудование для сжатого воздуха производит российский завод (компрессоры, ресиверы, осушители, фильтры)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_belorusskie_kompressory_zavoevali_mesto_na_rynke_rf/"}
+{"q": "Как санкции повлияли на поставки винтовых блоков и компрессоров на европейских блоках?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_sankcii_povliyali_na_vvoz_i_obsluzhivanie/"}
+{"q": "Какие преимущества у российских производителей компрессоров по сравнению с китайскими?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Какие преимущества даёт ручная сборка компрессоров?", "v": "net", "url": ""}
+{"q": "На что обратить внимание при выборе производителя винтового компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/stabilno_vostrebovannye/"}
+{"q": "Кто является дилером Бежецкого завода «АСО» в Южном федеральном округе?", "v": "net", "url": ""}
+{"q": "На каких винтовых блоках производятся компрессоры АСО-ВК22 и АСО-ВК30?", "v": "net", "url": ""}
+{"q": "На каких винтовых компрессорах устанавливаются блоки Rotorcomp EVO 9?", "v": "net", "url": ""}
+{"q": "Какие российские производители промышленных компрессоров существуют и что они предлагают?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Как санкции и импортозамещение повлияли на спрос на отечественные компрессоры и поставки комплектующих?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_sankcii_povliyali_na_vvoz_i_obsluzhivanie/"}
+{"q": "Как санкции повлияли на сроки производства и поставки компрессорного оборудования?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sroki/"}
+{"q": "Чем заменить немецкие винтовые блоки при сложностях с поставками?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/S_audi_na_geely/"}
+{"q": "Что известно о бренде Bekomsan, откуда он и стоит ли выбирать его компрессоры?", "v": "net", "url": ""}
+{"q": "Чем отличаются воздуходувки разных производителей по качеству изготовления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Какой бренд промышленных компрессоров выбрать для производства?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/100-kompressor/"}
+{"q": "Что за бренд компрессоров и какая у него история?", "v": "net", "url": ""}
+{"q": "Какие риски при использовании неоригинальных масляных фильтров?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/maslyaniy-filtr/"}
+{"q": "Где искать защитную метку на компрессоре?", "v": "net", "url": ""}
+{"q": "Как проверить подлинность компрессора смартфоном по QR-коду?", "v": "net", "url": ""}
+{"q": "Что означает результат «Контрафакт» при проверке метки?", "v": "net", "url": ""}
+{"q": "Как сверить заводские номера на компрессоре между собой?", "v": "net", "url": ""}
+{"q": "Какие сертификаты качества имеет турецкий производитель компрессоров?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vozmozhno_li_zamenit_kompressory_Ekomak/"}
+{"q": "Какие дополнительные расходы несёт владелец компрессора на шасси по сравнению с рамой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Чем полезно контейнерное исполнение компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/modulnye_kompressornye_stancii_kotorye_rabotaut_u_klientov_kompressor_centra/"}
+{"q": "Зачем компрессору регулируемые опоры и салазки?", "v": "net", "url": ""}
+{"q": "Как условия хранения и транспортировки влияют на выбор исполнения компрессора?", "v": "net", "url": ""}
+{"q": "Какие преимущества и ограничения у дизельного привода (достоинства/недостатки)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokiy-sezon-dizelnykh-vintovykh-kompressorov-/"}
+{"q": "Где применяют стационарные дизельные компрессоры?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какие характеристики проверить в паспорте перед покупкой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Можно ли использовать дизельный компрессор в закрытом помещении?", "v": "net", "url": ""}
+{"q": "Какие ошибки допускают при подборе дизельного компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Что выгоднее по стоимости владения: европейский или китайский компрессор?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/bu_kompressory_economya_ili_risk/"}
+{"q": "Особенности и отличия передвижных компрессоров Ремеза от стационарных?", "v": "net", "url": ""}
+{"q": "Чем удобны дизельные компрессоры Sullair в обслуживании и защите от погоды?", "v": "net", "url": ""}
+{"q": "Какими опциями комплектуются компрессоры Sullair и что показывает панель управления?", "v": "net", "url": ""}
+{"q": "Какой двигатель у Atlas Copco U175, подходит ли для зимы, как запуск и выхлоп?", "v": "net", "url": ""}
+{"q": "Что лучше для бурения: дизельный или электрический компрессор?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/interesnye-proekty-zimy-i-vesny/"}
+{"q": "Какие модели дизельных компрессоров под разные задачи (стройка, бурение, мобильные работы)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/tri_projekta%3Agde_i_kak_rabotayut_nashi_dizelnye_kompressory/"}
+{"q": "Какой компрессор выбрать при ограниченной электрогенерации или разъездном характере работы?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Что такое кулачковый компрессор и для чего он используется?", "v": "net", "url": ""}
+{"q": "Для чего применяют шестеренчатые (роторные) компрессоры и воздуходувки низкого давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Зачем в системе пневмотранспорта нужна воздуходувка и какую функцию она выполняет?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/transportirovka-sukhikh-veshchestv-szhatym-vozdukhom/"}
+{"q": "Какие требования к корпусу воздуходувки при транспортировке абразивных материалов (песок)?", "v": "net", "url": ""}
+{"q": "Почему воздуходувку нельзя эксплуатировать на пределе характеристик?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Почему воздуходувка перегревается и чем это опасно?", "v": "net", "url": ""}
+{"q": "Как устроен автономный компрессор для выгрузки сыпучих материалов?", "v": "net", "url": ""}
+{"q": "Какие бывают типы привода у воздуходувки и чем они отличаются?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Чем винтовой компрессор низкого давления отличается от компрессора общего назначения на 8-10 бар?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Как расшифровывается обозначение винтового компрессора (например, ВК50-2,0)?", "v": "net", "url": ""}
+{"q": "Как учитывать в бюджете стоимость ремонта крупных компонентов компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/neprikosnovennyy-zapas-raskhodnye-materialy-dlya-kompressorov/"}
+{"q": "Какой инструмент и что подготовить для замены поршней и колец компрессора?", "v": "net", "url": ""}
+{"q": "Как проверить компрессор после замены поршней и колец?", "v": "net", "url": ""}
+{"q": "Как заменить прокладку головки цилиндра компрессора при пропуске воздуха?", "v": "net", "url": ""}
+{"q": "Какие неисправности компрессора можно устранить самостоятельно, а когда нужен сервисный центр?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Как проводится ремонт дожимного/бустерного компрессора и какие работы можно делать самому?", "v": "net", "url": ""}
+{"q": "Как ремонтировать осушитель, если он установлен на одной раме с компрессором?", "v": "net", "url": ""}
+{"q": "Что входит в капитальный/полный ремонт поршневой компрессорной головки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Standartnyye%20polomki%20porshnevykh%20kompressorov%20i%20sposoby%20ikh%20ustraneniya/"}
+{"q": "Можно ли восстановить клапанный блок поршневого компрессора или нужно менять на новый?", "v": "net", "url": ""}
+{"q": "Какая диагностика проводится при поступлении неисправной компрессорной головки в сервис?", "v": "net", "url": ""}
+{"q": "От чего зависит стоимость ремонта и обслуживания компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/abonentskoe-obsluzhivanie-ili-sobstvennyy-servisnyy-tsentr/"}
+{"q": "Можно ли отдать на сервис/заключить договор на компрессор, купленный не у поставщика (в другой организации)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Где можно отремонтировать компрессор Atlas Copco и насколько доступен сервис?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Какие услуги по ремонту и обслуживанию дизельных компрессоров XAS оказывает сервисная служба?", "v": "net", "url": ""}
+{"q": "Какие этапы включает ремонт промышленного компрессора (диагностика, смета, замена деталей)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Для чего нужна обкатка и испытания после ремонта компрессора?", "v": "net", "url": ""}
+{"q": "Выгодно ли заключать договор на ТО и ремонт компрессора или держать свою службу?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/abonentskoe-obsluzhivanie-ili-sobstvennyy-servisnyy-tsentr/"}
+{"q": "Какая квалификация должна быть у специалистов, обслуживающих компрессоры (в т.ч. Atlas Copco)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Trebovaniya%20k%20personalu%20dlya%20kompressornoy%20stantsii%3A%20kompetentsii%2C%20navyki%2C%20lichnyye%20kachestva/"}
+{"q": "Что такое предремонтная диагностика винтового компрессора и зачем она нужна?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Где заказать ремонт и сервис компрессоров Kaeser не в официальном сервисном центре и дешевле ли это?", "v": "net", "url": ""}
+{"q": "Какие виды обслуживания и работ входят в сервис компрессоров Kaeser?", "v": "net", "url": ""}
+{"q": "Какие модели и серии компрессоров Kaeser можно отремонтировать и обслуживать?", "v": "net", "url": ""}
+{"q": "Что входит в капитальный ремонт передвижного винтового компрессора Atlas Copco и какие бывают программы ремонта?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Какие модели передвижных и стационарных компрессоров ПКСД обслуживаются и ремонтируются?", "v": "net", "url": ""}
+{"q": "Кто и как выполняет монтаж зимнего пакета на компрессор, возможен ли выезд к заказчику?", "v": "net", "url": ""}
+{"q": "Где заказать ремонт, диагностику и обслуживание компрессоров CompAir и какие модели (серии C, L, D) ремонтируются?", "v": "net", "url": ""}
+{"q": "Кто выполняет ремонт и обслуживание компрессоров Atmos и есть ли выезд к заказчику?", "v": "net", "url": ""}
+{"q": "В каких случаях осушителю Atlas Copco нужен ремонт, какие модели обслуживаются и есть ли подменное оборудование?", "v": "net", "url": ""}
+{"q": "Что делать, если диагностика показала износ подшипников компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Нужен ли сервисный договор после модернизации компрессорного парка?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/abonentskoe-obsluzhivanie-ili-sobstvennyy-servisnyy-tsentr/"}
+{"q": "Для чего нужно съёмное дышло и как оно влияет на транспортировку?", "v": "net", "url": ""}
+{"q": "Чем можно заменить дизельный передвижной компрессор на стройплощадке?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какое масло использовать в передвижных дизельных компрессорах?", "v": "net", "url": ""}
+{"q": "Какие опции можно заказать для компрессоров Atlas Copco?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какие преимущества у полиэтиленового кожуха HardHat?", "v": "net", "url": ""}
+{"q": "Какие преимущества и особенности конструкции у компрессоров Atmos?", "v": "net", "url": ""}
+{"q": "Чем хороши дизельные компрессоры Atlas Copco XAS и XAHS?", "v": "net", "url": ""}
+{"q": "Как работает дизельный винтовой компрессор и где применяют, когда нет электричества?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokiy-sezon-dizelnykh-vintovykh-kompressorov-/"}
+{"q": "Чем Airman PDSK 1200S-W отличается от PDSJ 1550DP-W и Atlas Copco XAVS 1800?", "v": "net", "url": ""}
+{"q": "Чем Atlas Copco XAH 1066 отличается от Atlas Copco XRV 946?", "v": "net", "url": ""}
+{"q": "На что обращать внимание в конструкции и раме компрессора для пыльной/вибрирующей стройки, защита от коррозии?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Что такое передвижная компрессорная станция и зачем нужны колёса/буксировка?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какой компрессор безопаснее для человека и окружающей среды?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Что выбрать: электрический или бензиновый компрессор для дайвинга?", "v": "net", "url": ""}
+{"q": "Что нужно учесть при производстве передвижной компрессорной станции?", "v": "net", "url": ""}
+{"q": "Зачем нужен дополнительный топливный фильтр на дизельном компрессоре?", "v": "net", "url": ""}
+{"q": "Какие параметры и исходные данные нужны для подбора бустерной/дожимной станции и как связаны давление и производительность?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Как тип потребителя влияет на расчёт расхода воздуха и выбор компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "С чего начать модернизацию компрессорного парка и можно ли заменить старый на такой же?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Vybrat_i_ne_oshibitsya/"}
+{"q": "Как пересчитать расход ударных инструментов (степлер, заклёпочник) из расхода на удар в л/мин?", "v": "net", "url": ""}
+{"q": "Как подобрать компрессор для работы на высоте (ограничения, мощность двигателя)?", "v": "net", "url": ""}
+{"q": "Какой компрессор и параметры нужны для цементовоза?", "v": "net", "url": ""}
+{"q": "Как температура и давление всасываемого воздуха влияют на производительность на входе и как её измеряют?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Какие параметры нужно подобрать под конкретный вид работ (FAD, давление, осушение)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Можно ли компенсировать недостаток производительности большим ресивером?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Что будет, если производительность компрессора выше расхода инструмента (избыточная производительность)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/rasschityvaem-proizvoditelnost-kompressora-dlya-predpriyatiya/"}
+{"q": "Как производительность компрессора влияет на скорость пескоструйной очистки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "В каких случаях нужен компрессор на 10 бар?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Зачем нужна промежуточная ступень 13 бар и для каких машин она доступна?", "v": "net", "url": ""}
+{"q": "Чем отличается пиковый расход от среднего при подборе компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Как выбрать рабочее давление и рассчитать расход для задач низкого давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Как подобрать оборудование под импульсных потребителей с кратковременным большим расходом?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Чем воздуходувка отличается от компрессора (и промышленного вентилятора)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Есть ли смысл использовать обычный компрессор вместо воздуходувки там, где нужно низкое давление?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Как устроена безмасляная винтовая воздуходувка и чем обеспечивается отсутствие масла?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/transportirovka-sukhikh-veshchestv-szhatym-vozdukhom/"}
+{"q": "Где применяются вихревые воздуходувки в режиме вакуума?", "v": "net", "url": ""}
+{"q": "Где применяются вихревые воздуходувки в режиме компрессора (избыточное давление)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Что на самом деле означает давление воздуходувки в паспорте?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Почему сужение сопла не всегда улучшает сушку?", "v": "net", "url": ""}
+{"q": "Какие факторы влияют на эффективность сушки воздухом и насколько сильно?", "v": "net", "url": ""}
+{"q": "Как проводится системная диагностика падения производительности винтового компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Какие методы неразрушающего контроля применяются для выявления дефектов деталей компрессоров?", "v": "net", "url": ""}
+{"q": "Какие дефекты металла обнаруживает ультразвуковая дефектоскопия и в чём её достоинства?", "v": "net", "url": ""}
+{"q": "Как определить марку стали/сплава детали и проверить химический состав без разрушения?", "v": "net", "url": ""}
+{"q": "Какие существуют методы измерения твёрдости металла и чем они различаются?", "v": "net", "url": ""}
+{"q": "Обеспечивается ли гарантийное и сервисное обслуживание, ремонт и поставка запчастей для отечественных компрессоров через дилерскую сеть?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/abonentskoe-obsluzhivanie-ili-sobstvennyy-servisnyy-tsentr/"}
+{"q": "Почему картер и блок цилиндров меняют только комплектом?", "v": "net", "url": ""}
+{"q": "Какие работы выполняются при среднем и капитальном ремонте винтового блока?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Когда выгоднее заменить поршневой блок на новый целиком, а не ремонтировать старый?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Можно ли отремонтировать винтовую пару BAOSI и дают ли сервисы гарантию?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Как работает генератор/станция азота и каким методом получают азот из воздуха?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peredvizhnye-i-statsionarnye-azotnye-stantsii/"}
+{"q": "Какими способами получают газообразный кислород?", "v": "net", "url": ""}
+{"q": "Как подобрать насос сжиженных газов (НСГ, 22НСГ) или запчасти к нему?", "v": "net", "url": ""}
+{"q": "Для чего азот используется в ракетно-космической промышленности?", "v": "net", "url": ""}
+{"q": "Можно ли использовать обычный гаражный компрессор для лазерного станка?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vashemu-lazeru-nuzhen-pravilnyy-kompressor/"}
+{"q": "Какой мобильный компрессор выбрать для строителей, отделочников, мебельщиков, аэрографии или автолюбителя?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Какие преимущества у пневматического инструмента по сравнению с электрическим?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Какой привод компрессора выбрать для интенсивной работы с мощным пневмоинструментом?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoy-kompressor-remennoy-ili-pryamoy-privod-chto-vybrat/"}
+{"q": "Можно ли самостоятельно запустить бытовой компрессор?", "v": "net", "url": ""}
+{"q": "Какие характеристики пневмоинструмента учитывать и нужен ли профессиональный инструмент для дома?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "В каких случаях покупать компрессор для пневмоинструмента нецелесообразно?", "v": "net", "url": ""}
+{"q": "Какие шланги для компрессора выбрать для гаражной покраски и какой минимальный диаметр нужен для HVLP?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Какой компрессор выбрать — масляный или безмасляный — для дома и гаража?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Как правильно подключить компрессор к инструменту через шланг?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/10-pravil-servis/"}
+{"q": "Как настроить рабочее давление компрессора под конкретный инструмент?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Как правильно завершить работу с компрессором?", "v": "net", "url": ""}
+{"q": "Какой компрессор выбрать для накачки шин в гараже?", "v": "net", "url": ""}
+{"q": "Подходит ли безмасляный компрессор для небольшой автомастерской или бытовых работ?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Какое рабочее давление у поршневых компрессоров и как его регулировать?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/porshnevoi-kompressor/"}
+{"q": "Какие основные ошибки при выборе компрессора для покраски?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Из каких основных элементов состоит бустер?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Почему большинство бустеров поршневые, а не винтовые?", "v": "net", "url": ""}
+{"q": "Для чего нужен поршневой бустер и в каких задачах без него не обойтись?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Как выбрать бустер для мобильных объектов, крупной промышленности или встраивания в существующую сеть?", "v": "net", "url": ""}
+{"q": "Что выбрать: дизельный или электрический бустер?", "v": "net", "url": ""}
+{"q": "Какие ошибки чаще всего допускают при покупке/подборе бустера?", "v": "net", "url": ""}
+{"q": "Можно ли использовать бустер постоянно и что важнее — давление или производительность?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Как состояние клапанов влияет на работу поршневого бустера?", "v": "net", "url": ""}
+{"q": "Какой бустер выбрать при небольшом расходе воздуха и высоком давлении?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какие конкретные модели бустеров подходят под разную производительность?", "v": "net", "url": ""}
+{"q": "Как масляный радиатор расположен относительно основного радиатора водяного охлаждения?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "От чего зависит выбор газоохладителя для поршневого компрессора?", "v": "net", "url": ""}
+{"q": "Какими свойствами обладают газоохладители ГК-125 и ГК-63?", "v": "net", "url": ""}
+{"q": "Какие преимущества даёт воздушное охлаждение винтового компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Почему поршневому компрессору нужно больше времени на охлаждение и как это влияет на производительность?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Как система охлаждения влияет на работу компрессора, в т.ч. при высоких нагрузках?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Какой тип охлаждения выбрать для гидроприводного компрессора?", "v": "net", "url": ""}
+{"q": "Что делать с системой охлаждения компрессора зимой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Нужны ли встроенные осушитель и охладитель винтовому компрессору?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/interesnye-proekty-zimy-i-vesny/"}
+{"q": "Для чего нужно охлаждение в компрессоре высокого давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какие причины перегрузки двигателя вентилятора охлаждения?", "v": "net", "url": ""}
+{"q": "Выпускаются ли компрессорные станции в модульном исполнении российского производства?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Может ли промышленный компрессор или ресивер взорваться и почему?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Нужна ли декларация соответствия EAC на камеру абразивоструйной очистки?", "v": "net", "url": ""}
+{"q": "Является ли применение пищевых компрессорных масел обязательным требованием законодательства?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_dla_pishevogo_proizvodstva/"}
+{"q": "Какая разрешительная документация нужна на оборудование под давлением для проверок контролирующих органов в РФ?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/ustanovka_vintovogo_kompressora_trebovaniya_k_pomeshchiy/"}
+{"q": "Чем опасен ресивер с самодельным ремонтом (заваренные отверстия, приваренные штуцеры)?", "v": "net", "url": ""}
+{"q": "Какую роль играют ХАССП и оценка рисков при выборе качества сжатого воздуха на пищевом предприятии?", "v": "net", "url": ""}
+{"q": "Какими нормами и документами руководствоваться при выборе помещения для компрессора и когда его размещать отдельно?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/ustanovka_vintovogo_kompressora_trebovaniya_k_pomeshchiy/"}
+{"q": "Можно ли менять настройки реле давления и предохранительного клапана?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/10-pravil-servis/"}
+{"q": "Можно ли оставлять компрессор включённым в сеть без присмотра?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Из какого материала изготавливаются лопатки в лопастном компрессоре?", "v": "net", "url": ""}
+{"q": "Где используется роторно-пластинчатое компрессорное оборудование?", "v": "net", "url": ""}
+{"q": "Когда зародился центробежный принцип создания давления?", "v": "net", "url": ""}
+{"q": "Кто начал производство центробежных компрессоров в России?", "v": "net", "url": ""}
+{"q": "К какому типу компрессоров относится спиральный?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Как по серийному номеру и паспорту отличить оригинальный ресивер от подделки?", "v": "net", "url": ""}
+{"q": "Насколько спиральные компрессоры Remeza дешевле европейских и южнокорейских аналогов?", "v": "net", "url": ""}
+{"q": "Что известно о производителе Fubag и его оборудовании?", "v": "net", "url": ""}
+{"q": "Чем выделяются компрессоры Кратон и какие типы выпускает эта марка?", "v": "net", "url": ""}
+{"q": "Какие новые модели малых дизельных компрессоров выпустил Atlas Copco и чем отличаются от XAS 97?", "v": "net", "url": ""}
+{"q": "Можно ли доверять китайским вихревым воздуходувкам по надёжности?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/top_letnich_proektov_ot_kompressor_centra/"}
+{"q": "Что происходит с поддержкой и сервисом европейских компрессоров после ухода брендов с рынка?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "С какого времени завод АСО начал выпускать обновлённые поршневые компрессоры?", "v": "net", "url": ""}
+{"q": "Какие производители и бренды компрессоров со 100-литровым ресивером представлены на рынке?", "v": "net", "url": ""}
+{"q": "Какова доля импортных компрессоров на российском рынке?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kitay_rulit/"}
+{"q": "Какие компрессоры выпускает Dalgakiran и с какими опциями?", "v": "net", "url": ""}
+{"q": "Насколько популярна и надёжна головка С415М и как менялась её конструкция?", "v": "net", "url": ""}
+{"q": "Какие бывают российские производители воздушных ресиверов и чем отличаются их модели?", "v": "net", "url": ""}
+{"q": "Предпочитают ли российские клиенты отечественные компрессоры китайским?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Когда при бурении скважин нужен дожимной компрессор (бустер)?", "v": "net", "url": ""}
+{"q": "Какие преимущества даёт схема «винтовой компрессор + бустер» для бурения?", "v": "net", "url": ""}
+{"q": "Почему при бурении важно достаточное давление воздуха и что будет при его нехватке?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "В каких случаях действительно нужно давление 40 бар и выше?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "На какое давление рассчитаны обычные промышленные компрессоры и когда его перестаёт хватать?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Для чего применяются мембранные компрессоры?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/razvitie-bezmaslyanykh-tekhnologiy-v-kompressornykh-sistemakh/"}
+{"q": "Какие компрессоры применяют для давлений в десятки и сотни атмосфер?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какие газы можно сжимать дожимным компрессором?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/top_letnich_proektov_ot_kompressor_centra/"}
+{"q": "От каких параметров зависит выбор компрессора для дыхательного воздуха?", "v": "net", "url": ""}
+{"q": "Какие компрессоры используются для заправки баллонов воздухом для пожарных?", "v": "net", "url": ""}
+{"q": "Какие преимущества дают комплексные системы для дыхательного воздуха?", "v": "net", "url": ""}
+{"q": "Что проверить при покупке б/у компрессора и как оценить его износ?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/bu_kompressory_economya_ili_risk/"}
+{"q": "Как покупка б/у компрессора влияет на стоимость владения?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/bu_kompressory_economya_ili_risk/"}
+{"q": "Стоит ли покупать воздушный ресивер б/у?", "v": "net", "url": ""}
+{"q": "Что входит в комплект пескоструйной камеры/оборудования «под ключ» с компрессором?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Чем выгоднее покупать пескоструйный комплект с компрессором, чем компоненты по отдельности?", "v": "net", "url": ""}
+{"q": "Как взять оборудование в лизинг и как устроена лизинговая сделка?", "v": "net", "url": ""}
+{"q": "Какие налоговые преимущества даёт лизинг оборудования?", "v": "net", "url": ""}
+{"q": "Кто может взять оборудование в лизинг (юрлица, ИП, самозанятые, физлица)?", "v": "net", "url": ""}
+{"q": "Какие затраты входят в первоначальную стоимость приобретения компрессора кроме цены оборудования?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/cena-na-compressor/"}
+{"q": "Сколько стоит утилизация компрессора и можно ли компенсировать затраты?", "v": "net", "url": ""}
+{"q": "Сколько стоит передвижной компрессор по сравнению со стационарным?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Каковы недостатки пневмоинструмента и затраты на оснащение цеха пневмосистемой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "От чего зависит стоимость ремонта компрессора?", "v": "net", "url": ""}
+{"q": "Какая гарантия на спиральные компрессоры Renner?", "v": "net", "url": ""}
+{"q": "Какая гарантия и документация предоставляется на компрессоры российского производства?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_sankcii_povliyali_na_vvoz_i_obsluzhivanie/"}
+{"q": "Какие подводные камни у расширенной гарантии на компрессор?", "v": "net", "url": ""}
+{"q": "На что обратить внимание при покупке компрессора с приводом от КОМ / без привода?", "v": "net", "url": ""}
+{"q": "Какие документы нужно сверить при приёмке компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Какие эксплуатационные затраты учитывать при выборе дизельного компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Нужна ли дополнительная фильтрация и осушение воздуха после безмасляного компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Bezmaslyanye_vintovye_kompressory_vse_ob_ih_plusah_i_minusah/"}
+{"q": "Что делать, если компрессор выдал ошибку двигателя и не запускается?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Когда стоит выбрать компрессор с водяным охлаждением или выносными теплообменниками вместо воздушного?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Какие опции бывают у дизельных/передвижных компрессоров?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Может ли поставщик собрать, запустить и проверить оборудование до отправки (предпродажная подготовка)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/mozhnye_kompressory_i_unikalnye_proekty/"}
+{"q": "Как обслуживать фильтры и влагоотделители на линии покраски?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak-izbavitsya-ot-kondensata-v-pnevmolinii/"}
+{"q": "Нужен ли влагомаслоотделитель в пневмолинии пескоструйного оборудования?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Какие самоочищающиеся фильтры подбирают для обитаемых пескоструйных камер?", "v": "net", "url": ""}
+{"q": "Существует ли универсальный фильтр для сжатого воздуха?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Где подобрать воздушные и масляные фильтры по бренду/модели компрессора?", "v": "net", "url": ""}
+{"q": "Можно ли заменить недоступный импортный винтовой блок на блок Rotorcomp в отечественных компрессорах?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Насколько ремонтопригодны бежецкие компрессоры и каковы затраты на их содержание?", "v": "net", "url": ""}
+{"q": "Какие преимущества у российских винтовых компрессоров по ресурсу и доступности запчастей?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Из каких компонентов собирают российские компрессоры и насколько они действительно отечественные?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Насколько важен производитель при выборе промышленного осушителя?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/membrannye_osushiteli_dlya_kompressora/"}
+{"q": "Что представляет собой бренд JinHeung и каковы его особенности?", "v": "net", "url": ""}
+{"q": "Каких производителей компрессоров с приводом от КОМ выделяют?", "v": "net", "url": ""}
+{"q": "Как современные материалы влияют на вес и долговечность компрессора?", "v": "net", "url": ""}
+{"q": "Чем турецкие компрессоры отличаются от отечественных и импортных аналогов?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kitay_rulit/"}
+{"q": "Из каких комплектующих делают компрессоры этого бренда и насколько они качественные?", "v": "net", "url": ""}
+{"q": "Как по маркировке понять, что частотник входит в базовую комплектацию?", "v": "net", "url": ""}
+{"q": "Какие бренды масляных фильтров считаются надёжными?", "v": "net", "url": ""}
+{"q": "Для каких брендов поршневых блоков действует предложение по ремонту?", "v": "net", "url": ""}
+{"q": "Какие бренды передвижных дизельных компрессоров представлены?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какие бренды компрессорного оборудования представлены на российском рынке?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/inostrannye-brendy-mogut-vernutsya-na-rynok-rf/"}
+{"q": "Когда выбирать электрический винтовой компрессор, а когда дизельный?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какую производительность даёт дизельный компрессор мощностью около 40 кВт?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какие опции облегчают транспортировку и защиту от кражи?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Чем отличаются модели Airman PDSJ 1100DP-W и PDSJ 1550DP-W?", "v": "net", "url": ""}
+{"q": "Какие бывают передвижные дизельные компрессоры и где используются?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vysokiy-sezon-dizelnykh-vintovykh-kompressorov-/"}
+{"q": "Почему электрический компрессор сложно использовать на открытых площадках?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Как регулировать рабочее давление передвижного компрессора?", "v": "net", "url": ""}
+{"q": "Как обеспечивается длительное время работы между дозаправками?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Какие дизельные и передвижные компрессоры есть в ассортименте?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какие параметры учитывать при подборе спирального компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Как правильно подобрать производительность компрессора вместе с пневмолинией?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Как считать производительность при работе нескольких пескоструйных постов?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Чем центробежный (турбо) компрессор связан с воздуходувкой?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Насколько надёжны и требовательны к обслуживанию воздуходувки Рутса?", "v": "net", "url": ""}
+{"q": "Можно ли отремонтировать спиральный блок при износе?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Как правильно транспортировать компрессорные головки при перевозке в сервис?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/slomalsya_vintovoy_blok_vozdushnogo_kompressora/"}
+{"q": "Даёт ли сервисный центр гарантию на ремонт компрессоров и консультирует ли по эксплуатации?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Ремонтируют ли винтовые компрессоры популярных марок (Atlas Copco, АСО, Remeza и др.)?", "v": "net", "url": ""}
+{"q": "Можно ли заказать срочный разовый ремонт компрессора без договора на обслуживание?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/abonentskoe-obsluzhivanie-ili-sobstvennyy-servisnyy-tsentr/"}
+{"q": "Какие дополнительные услуги сервиса доступны для винтовых компрессоров Atmos помимо ремонта?", "v": "net", "url": ""}
+{"q": "Где можно купить запчасти и отремонтировать винтовой компрессор?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Zapasnye_chasti_k_kompressoram/"}
+{"q": "Выполняется ли ремонт и обслуживание осушителей Kaeser?", "v": "net", "url": ""}
+{"q": "От чего зависит стоимость капитального ремонта компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Нужно ли менять изношенные запчасти при восстановлении компрессорной установки (выход из строя экспандера)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vintovoi-blok/"}
+{"q": "Можно ли заказать ремонт компрессора вместе с поставкой комплектующих?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Zapasnye_chasti_k_kompressoram/"}
+{"q": "Какие темы разбираются на семинаре по обслуживанию компрессоров (сборка, ремонт, эксплуатация)?", "v": "net", "url": ""}
+{"q": "Можно ли заказать диагностику и ремонт компрессоров у дилера, а не у завода?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Какие работы по обслуживанию лучше доверить сервисной службе и официальному дилеру?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Trebovaniya%20k%20personalu%20dlya%20kompressornoy%20stantsii%3A%20kompetentsii%2C%20navyki%2C%20lichnyye%20kachestva/"}
+{"q": "Что делать со старым поршневым блоком после покупки нового?", "v": "net", "url": ""}
+{"q": "Зачем держать подменный компрессорный блок на предприятии?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/podbor_podmennogo_vozdushnogo_kompressora_dlya_predpriyatiya/"}
+{"q": "Для чего предназначены насосы сжиженных газов (НСГ) и какие газы они перекачивают?", "v": "net", "url": ""}
+{"q": "Какие преимущества даёт использование насосов сжиженных газов?", "v": "net", "url": ""}
+{"q": "Как учесть размер и портативность при выборе компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Нужен ли влагоотделитель при покраске компрессором?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Какой компрессор Fubag выбрать для гаража или дома?", "v": "net", "url": ""}
+{"q": "Подходит ли компрессор на 100 л для бытового пневмоинструмента?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Какие функции снижают шум и энергопотребление компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Какой уровень шума и какие защитные функции важны у компрессора высокого давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Какие бывают типы дожимных компрессоров?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Почему давление 150 бар востребовано для бустеров?", "v": "net", "url": ""}
+{"q": "Какой диапазон давления обеспечивают современные дожимные компрессоры высокого давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Можно ли получать дыхательную смесь нитрокс на компрессоре?", "v": "net", "url": ""}
+{"q": "Из чего состоит комплексная система сжатого воздуха высокого давления?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Можно ли перепродать б/у компрессор и как это влияет на выбор?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/bu_kompressory_economya_ili_risk/"}
+{"q": "На чём можно сэкономить при покупке б/у оборудования, а на чём нельзя?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/bu_kompressory_economya_ili_risk/"}
+{"q": "Можно ли купить дизельный компрессор с отгрузкой в день заказа?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sroki/"}
+{"q": "Можно ли заказать комплект оборудования с доставкой в другой регион или страну ТС?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sroki/"}
+{"q": "Куда возможна доставка компрессора и входит ли доставка в стоимость?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sroki/"}
+{"q": "Чем лизинг отличается от аренды?", "v": "net", "url": ""}
+{"q": "Можно ли вернуть оборудование лизингодателю, если оно не окупилось?", "v": "net", "url": ""}
+{"q": "От чего зависят производительность, качество, надёжность и цена компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/cena-na-compressor/"}
+{"q": "Где выгоднее покупать маломощный бытовой компрессор: в магазине или у поставщика?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Стоит ли покупать компрессор заранее, до сезонного повышения цен?", "v": "net", "url": ""}
+{"q": "Стоит ли заменить старый дизельный компрессор на Atlas Copco U175 по соотношению цена/качество?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/bu_kompressory_economya_ili_risk/"}
+{"q": "Есть ли доставка запчастей для компрессоров в регионы и какие сроки/способы получения?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sroki/"}
+{"q": "Что делать, если компрессор получил повреждения при доставке?", "v": "net", "url": ""}
+{"q": "Как проводится входной контроль материалов при производстве компрессорного оборудования?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/my-ubedilis-chto-u-nas-deystvitelno-silnye-partnery/"}
+{"q": "От чего зависит стоимость обслуживания и ремонта осушителя?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zachem-nuzhny-adsorbtsionnye-osushiteli/"}
+{"q": "От чего зависит стоимость насоса сжиженных газов или его деталей?", "v": "net", "url": ""}
+{"q": "Предоставляется ли гарантия и есть ли на складе детали для сборки насоса 22НСГ?", "v": "net", "url": ""}
+{"q": "Можно ли заказать поршневые гайки у производителя без посредников и какие гарантии и сроки?", "v": "net", "url": ""}
+{"q": "Какие документы сопровождают поставляемые запчасти для компрессоров?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Zapasnye_chasti_k_kompressoram/"}
+{"q": "Где купить винтовой компрессор российского производства и как подобрать модель под параметры?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Igra_v_zamezhenie/"}
+{"q": "Какие цены и условия на российские винтовые компрессоры 16 бар 7,5–30 кВт?", "v": "net", "url": ""}
+{"q": "Входят ли пусконаладочные работы в стоимость компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/10-pravil-servis/"}
+{"q": "Где найти (купить) магистральные фильтры для сжатого воздуха?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Чем грозит загрязнение магистральных фильтров осушителя?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Как обслуживать стерильные фильтры?", "v": "net", "url": ""}
+{"q": "Какие фильтры ставить на вход при высокой запылённости?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Как защитить компрессор от перегрева при перегрузке инструментом (краскопультом)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Почему зимой падает давление в системе компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-vintovoy-kompressor-ostanavlivaetsya-ili-ne-zapuskaetsya-prichiny-i-resheniya/"}
+{"q": "Что делать, если производительность компрессора на входе снизилась?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Как номинальное давление компрессора связано с маркировкой модели?", "v": "net", "url": ""}
+{"q": "Почему компрессор работает, но давление в сети не растёт?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Что такое классы чистоты сжатого воздуха, как они устроены и чем отличаются?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Как защитить пневмотрассу вне отапливаемого помещения от замерзания конденсата?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/modulnye_kompressornye_stancii_kotorye_rabotaut_u_klientov_kompressor_centra/"}
+{"q": "Подходит ли маслозаполненный винтовой компрессор для окраски, пищевого производства и лазерной резки?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Может ли некачественное/загрязнённое компрессорное масло загрязнять сжатый воздух?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Можно ли получить сухой воздух без масла на выходе винтового компрессора с осушителем и фильтрами?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vashemu-lazeru-nuzhen-pravilnyy-kompressor/"}
+{"q": "Можно ли обойтись без осушителя в базовой комплектации компрессора и когда осушитель особенно необходим?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Как влажность сжатого воздуха влияет на качество конечной продукции?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zagryaznenie/"}
+{"q": "Влияет ли температура окружающей среды на точку росы и влажность в пневмосистеме?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/podogrevateli/"}
+{"q": "Помогают ли подобрать систему подготовки воздуха и обучить персонал?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybrat_i_ne_oshibitsya/"}
+{"q": "Какой комплект оборудования нужен для чистого и сухого воздуха в покраске, фармацевтике и пищевой промышленности?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/interesnye-proekty-zimy-i-vesny/"}
+{"q": "В каких формах влага присутствует в сжатом воздухе (пар, аэрозоль, конденсат)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/zagryaznenie/"}
+{"q": "Нужна ли дополнительная осушка и очистка воздуха для бустера?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/vysokoe-davlenie-i-nizkoe-davlenie-szhatogo-vozdukha-dlya-kakikh-tseley-ispolzuyutsya-takie-kompress/"}
+{"q": "Почему очистка воздуха от масла и влаги полезна для пневмосети?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/magistralniy-filtr/"}
+{"q": "Как класс чистоты воздуха влияет на выбор труб и оборудования подготовки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Какие работы входят в пусконаладку пневмолинии пескоструйной камеры?", "v": "net", "url": ""}
+{"q": "Какое компрессорное и смежное оборудование можно купить у поставщика пескоструйной техники?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-dlya-peskostruynoy-obrabotki-kak-vybrat-podkhodyashchuyu-model/"}
+{"q": "Какие крупные проекты по поставке винтовых компрессоров реализует завод «АСО» с дилерами?", "v": "net", "url": ""}
+{"q": "Где применяются винтовые и поршневые компрессоры?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda_vintovoy_kompressor_luchshee_reshenie/"}
+{"q": "Как работают ротационные компрессоры?", "v": "net", "url": ""}
+{"q": "Что такое вакуумный компрессор?", "v": "net", "url": ""}
+{"q": "Как найти инструкцию по эксплуатации компрессора с частотным преобразователем?", "v": "net", "url": ""}
+{"q": "Что входит в диагностику частотного преобразователя при обслуживании?", "v": "net", "url": ""}
+{"q": "Что означает суффикс ВС (частотный преобразователь) в обозначении компрессора?", "v": "net", "url": ""}
+{"q": "В чём выгода частотного привода (VSD) в винтовом компрессоре?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Что проверить при перегреве компрессора с водяным охлаждением?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/peregrev-vintovogo-bloka-prichiny-i-posledstviya/"}
+{"q": "Какие требования к качеству воды для водяного охлаждения компрессора?", "v": "net", "url": ""}
+{"q": "Зачем дизельному компрессору охлаждение и как оно работает?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Как обслуживать воздушное охлаждение электродвигателя компрессора?", "v": "net", "url": ""}
+{"q": "Как подключить водяное охлаждение компрессора?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/pravilnaya-organizatsiya-ventilyatsii-kompressornogo-oborudovaniya/"}
+{"q": "Как охлаждается дожимной компрессор в процессе работы?", "v": "net", "url": ""}
+{"q": "Увеличивает ли охлаждение винтового компрессора эксплуатационные расходы?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zachem-vozdushnomu-kompressoru-nuzhna-gradirnya-/"}
+{"q": "Как купить компрессор конкретного бренда (ЧКЗ, IRONMAC, Atlas Copco)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/cena-na-compressor/"}
+{"q": "Какие гарантии по запчастям и сервису дают производители дыхательных компрессоров?", "v": "net", "url": ""}
+{"q": "Как выбрать надёжный промышленный компрессор для тяжёлых условий производства?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/100-kompressor/"}
+{"q": "По каким показателям и параметрам оценивают степень загрязнённости и качество сжатого воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/klassi-zagryaznennosti/"}
+{"q": "Гарантирует ли безмасляный компрессор полное отсутствие масла и что такое «технически безмасляный» воздух?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/spiralnye_kompressory_novyj_vitok_tehnicheskih_reshenij/"}
+{"q": "Как состав окружающего/атмосферного воздуха и его влажность влияют на выбор оборудования очистки воздуха?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kogda-v-pnevmoseti-ne-tolko-vozdukh/"}
+{"q": "Какой компрессор выбрать для стройки с учётом шума и надёжности?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Как транспортируют передвижные компрессоры и как выбрать способ транспортировки?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/tri_projekta%3Agde_i_kak_rabotayut_nashi_dizelnye_kompressory/"}
+{"q": "Чем впускные воздушные фильтры компрессора отличаются от магистральных?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Как неисправные клапаны влияют на давление в пневмосети?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Влияет ли квалификация персонала на поломки и безопасность компрессора, почему монтаж требует особой квалификации?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Как соблюдать пожарную безопасность и снизить риск пожара/взрыва при работе компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Почему китайский компрессор может стоить столько же, сколько немецкий или итальянский, и за что переплачивает покупатель европейского бренда?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/S_audi_na_geely/"}
+{"q": "Почему падает давление при подключении новых пневмоинструментов и хватит ли мощности на несколько инструментов одновременно?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Какой привод винтового/поршневого компрессора проще и ремонтопригоднее (ременный или прямой)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vintovoy-kompressor-remennoy-ili-pryamoy-privod-chto-vybrat/"}
+{"q": "Где и для каких задач используют бытовые компрессоры и воздуходувки низкого давления?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Дают ли азиатские производители гарантию и сервис в России и как защититься от некачественного китайского компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/S_audi_na_geely/"}
+{"q": "Как подобрать размер/типоразмер воздушного и магистрального фильтра под расход компрессора?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vozdushnii-filtr/"}
+{"q": "Почему в пневмосети размножаются микроорганизмы, откуда они берутся и как это предотвратить?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/zagryaznenie/"}
+{"q": "Зачем подогревать сжатый воздух и для чего нужен подогреватель/донагреватель (устройство, какой воздух даёт)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/podogrevateli/"}
+{"q": "Как масло в сжатом воздухе влияет на пневмооборудование и как от него защититься?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Maslo_letit_v_pnevmomagistral/"}
+{"q": "Когда выбрать центробежный компрессор, а когда винтовой (сравнение, принцип сжатия)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/dopolnitelnoe-oborudovanie-dlya-tsentrobezhnykh-kompressorov-est-li-otlichiya-s-vintovymi-/"}
+{"q": "Какие системы и способы охлаждения бывают у компрессоров?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kak_izbezhat_peregreva_kompressora/"}
+{"q": "Какие требования предъявляются к персоналу, работающему с компрессором?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/Vzryvnoy_potenzial_pravila_bezopasnosti/"}
+{"q": "Можно ли перевозить дизельный компрессор в кузове автомобиля или без шасси?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Как подобрать подменный/резервный компрессор для парка дизельных компрессоров?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/podbor_podmennogo_vozdushnogo_kompressora_dlya_predpriyatiya/"}
+{"q": "Как быстро сервисная служба может выехать и заменить вышедший из строя узел/компрессор на объекте?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/skoraya_pomosh%27_dlya_kompressora/"}
+{"q": "Какие конструктивные особенности делают компрессор компактным и удобным для транспортировки?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Что представляет собой дизельный поршневой бустер BAYSAR BSR-1800/25-150-C и для каких задач?", "v": "net", "url": ""}
+{"q": "Сколько пневмоинструментов можно одновременно подключить к компрессору?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Какой компрессор подходит для буровых работ и по каким критериям выбирать (включая тяжёлые условия)?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/interesnye-proekty-zimy-i-vesny/"}
+{"q": "Как классифицируют дизельные компрессоры по мощности двигателя?", "v": "net", "url": ""}
+{"q": "Какой компрессор для крупных строительных/инфраструктурных объектов с большим расходом?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/universalny_soldat_na_stroitelnoy_plozchadke/"}
+{"q": "Когда нужен дизельный бустер и для каких объектов он подходит?", "v": "net", "url": ""}
+{"q": "Характеристики Airman PDSJ 1550DP-W (производительность, давление, мощность)?", "v": "net", "url": ""}
+{"q": "Габариты и масса мобильного дизельного компрессора большой производительности?", "v": "net", "url": ""}
+{"q": "Чем Airman PDSJ 1550DP-W отличается от Atlas Copco XAVS 1800 и XRVS 1350?", "v": "net", "url": ""}
+{"q": "Характеристики Atlas Copco Y 35 (давление, производительность, двигатель)?", "v": "net", "url": ""}
+{"q": "Уровень шума и вынос масла дизельного компрессора и условия эксплуатации?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Характеристики и габариты/шум Airman PDSG1300S?", "v": "net", "url": ""}
+{"q": "Чем Airman PDSG1300S отличается от Airman PDSJ1550DP-W?", "v": "net", "url": ""}
+{"q": "Характеристики, конструкция и опции Airman PDSK 1200S-W?", "v": "net", "url": ""}
+{"q": "Характеристики и преимущества Airman PDSJ 1100DP-W?", "v": "net", "url": ""}
+{"q": "Характеристики Atlas Copco XRXS 567 (давление, производительность, двигатель)?", "v": "net", "url": ""}
+{"q": "Характеристики и транспортировка Atlas Copco XAH 1066, устройство TwinAir, резервирование и охлаждение?", "v": "net", "url": ""}
+{"q": "Характеристики Airman PDS130SC-W?", "v": "net", "url": ""}
+{"q": "Чем Airman PDS130SC-W отличается от Atlas Copco XAS 58-7 и XAS 68-10?", "v": "net", "url": ""}
+{"q": "С какой скоростью могут передвигаться мобильные компрессоры?", "v": "net", "url": ""}
+{"q": "Как классифицируют компрессорные станции по производительности?", "v": "net", "url": ""}
+{"q": "Как классифицируют винтовые компрессоры по мощности и какую производительность они дают?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/vybiraem_vozdushnye_kompressory_s_chastotnikom/"}
+{"q": "Какое рабочее давление выбрать для дизельного компрессора под разные задачи?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/sezon_dizelnyh_compressorov/"}
+{"q": "Какая производительность нужна для пневмогайковёрта?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Какая производительность нужна для быстрой заправки баллона (ПСД/дайвинг)?", "v": "net", "url": ""}
+{"q": "Какое давление и производительность нужны для бурения скважин?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/interesnye-proekty-zimy-i-vesny/"}
+{"q": "Как подобрать производительность и линию под пневматический диафрагменный насос?", "v": "net", "url": ""}
+{"q": "При каком расходе оптимальны винтовые, а при каком центробежные компрессоры?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/my-ubedilis-chto-u-nas-deystvitelno-silnye-partnery/"}
+{"q": "Как выбрать мощность/сеть питания компрессора (220 В vs 380 В) и ограничения винтового на 220 В?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/Vybiraem_vintovoy_kompressor_dlya_predpriyatiya/"}
+{"q": "Как выбрать тип безмасляного компрессора по производительности?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/razvitie-bezmaslyanykh-tekhnologiy-v-kompressornykh-sistemakh/"}
+{"q": "Какие параметры учитывать при выборе компрессора в аренду и чем отличаются модели по производительности?", "v": "net", "url": ""}
+{"q": "Какая производительность нужна для бытовых и профессиональных задач?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/kompressory_nizkogo_davleniya_i_vozduhoduvki/"}
+{"q": "Как рассчитать требуемое давление компрессора с учётом потерь в магистрали?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/pochemu-teryaetsya-davlenie-szhatogo-vozdukha-v-pnevmoseti-/"}
+{"q": "Почему не стоит брать компрессор с запасом по давлению и что будет при избыточном давлении?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/tipichnye-oshibki-pri-proektirovanii-modulnykh-kompressornykh-stantsiy/"}
+{"q": "Как рассчитать производительность компрессора по числу постов (для автосервиса)?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kakoq_kompressor_vybrat_dlya_avtoservisa/"}
+{"q": "Когда стоит взять компрессор на шаг мощнее?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/proizvoditelnost_kompressora_njuansy/"}
+{"q": "Как кожух влияет на производительность компрессора?", "v": "net", "url": ""}
+{"q": "Какое рабочее давление требуется для отбойного молотка?", "v": "zakryt", "url": "/blog/poleznaya-informatsiya/kompressor-na-stroyploshchadke-kak-podobrat-model-dlya-raboty-pnevmoinstrumenta/"}
+{"q": "Чем безмасляная винтовая воздуходувка отличается от Roots и маслозаполненного компрессора и как сравнивается стоимость владения?", "v": "chastichno", "url": "/blog/poleznaya-informatsiya/transportirovka-sukhikh-veshchestv-szhatym-vozdukhom/"}
