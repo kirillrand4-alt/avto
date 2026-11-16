@@ -8,3 +8,11 @@ ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/380-380-66
 ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/master-blast-/ JSONDecodeError("Expecting ',' delimiter: line 19 column 516 (char 10292)")
 ERR /catalog/vozdushnye-kompressory/ssha/ JSONDecodeError("Expecting ',' delimiter: line 21 column 346 (char 10756)")
 профилей 626
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/110-to-110/ JSONDecodeError("Expecting ',' delimiter: line 16 column 509 (char 8762)")
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/atmos/ JSONDecodeError("Expecting ',' delimiter: line 15 column 517 (char 8430)")
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/master-blast-/ JSONDecodeError("Expecting ',' delimiter: line 19 column 493 (char 9826)")
+профилей 701
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/110-to-110/ JSONDecodeError("Expecting ',' delimiter: line 13 column 609 (char 7282)")
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/atmos/ JSONDecodeError("Expecting ',' delimiter: line 19 column 545 (char 9931)")
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/master-blast-/ JSONDecodeError("Expecting ',' delimiter: line 18 column 570 (char 9682)")
+профилей 701
