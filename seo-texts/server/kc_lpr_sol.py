@@ -15,6 +15,12 @@ DIR = r'C:\sender\server'
 ПАПКА = os.path.join(DIR, 'ca')
 ДРОП = r'C:\seostat\drop\drop-storage'
 if '--vnutri' not in sys.argv:
+    уже = subprocess.run(['powershell', '-NoProfile', '-Command', "Get-CimInstance Win32_Process | Where-Object { $_.Name -like "
+                          "'python*' -and $_.CommandLine -like '*kc_lpr_sol.py*--vnutri*' } | ForEach-Object { $_.ProcessId }"],
+                         capture_output=True, text=True, timeout=120).stdout.split()
+    if уже:  # повтор вызова после обрыва связи не должен запустить вторую копию
+        print('===ИТОГ=== уже идёт', уже)
+        sys.exit(0)
     with open(os.path.join(ПАПКА, 'kc_lpr_sol_%s.log' % time.strftime('%d%m-%H%M')), 'wb') as в:
         subprocess.Popen([sys.executable, '-u', os.path.abspath(__file__), '--vnutri'], cwd=DIR,
                          creationflags=0x08 | 0x200 | 0x4000, stdin=subprocess.DEVNULL, stdout=в, stderr=subprocess.STDOUT,
@@ -102,10 +108,14 @@ def main():
     if os.path.exists(ВЫХОД):
         for s in io.open(ВЫХОД, encoding='utf-8', errors='replace'):
             try:
-                сделано.add(json.loads(s)['ключ'])
-            except (ValueError, KeyError):
-                pass
+                r = json.loads(s)
+            except ValueError:
+                continue
+            if r.get('размещение') == 'на странице' and not r.get('Sol: чей'):
+                continue  # модель не ответила — повторить (итог берёт последнюю запись по ключу)
+            сделано.add(r.get('ключ'))
     задачи = [x for x in все if ключ(x) not in сделано]
+    задачи.sort(key=lambda x: not re.sub(r'\D', '', x.get('телефон') or ''))  # телефоны вперёд (владелец собирает обзвон)
     сч = {'точно': 0, 'на странице': 0, 'нет на странице': 0, 'страница не открылась': 0, 'нет ответа модели': 0}
     n = [0]
 
