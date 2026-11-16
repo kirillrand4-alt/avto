@@ -49,11 +49,38 @@ def categories():
             continue
         if r.get('canonical') and r['canonical'] != r['url']:
             continue
-        if r['url'] == '/catalog/':
-            continue
+        if r['url'] == '/catalog/' or (r['url'].count('/') <= 3 and not r.get('sub')):
+            continue  # карточка товара, не раздел
         r['prio'] = 1 if r['url'] in acc else 0
         out[r['url']] = r
     return out
+
+
+_W = re.compile(r'[а-яёa-z0-9]+', re.I)
+
+
+def stems(t):
+    return {w.lower()[:6] for w in _W.findall(t or '') if len(w) > 2}
+
+
+def shortlist(cats, article, k=60):
+    """Предотбор без LLM: ~60 разделов, ближайших к статье по словам (TF-IDF по основам),
+    + все приоритетные + разделы верхних уровней (родители)."""
+    import math
+    prof = {r['url']: r for r in jl('cat-profile.jsonl')}
+    docs = {u: stems(' '.join([c['h1'], ' '.join(c.get('crumbs', [])),
+                               prof.get(u, {}).get('srez', ''), prof.get(u, {}).get('prodaet', '')]))
+            for u, c in cats.items()}
+    df = collections.Counter(w for d in docs.values() for w in d)
+    N = len(docs)
+    text = article['h1'] + ' ' + ' '.join(p['text'] for p in article['paras'])
+    tf = collections.Counter(w.lower()[:6] for w in _W.findall(text) if len(w) > 2)
+    score = {u: sum(math.log(1 + tf[w]) * math.log(N / df[w]) for w in d if w in tf) / math.sqrt(len(d) or 1)
+             for u, d in docs.items()}
+    top = sorted(score, key=lambda u: -score[u])[:k]
+    par = {'/'.join(u.split('/')[:k2]) + '/' for u in top for k2 in (3, 4)}
+    extra = [u for u, c in cats.items() if c['prio'] or u.count('/') <= 3 or u in par]
+    return {u: cats[u] for u in dict.fromkeys(top + extra)}
 
 
 def cat_lines(cats):
@@ -106,14 +133,13 @@ def para_lines(a):
 
 def st_pick():
     cats = categories()
-    cl = cat_lines(cats)
-    print('разделов в списке', len(cats), flush=True)
+    print('разделов всего', len(cats), flush=True)
     done = {r['url'] for r in jl('link-pick.jsonl')}
     arts = [a for a in jl('blog.jsonl') if a.get('status') == 200 and a['url'] not in done]
 
     def one(a):
         try:
-            r = ask(PICK.format(cats=cl, url=a['url'], h1=a['h1'],
+            r = ask(PICK.format(cats=cat_lines(shortlist(cats, a)), url=a['url'], h1=a['h1'],
                                 existing=', '.join(sorted({l['href'] for l in a.get('links', [])})) or 'нет',
                                 paras=para_lines(a)))
         except Exception as e:
@@ -149,7 +175,6 @@ REVIEW = """Ты ревьюер внутренней перелинковки (S
 
 def st_review():
     cats = categories()
-    cl = cat_lines(cats)
     arts = {a['url']: a for a in jl('blog.jsonl')}
     done = {r['url'] for r in jl('link-review.jsonl')}
     todo = [r for r in jl('link-pick.jsonl') if r['url'] not in done and r['links']]
@@ -160,7 +185,7 @@ def st_review():
                           f"{' | вставка: ' + l['new_sentence'] if l.get('new_sentence') else ''} | {l.get('why', '')}"
                           for i, l in enumerate(r['links']))
         try:
-            v = ask(REVIEW.format(cats=cl, url=a['url'], h1=a['h1'], paras=para_lines(a), links=links))
+            v = ask(REVIEW.format(cats=cat_lines(shortlist(cats, a)), url=a['url'], h1=a['h1'], paras=para_lines(a), links=links))
         except Exception as e:
             print('ERR', r['url'], repr(e)[:120], flush=True)
             return

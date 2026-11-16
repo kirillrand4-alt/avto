@@ -40,10 +40,16 @@ def append(name, rec):
         f.flush(); os.fsync(f.fileno())
 
 
+def is_section(r):
+    # /catalog/slug/ без вложенных разделов = карточка товара (sitemap устарел, их там нет)
+    return r['url'].count('/') > 3 or bool(r.get('sub'))
+
+
 def live_cats():
     return [r for r in jl('categories.jsonl') if r.get('status') == 200 and not r.get('noindex')
             and r.get('h1') and (not r.get('final_url') or r['final_url'] == r['url'])
-            and (not r.get('canonical') or r['canonical'] == r['url']) and r['url'] != '/catalog/']
+            and (not r.get('canonical') or r['canonical'] == r['url']) and r['url'] != '/catalog/'
+            and is_section(r)]
 
 
 def st_fetch():

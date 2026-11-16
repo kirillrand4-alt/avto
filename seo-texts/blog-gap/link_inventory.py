@@ -68,8 +68,8 @@ def get(url):
     return None
 
 
-def cats():
-    prod = products()
+def cats(seeds=()):
+    prod = products() - set(seeds)
     done = {r['url'] for r in jl('categories.jsonl')}
     queue = collections.deque(['/catalog/'] + [r['url'] for r in jl('categories.jsonl') for _ in [0]])
     seen = set(queue)
@@ -78,7 +78,8 @@ def cats():
         for s in r.get('sub', []):
             if s not in seen:
                 seen.add(s); queue.append(s)
-    queue = collections.deque([u for u in queue if u not in done])
+    queue = collections.deque(list(seeds) + [u for u in queue if u not in done and u not in seeds])
+    seen |= set(seeds)
 
     def one(path):
         r = get(SITE + path)
@@ -184,4 +185,7 @@ def blog():
 
 
 if __name__ == '__main__':
-    {'cats': cats, 'blog': blog}[sys.argv[1]]()
+    if sys.argv[1] == 'seed':  # дообойти разделы, которые sitemap выдаёт за товары
+        cats([l.strip() for l in open(sys.argv[2]) if l.strip()])
+    else:
+        {'cats': cats, 'blog': blog}[sys.argv[1]]()
