@@ -25,6 +25,31 @@ KEY, UID = os.environ['SR_TREND_KEY'], int(os.environ['SR_UID'])
 SIZE = int(os.environ.get('POS_SIZE', '500'))
 
 
+def mint(c):
+    """Новая сессия Semrush: групбай выдаёт PHPSESSID/SSO-JWT при открытии страницы,
+    а лимит отчётов позиций считается на сессию (~1 отчёт). Обновляем файл cookie."""
+    import re
+    ck = open(CK, encoding='utf-8').read().strip()
+    base = re.sub(r';\s*(PHPSESSID|SSO-JWT)=[^;]+', '', ck)
+    r = c.get('https://sr.groupbuyseo.org/analytics/overview/', headers={
+        'cookie': base, 'user-agent': SR.UA, 'accept': 'text/html'})
+    jar = {}
+    for sc in r.headers.get_list('set-cookie'):
+        k, v = sc.split(';')[0].split('=', 1)
+        if v and v != 'deleted':
+            jar[k] = v
+    if 'PHPSESSID' not in jar or 'SSO-JWT' not in jar:
+        raise RuntimeError(f'сессия не выдана: HTTP {r.status_code}')
+    new = base
+    for k in ('_gbs_jwt',):
+        if k in jar:
+            new = re.sub(k + r'=[^;]+', k + '=' + jar[k], new)
+    new += '; PHPSESSID=%s; SSO-JWT=%s' % (jar['PHPSESSID'], jar['SSO-JWT'])
+    fd = os.open(CK, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0o600)
+    os.write(fd, new.encode())
+    os.close(fd)
+
+
 def positions(c, dom):
     a = {'database': 'ru', 'searchItem': dom, 'searchType': 'domain', 'dateFormat': 'date', 'dateType': 'daily',
          'filter': {}, 'positionsType': 'all',
@@ -47,7 +72,19 @@ def main():
     with httpx.Client(timeout=120) as c, open(OUT, 'a', encoding='utf-8') as f:
         for i, d in enumerate(todo, 1):
             try:
-                r = positions(c, d)
+                for _ in range(int(os.environ.get('SR_TRIES', '12'))):
+                    try:
+                        import gbs_refresh
+                        gbs_refresh.refresh(CK)          # _gbs_jwt живёт 30 мин
+                    except BaseException:  # noqa: BLE001
+                        pass
+                    if os.environ.get('SR_MINT'):
+                        mint(c)
+                    r = positions(c, d)
+                    if 'limit' not in str(r.get('error', '')).lower():
+                        break
+                    # ~1 отчёт позиций на пользователя Semrush за ~5 мин (проверено 16.11)
+                    time.sleep(int(os.environ.get('SR_WAIT', '120')))
                 if r.get('error'):
                     rec = {'domain': d, 'error': r['error'].get('message')}
                 else:
@@ -59,7 +96,7 @@ def main():
             f.flush()
             os.fsync(f.fileno())
             print(i, d, len(rec.get('rows') or []) if 'rows' in rec else rec['error'], flush=True)
-            if 'limit' in str(rec.get('error', '')).lower():
+            if 'limit' in str(rec.get('error', '')).lower() and not os.environ.get('SR_MINT'):
                 break
             time.sleep(0.5)
 
