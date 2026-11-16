@@ -53,5 +53,5 @@ with io.open(r"C:\sender\_ops\meyer-partiya-dubli.jsonl", "w", encoding="utf-8")
 ст = Counter(json.loads(с).get("status") for с in io.open(r"C:\sender\_ops\meyer-partiya.jsonl", encoding="utf-8"))
 print("статусы журнала:", dict(ст), "| дублей к пересборке:", len(дубли))
 if ПОК:
-    for з in зз[:ПОК]:
+    for з in зз[-ПОК:]:
         print("\n=== %s | %s | перефраз %s\nТема: %s\n\n%s" % (з["shablon"], з["kompaniya"], з["perefraz"], з["tema"], з["pismo"]))
