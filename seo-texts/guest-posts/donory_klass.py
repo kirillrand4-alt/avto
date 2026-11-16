@@ -33,7 +33,7 @@ PROMPT = """Размечаешь поисковую видимость сайт�
 def label(dom, rows):
     lines = '\n'.join(f'{i} | {r[0]} | {r[1]} | {r[2]}' for i, r in enumerate(rows))
     txt = GP.call(None, [{'role': 'user', 'content': PROMPT + f'\nСайт: {dom}\n' + lines}],
-                  model='claude-opus-5-5', thinking_on=False, max_tokens=8000)
+                  model='claude-sonnet-5-5', thinking_on=False, max_tokens=8000)
     txt = txt if isinstance(txt, str) else ''.join(b.text for b in txt.content if b.type == 'text')
     return json.loads(re.search(r'\{.*\}', txt, re.S).group(0))
 

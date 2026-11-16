@@ -17,7 +17,7 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(DIR))
 import gen_provider as GP  # noqa: E402
 
-MODEL = os.environ.get('LP_MODEL', 'claude-opus-5-5')
+MODEL = os.environ.get('LP_MODEL', 'claude-sonnet-5-5')
 LOCK = threading.Lock()
 MAX_PER_ARTICLE, MAX_PER_CAT, EXACT_SHARE = 5, 10, 0.3
 P = lambda n: os.path.join(DIR, n)  # noqa: E731

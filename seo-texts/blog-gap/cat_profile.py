@@ -130,7 +130,7 @@ def st_profile():
     def batch(us):
         try:
             m = GP.call(None, [{'role': 'user', 'content': PROMPT.format(rows='\n\n'.join(row(u) for u in us))}],
-                        model='claude-opus-5-5', thinking_on=False, max_tokens=8000)
+                        model='claude-sonnet-5-5', thinking_on=False, max_tokens=8000)
             txt = m if isinstance(m, str) else ''.join(b.text for b in m.content if b.type == 'text')
             res = json.loads(re.search(r'\{.*\}', txt, re.S).group(0))
         except Exception as e:

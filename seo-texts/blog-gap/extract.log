@@ -1,1 +1,25 @@
 статей к разметке 888, уже 349
+50
+100
+ERR https://zenova.ru/articles/zenova-rb-testiruem JSONDecodeError("Expecting ',' delimiter: line 1 column 2559 (char 2558)")
+150
+200
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
+250
+300
+350
+400
+450
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 2/7 через 30 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
+сбой провайдера, ретрай 3/7 через 60 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"claude-sonnet-5-5 is not served by the selected source Claude Kiro right now. Sources that serve it: K
