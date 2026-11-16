@@ -31,12 +31,18 @@ LOCK = threading.Lock()
 DEPTH = {'upomyanuto': 1, 'raskryto': 2, 'raskryto_s_ciframi': 3}
 
 
-def ask(prompt, max_tokens=8000):
-    m = GP.call(None, [{'role': 'user', 'content': prompt}], model=MODEL, thinking_on=False,
-                max_tokens=max_tokens)
-    txt = m if isinstance(m, str) else ''.join(b.text for b in m.content if b.type == 'text')
-    s = re.search(r'[\{\[].*[\}\]]', txt, re.S)
-    return json.loads(s.group(0))
+def ask(prompt, max_tokens=8000, tries=3):
+    last = None
+    for _ in range(tries):
+        m = GP.call(None, [{'role': 'user', 'content': prompt}], model=MODEL, thinking_on=False,
+                    max_tokens=max_tokens)
+        txt = m if isinstance(m, str) else ''.join(b.text for b in m.content if b.type == 'text')
+        i = min([k for k in (txt.find('{'), txt.find('[')) if k >= 0] or [-1])
+        try:
+            return json.JSONDecoder().raw_decode(txt[i:])[0]  # первый JSON, хвост игнорируем
+        except Exception as e:
+            last = e
+    raise last
 
 
 def jl(name):
@@ -207,8 +213,14 @@ def st_canon():
         append('canon.jsonl', {'topic': tid, 'name': tax.get(tid, tid), 'canon': groups})
         print(tid, len(its), '->', len(groups), flush=True)
 
+    def safe(tid):
+        try:
+            topic(tid)
+        except Exception as e:
+            print('ERR', tid, repr(e)[:150], flush=True)
+
     with cf.ThreadPoolExecutor(4) as ex:
-        list(ex.map(topic, list(items)))
+        list(ex.map(safe, list(items)))
 
 
 # ---------- gaps
@@ -263,7 +275,11 @@ def st_verify():
 
     def batch(part):
         lines = '\n'.join(f"{i} | {c['q']}" for i, c in enumerate(part))
-        res = ask(VERIFY.format(ours=ours, cands=lines), 6000)
+        try:
+            res = ask(VERIFY.format(ours=ours, cands=lines), 6000)
+        except Exception as e:
+            print('ERR verify', repr(e)[:150], flush=True)
+            return
         for row in res['v']:
             i = int(row[0])
             if 0 <= i < len(part):

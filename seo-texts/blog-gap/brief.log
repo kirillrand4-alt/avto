@@ -7,3 +7,9 @@ electrics 47 -> 10
 installation 41 -> 10
 spare_parts 116 -> 16
 oil 74 -> 13
+dryers 37 -> 7
+condensate 30 -> 8
+maintenance 105 -> 19
+energy 30 -> 8
+airend 34 -> 7
+ERR controls JSONDecodeError('Extra data: line 162 column 1 (char 17940)')
