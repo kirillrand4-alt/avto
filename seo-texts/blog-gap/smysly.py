@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.dirname(DIR))
 import gen_provider as GP  # noqa: E402
 
 OUR = 'prokompressor.ru'
-MODEL = os.environ.get('SM_MODEL', 'claude-opus-5-5')
+MODEL = os.environ.get('SM_MODEL', 'claude-sonnet-5-5')
 P = lambda n: os.path.join(DIR, n)  # noqa: E731
 LOCK = threading.Lock()
 DEPTH = {'upomyanuto': 1, 'raskryto': 2, 'raskryto_s_ciframi': 3}
@@ -113,19 +113,32 @@ URL: {url}
 {text}"""
 
 
+TOPIC = re.compile(r'компрессор|сжат\w* воздух|пневм|ресивер|осушит|азот|кислород|винтов|поршнев|'
+                   r'конденсат|воздуходув|дожим|бустер|точк\w* рос|компрессорн|запчаст|обслуживан|сепаратор|'
+                   r'масл\w* фильтр|remeza|atlas|kaeser|ingersoll|fini|abac|ceccato|dalgakiran|ekomak|'
+                   r'comprag|boge|enger|berg', re.I)
+
+
+def on_topic(p):
+    # дешёвый предфильтр без провайдера: наши статьи - все; чужие - если тема видна в заголовках
+    if p['domain'] == OUR:
+        return True
+    return bool(TOPIC.search(' '.join([p.get('title', ''), p.get('h1', '')] + p.get('heads', [])[:15])))
+
+
 def st_extract():
     tax = json.load(open(P('taxonomy.json'), encoding='utf-8'))['topics']
     taxs = '\n'.join(f"{t['id']}: {t['name']} ({t['covers']})" for t in tax)
     ids = {t['id'] for t in tax}
     done = {r['url'] for r in jl('smysly.jsonl')}
-    todo = [p for p in pages() if p['url'] not in done]
+    todo = [p for p in pages() if p['url'] not in done and on_topic(p)]
     todo.sort(key=lambda p: p['domain'] != OUR)  # наши первыми
     print(f'статей к разметке {len(todo)}, уже {len(done)}', flush=True)
 
     def one(p):
         try:
             r = ask(EXTRACT.format(tax=taxs, url=p['url'], h1=p['h1'] or p['title'],
-                                   text=p['text'][:12000]), 4000)
+                                   text=p['text'][:6000]), 3000)
         except Exception as e:
             print('ERR', p['url'], repr(e)[:120], flush=True)
             return
