@@ -1,1 +1,10 @@
 к заходу 722
+готово 776
+ERR /catalog/osushiteli/refrizheratornye/xeleron/ JSONDecodeError("Expecting ',' delimiter: line 25 column 521 (char 13136)")
+сбой провайдера, ретрай 1/7 через 15 с: сбой стрима: TimeoutError('claude-opus-5-5: стрим молчит 102с (шлюз шлёт только ping)')
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/110-to-110/ JSONDecodeError("Expecting ',' delimiter: line 18 column 584 (char 9972)")
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/atmos/ JSONDecodeError("Expecting ',' delimiter: line 19 column 569 (char 9923)")
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/380-380-660-400/ JSONDecodeError("Expecting ',' delimiter: line 16 column 605 (char 9240)")
+ERR /catalog/vozdushnye-kompressory/po-tipu/vintovye/elektricheskie_1/master-blast-/ JSONDecodeError("Expecting ',' delimiter: line 19 column 516 (char 10292)")
+ERR /catalog/vozdushnye-kompressory/ssha/ JSONDecodeError("Expecting ',' delimiter: line 21 column 346 (char 10756)")
+профилей 626
