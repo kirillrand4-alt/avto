@@ -18,3 +18,7 @@ receivers 328 -> 86
 сбой провайдера, ретрай 5/7 через 150 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615194624479143
 сбой провайдера, ретрай 5/7 через 150 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615194645792275
 сбой провайдера, ретрай 5/7 через 150 с: HTTP 400: HTTPStatusError('HTTP 400: {"error":{"message":"Request failed. If the issue persists, please start a new session. (request id: 2026111615194630021057
+condensate 155 -> 45
+oilfree 193 -> 75
+energy 161 -> 70
+сбой провайдера, ретрай 1/7 через 15 с: HTTP 503: HTTPStatusError('HTTP 503: {"error":{"message":"The upstream provider is temporarily unavailable (status 503). Please retry later. (request id: 202611
