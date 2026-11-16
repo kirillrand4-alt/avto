@@ -157,10 +157,26 @@ for с in io.open(os.path.join(ОПС, "meyer-primery.jsonl"), encoding="utf-8")
     if ок and "пройти по" not in з["fraza"]: пример[з["gruppa"]].append(з["fraza"])
 
 
+# ПРАВИЛО ВЛАДЕЛЬЦА 16.11 для партии Meyer: мешает только письмо MEYER на ТОТ ЖЕ адрес за последние 15 дней,
+# письма КЦ не мешают (раньше отсеивали всех, кому писали на адрес за 60 дней, — 381 компания).
+import sqlite3 as _sq  # noqa: E402
+from datetime import datetime as _dt, timedelta as _td, timezone as _tz  # noqa: E402
+from sender.config import Config as _Cfg  # noqa: E402
+_мейер_ящ = {m.mailbox_id for m in _Cfg.load(r"C:\sender\sender.yaml").mailboxes() if str(getattr(m, "division", "")) == "meyer"}
+_порог = (_dt.now(_tz.utc) - _td(days=15)).isoformat()
+_мейер_недавно = set()
+_с = _sq.connect("file:C:\\sender\\sender.db?mode=ro", uri=True)
+for _e, _mb, _t in _с.execute("SELECT lower(r.email), m.mailbox_id, m.sent_at FROM messages m JOIN recipients r ON r.id=m.recipient_id "
+                              "WHERE m.status='sent' AND m.sent_at >= ?", (_порог[:19],)):
+    if _mb in _мейер_ящ: _мейер_недавно.add(_e)
+_с.close()
+
+
 def адрес(x):
     for нужн in ("есть", "принимает всё"):
         for e in x["emails"]:
-            if проба.get(e.strip().lower()) == нужн: return e.strip().lower()
+            e = e.strip().lower()
+            if проба.get(e) == нужн and e not in _мейер_недавно: return e
     return ""
 
 
@@ -191,7 +207,7 @@ if os.path.exists(ЖУР):   # записи без ответа модели (п
 кандидаты = []
 for к, р in кл.items():
     ш = ШАБЛОН.get(р.get("shablon")); x = комп.get(к)
-    if not ш or not x or x.get("stop") or x.get("pisali60") or x.get("aktiv_kc") or к in готово: continue
+    if not ш or not x or x.get("stop") or x.get("aktiv_kc") or к in готово: continue
     e = адрес(x)
     if e: кандидаты.append((ш, р, x, e))
 random.seed(1611); random.shuffle(кандидаты)
