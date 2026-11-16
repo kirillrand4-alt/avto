@@ -22,7 +22,7 @@ import semrush_check as SR  # noqa: E402
 
 CK = os.environ.get('GBS_COOKIE_FILE',
                     '/tmp/claude-0/-home-user-avto/20e1aa6d-1000-514f-959c-428ea037ecc1/scratchpad/gbs_panel.txt')
-OUT = os.path.join(DIR, 'konkurenty-trend.jsonl')
+OUT = os.environ.get('TREND_OUT') or os.path.join(DIR, 'konkurenty-trend.jsonl')
 KEY = os.environ.get('SR_TREND_KEY') or SR.API
 UID = int(os.environ.get('SR_UID') or SR.UID)
 SERVERS = [int(x) for x in os.environ.get('SR_SERVERS', '1924,1925,1926,2578,2579').split(',')]
