@@ -309,6 +309,146 @@ def st_vint():
         list(ex.map(one, todo))
 
 
+# ---------- brief: ТЗ копирайтеру (тема -> подтемы -> ссылки конкурентов)
+BRIEF = """Ты редактор блога prokompressor.ru (промышленные компрессоры, осушители, генераторы
+азота/кислорода, пневмооборудование). Тема: «{name}».
+Ниже вопросы клиентов, на которые конкуренты отвечают, а наш блог - нет (net) или поверхностно
+(chastichno, указана наша статья). Формат: N | вопрос | статус | наша статья | факты конкурентов.
+
+Сгруппируй вопросы в ПЛАН СТАТЕЙ для копирайтера. Одна статья = один поисковый интент
+(не смешивай «как выбрать» и «как ремонтировать»). Каждая статья: H1, интент, 3-8 подтем H2;
+у каждой H2 - номера вопросов N и что именно раскрыть (смыслы и цифры, которые есть у
+конкурентов, чтобы наш текст был не хуже). Если вопросы удобнее дописать в существующую нашу
+статью (chastichno) - укажи её url в dorabotat, а не плоди новую. Каждый N - ровно в одной статье.
+Вопросы-одиночки, не тянущие на статью, сведи в одну статью-FAQ по теме или приложи к ближайшей.
+katalog - 1-3 раздела каталога из списка ниже, куда статья должна вести читателя (точные url),
+только если они реально подходят.
+Без длинных тире. Ответ строго JSON:
+{{"stati":[{{"h1":"...","intent":"...","dorabotat":"url или пусто","katalog":["/catalog/..."],
+"podtemy":[{{"h2":"...","n":[N],"raskryt":"..."}}]}}]}}
+
+РАЗДЕЛЫ КАТАЛОГА (url | срез):
+{cats}
+
+ВОПРОСЫ:
+{lines}"""
+
+
+def gap_rows():
+    ver = {r['q']: r for r in jl('verify.jsonl')}
+    out = []
+    for c in json.load(open(P('gaps-candidates.json'), encoding='utf-8')):
+        v = ver.get(c['q'], {}).get('v', 'net')
+        if v == 'zakryt':
+            continue
+        out.append({**c, 'v': v, 'our_url': ver.get(c['q'], {}).get('url', '')})
+    return out
+
+
+def st_brief():
+    rows = gap_rows()
+    by = collections.defaultdict(list)
+    for r in rows:
+        by[r['topic']].append(r)
+    cats = '\n'.join(f"{x['url']} | {x['srez'][:90]}" for x in jl('cat-profile.jsonl')
+                     if not re.search(r'бренд|страна', x['srez'], re.I))
+    done = {r['topic'] for r in jl('brief.jsonl')}
+    names = {t['topic']: t['name'] for t in jl('canon.jsonl')}
+
+    def topic(tid):
+        if tid in done or tid == 'off':
+            return
+        its = sorted(by[tid], key=lambda x: -x['score'])[:120]
+        lines = '\n'.join(
+            f"{i} | {x['q']} | {x['v']} | {x['our_url'] or '-'} | "
+            + '; '.join(f for c in x['comp'][:3] for f in (c[3] or [])[:2])[:300]
+            for i, x in enumerate(its))
+        try:
+            res = ask(BRIEF.format(name=names.get(tid, tid), cats=cats, lines=lines), 12000)
+        except Exception as e:
+            print('ERR', tid, repr(e)[:120], flush=True)
+            return
+        for s in res.get('stati', []):
+            for p in s.get('podtemy', []):
+                ns = [i for i in p.get('n', []) if isinstance(i, int) and 0 <= i < len(its)]
+                p['voprosy'] = [its[i]['q'] for i in ns]
+                links = {}
+                for i in ns:
+                    for d, dep, u, _f in its[i]['comp']:
+                        if dep > links.get(u, (0, ''))[0]:
+                            links[u] = (dep, d)
+                p['konkurenty'] = [[u, dep] for u, (dep, d) in sorted(links.items(), key=lambda kv: -kv[1][0])][:8]
+        append('brief.jsonl', {'topic': tid, 'name': names.get(tid, tid), 'stati': res.get('stati', [])})
+        print(tid, len(its), '->', len(res.get('stati', [])), flush=True)
+
+    with cf.ThreadPoolExecutor(4) as ex:
+        list(ex.map(topic, list(by)))
+
+
+# ---------- report
+def st_report():
+    import csv
+    sm = jl('smysly.jsonl')
+    ours = [r for r in sm if r['domain'] == OUR]
+    comp_dom = {r['domain'] for r in sm if r['domain'] != OUR and r['relevant']}
+    canon = jl('canon.jsonl')
+    n_canon = sum(len(t['canon']) for t in canon)
+    rows = gap_rows()
+    briefs = jl('brief.jsonl')
+    DL = {1: 'упомянуто', 2: 'раскрыто', 3: 'с цифрами'}
+    with open(P('TZ-KOPIRAITER.csv'), 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.writer(f, delimiter=';')
+        w.writerow(['Тема', 'Статья (H1)', 'Интент', 'Новая/дописать', 'Подтема (H2)', 'Вопросы клиента',
+                    'Что раскрыть', 'Статьи конкурентов (глубина)', 'Ссылки в каталог'])
+        for b in briefs:
+            for s in b['stati']:
+                for p in s.get('podtemy', []):
+                    w.writerow([b['name'], s.get('h1', ''), s.get('intent', ''),
+                                ('дописать ' + s['dorabotat']) if s.get('dorabotat') else 'новая',
+                                p.get('h2', ''), '\n'.join(p.get('voprosy', [])), p.get('raskryt', ''),
+                                '\n'.join(f"{u} ({DL.get(d, d)})" for u, d in p.get('konkurenty', [])),
+                                ' '.join(s.get('katalog', []))])
+    L = ['# Смыслы блога prokompressor.ru против конкурентов', '',
+         f"- Наших статей размечено: {len(ours)}; конкурентов с блогами по теме: {len(comp_dom)}; "
+         f"статей всего: {len(sm)}.",
+         f"- Канонических вопросов клиента (после сведения дублей): {n_canon}.",
+         f"- Не закрываем: {sum(1 for r in rows if r['v'] == 'net')}, поверхностно: "
+         f"{sum(1 for r in rows if r['v'] == 'chastichno')} (после перепроверки по нашим статьям).",
+         f"- ТЗ копирайтеру: {sum(len(b['stati']) for b in briefs)} статей, полная таблица - "
+         "`TZ-KOPIRAITER.csv`.", '', '## План статей по темам', '']
+    for b in sorted(briefs, key=lambda b: -len(b['stati'])):
+        L.append(f"### {b['name']}")
+        for s in b['stati']:
+            mark = f" (дописать {s['dorabotat']})" if s.get('dorabotat') else ''
+            L.append(f"- **{s.get('h1', '')}**{mark}")
+            for p in s.get('podtemy', []):
+                top = ', '.join(u for u, d in p.get('konkurenty', [])[:3])
+                L.append(f"  - {p.get('h2', '')}: {top}")
+        L.append('')
+    vint = jl('vint.jsonl')
+    L += ['## Как конкуренты сравнивают винтовые блоки', '',
+          f"Разобрано статей: {len(vint)}.", '']
+    krit = collections.Counter(k.strip().lower() for v in vint for k in v.get('kriterii', []))
+    srav = collections.Counter(k.strip() for v in vint for k in v.get('sravnivayut', []))
+    L.append('Чаще всего сравнивают: ' + ', '.join(f'{k} ({n})' for k, n in srav.most_common(20)))
+    L.append('')
+    L.append('Критерии сравнения: ' + ', '.join(f'{k} ({n})' for k, n in krit.most_common(25)))
+    L.append('')
+    for v in vint:
+        L.append(f"### {v.get('h1') or v['url']}")
+        L.append(f"{v['url']}")
+        for u in v.get('utverzhdeniya', [])[:8]:
+            c = f" [{u.get('cifry')}]" if u.get('cifry') else ''
+            L.append(f"- {u.get('o_chem', '')}: {u.get('tezis', '')}{c}")
+        if v.get('vyvod'):
+            L.append(f"- Вывод: {v['vyvod']}")
+        if v.get('kogo_prodvigayut'):
+            L.append(f"- Продвигают: {v['kogo_prodvigayut']}")
+        L.append('')
+    open(P('BLOG-GAP-REPORT.md'), 'w', encoding='utf-8').write('\n'.join(L).replace('—', '-'))
+    print('отчёт готов')
+
+
 if __name__ == '__main__':
     {'taxonomy': st_taxonomy, 'extract': st_extract, 'canon': st_canon, 'gaps': st_gaps,
-     'verify': st_verify, 'vint': st_vint}[sys.argv[1]]()
+     'verify': st_verify, 'vint': st_vint, 'brief': st_brief, 'report': st_report}[sys.argv[1]]()
