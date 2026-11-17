@@ -8,6 +8,7 @@
    "g_tr": 78728,
    "g_dyn": 4.14,
    "mira": 3500,
+   "url": "moluch.ru",
    "strict": 5511,
    "wide": 8660,
    "toxic": 0.0,
@@ -39,6 +40,7 @@
    "g_tr": 4182,
    "g_dyn": 2.1,
    "mira": 1999,
+   "url": "topclimat.ru",
    "strict": 753,
    "wide": 2467,
    "toxic": 0.0,
@@ -63,6 +65,166 @@
    ]
   },
   {
+   "domain": "energyland.info",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 998,
+   "g_dyn": null,
+   "mira": 6000,
+   "url": "energyland.info",
+   "strict": 679,
+   "wide": 689,
+   "toxic": 0.0,
+   "razdel": "/analitic-show-",
+   "otsev": "",
+   "top": [
+    [
+     "александр коньков русал",
+     "https://energyland.info/analitic-show-75922",
+     130
+    ],
+    [
+     "лампа бегущей волны",
+     "https://energyland.info/analitic-show-192030",
+     122
+    ],
+    [
+     "червячная передача",
+     "https://energyland.info/analitic-show-283122",
+     72
+    ]
+   ]
+  },
+  {
+   "domain": "metallicheckiy-portal.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 17973,
+   "g_dyn": null,
+   "mira": 1470,
+   "url": "metallicheckiy-portal.ru",
+   "strict": 359,
+   "wide": 539,
+   "toxic": 0.01,
+   "razdel": "/articles/",
+   "otsev": "",
+   "top": [
+    [
+     "марафон зеркало последнее актуальное",
+     "https://metallicheckiy-portal.ru/articles/raznoe/servisi/saiti-zerkala_dla_popularnix_servisov_bk_marafon",
+     90
+    ],
+    [
+     "аустенит",
+     "https://metallicheckiy-portal.ru/articles/chermet/fazovie_sostoyania/austenit_-_obrazovanie_i_prevrashenia/2",
+     52
+    ],
+    [
+     "огнетушители виды",
+     "https://metallicheckiy-portal.ru/articles/pojobr/ognetyshiteli",
+     50
+    ]
+   ]
+  },
+  {
+   "domain": "infpol.ru",
+   "tema": "мимо",
+   "tip": "прочее",
+   "n": 11,
+   "g_tr": 35244,
+   "g_dyn": 0.43,
+   "mira": 22000,
+   "url": "infpol.ru",
+   "strict": 352,
+   "wide": 352,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "гиф с днем рождения",
+     "https://www.infpol.ru/250221-otkrytki-i-gifki-s-dnyem-rozhdeniya/",
+     1738
+    ],
+    [
+     "с днем рождения гиф",
+     "https://www.infpol.ru/250221-otkrytki-i-gifki-s-dnyem-rozhdeniya/",
+     1738
+    ],
+    [
+     "армянские сериал",
+     "https://www.infpol.ru/214362-luchshie-armyanskie-serialy/",
+     1485
+    ]
+   ]
+  },
+  {
+   "domain": "russianelectronics.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 664,
+   "g_dyn": null,
+   "mira": 6500,
+   "url": "russianelectronics.ru",
+   "strict": 266,
+   "wide": 286,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "pci express 3.0",
+     "https://russianelectronics.ru/pci-express-3-0-v-dva-raza-luchshe-prezhnego-standarta/",
+     76
+    ],
+    [
+     "построение ip сетей",
+     "https://russianelectronics.ru/bazovye-princzipy-postroeniya-ip-setej-dlya-vstraivaemyh-sistem/",
+     27
+    ],
+    [
+     "рч",
+     "https://russianelectronics.ru/chto-takoe-rch_28_12_2025/",
+     19
+    ]
+   ]
+  },
+  {
+   "domain": "volga.news",
+   "tema": "мимо",
+   "tip": "региональное СМИ",
+   "n": 25,
+   "g_tr": 17701,
+   "g_dyn": 1.42,
+   "mira": 1700,
+   "url": "volga.news",
+   "strict": 177,
+   "wide": 177,
+   "toxic": 0.0,
+   "razdel": "/article/",
+   "otsev": "",
+   "top": [
+    [
+     "сызрань",
+     "https://volga.news/article/803323.html",
+     1554
+    ],
+    [
+     "самара новости",
+     "https://volga.news/article/803810.html",
+     847
+    ],
+    [
+     "чат вд",
+     "https://volga.news/article/527039.html",
+     413
+    ]
+   ]
+  },
+  {
    "domain": "vrk1.ru",
    "tema": "смежная",
    "tip": "прочее",
@@ -70,6 +232,7 @@
    "g_tr": 736,
    "g_dyn": 1.56,
    "mira": 790,
+   "url": "vrk1.ru",
    "strict": 155,
    "wide": 581,
    "toxic": 0.0,
@@ -101,6 +264,7 @@
    "g_tr": 7447,
    "g_dyn": 2.06,
    "mira": 950,
+   "url": "novosibdom.ru",
    "strict": 149,
    "wide": 298,
    "toxic": 0.0,
@@ -132,6 +296,7 @@
    "g_tr": 440,
    "g_dyn": 0.57,
    "mira": 670,
+   "url": "stroy-mart.ru",
    "strict": 92,
    "wide": 255,
    "toxic": 0.0,
@@ -156,6 +321,124 @@
    ]
   },
   {
+   "domain": "prom-siberia.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 151,
+   "g_dyn": null,
+   "mira": 6200,
+   "url": "prom-siberia.ru",
+   "strict": 71,
+   "wide": 85,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "алюминиевый завод",
+     "https://prom-siberia.ru/metallurgy/krasnoyarskiy-alyuminievyy-zavod-sovremennoe-proizvodstvo-i-tehnologii/",
+     8
+    ],
+    [
+     "промка",
+     "https://prom-siberia.ru/obrazovanie/promka-novaya-sistema-proforientaczii-dlya-promyshlennosti-krasnoyarskogo-kraya/",
+     7
+    ],
+    [
+     "тсм керамик красноярск",
+     "https://prom-siberia.ru/construction/innovatsionnyj-zhidkij-uteplitel-tsm-ceramic/",
+     6
+    ]
+   ]
+  },
+  {
+   "domain": "lpk-sibiri.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 494,
+   "g_dyn": null,
+   "mira": 5600,
+   "url": "lpk-sibiri.ru",
+   "strict": 40,
+   "wide": 40,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "летнаб это",
+     "https://lpk-sibiri.ru/forest-management/protection-of-forests/letnab-kiselev-na-tatami-s-ognem/",
+     12
+    ],
+    [
+     "пожар 5 класса",
+     "https://lpk-sibiri.ru/forest-management/protection-of-forests/5-klassov-pozharnoj-opasnosti-v-lesah/",
+     6
+    ],
+    [
+     "лесегаис регистрация",
+     "https://lpk-sibiri.ru/forest-management/forest-control/osobennosti-registratsii-v-egais-les/",
+     4
+    ]
+   ]
+  },
+  {
+   "domain": "miniteh.com",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 1460,
+   "g_dyn": null,
+   "mira": 1400,
+   "url": "miniteh.com",
+   "strict": 29,
+   "wide": 292,
+   "toxic": 0.0,
+   "razdel": "/articles/",
+   "otsev": "",
+   "top": [
+    [
+     "нитрометан",
+     "https://miniteh.com/articles/Informaciya/Nitrometan-byl-otkryt-kak-gonochnoe-toplivo-eshe-v-dalekom-1954-godu",
+     48
+    ],
+    [
+     "kenworth t680",
+     "https://miniteh.com/articles/Obzory/Kenworth-T680",
+     16
+    ],
+    [
+     "момент затяжки гбц камаз",
+     "https://miniteh.com/articles/Informaciya/Moment-zatyazhki-GBC-KamAZ-740",
+     14
+    ]
+   ]
+  },
+  {
+   "domain": "energoseti.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 2584,
+   "g_dyn": null,
+   "mira": 5000,
+   "url": "energoseti.ru",
+   "strict": 26,
+   "wide": 26,
+   "toxic": 0.0,
+   "razdel": "/articles/",
+   "otsev": "",
+   "top": [
+    [
+     "тэц",
+     "https://energoseti.ru/articles/teploelektrocentral-chto-takoe-kak-ustroena-otlichiya-ot-tes",
+     18
+    ]
+   ]
+  },
+  {
    "domain": "mplast.by",
    "tema": "смежная",
    "tip": "отраслевое СМИ/портал",
@@ -163,6 +446,7 @@
    "g_tr": 617,
    "g_dyn": 0.81,
    "mira": 817,
+   "url": "mplast.by",
    "strict": 12,
    "wide": 210,
    "toxic": 0.0,
@@ -187,6 +471,102 @@
    ]
   },
   {
+   "domain": "freesmi.by",
+   "tema": "мимо",
+   "tip": "общее СМИ",
+   "n": 10,
+   "g_tr": 213,
+   "g_dyn": 0.75,
+   "mira": 380,
+   "url": "freesmi.by",
+   "strict": 4,
+   "wide": 9,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "эвелина мартынова",
+     "https://freesmi.by/culture/znamenitosti/325314",
+     125
+    ],
+    [
+     "ольга юрьевна лысова",
+     "https://freesmi.by/culture/290182",
+     39
+    ],
+    [
+     "кресло кровать минск недорого",
+     "https://freesmi.by/raznoe/338820",
+     9
+    ]
+   ]
+  },
+  {
+   "domain": "truckmix.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 310,
+   "g_dyn": null,
+   "mira": 1200,
+   "url": "truckmix.ru",
+   "strict": 3,
+   "wide": 81,
+   "toxic": 0.0,
+   "razdel": "/articles/",
+   "otsev": "",
+   "top": [
+    [
+     "юмз",
+     "https://truckmix.ru/articles/vidi-traktorov-semeistva-umz-6-i-navesnoe-oborydovanie-dlya-nih",
+     20
+    ],
+    [
+     "замена колес на гусеницы",
+     "https://truckmix.ru/blogs/zamena-shin-na-gysenichnie-sistemi-poluzzi",
+     9
+    ],
+    [
+     "карьерная техника",
+     "https://truckmix.ru/articles/vidi-karernoi-tehniki",
+     7
+    ]
+   ]
+  },
+  {
+   "domain": "bouw.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 7817,
+   "g_dyn": null,
+   "mira": 2600,
+   "url": "bouw.ru",
+   "strict": 0,
+   "wide": 4534,
+   "toxic": 0.0,
+   "razdel": "/article/",
+   "otsev": "",
+   "top": [
+    [
+     "поделки из пластиковых бутылок",
+     "https://bouw.ru/article/master-klass-podelok-iz-plastikovih-butilok-dlya-dachi",
+     517
+    ],
+    [
+     "пескоструй своими руками",
+     "https://bouw.ru/article/peskostruyniy-apparat-svoimi-rukami",
+     297
+    ],
+    [
+     "комнатные растения фото и названия",
+     "https://bouw.ru/article/komnatnie-rasteniya-v-interyere",
+     282
+    ]
+   ]
+  },
+  {
    "domain": "business-gazeta.ru",
    "tema": "смежная",
    "tip": "региональное СМИ",
@@ -194,6 +574,7 @@
    "g_tr": 327635,
    "g_dyn": 0.75,
    "mira": 2350,
+   "url": "kam.business-gazeta.ru",
    "strict": 0,
    "wide": 3276,
    "toxic": 0.0,
@@ -225,6 +606,7 @@
    "g_tr": 22430,
    "g_dyn": 1.43,
    "mira": 36000,
+   "url": "c-o-k.ru",
    "strict": 0,
    "wide": 3140,
    "toxic": 0.0,
@@ -249,6 +631,38 @@
    ]
   },
   {
+   "domain": "autodela.ru",
+   "tema": "мимо",
+   "tip": "отраслевое СМИ/портал",
+   "n": 8,
+   "g_tr": 2671,
+   "g_dyn": 0.94,
+   "mira": 520,
+   "url": "catalog.autodela.ru",
+   "strict": 0,
+   "wide": 1736,
+   "toxic": 0.0,
+   "razdel": "/main/blogs/",
+   "otsev": "",
+   "top": [
+    [
+     "аукцион",
+     "https://www.autodela.ru/main/blogs/Ira_Avto/chto-takoe-avtomobilnyy-aukcion-i-kak-on-rabotaet",
+     192
+    ],
+    [
+     "chevrolet lanos тюнинг",
+     "https://www.autodela.ru/main/top/diy/tuning_chevrolet_lanos",
+     79
+    ],
+    [
+     "logan 2021",
+     "https://www.autodela.ru/main/blogs/Ira_Avto/obzor-novogo-renault-logan-2021-kharaktjeristiki-kotoryje-vpjechatljajut",
+     50
+    ]
+   ]
+  },
+  {
    "domain": "totalarch.com",
    "tema": "смежная",
    "tip": "отраслевое СМИ/портал",
@@ -256,6 +670,7 @@
    "g_tr": 8300,
    "g_dyn": 1.01,
    "mira": 1500,
+   "url": "totalarch.com",
    "strict": 0,
    "wide": 1660,
    "toxic": 0.0,
@@ -287,6 +702,7 @@
    "g_tr": 19024,
    "g_dyn": 2.39,
    "mira": 2800,
+   "url": "rlocman.ru",
    "strict": 0,
    "wide": 1522,
    "toxic": 0.0,
@@ -311,6 +727,38 @@
    ]
   },
   {
+   "domain": "donnews.ru",
+   "tema": "мимо",
+   "tip": "региональное СМИ",
+   "n": 9,
+   "g_tr": 9172,
+   "g_dyn": 0.66,
+   "mira": 990,
+   "url": "donnews.ru",
+   "strict": 0,
+   "wide": 1192,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "киаби",
+     "https://www.donnews.ru/Brend-odezhdy-Kiabi-istoriya-assortiment-preimuschestva_99512",
+     827
+    ],
+    [
+     "играть паук 4 масти",
+     "https://www.donnews.ru/Chto-takoe-pasyans-Pauk-4-masti_121214",
+     413
+    ],
+    [
+     "анонимный просмотр сторис",
+     "https://www.donnews.ru/anonimnyy-prosmotr-storis-v-instagram_73717510",
+     202
+    ]
+   ]
+  },
+  {
    "domain": "c-inform.info",
    "tema": "смежная",
    "tip": "региональное СМИ",
@@ -318,6 +766,7 @@
    "g_tr": 12658,
    "g_dyn": 1.56,
    "mira": 2258,
+   "url": "c-inform.info",
    "strict": 0,
    "wide": 886,
    "toxic": 0.03,
@@ -349,6 +798,7 @@
    "g_tr": 628,
    "g_dyn": 0.58,
    "mira": 1800,
+   "url": "perekos.net",
    "strict": 0,
    "wide": 276,
    "toxic": 0.01,
@@ -380,6 +830,7 @@
    "g_tr": 285,
    "g_dyn": 9.48,
    "mira": 400,
+   "url": "1npf.com",
    "strict": 0,
    "wide": 111,
    "toxic": 0.03,
@@ -411,6 +862,7 @@
    "g_tr": 2345,
    "g_dyn": 0.48,
    "mira": 1552,
+   "url": "dubna.ru",
    "strict": 0,
    "wide": 94,
    "toxic": 0.0,
@@ -442,6 +894,7 @@
    "g_tr": 1948,
    "g_dyn": 2.84,
    "mira": 1800,
+   "url": "innov.ru",
    "strict": 0,
    "wide": 58,
    "toxic": 0.01,
@@ -473,6 +926,7 @@
    "g_tr": 1717,
    "g_dyn": 0.78,
    "mira": 3000,
+   "url": "bobr.by",
    "strict": 0,
    "wide": 17,
    "toxic": 0.0,
@@ -497,6 +951,38 @@
    ]
   },
   {
+   "domain": "time-samara.ru",
+   "tema": "мимо",
+   "tip": "региональное СМИ",
+   "n": 9,
+   "g_tr": 198,
+   "g_dyn": 1.4,
+   "mira": 514,
+   "url": "time-samara.ru",
+   "strict": 0,
+   "wide": 4,
+   "toxic": 0.01,
+   "razdel": "/content/view/",
+   "otsev": "",
+   "top": [
+    [
+     "интернет новости",
+     "http://www.time-samara.ru/content/view/802810/internetgramotnost-na-otlichno-rostelekom-obuchil-samarskih-podrostkov-osnovam-kiberbezopasnosti",
+     65
+    ],
+    [
+     "геометри даш полная версия скачать",
+     "https://www.time-samara.ru/content/view/687878/skachat-geometry-dash-22-besplatno",
+     52
+    ],
+    [
+     "скачать geometry dash оригинал",
+     "https://www.time-samara.ru/content/view/687878/skachat-geometry-dash-22-besplatno",
+     48
+    ]
+   ]
+  },
+  {
    "domain": "metaprom.ru",
    "tema": "наша",
    "tip": "каталог/справочник",
@@ -504,6 +990,7 @@
    "g_tr": 2711,
    "g_dyn": 3.06,
    "mira": 16200,
+   "url": "metaprom.ru",
    "strict": 0,
    "wide": 0,
    "toxic": 0.0,
@@ -519,6 +1006,7 @@
    "g_tr": 3332,
    "g_dyn": 1.19,
    "mira": 2250,
+   "url": "progorod76.ru",
    "strict": 0,
    "wide": 0,
    "toxic": 0.02,
@@ -550,6 +1038,7 @@
    "g_tr": 44647,
    "g_dyn": 1.23,
    "mira": 3300,
+   "url": "v-tagile.ru",
    "strict": 0,
    "wide": 0,
    "toxic": 0.01,
@@ -574,68 +1063,6 @@
    ]
   },
   {
-   "domain": "infokam.su",
-   "tema": "смежная",
-   "tip": "региональное СМИ",
-   "n": 7,
-   "g_tr": 7700,
-   "g_dyn": 0.75,
-   "mira": 500,
-   "strict": 0,
-   "wide": 0,
-   "toxic": 0.0,
-   "razdel": "",
-   "otsev": "",
-   "top": [
-    [
-     "как поделиться историей в инстаграм",
-     "https://infokam.su/n38355.html",
-     48
-    ],
-    [
-     "happymod скачать на андроид",
-     "https://infokam.su/osobennosti-prilozheniya-happymod.html",
-     39
-    ],
-    [
-     "как в инстаграме поделиться чужой историей",
-     "https://infokam.su/n38355.html",
-     27
-    ]
-   ]
-  },
-  {
-   "domain": "niasam.ru",
-   "tema": "смежная",
-   "tip": "региональное СМИ",
-   "n": 6,
-   "g_tr": 8391,
-   "g_dyn": 0.79,
-   "mira": 1310,
-   "strict": 0,
-   "wide": 0,
-   "toxic": 0.0,
-   "razdel": "",
-   "otsev": "",
-   "top": [
-    [
-     "hms core это",
-     "https://www.niasam.ru/elektronnye_ustrojstva/hms-core-dlya-chego-nuzhna-eta-programma-na-android-i-kak-udalit-eyo-so-smartfona-218901.html",
-     91
-    ],
-    [
-     "hms core",
-     "https://www.niasam.ru/elektronnye_ustrojstva/hms-core-dlya-chego-nuzhna-eta-programma-na-android-i-kak-udalit-eyo-so-smartfona-218901.html",
-     64
-    ],
-    [
-     "для постройки гаража дачнику",
-     "https://www.niasam.ru/building_dacha/kak-vybrat-dachnyj-garazh-kotoryj-prosluzhit-dolgie-gody-bez-hlopot-260477.html",
-     26
-    ]
-   ]
-  },
-  {
    "domain": "1777.ru",
    "tema": "смежная",
    "tip": "региональное СМИ",
@@ -643,6 +1070,7 @@
    "g_tr": 50350,
    "g_dyn": 0.81,
    "mira": 1499,
+   "url": "1777.ru",
    "strict": 0,
    "wide": 0,
    "toxic": 0.0,
@@ -674,6 +1102,7 @@
    "g_tr": 54184,
    "g_dyn": 1.78,
    "mira": 3000,
+   "url": "justmedia.ru",
    "strict": 0,
    "wide": 0,
    "toxic": 0.0,
@@ -696,24 +1125,345 @@
      634
     ]
    ]
-  }
- ],
- "otsev": [
+  },
   {
-   "domain": "oborudunion.ru",
-   "tema": "наша",
-   "tip": "каталог/справочник",
-   "n": 20,
-   "g_tr": 9947,
-   "g_dyn": 1.72,
-   "mira": 6000,
+   "domain": "niasam.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 6,
+   "g_tr": 8391,
+   "g_dyn": 0.79,
+   "mira": 1310,
+   "url": "niasam.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "hms core это",
+     "https://www.niasam.ru/elektronnye_ustrojstva/hms-core-dlya-chego-nuzhna-eta-programma-na-android-i-kak-udalit-eyo-so-smartfona-218901.html",
+     91
+    ],
+    [
+     "hms core",
+     "https://www.niasam.ru/elektronnye_ustrojstva/hms-core-dlya-chego-nuzhna-eta-programma-na-android-i-kak-udalit-eyo-so-smartfona-218901.html",
+     64
+    ],
+    [
+     "для постройки гаража дачнику",
+     "https://www.niasam.ru/building_dacha/kak-vybrat-dachnyj-garazh-kotoryj-prosluzhit-dolgie-gody-bez-hlopot-260477.html",
+     26
+    ]
+   ]
+  },
+  {
+   "domain": "infokam.su",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 7,
+   "g_tr": 7700,
+   "g_dyn": 0.75,
+   "mira": 500,
+   "url": "infokam.su",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "как поделиться историей в инстаграм",
+     "https://infokam.su/n38355.html",
+     48
+    ],
+    [
+     "happymod скачать на андроид",
+     "https://infokam.su/osobennosti-prilozheniya-happymod.html",
+     39
+    ],
+    [
+     "как в инстаграме поделиться чужой историей",
+     "https://infokam.su/n38355.html",
+     27
+    ]
+   ]
+  },
+  {
+   "domain": "factories.kz",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 694,
+   "g_dyn": null,
+   "mira": 3000,
+   "url": "factories.kz",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "/news/",
+   "otsev": "",
+   "top": []
+  },
+  {
+   "domain": "factories.by",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 462,
+   "g_dyn": null,
+   "mira": 3000,
+   "url": "factories.by",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.02,
+   "razdel": "/news",
+   "otsev": "",
+   "top": []
+  },
+  {
+   "domain": "stroy-union.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 185,
+   "g_dyn": null,
+   "mira": 5500,
+   "url": "stroy-union.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": []
+  },
+  {
+   "domain": "santehnicheskij-mir.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 1,
+   "g_dyn": null,
+   "mira": 535,
+   "url": "santehnicheskij-mir.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "водонагреватель вм 390",
+     "https://santehnicheskij-mir.ru/tehnika/vodonagrevatel-real.html",
+     0
+    ],
+    [
+     "водонагреватель вм 390",
+     "https://santehnicheskij-mir.ru/tehnika/vodonagrevatel-real.html",
+     0
+    ],
+    [
+     "водонагреватель реал термо вм 390",
+     "https://santehnicheskij-mir.ru/tehnika/vodonagrevatel-real.html",
+     0
+    ]
+   ]
+  },
+  {
+   "domain": "ecoportal.info",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 12110,
+   "g_dyn": null,
+   "mira": 6700,
+   "url": "ecoportal.info",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "жук олень",
+     "https://ecoportal.info/zhuk-olen/",
+     1573
+    ],
+    [
+     "птицы подмосковья",
+     "https://ecoportal.info/pticy-podmoskovya/",
+     377
+    ],
+    [
+     "мечехвост",
+     "https://ecoportal.info/mechexvost/",
+     363
+    ]
+   ]
+  },
+  {
+   "domain": "komiinform.ru",
+   "tema": "мимо",
+   "tip": "региональное СМИ",
+   "n": 9,
+   "g_tr": 41756,
+   "g_dyn": 1.08,
+   "mira": 2920,
+   "url": "komiinform.ru",
    "strict": 0,
    "wide": 0,
    "toxic": 0.01,
-   "razdel": "",
-   "otsev": "ферма 43.2",
-   "top": []
+   "razdel": "/page/novosti_i_trendy.",
+   "otsev": "",
+   "top": [
+    [
+     "как сделать свечи от геморроя из прополиса",
+     "https://komiinform.ru/page/novosti_i_trendy.13.kak_sdelat_propolisnye_svechi_v_domashnih_usloviyah",
+     42
+    ],
+    [
+     "28 45 садовод детская одежда",
+     "https://komiinform.ru/page/novosti_i_trendy.16.sadovod___detskaya_odezhda",
+     33
+    ],
+    [
+     "как приготовить свечи с прополисом",
+     "https://komiinform.ru/page/novosti_i_trendy.13.kak_sdelat_propolisnye_svechi_v_domashnih_usloviyah",
+     32
+    ]
+   ]
   },
+  {
+   "domain": "progorodsamara.ru",
+   "tema": "мимо",
+   "tip": "региональное СМИ",
+   "n": 9,
+   "g_tr": 12149,
+   "g_dyn": 0.72,
+   "mira": 2200,
+   "url": "progorodsamara.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "/russia/view/",
+   "otsev": "",
+   "top": [
+    [
+     "жуки в крупах",
+     "https://progorodsamara.ru/russia/view/kak-izbavitsa-ot-zuckov-v-krupe-i-muke-prostye-i-effektivnye-metody",
+     70
+    ],
+    [
+     "сирень это дерево или кустарник",
+     "https://progorodsamara.ru/russia/view/siren-otdyhaet-etot-kustarnik-cvetet-s-leta-do-zimy-i-ukrasaet-sad-kruglyj-god",
+     29
+    ],
+    [
+     "что такое джипер",
+     "https://progorodsamara.ru/longread/view/pokoriteli-samarskogo-bezdorozhya-kto-takiye-dzhipery-i-kakiye-mesta-ikh-privlekayut",
+     18
+    ]
+   ]
+  },
+  {
+   "domain": "progorod59.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 8,
+   "g_tr": 1264,
+   "g_dyn": 0.78,
+   "mira": 1600,
+   "url": "progorod59.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "/interesnoe/view/",
+   "otsev": "",
+   "top": [
+    [
+     "вода пилигрим",
+     "https://progorod59.ru/interesnoe/view/voda-piligrim-sostav-i-poleznye-svojstva-vody",
+     30
+    ],
+    [
+     "создать вторую страницу вк",
+     "https://progorod59.ru/interesnoe/view/kak-sozdat-vtoroj-akkaunt-v-tik-toke",
+     15
+    ],
+    [
+     "стоимость еды в грузии",
+     "https://progorod59.ru/adverting/view/turist-resil-sravnit-produkty-i-pozalel-ceny-v-gruzii-okazalis-sovsem-ne-takimi-kak-ozidalos",
+     9
+    ]
+   ]
+  },
+  {
+   "domain": "metronews.ru",
+   "tema": "мимо",
+   "tip": "общее СМИ",
+   "n": 7,
+   "g_tr": 22388,
+   "g_dyn": 0.74,
+   "mira": 2550,
+   "url": "metronews.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.01,
+   "razdel": "/novosti/.../reviews/",
+   "otsev": "",
+   "top": [
+    [
+     "челка шторка",
+     "https://www.metronews.ru/lifestyle/moda/reviews/shtorka-ramka-ili-naches-vybiraem-strizhku-s-chelkoy-kak-u-zvezdy-2180401/",
+     1738
+    ],
+    [
+     "мужская стрижка",
+     "https://www.metronews.ru/novosti/glavnoe/reviews/modnye-muzhskie-strizhki-2024-2025-goda-trendy-dlya-sozdaniya-sovremennogo-obraza-2168573/",
+     1738
+    ],
+    [
+     "волочкова в молодости",
+     "https://www.metronews.ru/novosti/zvezdy/reviews/do-shpagatov-i-skandalov-kakoy-byla-v-molodosti-anastasiya-volochkova-1664906/",
+     947
+    ]
+   ]
+  },
+  {
+   "domain": "gorodkirov.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 7,
+   "g_tr": 1195,
+   "g_dyn": 1.51,
+   "mira": 8000,
+   "url": "gorodkirov.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "/news/",
+   "otsev": "",
+   "top": [
+    [
+     "холодные звонки это",
+     "https://gorodkirov.ru/news/holodnye-zvonki-i-ih-osobennosti/",
+     6
+    ],
+    [
+     "пятиугольник",
+     "https://gorodkirov.ru/news/pyatiugolnik-v-geometrii/",
+     6
+    ],
+    [
+     "где встретить новый год в кирове",
+     "https://gorodkirov.ru/projects/novyj-god/gde-vstretit-novyj-god-v-kirove/",
+     4
+    ]
+   ]
+  }
+ ],
+ "otsev": [
   {
    "domain": "metallurgprom.org",
    "tema": "наша",
@@ -722,6 +1472,7 @@
    "g_tr": 476,
    "g_dyn": 0.97,
    "mira": 246,
+   "url": "metallurgprom.org",
    "strict": 0,
    "wide": 67,
    "toxic": 0.36,
@@ -746,6 +1497,54 @@
    ]
   },
   {
+   "domain": "vpk.name",
+   "tema": "наша",
+   "tip": "отраслевое СМИ/портал",
+   "n": 3,
+   "g_tr": 12224,
+   "g_dyn": 1.47,
+   "mira": 4500,
+   "url": null,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.05,
+   "razdel": "/news/",
+   "otsev": "токсичн 5%",
+   "top": [
+    [
+     "fresh 24 casino",
+     "https://vpk.name/news/921039_obzor_raboty_luchshego_onlain_kazino_fresh.html",
+     150
+    ],
+    [
+     "вулкан россия рабочее зеркало",
+     "https://vpk.name/news/990055_rabota_zerkala_oficialnogo_saita_vulkan_rossiya.html",
+     80
+    ],
+    [
+     "русский вулкан зеркало",
+     "https://vpk.name/news/990055_rabota_zerkala_oficialnogo_saita_vulkan_rossiya.html",
+     59
+    ]
+   ]
+  },
+  {
+   "domain": "oborudunion.ru",
+   "tema": "наша",
+   "tip": "каталог/справочник",
+   "n": 20,
+   "g_tr": 9947,
+   "g_dyn": 1.72,
+   "mira": 6000,
+   "url": "oborudunion.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.01,
+   "razdel": "",
+   "otsev": "ферма 43.2",
+   "top": []
+  },
+  {
    "domain": "obzor.city",
    "tema": "смежная",
    "tip": "региональное СМИ",
@@ -753,6 +1552,7 @@
    "g_tr": 23111,
    "g_dyn": 1.99,
    "mira": 1590,
+   "url": "obzor.city",
    "strict": 0,
    "wide": 693,
    "toxic": 0.52,
@@ -784,6 +1584,7 @@
    "g_tr": 2242,
    "g_dyn": 4.0,
    "mira": 300,
+   "url": "gostei.ru",
    "strict": 0,
    "wide": 22,
    "toxic": 0.17,
@@ -815,6 +1616,7 @@
    "g_tr": 5539,
    "g_dyn": 1.35,
    "mira": 1706,
+   "url": "istoki.tv",
    "strict": 0,
    "wide": 55,
    "toxic": 0.11,
@@ -839,37 +1641,6 @@
    ]
   },
   {
-   "domain": "vpk.name",
-   "tema": "наша",
-   "tip": "отраслевое СМИ/портал",
-   "n": 3,
-   "g_tr": 12224,
-   "g_dyn": 1.47,
-   "mira": 4500,
-   "strict": 0,
-   "wide": 0,
-   "toxic": 0.05,
-   "razdel": "/news/",
-   "otsev": "токсичн 5%",
-   "top": [
-    [
-     "fresh 24 casino",
-     "https://vpk.name/news/921039_obzor_raboty_luchshego_onlain_kazino_fresh.html",
-     150
-    ],
-    [
-     "вулкан россия рабочее зеркало",
-     "https://vpk.name/news/990055_rabota_zerkala_oficialnogo_saita_vulkan_rossiya.html",
-     80
-    ],
-    [
-     "русский вулкан зеркало",
-     "https://vpk.name/news/990055_rabota_zerkala_oficialnogo_saita_vulkan_rossiya.html",
-     59
-    ]
-   ]
-  },
-  {
    "domain": "promvest.info",
    "tema": "наша",
    "tip": "отраслевое СМИ/портал",
@@ -877,6 +1648,7 @@
    "g_tr": 4356,
    "g_dyn": 2.06,
    "mira": 12000,
+   "url": "promvest.info",
    "strict": 87,
    "wide": 87,
    "toxic": 0.07,
@@ -897,6 +1669,353 @@
      "отрасли промышленности россии",
      "https://promvest.info/ru/novosti-promyishlennosti/osnovnyie-otrasli-promyishlennosti-rossii/",
      13
+    ]
+   ]
+  },
+  {
+   "domain": "ess-ltd.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 1307,
+   "g_dyn": null,
+   "mira": 1200,
+   "url": "ess-ltd.ru",
+   "strict": 183,
+   "wide": 222,
+   "toxic": 0.05,
+   "razdel": "/proto/",
+   "otsev": "токсичн 5%",
+   "top": [
+    [
+     "трансформатор на схеме",
+     "https://www.ess-ltd.ru/maintenance-repair/21/1034/",
+     37
+    ],
+    [
+     "схема трансформатора",
+     "https://www.ess-ltd.ru/maintenance-repair/21/1034/",
+     30
+    ],
+    [
+     "вли",
+     "https://www.ess-ltd.ru/elektro/objie-svedeniya-ensto.php",
+     29
+    ]
+   ]
+  },
+  {
+   "domain": "ruscable.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 13000,
+   "g_dyn": null,
+   "mira": 7000,
+   "url": "ruscable.ru",
+   "strict": 390,
+   "wide": 390,
+   "toxic": 0.05,
+   "razdel": "/article/",
+   "otsev": "токсичн 5%",
+   "top": [
+    [
+     "гоэлро",
+     "https://www.ruscable.ru/doc/analytic/statya-139.html",
+     132
+    ],
+    [
+     "план гоэлро",
+     "https://www.ruscable.ru/doc/analytic/statya-139.html",
+     95
+    ],
+    [
+     "квт",
+     "https://www.ruscable.ru/article/istoriya_zavoda_kvt_/",
+     92
+    ]
+   ]
+  },
+  {
+   "domain": "atomic-energy.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 9699,
+   "g_dyn": null,
+   "mira": 6000,
+   "url": "atomic-energy.ru",
+   "strict": 194,
+   "wide": 194,
+   "toxic": 0.07,
+   "razdel": "/articles/",
+   "otsev": "токсичн 7%",
+   "top": [
+    [
+     "дейтерий",
+     "https://www.atomic-energy.ru/articles/2025/08/27/158853",
+     116
+    ],
+    [
+     "рутений",
+     "https://www.atomic-energy.ru/Ruthenium/articles",
+     39
+    ]
+   ]
+  },
+  {
+   "domain": "relasko.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 437,
+   "g_dyn": null,
+   "mira": 2500,
+   "url": "relasko.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.1,
+   "razdel": "/blog/",
+   "otsev": "токсичн 10%",
+   "top": [
+    [
+     "гдз по немецкому 10 класс радченко",
+     "https://relasko.ru/blog/nemeckij_jazyk_10_klass_uchebnik_bazovyj_i_uglublennyj_uroven_fp_otvety/2021-10-27-10568",
+     9
+    ],
+    [
+     "для тех кто любит математику 2 класс ответы",
+     "https://relasko.ru/blog/dlja_tekh_kto_ljubit_matematiku_2_klass_uchebnoe_posobie_otvety/2021-10-11-6632",
+     4
+    ],
+    [
+     "смысловое чтение 4 класс ответы бойкина",
+     "https://relasko.ru/blog/smyslovoe_chtenie_4_klass_rabochaja_tetrad_fgos_otvety/2021-10-21-9069",
+     2
+    ]
+   ]
+  },
+  {
+   "domain": "satom.ru",
+   "tema": null,
+   "tip": null,
+   "n": null,
+   "g_tr": 7520,
+   "g_dyn": null,
+   "mira": 3500,
+   "url": "Satom.ru",
+   "strict": 0,
+   "wide": 150,
+   "toxic": 0.07,
+   "razdel": "/articles/",
+   "otsev": "токсичн 7%",
+   "top": [
+    [
+     "лучшие презервативы",
+     "https://satom.ru/articles/top-10-luchshih-prezervativov/",
+     220
+    ],
+    [
+     "лучший кофе",
+     "https://satom.ru/articles/kakoy-horoshiy-kofe-v-zernah-vybrat/",
+     162
+    ],
+    [
+     "какие презервативы лучше",
+     "https://satom.ru/articles/top-10-luchshih-prezervativov/",
+     108
+    ]
+   ]
+  },
+  {
+   "domain": "lyubimiigorod.ru",
+   "tema": "мимо",
+   "tip": "региональное СМИ",
+   "n": 22,
+   "g_tr": 2906,
+   "g_dyn": 1.2,
+   "mira": 17000,
+   "url": "lyubimiigorod.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.01,
+   "razdel": "",
+   "otsev": "ферма 328.8",
+   "top": []
+  },
+  {
+   "domain": "azovpromstal.com",
+   "tema": "наша",
+   "tip": "прочее",
+   "n": 11,
+   "g_tr": 16,
+   "g_dyn": 4.39,
+   "mira": 164,
+   "url": "azovpromstal.com",
+   "strict": 0,
+   "wide": 3,
+   "toxic": 0.02,
+   "razdel": "/article/",
+   "otsev": "ферма 32.5",
+   "top": [
+    [
+     "как пригнать трактор из польши",
+     "https://www.azovpromstal.com/article/one/id/5809",
+     6
+    ],
+    [
+     "какой строительный инструмент по легенде создал дедал",
+     "https://www.azovpromstal.com/article/one/id/2522",
+     2
+    ],
+    [
+     "днепр мотоцикл",
+     "https://www.azovpromstal.com/article/one/id/4678",
+     1
+    ]
+   ]
+  },
+  {
+   "domain": "rossoshru.ru",
+   "tema": "мимо",
+   "tip": "региональное СМИ",
+   "n": 10,
+   "g_tr": 253,
+   "g_dyn": 2.41,
+   "mira": 700,
+   "url": "rossoshru.ru",
+   "strict": 0,
+   "wide": 13,
+   "toxic": 0.28,
+   "razdel": "/ГГГГ/ММ/ДД/",
+   "otsev": "токсичн 28%",
+   "top": [
+    [
+     "русский вулкан зеркало",
+     "https://rossoshru.ru/2023/06/20/vulkan-rossiya-rabochie-zerkala/",
+     46
+    ],
+    [
+     "минтай",
+     "https://rossoshru.ru/2025/10/06/mintaj-ryba-kotoraya-umeet-byt-prostoj/",
+     27
+    ],
+    [
+     "франциска тун",
+     "https://rossoshru.ru/2020/10/23/andrei-martynov-so-slezami-vspominaet-syna-s-kotorym-razlychen-mnogo-let/",
+     23
+    ]
+   ]
+  },
+  {
+   "domain": "yerkramas.org",
+   "tema": "мимо",
+   "tip": "общее СМИ",
+   "n": 9,
+   "g_tr": 13291,
+   "g_dyn": 1.13,
+   "mira": 550,
+   "url": "yerkramas.org",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.31,
+   "razdel": "/article/",
+   "otsev": "токсичн 31%",
+   "top": [
+    [
+     "вулкан вегас",
+     "https://yerkramas.org/article/118853/kazino-vulkan-vegas-%E2%80%93-otlichna-kollekciya-slotov/",
+     1897
+    ],
+    [
+     "одноклассники открыть мою страницу",
+     "https://yerkramas.org/article/145075/odnoklassniki-moya-stranica-kak-vojti-s-pomoshhyu-logina-i-parolya/",
+     1080
+    ],
+    [
+     "vulkan russia",
+     "https://www.yerkramas.org/article/174115/vulkan-rossiya-oficialnyj-sajt--onlajn-kazino-vulkan-russia",
+     543
+    ]
+   ]
+  },
+  {
+   "domain": "otzovik.online",
+   "tema": "мимо",
+   "tip": "доска объявлений/маркетплейс",
+   "n": 9,
+   "g_tr": 1,
+   "g_dyn": 1.82,
+   "mira": 6900,
+   "url": "otzovik.online",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "ферма 66.0",
+   "top": []
+  },
+  {
+   "domain": "piterets.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 8,
+   "g_tr": 242,
+   "g_dyn": 0.95,
+   "mira": 560,
+   "url": "piterets.ru",
+   "strict": 0,
+   "wide": 10,
+   "toxic": 0.07,
+   "razdel": "/clause/",
+   "otsev": "токсичн 7%",
+   "top": [
+    [
+     "пособия на детей",
+     "https://piterets.ru/clause/raznoe/part12/47404-posobija-na-detej-v-rossii-v-2024-godu-polnyj-obzor.html",
+     14
+    ],
+    [
+     "сколько бутылок в ящике шампанского фраголино",
+     "https://piterets.ru/clause/holiday/svadba/23475-skolko-shampanskogo-v-yashchike.html",
+     10
+    ],
+    [
+     "рецепт на триган д",
+     "https://piterets.ru/clause/other/49197-kak-poluchit-recept-na-trigan-d-poshagovaja-instrukcija-i-vazhnye-rekomendacii.html",
+     9
+    ]
+   ]
+  },
+  {
+   "domain": "bigpicture.ru",
+   "tema": "мимо",
+   "tip": "общее СМИ",
+   "n": 7,
+   "g_tr": 54022,
+   "g_dyn": 0.94,
+   "mira": 4492,
+   "url": "bigpicture.ru",
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.5,
+   "razdel": "",
+   "otsev": "токсичн 50%",
+   "top": [
+    [
+     "лысый из бразерс",
+     "https://bigpicture.ru/zhena-lysogo-iz-brazzers/",
+     1629
+    ],
+    [
+     "хмонг собака",
+     "https://bigpicture.ru/sobaki-hmong/",
+     1573
+    ],
+    [
+     "трансгендер",
+     "https://bigpicture.ru/transgendery-do-i-posle/",
+     1324
     ]
    ]
   }
