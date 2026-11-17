@@ -203,10 +203,14 @@ import proba_tochnaya as P                          # noqa: E402
 _петля = build_addr_probe(store, cfg)
 проба = getattr(_петля, "probe", None) or getattr(_петля, "probe_")
 проба.per_domain = 10 ** 6
-МЁРТВ = ("нет ящика", "нет MX")
+МЁРТВ = ("нет ящика", "нет MX", "неясно", "отказ пробе")   # владелец 17.11: «неясно — мы не брали раньше, не бери их, отказ пробе тоже»
 КРУПНЫЕ = {"mail.ru", "bk.ru", "list.ru", "inbox.ru", "internet.ru", "yandex.ru", "ya.ru", "yandex.by", "yandex.com", "narod.ru", "gmail.com", "rambler.ru"}
 ЛЕС = читать_журнал(ЖУР_ЛЕС)
 шаг = {и: 0 for и in КОМП if и not in ЛЕС}
+for и in КОМП:   # 17.11: выбранные на «неясно»/«отказ пробе» — дальше по лесенке со следующей ступени
+    з = ЛЕС.get(и)
+    if з and з.get("status") == "выбран" and з.get("verdict") in МЁРТВ:
+        шаг[и] = int(з.get("stupen", 0)) + 1; del ЛЕС[и]
 посл_домен = {}; сч_проб = Counter()
 print("лесенка: к пробе %d (уже решено %d)" % (len(шаг), len([и for и in КОМП if и in ЛЕС])), flush=True)
 while шаг:
