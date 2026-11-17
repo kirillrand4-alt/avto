@@ -107,9 +107,19 @@ print("строк %d, компаний после чистки %d | отсев �
 for em, inn in к.execute("SELECT lower(r.email), r.inn FROM messages m JOIN recipients r ON r.id=m.recipient_id WHERE m.status IN ('scheduled','sending','pending_review')"):
     в_очереди.add("@" + em); в_очереди.add(ц(inn))
 чей = {r[0].lower(): ц(r[1]) for r in к.execute("SELECT email, inn FROM recipients WHERE email IS NOT NULL")}
-сч1 = Counter(); ГОДН = {}
+try:
+    sys.path.insert(0, r"C:\sender\sender")
+    from sender.ne_nash import build_ne_nash
+    не_наш = {ц(x) for x in (build_ne_nash().набор(None) or [])}
+except Exception as ex:  # noqa: BLE001
+    print("реестр «не наш» не прочитан: %s" % ex, flush=True); не_наш = set()
+# 17.11 вычитка выбора: в сделках СЦ есть компрессорные сервисы и дилеры (покупали запчасти) — это конкуренты, не пишем
+КОНК_ИМЯ = re.compile(r"(?i)компрессор|kompres|compres|пневмо|фильтрамакс|filtramax|\bсц\b|сервисн\w* центр компр")
+сч1 = Counter(); ГОДН = {}; КОНК = []
 for кл, ад in КОМП.items():
     инн = кл if not кл.startswith("имя:") else ""
+    if (инн and инн in не_наш) or КОНК_ИМЯ.search(ИМЯ_К[кл]) or any(re.search(r"(?i)\bсц\)", а["fio"] or "") for а in ад):
+        сч1["конкурент / компрессорный сервис / «не наш»"] += 1; КОНК.append(ИМЯ_К[кл] + (" [реестр]" if инн in не_наш else "")); continue
     if инн and (инн in стоп): сч1["компания в стоп-листе"] += 1; continue
     if инн and инн in ответ: сч1["был ответ/жалоба/отписка"] += 1; continue
     if инн and инн in в_очереди: сч1["письмо компании в очереди"] += 1; continue
@@ -126,6 +136,7 @@ for кл, ад in КОМП.items():
     if not ост: сч1["не осталось адреса"] += 1; continue
     ГОДН[кл] = ост
 print("правила КЦ: компаний дальше %d | %s" % (len(ГОДН), dict(сч1)), flush=True)
+print("конкуренты/компрессорные сервисы:", КОНК[:60], flush=True)
 if not РАБОТА:
     print("сухой прогон: модель, проба и карточки не запускались. Боевой — --zapusk"); sys.exit(0)
 
@@ -282,7 +293,12 @@ def _вар(с):
 
 def имя_уверено(кл, em, imya, fio):
     """Владелец 17.11: одно ФИО на нескольких почтах компании — имя только если адрес совпадает с именем/фамилией."""
-    if not imya: return ""
+    лок0 = em.split("@")[0].lower().replace(".", "").replace("_", "").replace("-", "")
+    if not imya:
+        обр = K.обращение(fio or "")
+        слова = [сл for сл in re.findall(r"[А-Яа-яЁё]{4,}", fio or "") if сл.lower() not in K.ИМЕНА and not re.search(r"(?i)(вич|вна|ична)$", сл)]
+        if обр and слова and any(в[:5] in лок0 for сл in слова for в in _вар(сл) if len(в) >= 5): return обр
+        return ""
     сколько = sum(1 for а in КОМП.get(кл, []) if (а["fio"] or "").strip() == (fio or "").strip())
     if сколько <= 1: return imya
     лок = em.split("@")[0].lower().replace(".", "").replace("_", "").replace("-", "")
@@ -305,6 +321,7 @@ for п0 in range(0, len(список), 20):
             запись["otsev"] = "фраза модели: %r" % ф[:120]; пиши(ЖУР_КАРТ, запись); отсев["фраза не прошла"] += 1; continue
         обр = имя_уверено(кл, em, лз.get("imya") or "", лз.get("fio") or "")
         if (лз.get("imya") or "") and not обр: отсев["имя снято: одно ФИО на нескольких почтах"] += 1
+        if not (лз.get("imya") or "") and обр: отсев["имя добавлено: фамилия в адресе"] += 1
         _им = обр.split()[:1]
         mb = random.choice([m for m in ящики if str(getattr(m, "from_name", "") or "").split()[:1] != _им] or ящики)
         менеджер = (str(getattr(mb, "from_name", "") or "").split(",")[0].split() or ["Сергей"])[0]
