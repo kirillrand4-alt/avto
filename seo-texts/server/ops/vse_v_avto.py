@@ -8,7 +8,7 @@
 направлений — пропуск с причиной, срок — ближайший слот окна в зоне
 получателя. Разница одна: не первые 300 по баллу, а все — кнопка упирается
 в одни и те же заблокированные верхние карточки.
-    vse_v_avto.py [--katit] [--zapusk]   (без --katit — сухой подсчёт)
+    vse_v_avto.py [--katit] [--zapusk] [--tolko=ID,ID] [--bez=ID,ID] [--kto=кто решил]   (без --katit — сухой подсчёт)
 Журнал: _ops/vse-v-avto.jsonl, лог: _ops/vse-v-avto.log
 """
 import io
@@ -49,6 +49,11 @@ now = datetime.now(timezone.utc)
 _БЕЗ = {int(x) for a in sys.argv if a.startswith("--bez=") for x in a.split("=", 1)[1].split(",") if x.strip().isdigit()}
 if _БЕЗ:
     ряды = [r for r in ряды if int(r.get("campaign_id") or 0) not in _БЕЗ]
+# --tolko=24 — ТОЛЬКО карточки этих кампаний (владелец 17.11: «переводи в автоотправку те, которые сделались сейчас»)
+_ТОЛЬКО = {int(x) for a in sys.argv if a.startswith("--tolko=") for x in a.split("=", 1)[1].split(",") if x.strip().isdigit()}
+if _ТОЛЬКО:
+    ряды = [r for r in ряды if int(r.get("campaign_id") or 0) in _ТОЛЬКО]
+_КТО = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--kto=")), "владелец 30.10 (все разом)")
 _по_камп = Counter(int(r.get("campaign_id") or 0) for r in ряды)
 print("по кампаниям:", sorted(_по_камп.items()), flush=True)
 print("%s в подтверждении (без ответов): %d" % (time.strftime("%H:%M:%S"), len(ряды)), flush=True)
@@ -102,7 +107,7 @@ for i, r in enumerate(ряды, 1):
             store.confirm_set_message(rid, mid)
         else:
             store.reschedule_message(int(mid), слот)
-        ок = store.confirm_decide(rid, status="approved", decided_by="владелец 30.10 (все разом)",
+        ок = store.confirm_decide(rid, status="approved", decided_by=_КТО,
                                   reason="bulk-to-auto")
         итог["в автоотправку" if ок else "уже решена"] += 1
         if ок:
