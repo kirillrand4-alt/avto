@@ -274,6 +274,23 @@ def о_компании(кл):
     return "%s; ОКВЭД %s; %s" % (ИМЯ_К[кл], ок or "-", прод or (r_[2] if r_ else "") or "-")
 
 
+_ТР = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя", ["a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","kh","ts","ch","sh","sch","","y","","e","yu","ya"]))
+def _лат(с): return "".join(_ТР.get(ч, ч) for ч in с.lower())
+def _вар(с):
+    л = _лат(с); return {л, л.replace("kh", "h"), л.replace("y", "i"), л.replace("ts", "c"), л.replace("zh", "j")}
+
+
+def имя_уверено(кл, em, imya, fio):
+    """Владелец 17.11: одно ФИО на нескольких почтах компании — имя только если адрес совпадает с именем/фамилией."""
+    if not imya: return ""
+    сколько = sum(1 for а in КОМП.get(кл, []) if (а["fio"] or "").strip() == (fio or "").strip())
+    if сколько <= 1: return imya
+    лок = em.split("@")[0].lower().replace(".", "").replace("_", "").replace("-", "")
+    for сл in re.findall(r"[А-Яа-яЁё]{3,}", fio or ""):
+        if any(в[:4] in лок for в in _вар(сл) if len(в) >= 4): return imya
+    return ""
+
+
 заведено = 0; отсев = Counter()
 for п0 in range(0, len(список), 20):
     пачка = список[п0:п0 + 20]
@@ -286,7 +303,8 @@ for п0 in range(0, len(список), 20):
         запись = {"kluch": кл, "inn": инн, "email": em, "imya": лз.get("imya"), "rol": лз.get("rol"), "ts": datetime.now(timezone.utc).isoformat()}
         if not KK.фраза_годна(ф):
             запись["otsev"] = "фраза модели: %r" % ф[:120]; пиши(ЖУР_КАРТ, запись); отсев["фраза не прошла"] += 1; continue
-        обр = лз.get("imya") or ""
+        обр = имя_уверено(кл, em, лз.get("imya") or "", лз.get("fio") or "")
+        if (лз.get("imya") or "") and not обр: отсев["имя снято: одно ФИО на нескольких почтах"] += 1
         _им = обр.split()[:1]
         mb = random.choice([m for m in ящики if str(getattr(m, "from_name", "") or "").split()[:1] != _им] or ящики)
         менеджер = (str(getattr(mb, "from_name", "") or "").split(",")[0].split() or ["Сергей"])[0]
