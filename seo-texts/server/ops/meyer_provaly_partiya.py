@@ -8,7 +8,8 @@
 Каждое письмо — линзы технолога и скептика Meyer (боевые) и редактор. Ошибка после перефраза → откат к исходным
 абзацам и повторная проверка; снова ошибка → статус «ошибка» (владельцу). Конкурентов не упоминаем, силикон
 оставляем (владелец 16.11). КАРТОЧЕК НЕ ЗАВОДИТ — только журнал _ops/meyer-partiya.jsonl (fsync, резюмируемо).
-    meyer_provaly_partiya.py --zapusk [--potokov=6] [--limit=N] [--sbros] [--model=claude-sonnet-5-5]"""
+    meyer_provaly_partiya.py --zapusk [--potokov=6] [--limit=N] [--sbros] [--povtor] [--model=claude-sonnet-5-5]
+    --povtor: выкинуть из журнала «ошибка» и «не писать» и собрать их заново (владелец 17.11)."""
 import csv, io, json, os, random, re, subprocess, sys, threading, time
 from collections import Counter, defaultdict
 ОПС = r"C:\sender\_ops"; ДР = r"C:\seostat\drop\drop-storage"
@@ -40,6 +41,11 @@ if "--dubli" in sys.argv and os.path.exists(ЖУР):   # пересобрать 
     _вс = [с for с in io.open(ЖУР, encoding="utf-8") if с.strip()]
     with io.open(ЖУР.replace(".jsonl", "-do-dubley.jsonl"), "w", encoding="utf-8") as ф: ф.writelines(_вс)
     with io.open(ЖУР + ".tmp", "w", encoding="utf-8") as ф: ф.writelines(с for с in _вс if json.loads(с)["kluch"] not in _д)
+    os.replace(ЖУР + ".tmp", ЖУР)
+if "--povtor" in sys.argv and os.path.exists(ЖУР):   # владелец 17.11: «ошибки и отсеянные прогони ещё раз» — убрать их из журнала
+    _вс = [с for с in io.open(ЖУР, encoding="utf-8") if с.strip()]
+    with io.open(ЖУР.replace(".jsonl", "-do-povtora.jsonl"), "w", encoding="utf-8") as ф: ф.writelines(_вс)
+    with io.open(ЖУР + ".tmp", "w", encoding="utf-8") as ф: ф.writelines(с for с in _вс if json.loads(с).get("status") == "ок")
     os.replace(ЖУР + ".tmp", ЖУР)
 if "--sbros" in sys.argv and os.path.exists(ЖУР):   # пробная пачка по старым правилам — в сторону
     os.replace(ЖУР, ЖУР.replace(".jsonl", "-proba-%d.jsonl" % int(time.time())))
@@ -267,7 +273,10 @@ print("к сборке: %d (уже в журнале %d) %s" % (len(кандид
 
 ЛИНЗЫ = ("Ты проверяешь письмо поставщика Meyer тремя независимыми взглядами и даёшь три вердикта.\n"
          "ИМЯ_ОТПРАВИТЕЛЯ — имя НАШЕГО менеджера-отправителя, его подставит система при отправке; к получателю оно отношения "
-         "не имеет, это не ошибка и не повод для замечания. Подпись тоже добавит система.\n\n"
+         "не имеет, это не ошибка и не повод для замечания. Подпись тоже добавит система.\n"
+         "Все адресаты — бывшие сделки или лиды Meyer: разговор о покупке оборудования с ними был (владелец 17.11). Поэтому "
+         "профиль «торговля», «ассоциация», «инвестиции», пустой профиль или непрофильный ОКВЭД — НЕ ошибка и не повод для "
+         "замечания; оценивай только сам текст письма: факты, станок под продукт, язык.\n\n"
          "1) tehnolog:\n" + AL._TEH_LENS_TEHNOLOG_MEYER + "\n\n2) skeptik:\n" + AL._TEH_LENS_SKEPTIK_MEYER +
          "\n\n3) redaktor:\n" + РЕДАКТОР.split("ФИО контакта:")[0] +
          '\nОтвет СТРОГО JSON: {"tehnolog": {"verdict": "верно|сомнительно|ошибка", "pochemu": "кратко"}, '
@@ -336,9 +345,9 @@ def собрать(кк):
     if ок_пф and any(v.get("verdict") == "ошибка" for v in вер.values()):
         вариант = текст(*исх); вер = линзы(вариант, тема, x, прод, ф_, данные); откат = True
     if any(v.get("verdict") == "нет ответа" for v in вер.values()): return "нет ответа модели"
-    статус = "ошибка" if any(v.get("verdict") == "ошибка" for v in вер.values()) else ("не писать" if лич.get("ne_pisat") else "ок")
+    статус = "ошибка" if any(v.get("verdict") == "ошибка" for v in вер.values()) else "ок"   # владелец 17.11: «это же сделки или привлечения» — ne_pisat больше не отсеивает, только пишется в журнал
     з = {"kluch": x["kluch"], "inn": x.get("inn"), "email": e, "shablon": ш, "razmetka": р.get("shablon"), "kompaniya": x.get("kompaniya"),
-         "fio": ф_, "obrashchenie": им, "produkt": прод, "rentgen": рент, "treyder": bool(лич.get("treyder")), "lichnaya": лф,
+         "fio": ф_, "obrashchenie": им, "produkt": прод, "rentgen": рент, "treyder": bool(лич.get("treyder")), "ne_pisat": bool(лич.get("ne_pisat")), "lichnaya": лф,
          "perefraz": ок_пф and not откат, "otkat": откат, "tema": тема, "pismo": вариант, "status": статус,
          "tehnolog": вер["tehnolog"], "skeptik": вер["skeptik"], "redaktor": вер["redaktor"], "ts": time.strftime("%Y-%m-%dT%H:%M:%S")}
     with _з:
