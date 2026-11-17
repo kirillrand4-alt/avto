@@ -1,0 +1,904 @@
+{
+ "top": [
+  {
+   "domain": "moluch.ru",
+   "tema": "смежная",
+   "tip": "отраслевое СМИ/портал",
+   "n": 4,
+   "g_tr": 78728,
+   "g_dyn": 4.14,
+   "mira": 3500,
+   "strict": 5511,
+   "wide": 8660,
+   "toxic": 0.0,
+   "razdel": "/archive/",
+   "otsev": "",
+   "top": [
+    [
+     "скачать майнкрафт 1.16.40",
+     "https://moluch.ru/archive/290/73525",
+     1110
+    ],
+    [
+     "неологизмы",
+     "https://moluch.ru/young/archive/59/3172",
+     905
+    ],
+    [
+     "мнемотехника",
+     "https://moluch.ru/young/archive/23/1395",
+     740
+    ]
+   ]
+  },
+  {
+   "domain": "topclimat.ru",
+   "tema": "наша",
+   "tip": "отраслевое СМИ/портал",
+   "n": 9,
+   "g_tr": 4182,
+   "g_dyn": 2.1,
+   "mira": 1999,
+   "strict": 753,
+   "wide": 2467,
+   "toxic": 0.0,
+   "razdel": "/publications/",
+   "otsev": "",
+   "top": [
+    [
+     "градирня",
+     "https://www.topclimat.ru/publications/isparitelnye-ventilyatornye-gradirny.html",
+     198
+    ],
+    [
+     "тэн",
+     "https://www.topclimat.ru/publications/chto-takoe-ten.html",
+     162
+    ],
+    [
+     "замена подшипника кондиционера",
+     "https://www.topclimat.ru/publications/podshipnik-kondicionera-menyaem.html",
+     98
+    ]
+   ]
+  },
+  {
+   "domain": "vrk1.ru",
+   "tema": "смежная",
+   "tip": "прочее",
+   "n": 3,
+   "g_tr": 736,
+   "g_dyn": 1.56,
+   "mira": 790,
+   "strict": 155,
+   "wide": 581,
+   "toxic": 0.0,
+   "razdel": "/articles/",
+   "otsev": "",
+   "top": [
+    [
+     "никелевый",
+     "https://www.vrk1.ru/articles/articles_1207.html",
+     91
+    ],
+    [
+     "торцовочная пила с протяжкой",
+     "https://www.vrk1.ru/articles/articles_775.html",
+     76
+    ],
+    [
+     "быстровозводимые здания",
+     "https://vrk1.ru/articles/chto-takoe-bystrovozvodimye-zdanija.html",
+     64
+    ]
+   ]
+  },
+  {
+   "domain": "novosibdom.ru",
+   "tema": "смежная",
+   "tip": "каталог/справочник",
+   "n": 3,
+   "g_tr": 7447,
+   "g_dyn": 2.06,
+   "mira": 950,
+   "strict": 149,
+   "wide": 298,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "башня татлина",
+     "https://arx.novosibdom.ru/node/2409",
+     223
+    ],
+    [
+     "красный проспект новосибирск",
+     "https://nsk.novosibdom.ru/node/2147",
+     76
+    ],
+    [
+     "архитектура древней греции",
+     "https://arx.novosibdom.ru/node/444",
+     61
+    ]
+   ]
+  },
+  {
+   "domain": "stroy-mart.ru",
+   "tema": "смежная",
+   "tip": "каталог/справочник",
+   "n": 8,
+   "g_tr": 440,
+   "g_dyn": 0.57,
+   "mira": 670,
+   "strict": 92,
+   "wide": 255,
+   "toxic": 0.0,
+   "razdel": "/stati/",
+   "otsev": "",
+   "top": [
+    [
+     "из чего состоит гранит",
+     "http://stroy-mart.ru/stati/granit-svoystva-sostav-primenenie/",
+     76
+    ],
+    [
+     "дроссель это",
+     "https://stroy-mart.ru/zametki/drossel-chto-eto-kakie-byvayut-i-gde-primenyayutsya/",
+     50
+    ],
+    [
+     "что такое дроссель",
+     "https://stroy-mart.ru/zametki/drossel-chto-eto-kakie-byvayut-i-gde-primenyayutsya/",
+     31
+    ]
+   ]
+  },
+  {
+   "domain": "mplast.by",
+   "tema": "смежная",
+   "tip": "отраслевое СМИ/портал",
+   "n": 4,
+   "g_tr": 617,
+   "g_dyn": 0.81,
+   "mira": 817,
+   "strict": 12,
+   "wide": 210,
+   "toxic": 0.0,
+   "razdel": "/novosti/",
+   "otsev": "",
+   "top": [
+    [
+     "вагонка",
+     "https://mplast.by/novosti/2020-09-23-vagonka-dlya-kuhni/",
+     947
+    ],
+    [
+     "поделка из пластиковой бутылки",
+     "https://mplast.by/novosti/2015-04-02-plastikovaya-butyilka-drug-cheloveka/",
+     56
+    ],
+    [
+     "приборы для измерения давления",
+     "https://mplast.by/novosti/2019-02-04-pribory-dlya-izmereniya-davleniya/",
+     54
+    ]
+   ]
+  },
+  {
+   "domain": "business-gazeta.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 7,
+   "g_tr": 327635,
+   "g_dyn": 0.75,
+   "mira": 2350,
+   "strict": 0,
+   "wide": 3276,
+   "toxic": 0.0,
+   "razdel": "/article/",
+   "otsev": "",
+   "top": [
+    [
+     "бизнес онлайн",
+     "https://sport.business-gazeta.ru/article/320973",
+     7826
+    ],
+    [
+     "бизнес онлайн",
+     "https://www.business-gazeta.ru/article/713869",
+     5418
+    ],
+    [
+     "новости ульяновск",
+     "https://www.business-gazeta.ru/article/711263",
+     3465
+    ]
+   ]
+  },
+  {
+   "domain": "c-o-k.ru",
+   "tema": "наша",
+   "tip": "отраслевое СМИ/портал",
+   "n": 8,
+   "g_tr": 22430,
+   "g_dyn": 1.43,
+   "mira": 36000,
+   "strict": 0,
+   "wide": 3140,
+   "toxic": 0.0,
+   "razdel": "/articles/",
+   "otsev": "",
+   "top": [
+    [
+     "акведук",
+     "https://www.c-o-k.ru/articles/rimskie-akveduki-inzhenernoe-chudo-drevnego-mira",
+     396
+    ],
+    [
+     "пар",
+     "https://www.c-o-k.ru/articles/par-i-parogeneratory",
+     165
+    ],
+    [
+     "экстракция",
+     "https://www.c-o-k.ru/articles/tehnologicheskiy-raschet-ekstrakcii-v-sisteme-zhidkost-zhidkost",
+     96
+    ]
+   ]
+  },
+  {
+   "domain": "totalarch.com",
+   "tema": "смежная",
+   "tip": "отраслевое СМИ/портал",
+   "n": 6,
+   "g_tr": 8300,
+   "g_dyn": 1.01,
+   "mira": 1500,
+   "strict": 0,
+   "wide": 1660,
+   "toxic": 0.0,
+   "razdel": "https://totalarch.com/",
+   "otsev": "",
+   "top": [
+    [
+     "термы диоклетиана",
+     "https://antique.totalarch.com/gha_roma/3/9",
+     168
+    ],
+    [
+     "мемориальный парк",
+     "https://landscape.totalarch.com/node/42",
+     117
+    ],
+    [
+     "ноприз",
+     "https://totalarch.com/vstupleniye-v-nopriz-dokumenty-i-trebovaniy",
+     113
+    ]
+   ]
+  },
+  {
+   "domain": "rlocman.ru",
+   "tema": "наша",
+   "tip": "отраслевое СМИ/портал",
+   "n": 9,
+   "g_tr": 19024,
+   "g_dyn": 2.39,
+   "mira": 2800,
+   "strict": 0,
+   "wide": 1522,
+   "toxic": 0.0,
+   "razdel": "/press-rel/",
+   "otsev": "",
+   "top": [
+    [
+     "компаратор на оу",
+     "https://www.rlocman.ru/review/article.html?di=500899",
+     98
+    ],
+    [
+     "2332 на часах",
+     "https://www.rlocman.ru/press-rel/rel.html?di=3613",
+     80
+    ],
+    [
+     "1919 на часах",
+     "https://www.rlocman.ru/press-rel/rel.html?di=3607",
+     72
+    ]
+   ]
+  },
+  {
+   "domain": "c-inform.info",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 8,
+   "g_tr": 12658,
+   "g_dyn": 1.56,
+   "mira": 2258,
+   "strict": 0,
+   "wide": 886,
+   "toxic": 0.03,
+   "razdel": "/news/id/",
+   "otsev": "",
+   "top": [
+    [
+     "анонимный просмотр сторис",
+     "https://www.c-inform.info/news/id/101629",
+     2835
+    ],
+    [
+     "причастный оборот",
+     "https://www.c-inform.info/news/id/110690",
+     1980
+    ],
+    [
+     "анонимный просмотр историй",
+     "https://www.c-inform.info/news/id/99633",
+     905
+    ]
+   ]
+  },
+  {
+   "domain": "perekos.net",
+   "tema": "смежная",
+   "tip": "отраслевое СМИ/портал",
+   "n": 3,
+   "g_tr": 628,
+   "g_dyn": 0.58,
+   "mira": 1800,
+   "strict": 0,
+   "wide": 276,
+   "toxic": 0.01,
+   "razdel": "/pages/view/",
+   "otsev": "",
+   "top": [
+    [
+     "шопинг",
+     "https://perekos.net/pages/view/4926",
+     87
+    ],
+    [
+     "бра это",
+     "https://perekos.net/pages/view/5312",
+     72
+    ],
+    [
+     "подкрановая балка",
+     "https://perekos.net/pages/view/1318",
+     25
+    ]
+   ]
+  },
+  {
+   "domain": "1npf.com",
+   "tema": "смежная",
+   "tip": "общее СМИ",
+   "n": 6,
+   "g_tr": 285,
+   "g_dyn": 9.48,
+   "mira": 400,
+   "strict": 0,
+   "wide": 111,
+   "toxic": 0.03,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "как получить пароль к сертификату электронной подписи",
+     "https://1npf.com/elektronnaya-podpis-v-nalogovoj-chto-takoe-parol-sertifikata/",
+     79
+    ],
+    [
+     "электронная нагрузка ардуино",
+     "https://1npf.com/sozdanie-elektronnoj-nagruzki-dlya-arduino/",
+     42
+    ],
+    [
+     "13 33 на часах",
+     "https://1npf.com/chasy-1333-znachenie-v-lyubvi/",
+     24
+    ]
+   ]
+  },
+  {
+   "domain": "dubna.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 8,
+   "g_tr": 2345,
+   "g_dyn": 0.48,
+   "mira": 1552,
+   "strict": 0,
+   "wide": 94,
+   "toxic": 0.0,
+   "razdel": "/article/",
+   "otsev": "",
+   "top": [
+    [
+     "маркеры для теггинга",
+     "https://dubna.ru/article/2021/11/markery-dlya-tegginga",
+     198
+    ],
+    [
+     "что такое дружба сочинение",
+     "https://dubna.ru/article/2023/08/sochinenie-na-temu-chto-takoe-druzhba",
+     168
+    ],
+    [
+     "сочинение на тему дружба",
+     "https://dubna.ru/article/2023/08/sochinenie-na-temu-chto-takoe-druzhba",
+     168
+    ]
+   ]
+  },
+  {
+   "domain": "innov.ru",
+   "tema": "смежная",
+   "tip": "отраслевое СМИ/портал",
+   "n": 5,
+   "g_tr": 1948,
+   "g_dyn": 2.84,
+   "mira": 1800,
+   "strict": 0,
+   "wide": 58,
+   "toxic": 0.01,
+   "razdel": "/news/ (в т.ч. /news/economy/, /news/mosaic/, /news/it/, /news/other/)",
+   "otsev": "",
+   "top": [
+    [
+     "павел абросимов",
+     "https://www.innov.ru/news/mosaic/kto-takoy-pavel-abrosimov-iz-major/",
+     150
+    ],
+    [
+     "сквозная нумерация это",
+     "https://www.innov.ru/news/it/kak-pravilno-sdelat-skvoznuyu-numeraciyu-v-eksele/",
+     39
+    ],
+    [
+     "чихалка",
+     "https://www.innov.ru/news/fun/printsip-gadaniya-chikhal/",
+     18
+    ]
+   ]
+  },
+  {
+   "domain": "bobr.by",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 4,
+   "g_tr": 1717,
+   "g_dyn": 0.78,
+   "mira": 3000,
+   "strict": 0,
+   "wide": 17,
+   "toxic": 0.0,
+   "razdel": "/news/press-releases/, /news/newscompany/",
+   "otsev": "",
+   "top": [
+    [
+     "православная пасха",
+     "http://bgsptk.bobr.by/138-5-maya-pravoslavnaya-pasha.html",
+     39
+    ],
+    [
+     "как разархивировать фото в инстаграм",
+     "https://bobr.by/news/press-releases/166562",
+     17
+    ],
+    [
+     "грибок на стенах",
+     "https://bobr.by/news/press-releases/144008",
+     14
+    ]
+   ]
+  },
+  {
+   "domain": "metaprom.ru",
+   "tema": "наша",
+   "tip": "каталог/справочник",
+   "n": 9,
+   "g_tr": 2711,
+   "g_dyn": 3.06,
+   "mira": 16200,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": []
+  },
+  {
+   "domain": "progorod76.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 8,
+   "g_tr": 3332,
+   "g_dyn": 1.19,
+   "mira": 2250,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.02,
+   "razdel": "/companies/",
+   "otsev": "",
+   "top": [
+    [
+     "к чему снится парень",
+     "https://progorod76.ru/k-chemu-snitsya-paren",
+     333
+    ],
+    [
+     "если снится парень",
+     "https://progorod76.ru/k-chemu-snitsya-paren",
+     190
+    ],
+    [
+     "британские ученые",
+     "https://progorod76.ru/10-samykh-izvestnykh-uchenykh-iz-anglii",
+     79
+    ]
+   ]
+  },
+  {
+   "domain": "v-tagile.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 7,
+   "g_tr": 44647,
+   "g_dyn": 1.23,
+   "mira": 3300,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.01,
+   "razdel": "/obschestvo-{mesyac}-{god}/",
+   "otsev": "",
+   "top": [
+    [
+     "гастропротекторы",
+     "https://v-tagile.ru/obschestvo-fevral-5/rebagit-i-drugie-gastroprotektory-kak-vybrat-podkhodyashchij-preparat",
+     247
+    ],
+    [
+     "размеры мониторов в см",
+     "https://v-tagile.ru/obschestvo-sentyabr-2022/kak-vybrat-monitor-dlya-kompyutera",
+     13
+    ],
+    [
+     "надписи на венках",
+     "https://v-tagile.ru/obschestvo-fevral-2024/podbor-traurnogo-venka-na-pokhorony-vidy-i-pravila-oformleniya",
+     11
+    ]
+   ]
+  },
+  {
+   "domain": "infokam.su",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 7,
+   "g_tr": 7700,
+   "g_dyn": 0.75,
+   "mira": 500,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "как поделиться историей в инстаграм",
+     "https://infokam.su/n38355.html",
+     48
+    ],
+    [
+     "happymod скачать на андроид",
+     "https://infokam.su/osobennosti-prilozheniya-happymod.html",
+     39
+    ],
+    [
+     "как в инстаграме поделиться чужой историей",
+     "https://infokam.su/n38355.html",
+     27
+    ]
+   ]
+  },
+  {
+   "domain": "niasam.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 6,
+   "g_tr": 8391,
+   "g_dyn": 0.79,
+   "mira": 1310,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "hms core это",
+     "https://www.niasam.ru/elektronnye_ustrojstva/hms-core-dlya-chego-nuzhna-eta-programma-na-android-i-kak-udalit-eyo-so-smartfona-218901.html",
+     91
+    ],
+    [
+     "hms core",
+     "https://www.niasam.ru/elektronnye_ustrojstva/hms-core-dlya-chego-nuzhna-eta-programma-na-android-i-kak-udalit-eyo-so-smartfona-218901.html",
+     64
+    ],
+    [
+     "для постройки гаража дачнику",
+     "https://www.niasam.ru/building_dacha/kak-vybrat-dachnyj-garazh-kotoryj-prosluzhit-dolgie-gody-bez-hlopot-260477.html",
+     26
+    ]
+   ]
+  },
+  {
+   "domain": "1777.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 6,
+   "g_tr": 50350,
+   "g_dyn": 0.81,
+   "mira": 1499,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "рождаемость",
+     "https://news.1777.ru/128214-k-chemu-privedet-pozdnyaya-rozhdaemost-prognoz-na-desyatiletiya-vpered",
+     125
+    ],
+    [
+     "анна шафран",
+     "https://1777.ru/stavropol/one_lenta.php?id_one=8276&id=29",
+     108
+    ],
+    [
+     "тофик арифов",
+     "https://1777.ru/stavropol/one_lenta.php?id_one=7192&id=29",
+     93
+    ]
+   ]
+  },
+  {
+   "domain": "justmedia.ru",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 4,
+   "g_tr": 54184,
+   "g_dyn": 1.78,
+   "mira": 3000,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.0,
+   "razdel": "",
+   "otsev": "",
+   "top": [
+    [
+     "лунный календарь 2021",
+     "https://www.justmedia.ru/news/russiaandworld/lunnyy-kalendar-na-dekabr-2021-goda",
+     2960
+    ],
+    [
+     "рыбы знак зодиака",
+     "https://www.justmedia.ru/analitika/russiaandworld/znak-zodiaka-ryby-opisaniye-i-kharakteristika",
+     993
+    ],
+    [
+     "хомяк мем",
+     "https://www.justmedia.ru/analitika/society/grustnyy-khomyak-s-bolshimi-glazami-chto-eto-za-mem-i-otkuda-vzyalsya",
+     634
+    ]
+   ]
+  }
+ ],
+ "otsev": [
+  {
+   "domain": "oborudunion.ru",
+   "tema": "наша",
+   "tip": "каталог/справочник",
+   "n": 20,
+   "g_tr": 9947,
+   "g_dyn": 1.72,
+   "mira": 6000,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.01,
+   "razdel": "",
+   "otsev": "ферма 43.2",
+   "top": []
+  },
+  {
+   "domain": "metallurgprom.org",
+   "tema": "наша",
+   "tip": "отраслевое СМИ/портал",
+   "n": 12,
+   "g_tr": 476,
+   "g_dyn": 0.97,
+   "mira": 246,
+   "strict": 0,
+   "wide": 67,
+   "toxic": 0.36,
+   "razdel": "/press-relises/",
+   "otsev": "токсичн 36%",
+   "top": [
+    [
+     "вулкан клуб оригинал",
+     "https://metallurgprom.org/articles/digest/miscellanea/casino/12843-igrovoj-klub-vulkan-original.html",
+     80
+    ],
+    [
+     "pm казино",
+     "https://metallurgprom.org/articles/digest/miscellanea/casino/6582-pm-kazino-onlajn-formata.html",
+     79
+    ],
+    [
+     "пм казино",
+     "https://metallurgprom.org/articles/digest/miscellanea/casino/6582-pm-kazino-onlajn-formata.html",
+     17
+    ]
+   ]
+  },
+  {
+   "domain": "obzor.city",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 8,
+   "g_tr": 23111,
+   "g_dyn": 1.99,
+   "mira": 1590,
+   "strict": 0,
+   "wide": 693,
+   "toxic": 0.52,
+   "razdel": "/texty/",
+   "otsev": "токсичн 52%",
+   "top": [
+    [
+     "вулкан платинум",
+     "https://obzor.city/texty/infotech/osnovnye-preimushchestva-sajta-kazino-vulkan-platinum",
+     3645
+    ],
+    [
+     "вулкан россия автоматы",
+     "https://obzor.city/texty/ras/Vulkan_avtomaty_-_luchshee_v_azartnom_mire",
+     2317
+    ],
+    [
+     "вулкан платинум вывод денег",
+     "https://obzor.city/texty/infotech/osnovnye-preimushchestva-sajta-kazino-vulkan-platinum",
+     611
+    ]
+   ]
+  },
+  {
+   "domain": "gostei.ru",
+   "tema": "смежная",
+   "tip": "отраслевое СМИ/портал",
+   "n": 7,
+   "g_tr": 2242,
+   "g_dyn": 4.0,
+   "mira": 300,
+   "strict": 0,
+   "wide": 22,
+   "toxic": 0.17,
+   "razdel": "/novosti/",
+   "otsev": "токсичн 17%",
+   "top": [
+    [
+     "клуб вулкан 24",
+     "https://gostei.ru/novosti/1431-igrovoy-klub-vulkan-24-obzor-i-osnovnye-vozmozhnosti.html",
+     116
+    ],
+    [
+     "вулкан 24 клуб отзывы",
+     "https://gostei.ru/novosti/1431-igrovoy-klub-vulkan-24-obzor-i-osnovnye-vozmozhnosti.html",
+     80
+    ],
+    [
+     "вулкан 24 клуб",
+     "https://gostei.ru/novosti/11475-kak-ustroen-igrovoy-klub-vulkan-24-i-stoit-li-syuda-zaglyadyvat.html",
+     65
+    ]
+   ]
+  },
+  {
+   "domain": "istoki.tv",
+   "tema": "смежная",
+   "tip": "региональное СМИ",
+   "n": 6,
+   "g_tr": 5539,
+   "g_dyn": 1.35,
+   "mira": 1706,
+   "strict": 0,
+   "wide": 55,
+   "toxic": 0.11,
+   "razdel": "/news/company/",
+   "otsev": "токсичн 11%",
+   "top": [
+    [
+     "туринабол",
+     "https://istoki.tv/news/company/istoriya-i-mekhanizm-deystviya-turinabola-v-sporte-i-meditsine/",
+     605
+    ],
+    [
+     "туринабол",
+     "https://istoki.tv/news/company/istoriya-i-mekhanizm-deystviya-turinabola-v-sporte-i-meditsine/",
+     385
+    ],
+    [
+     "скачать видео с тик ток",
+     "https://istoki.tv/news/company/prostoe-sokhranenie-video-iz-tik-tok-bez-votermarkov/",
+     247
+    ]
+   ]
+  },
+  {
+   "domain": "vpk.name",
+   "tema": "наша",
+   "tip": "отраслевое СМИ/портал",
+   "n": 3,
+   "g_tr": 12224,
+   "g_dyn": 1.47,
+   "mira": 4500,
+   "strict": 0,
+   "wide": 0,
+   "toxic": 0.05,
+   "razdel": "/news/",
+   "otsev": "токсичн 5%",
+   "top": [
+    [
+     "fresh 24 casino",
+     "https://vpk.name/news/921039_obzor_raboty_luchshego_onlain_kazino_fresh.html",
+     150
+    ],
+    [
+     "вулкан россия рабочее зеркало",
+     "https://vpk.name/news/990055_rabota_zerkala_oficialnogo_saita_vulkan_rossiya.html",
+     80
+    ],
+    [
+     "русский вулкан зеркало",
+     "https://vpk.name/news/990055_rabota_zerkala_oficialnogo_saita_vulkan_rossiya.html",
+     59
+    ]
+   ]
+  },
+  {
+   "domain": "promvest.info",
+   "tema": "наша",
+   "tip": "отраслевое СМИ/портал",
+   "n": 3,
+   "g_tr": 4356,
+   "g_dyn": 2.06,
+   "mira": 12000,
+   "strict": 87,
+   "wide": 87,
+   "toxic": 0.07,
+   "razdel": "/ru/innovatsii/",
+   "otsev": "токсичн 7%",
+   "top": [
+    [
+     "то расшифровка",
+     "https://promvest.info/ru/obzoryi/ito-chto-eto-takoe-rasshifrovka-i-osnovnyie-znacheniya/",
+     15
+    ],
+    [
+     "отрасли промышленности",
+     "https://promvest.info/ru/novosti-promyishlennosti/osnovnyie-otrasli-promyishlennosti-rossii/",
+     14
+    ],
+    [
+     "отрасли промышленности россии",
+     "https://promvest.info/ru/novosti-promyishlennosti/osnovnyie-otrasli-promyishlennosti-rossii/",
+     13
+    ]
+   ]
+  }
+ ]
+}
