@@ -33,7 +33,7 @@ PROMPT = """Размечаешь поисковую видимость сайт�
 def label(dom, rows):
     lines = '\n'.join(f'{i} | {r[0]} | {r[1]} | {r[2]}' for i, r in enumerate(rows))
     txt = GP.call(None, [{'role': 'user', 'content': PROMPT + f'\nСайт: {dom}\n' + lines}],
-                  model='claude-sonnet-5-5', thinking_on=False, max_tokens=8000)
+                  model=os.environ.get('SM_MODEL', 'claude-opus-4-8'), thinking_on=False, max_tokens=8000)
     txt = txt if isinstance(txt, str) else ''.join(b.text for b in txt.content if b.type == 'text')
     return json.loads(re.search(r'\{.*\}', txt, re.S).group(0))
 
@@ -53,7 +53,11 @@ def main():
             if d.get('error') or d['domain'] in done or not d.get('rows'):
                 continue
             rows = d['rows']
-            lab = label(d['domain'], rows)
+            try:
+                lab = label(d['domain'], rows)
+            except Exception as e:  # обрезанный/битый ответ шлюза - пропустить, доразметится повтором
+                print('ERR', d['domain'], repr(e)[:120], flush=True)
+                continue
             m = {int(x[0]): x for x in lab['rows'] if isinstance(x, list) and len(x) >= 4}
             tot = sum(r[2] or 0 for r in rows) or 1
             sh = lambda cond: round(sum((r[2] or 0) for i, r in enumerate(rows) if i in m and cond(m[i])) / tot, 2)  # noqa: E731

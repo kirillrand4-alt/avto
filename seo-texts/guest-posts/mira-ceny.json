@@ -1,0 +1,912 @@
+{
+ "business-gazeta.ru": {
+  "url": "kam.business-gazeta.ru",
+  "price": 2350,
+  "spam": 0.01999999955296516,
+  "stat": 812,
+  "idx": 34497
+ },
+ "cont.ws": {
+  "url": "cont.ws",
+  "price": 9500,
+  "spam": 0.009999999776482582,
+  "stat": 593,
+  "idx": 43078
+ },
+ "sevastopol.su": {
+  "url": "sevastopol.su",
+  "price": 7320,
+  "spam": 0.01999999955296516,
+  "stat": 982,
+  "idx": 40351
+ },
+ "politnavigator.net": {
+  "url": "politnavigator.net",
+  "price": 5799,
+  "spam": 0.01999999955296516,
+  "stat": 838,
+  "idx": 36355
+ },
+ "komiinform.ru": {
+  "url": "komiinform.ru",
+  "price": 2920,
+  "spam": 0.1800000071525574,
+  "stat": 5225,
+  "idx": 27185
+ },
+ "1777.ru": {
+  "url": "1777.ru",
+  "price": 1499,
+  "spam": 0.07999999821186066,
+  "stat": 4195,
+  "idx": 47549
+ },
+ "v-tagile.ru": {
+  "url": "v-tagile.ru",
+  "price": 3300,
+  "spam": 0.05999999865889549,
+  "stat": 4682,
+  "idx": 59634
+ },
+ "1sept.ru": {
+  "url": "1sept.ru",
+  "price": 18000,
+  "spam": 0,
+  "stat": 2,
+  "idx": 7007
+ },
+ "pg21.ru": {
+  "url": "pg21.ru",
+  "price": 3350,
+  "spam": 0.07000000029802322,
+  "stat": 3238,
+  "idx": 39611
+ },
+ "moluch.ru": {
+  "url": "moluch.ru",
+  "price": 3500,
+  "spam": 0.03999999910593033,
+  "stat": 1891,
+  "idx": 43614
+ },
+ "kam24.ru": {
+  "url": "kam24.ru",
+  "price": 2580,
+  "spam": 0.009999999776482582,
+  "stat": 3548,
+  "idx": 200161
+ },
+ "gorno-altaisk.info": {
+  "url": "gorno-altaisk.info",
+  "price": 4200,
+  "spam": 0.02999999932944775,
+  "stat": 1149,
+  "idx": 34410
+ },
+ "bragazeta.ru": {
+  "url": "bragazeta.ru",
+  "price": 10000,
+  "spam": 0.01999999955296516,
+  "stat": 829,
+  "idx": 29396
+ },
+ "progorod43.ru": {
+  "url": "progorod43.ru",
+  "price": 9000,
+  "spam": 0.03999999910593033,
+  "stat": 1654,
+  "idx": 35050
+ },
+ "donnews.ru": {
+  "url": "donnews.ru",
+  "price": 990,
+  "spam": 0.1899999976158142,
+  "stat": 8900,
+  "idx": 33183
+ },
+ "versia.ru": {
+  "url": "nn.versia.ru",
+  "price": 16000,
+  "spam": 0.009999999776482582,
+  "stat": 106,
+  "idx": 6789
+ },
+ "bobr.by": {
+  "url": "bobr.by",
+  "price": 3000,
+  "spam": 0.05999999865889549,
+  "stat": 2910,
+  "idx": 40321
+ },
+ "smolensk-i.ru": {
+  "url": "smolensk-i.ru",
+  "price": 1598,
+  "spam": 0.1000000014901161,
+  "stat": 4296,
+  "idx": 37977
+ },
+ "bigpicture.ru": {
+  "url": "bigpicture.ru",
+  "price": 4492,
+  "spam": 0.03999999910593033,
+  "stat": 10041,
+  "idx": 164161
+ },
+ "volga.news": {
+  "url": "volga.news",
+  "price": 1700,
+  "spam": 0.009999999776482582,
+  "stat": 5297,
+  "idx": 39572
+ },
+ "infokam.su": {
+  "url": "infokam.su",
+  "price": 500,
+  "spam": 0.07000000029802322,
+  "stat": 8790,
+  "idx": 100862
+ },
+ "infpol.ru": {
+  "url": "infpol.ru",
+  "price": 22000,
+  "spam": 0.119999997317791,
+  "stat": 5224,
+  "idx": 39048
+ },
+ "pg12.ru": {
+  "url": "pg12.ru",
+  "price": 2450,
+  "spam": 0.05000000074505806,
+  "stat": 2385,
+  "idx": 39726
+ },
+ "kineshemec.ru": {
+  "url": "kineshemec.ru",
+  "price": 3250,
+  "spam": 0.01999999955296516,
+  "stat": 941,
+  "idx": 37681
+ },
+ "yarnews.net": {
+  "url": "yarnews.net",
+  "price": 9000,
+  "spam": 0,
+  "stat": 146,
+  "idx": 33691
+ },
+ "rlocman.ru": {
+  "url": "rlocman.ru",
+  "price": 2800,
+  "spam": 0,
+  "stat": 2976,
+  "idx": 2461559
+ },
+ "ruffnews.ru": {
+  "url": "ruffnews.ru",
+  "price": 900,
+  "spam": 0.05999999865889549,
+  "stat": 2447,
+  "idx": 38733
+ },
+ "progorodsamara.ru": {
+  "url": "progorodsamara.ru",
+  "price": 2200,
+  "spam": 0.1299999952316284,
+  "stat": 6549,
+  "idx": 39663
+ },
+ "punkt-a.info": {
+  "url": "punkt-a.info",
+  "price": 15500,
+  "spam": 0,
+  "stat": 54,
+  "idx": 28182
+ },
+ "ruscable.ru": {
+  "url": "ruscable.ru",
+  "price": 7000,
+  "spam": 0.009999999776482582,
+  "stat": 437,
+  "idx": 27122
+ },
+ "belarushockey.com": {
+  "url": "belarushockey.com",
+  "price": 6000,
+  "spam": 0.009999999776482582,
+  "stat": 548,
+  "idx": 40474
+ },
+ "progorod33.ru": {
+  "url": "progorod33.ru",
+  "price": 2700,
+  "spam": 0.05999999865889549,
+  "stat": 2267,
+  "idx": 33236
+ },
+ "pressfeed.ru": {
+  "url": "news.pressfeed.ru",
+  "price": 30000,
+  "spam": 0,
+  "stat": 0,
+  "idx": 0
+ },
+ "c-inform.info": {
+  "url": "c-inform.info",
+  "price": 2258,
+  "spam": 0.1400000005960464,
+  "stat": 3769,
+  "idx": 24941
+ },
+ "metallicheckiy-portal.ru": {
+  "url": "metallicheckiy-portal.ru",
+  "price": 1470,
+  "spam": 0.1800000071525574,
+  "stat": 7702,
+  "idx": 38539
+ },
+ "sovsekretno.ru": {
+  "url": "sovsekretno.ru",
+  "price": 2940,
+  "spam": 0.09000000357627869,
+  "stat": 3380,
+  "idx": 34678
+ },
+ "gorodpavlodar.kz": {
+  "url": "gorodpavlodar.kz",
+  "price": 572,
+  "spam": 0.05999999865889549,
+  "stat": 2716,
+  "idx": 39244
+ },
+ "satom.ru": {
+  "url": "Satom.ru",
+  "price": 3500,
+  "spam": 0,
+  "stat": 291,
+  "idx": 41886
+ },
+ "gorodkirov.ru": {
+  "url": "gorodkirov.ru",
+  "price": 8000,
+  "spam": 0.05000000074505806,
+  "stat": 2288,
+  "idx": 39748
+ },
+ "progoroduhta.ru": {
+  "url": "progoroduhta.ru",
+  "price": 6320,
+  "spam": 0.01999999955296516,
+  "stat": 1207,
+  "idx": 39873
+ },
+ "vpk.name": {
+  "url": null,
+  "price": 4500,
+  "spam": 0.009999999776482582,
+  "stat": 503,
+  "idx": 40198
+ },
+ "x-true.info": {
+  "url": "x-true.info",
+  "price": 800,
+  "spam": 0.01999999955296516,
+  "stat": 3183,
+  "idx": 132120
+ },
+ "prokazan.ru": {
+  "url": "prokazan.ru",
+  "price": 3150,
+  "spam": 0.1700000017881393,
+  "stat": 5825,
+  "idx": 28920
+ },
+ "orenburg.media": {
+  "url": "orenburg.media",
+  "price": 20000,
+  "spam": 0,
+  "stat": 207,
+  "idx": 39753
+ },
+ "metronews.ru": {
+  "url": "metronews.ru",
+  "price": 2550,
+  "spam": 0.1899999976158142,
+  "stat": 10835,
+  "idx": 39471
+ },
+ "atomic-energy.ru": {
+  "url": "atomic-energy.ru",
+  "price": 6000,
+  "spam": 0,
+  "stat": 106,
+  "idx": 38168
+ },
+ "progorod76.ru": {
+  "url": "progorod76.ru",
+  "price": 2250,
+  "spam": 0.05000000074505806,
+  "stat": 2150,
+  "idx": 39742
+ },
+ "lyubimiigorod.ru": {
+  "url": "lyubimiigorod.ru",
+  "price": 17000,
+  "spam": 0,
+  "stat": 0,
+  "idx": 39657
+ },
+ "c-o-k.ru": {
+  "url": "c-o-k.ru",
+  "price": 36000,
+  "spam": 0,
+  "stat": 0,
+  "idx": 39861
+ },
+ "potokmedia.ru": {
+  "url": "potokmedia.ru",
+  "price": 1070,
+  "spam": 0.05000000074505806,
+  "stat": 2144,
+  "idx": 39193
+ },
+ "michurinsk.ru": {
+  "url": "michurinsk.ru",
+  "price": 736,
+  "spam": 0.01999999955296516,
+  "stat": 974,
+  "idx": 39112
+ },
+ "nta-pfo.ru": {
+  "url": "nta-pfo.ru",
+  "price": 5550,
+  "spam": 0.03999999910593033,
+  "stat": 1625,
+  "idx": 36346
+ },
+ "obzor.city": {
+  "url": "obzor.city",
+  "price": 1590,
+  "spam": 0.05999999865889549,
+  "stat": 2587,
+  "idx": 39313
+ },
+ "rubaltic.ru": {
+  "url": null,
+  "price": 3900,
+  "spam": 0.01999999955296516,
+  "stat": 906,
+  "idx": 30496
+ },
+ "istoki.tv": {
+  "url": "istoki.tv",
+  "price": 1706,
+  "spam": 0.009999999776482582,
+  "stat": 3278,
+  "idx": 172280
+ },
+ "forum2x2.ru": {
+  "url": "surgery.forum2x2.ru",
+  "price": 386,
+  "spam": 0,
+  "stat": 1682,
+  "idx": 0
+ },
+ "justmedia.ru": {
+  "url": "justmedia.ru",
+  "price": 3000,
+  "spam": 0.05999999865889549,
+  "stat": 2749,
+  "idx": 39476
+ },
+ "kikonline.ru": {
+  "url": "kikonline.ru",
+  "price": 3450,
+  "spam": 0.05999999865889549,
+  "stat": 2741,
+  "idx": 38051
+ },
+ "avtosreda.ru": {
+  "url": "avtosreda.ru",
+  "price": 1800,
+  "spam": 0.1299999952316284,
+  "stat": 6448,
+  "idx": 38524
+ },
+ "ecoportal.info": {
+  "url": "ecoportal.info",
+  "price": 6700,
+  "spam": 0.02999999932944775,
+  "stat": 154,
+  "idx": 4566
+ },
+ "dubna.ru": {
+  "url": "dubna.ru",
+  "price": 1552,
+  "spam": 0.1700000017881393,
+  "stat": 3467,
+  "idx": 19731
+ },
+ "factroom.ru": {
+  "url": "factroom.ru",
+  "price": 3600,
+  "spam": 0.07999999821186066,
+  "stat": 6421,
+  "idx": 57587
+ },
+ "culturavrn.ru": {
+  "url": "culturavrn.ru",
+  "price": 2300,
+  "spam": 0.01999999955296516,
+  "stat": 854,
+  "idx": 38112
+ },
+ "niasam.ru": {
+  "url": "niasam.ru",
+  "price": 1310,
+  "spam": 0.07999999821186066,
+  "stat": 3759,
+  "idx": 39770
+ },
+ "yerkramas.org": {
+  "url": "yerkramas.org",
+  "price": 550,
+  "spam": 0.119999997317791,
+  "stat": 5205,
+  "idx": 34145
+ },
+ "samaraonline24.ru": {
+  "url": "samaraonline24.ru",
+  "price": 2200,
+  "spam": 0.03999999910593033,
+  "stat": 1721,
+  "idx": 39643
+ },
+ "relasko.ru": {
+  "url": "relasko.ru",
+  "price": 2500,
+  "spam": 0.009999999776482582,
+  "stat": 463,
+  "idx": 40143
+ },
+ "metaprom.ru": {
+  "url": "metaprom.ru",
+  "price": 16200,
+  "spam": 0.009999999776482582,
+  "stat": 422,
+  "idx": 25889
+ },
+ "k-ur.ru": {
+  "url": "k-ur.ru",
+  "price": 1200,
+  "spam": 0.05999999865889549,
+  "stat": 2797,
+  "idx": 38861
+ },
+ "rusnord.ru": {
+  "url": "rusnord.ru",
+  "price": 860,
+  "spam": 0.07999999821186066,
+  "stat": 3222,
+  "idx": 33896
+ },
+ "megaobzor.com": {
+  "url": "megaobzor.com",
+  "price": 5500,
+  "spam": 0.1400000005960464,
+  "stat": 4942,
+  "idx": 21045
+ },
+ "progorod59.ru": {
+  "url": "progorod59.ru",
+  "price": 1600,
+  "spam": 0.05999999865889549,
+  "stat": 2575,
+  "idx": 39676
+ },
+ "vb.by": {
+  "url": "vb.by",
+  "price": 1600,
+  "spam": 0.02999999932944775,
+  "stat": 1594,
+  "idx": 39043
+ },
+ "crimeapress.info": {
+  "url": "crimeapress.info",
+  "price": 726,
+  "spam": 0.05999999865889549,
+  "stat": 2562,
+  "idx": 38920
+ },
+ "totalarch.com": {
+  "url": "totalarch.com",
+  "price": 1500,
+  "spam": 0.119999997317791,
+  "stat": 1539,
+  "idx": 12192
+ },
+ "russianelectronics.ru": {
+  "url": "russianelectronics.ru",
+  "price": 6500,
+  "spam": 0,
+  "stat": 26,
+  "idx": 31688
+ },
+ "pg13.ru": {
+  "url": "pg13.ru",
+  "price": 1600,
+  "spam": 0.02999999932944775,
+  "stat": 1531,
+  "idx": 38254
+ },
+ "prim.news": {
+  "url": "prim.news",
+  "price": 499,
+  "spam": 0.05000000074505806,
+  "stat": 2244,
+  "idx": 38361
+ },
+ "energyland.info": {
+  "url": "energyland.info",
+  "price": 6000,
+  "spam": 0,
+  "stat": 247,
+  "idx": 33750
+ },
+ "oborudunion.ru": {
+  "url": "oborudunion.ru",
+  "price": 6000,
+  "spam": 0,
+  "stat": 85,
+  "idx": 39153
+ },
+ "kafanews.com": {
+  "url": "kafanews.com",
+  "price": 1307,
+  "spam": 0,
+  "stat": 1456,
+  "idx": 0
+ },
+ "perekos.net": {
+  "url": "perekos.net",
+  "price": 1800,
+  "spam": 0.1500000059604645,
+  "stat": 1550,
+  "idx": 9414
+ },
+ "energoseti.ru": {
+  "url": "energoseti.ru",
+  "price": 5000,
+  "spam": 0,
+  "stat": 8,
+  "idx": 16818
+ },
+ "promvest.info": {
+  "url": "promvest.info",
+  "price": 12000,
+  "spam": 0,
+  "stat": 118,
+  "idx": 38953
+ },
+ "novosibdom.ru": {
+  "url": "novosibdom.ru",
+  "price": 950,
+  "spam": 0.1899999976158142,
+  "stat": 2071,
+  "idx": 6580
+ },
+ "realbrest.by": {
+  "url": "realbrest.by",
+  "price": 156,
+  "spam": 0.2000000029802322,
+  "stat": 5475,
+  "idx": 25361
+ },
+ "infosport.ru": {
+  "url": "infosport.ru",
+  "price": 1000,
+  "spam": 0.02999999932944775,
+  "stat": 1359,
+  "idx": 39298
+ },
+ "ess-ltd.ru": {
+  "url": "ess-ltd.ru",
+  "price": 1200,
+  "spam": 0.05000000074505806,
+  "stat": 670,
+  "idx": 9787
+ },
+ "progorodchelny.ru": {
+  "url": "progorodchelny.ru",
+  "price": 1500,
+  "spam": 0.05999999865889549,
+  "stat": 3206,
+  "idx": 39331
+ },
+ "miniteh.com": {
+  "url": "miniteh.com",
+  "price": 1400,
+  "spam": 0,
+  "stat": 181,
+  "idx": 39101
+ },
+ "21.by": {
+  "url": "news.21.by",
+  "price": 1400,
+  "spam": 0.01999999955296516,
+  "stat": 984,
+  "idx": 38907
+ },
+ "art-assorty.ru": {
+  "url": "art-assorty.ru",
+  "price": 390,
+  "spam": 0.1500000059604645,
+  "stat": 6054,
+  "idx": 29867
+ },
+ "andreyex.ru": {
+  "url": "andreyex.ru",
+  "price": 1144,
+  "spam": 0.05000000074505806,
+  "stat": 1886,
+  "idx": 33348
+ },
+ "trud-ost.ru": {
+  "url": "trud-ost.ru",
+  "price": 506,
+  "spam": 0.03999999910593033,
+  "stat": 1971,
+  "idx": 39344
+ },
+ "sayanogorsk.info": {
+  "url": "sayanogorsk.info",
+  "price": 981,
+  "spam": 0.07999999821186066,
+  "stat": 4026,
+  "idx": 39181
+ },
+ "bouw.ru": {
+  "url": "bouw.ru",
+  "price": 2600,
+  "spam": 0.01999999955296516,
+  "stat": 512,
+  "idx": 21032
+ },
+ "dezinfo.net": {
+  "url": "dezinfo.net",
+  "price": 366,
+  "spam": 0.1700000017881393,
+  "stat": 5529,
+  "idx": 28620
+ },
+ "lpk-sibiri.ru": {
+  "url": "lpk-sibiri.ru",
+  "price": 5600,
+  "spam": 0,
+  "stat": 6,
+  "idx": 8311
+ },
+ "stroy-mart.ru": {
+  "url": "stroy-mart.ru",
+  "price": 670,
+  "spam": 0.1000000014901161,
+  "stat": 4496,
+  "idx": 38931
+ },
+ "autodela.ru": {
+  "url": "catalog.autodela.ru",
+  "price": 520,
+  "spam": 0.1500000059604645,
+  "stat": 2090,
+  "idx": 11133
+ },
+ "lifeglobe.net": {
+  "url": "lifeglobe.net",
+  "price": 1000,
+  "spam": 0.1000000014901161,
+  "stat": 4614,
+  "idx": 31951
+ },
+ "resant.ru": {
+  "url": "otopleniye.resant.ru",
+  "price": 200,
+  "spam": 0.1000000014901161,
+  "stat": 480,
+  "idx": 4061
+ },
+ "factories.by": {
+  "url": "factories.by",
+  "price": 3000,
+  "spam": 0,
+  "stat": 10,
+  "idx": 5550
+ },
+ "prom-siberia.ru": {
+  "url": "prom-siberia.ru",
+  "price": 6200,
+  "spam": 0,
+  "stat": 10,
+  "idx": 5272
+ },
+ "factories.kz": {
+  "url": "factories.kz",
+  "price": 3000,
+  "spam": 0,
+  "stat": 8,
+  "idx": 4705
+ },
+ "truckmix.ru": {
+  "url": "truckmix.ru",
+  "price": 1200,
+  "spam": 0.009999999776482582,
+  "stat": 413,
+  "idx": 21846
+ },
+ "piterets.ru": {
+  "url": "piterets.ru",
+  "price": 560,
+  "spam": 0.07999999821186066,
+  "stat": 3696,
+  "idx": 36982
+ },
+ "usedcars.ru": {
+  "url": "usedcars.ru",
+  "price": 1050,
+  "spam": 0.03999999910593033,
+  "stat": 2177,
+  "idx": 39088
+ },
+ "metallurgprom.org": {
+  "url": "metallurgprom.org",
+  "price": 246,
+  "spam": 0.05000000074505806,
+  "stat": 2306,
+  "idx": 38128
+ },
+ "mplast.by": {
+  "url": "mplast.by",
+  "price": 817,
+  "spam": 0.2000000029802322,
+  "stat": 1419,
+  "idx": 6573
+ },
+ "gostei.ru": {
+  "url": "gostei.ru",
+  "price": 300,
+  "spam": 0.1099999994039536,
+  "stat": 1478,
+  "idx": 13138
+ },
+ "topclimat.ru": {
+  "url": "topclimat.ru",
+  "price": 1999,
+  "spam": 0.009999999776482582,
+  "stat": 530,
+  "idx": 26354
+ },
+ "sq.com.ua": {
+  "url": "sq.com.ua",
+  "price": 3200,
+  "spam": 0.01999999955296516,
+  "stat": 13124,
+  "idx": 367821
+ },
+ "allremont59.ru": {
+  "url": "allremont59.ru",
+  "price": 6534,
+  "spam": 0,
+  "stat": 34,
+  "idx": 5566
+ },
+ "otzovik.online": {
+  "url": "otzovik.online",
+  "price": 6900,
+  "spam": 0,
+  "stat": 0,
+  "idx": 30595
+ },
+ "reporter63.ru": {
+  "url": "reporter63.ru",
+  "price": 506,
+  "spam": 0.009999999776482582,
+  "stat": 829,
+  "idx": 20732
+ },
+ "innov.ru": {
+  "url": "innov.ru",
+  "price": 1800,
+  "spam": 0.1400000005960464,
+  "stat": 7717,
+  "idx": 38929
+ },
+ "rossoshru.ru": {
+  "url": "rossoshru.ru",
+  "price": 700,
+  "spam": 0.1800000071525574,
+  "stat": 3375,
+  "idx": 17792
+ },
+ "city-ck.com": {
+  "url": "city-ck.com",
+  "price": 220,
+  "spam": 0.1899999976158142,
+  "stat": 7413,
+  "idx": 25160
+ },
+ "1npf.com": {
+  "url": "1npf.com",
+  "price": 400,
+  "spam": 0.1800000071525574,
+  "stat": 2077,
+  "idx": 10913
+ },
+ "stroy-union.ru": {
+  "url": "stroy-union.ru",
+  "price": 5500,
+  "spam": 0,
+  "stat": 24,
+  "idx": 23279
+ },
+ "time-samara.ru": {
+  "url": "time-samara.ru",
+  "price": 514,
+  "spam": 0.009999999776482582,
+  "stat": 1593,
+  "idx": 13497
+ },
+ "freesmi.by": {
+  "url": "freesmi.by",
+  "price": 380,
+  "spam": 0.07999999821186066,
+  "stat": 5935,
+  "idx": 68416
+ },
+ "vrk1.ru": {
+  "url": "vrk1.ru",
+  "price": 790,
+  "spam": 0.1899999976158142,
+  "stat": 359,
+  "idx": 1404
+ },
+ "mygazeta.com": {
+  "url": "mygazeta.com",
+  "price": 613,
+  "spam": 0.119999997317791,
+  "stat": 7681,
+  "idx": 38579
+ },
+ "yopolis.ru": {
+  "url": "yopolis.ru",
+  "price": 740,
+  "spam": 0.1899999976158142,
+  "stat": 2006,
+  "idx": 5943
+ },
+ "santehnicheskij-mir.ru": {
+  "url": "santehnicheskij-mir.ru",
+  "price": 535,
+  "spam": 0,
+  "stat": 16,
+  "idx": 2321
+ },
+ "azovpromstal.com": {
+  "url": "azovpromstal.com",
+  "price": 164,
+  "spam": 0.03999999910593033,
+  "stat": 2418,
+  "idx": 38891
+ },
+ "moy.su": {
+  "url": "kgmt.moy.su",
+  "price": 188,
+  "spam": 0.1899999976158142,
+  "stat": 375,
+  "idx": 760
+ },
+ "ucoz.com": {
+  "url": "rybak.ucoz.com",
+  "price": 80,
+  "spam": 0.07999999821186066,
+  "stat": 436,
+  "idx": 2673
+ }
+}
