@@ -16,7 +16,7 @@
 Отсев как в КЦ: стоп-лист, ответ/жалоба/отписка, активная сделка КЦ, КЦ писал на адрес < 15 дней, письмо компании в
 очереди, адрес за другим ИНН. АВТООТПРАВКИ НЕТ.
     kc_sc_partiya_1711.py                 — сухой подсчёт
-    kc_sc_partiya_1711.py --zapusk [--model=claude-opus-4-8]
+    kc_sc_partiya_1711.py --zapusk [--model=claude-opus-4-8] [--tolko-gotovye]   (--tolko-gotovye: письма без хвоста пробы)
     kc_sc_partiya_1711.py --hod"""
 import csv, io, json, os, random, re, sqlite3, subprocess, sys, threading, time
 from collections import Counter, defaultdict
@@ -217,6 +217,8 @@ _петля = build_addr_probe(store, cfg)
 КРУПНЫЕ = {"mail.ru", "bk.ru", "list.ru", "inbox.ru", "internet.ru", "yandex.ru", "ya.ru", "yandex.by", "yandex.com", "narod.ru", "gmail.com", "rambler.ru"}
 ЛЕС = читать_журнал(ЖУР_ЛЕС)
 шаг = {кл: 0 for кл in ГОДН if кл in ВЫБ and кл not in ЛЕС}
+if "--tolko-gotovye" in sys.argv:   # владелец 17.11: «начинай письма» — письма по уже пробованным, хвост пробы позже
+    print("хвост пробы отложен: %d компаний" % len(шаг), flush=True); шаг = {}
 посл = {}; сп = Counter()
 print("лесенка: к пробе %d" % len(шаг), flush=True)
 while шаг:
