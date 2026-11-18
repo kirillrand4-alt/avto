@@ -16,13 +16,16 @@
 Отсев как в КЦ: стоп-лист, ответ/жалоба/отписка, активная сделка КЦ, КЦ писал на адрес < 15 дней, письмо компании в
 очереди, адрес за другим ИНН. АВТООТПРАВКИ НЕТ.
     kc_sc_partiya_1711.py                 — сухой подсчёт
-    kc_sc_partiya_1711.py --zapusk [--model=claude-opus-4-8] [--tolko-gotovye] [--sc-fraza]   (--tolko-gotovye: письма без хвоста пробы; --sc-fraza: кому была общая фраза — строка «работали через наш СЦ»)
+    kc_sc_partiya_1711.py --zapusk [--model=claude-opus-4-8] [--tolko-gotovye] [--sc-fraza] [--sdelki]   (--sdelki: фраза по сделкам, кампания «КЦ СЦ клиенты 18.11»; --tolko-gotovye: письма без хвоста пробы; --sc-fraza: кому была общая фраза — строка «работали через наш СЦ»)
     kc_sc_partiya_1711.py --hod"""
 import csv, io, json, os, random, re, sqlite3, subprocess, sys, threading, time
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 ОПС = r"C:\sender\_ops"; ДР = r"C:\seostat\drop\drop-storage"
-ЖУР_ВЫБ, ЖУР_ЛЕС, ЖУР_КАРТ = (os.path.join(ОПС, x) for x in ("kc-sc-vybor.jsonl", "kc-sc-lesenka.jsonl", "kc-sc-kartochki.jsonl"))
+# --sdelki (владелец 18.11): письма «как у Meyer» — фраза о том, что мы для клиента делали, по названиям его успешных сделок
+# (kc_sc_sdelki_fraza.py), «немного напомню о нас», без просьбы переслать (писали именно этому контакту). Своя кампания и журнал.
+СДЕЛКИ = "--sdelki" in sys.argv
+ЖУР_ВЫБ, ЖУР_ЛЕС, ЖУР_КАРТ = (os.path.join(ОПС, x) for x in ("kc-sc-vybor.jsonl", "kc-sc-lesenka.jsonl", "kc-sc-sdelki-kartochki.jsonl" if СДЕЛКИ else "kc-sc-kartochki.jsonl"))
 if "--zapusk" in sys.argv:
     л = io.open(os.path.join(ОПС, "kc-sc.log"), "a", encoding="utf-8")
     п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [x for x in sys.argv[1:] if x != "--zapusk"],
@@ -49,7 +52,7 @@ if "--hod" in sys.argv:
 
 РАБОТА = "--rabota" in sys.argv
 МОДЕЛЬ = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--model=")), "claude-opus-4-8")
-ИМЯ_КАМП = "КЦ СЦ клиенты 17.11"
+ИМЯ_КАМП = "КЦ СЦ клиенты 18.11" if СДЕЛКИ else "КЦ СЦ клиенты 17.11"
 os.environ["PROVIDER_THINKING_FIELD"] = "omit"
 sys.path.insert(0, r"C:\sender"); sys.path.insert(0, r"C:\sender\server"); sys.path.insert(0, r"C:\sender\server\ops")
 if РАБОТА:
@@ -251,6 +254,7 @@ print("лесенка готова: проб %s; живой адрес у %d, в
 # ---------------- 4. письма по канону и карточки ----------------
 from sender.ai_quota import build_ai_quota   # noqa: E402
 import gen_9000_kc_kanon as KK               # noqa: E402
+import kc_sc_sdelki_fraza as KF              # noqa: E402
 r = к.execute("SELECT id FROM campaigns WHERE name=?", (ИМЯ_КАМП,)).fetchone()
 if r:
     КАМП = r[0]
@@ -322,7 +326,12 @@ def имя_уверено(кл, em, imya, fio):
 заведено = 0; отсев = Counter()
 for п0 in range(0, len(список), 20):
     пачка = список[п0:п0 + 20]
-    д = {"f": []} if СЦ else зов(KK.ЗАДАНИЕ.replace("{firmy}", "\n".join("%d. %s" % (i, о_компании(кл)) for i, кл in enumerate(пачка, 1))).replace("{{", "{").replace("}}", "}"), "f", None, 3000)
+    if СДЕЛКИ:
+        _фр = KF.frazy([(кл, кл if not кл.startswith("имя:") else "") for кл in пачка], зов)
+        д = {"f": [{"n": i, "t": _фр[кл]["f"]} for i, кл in enumerate(пачка, 1)]}
+        for кл in пачка: отсев["фраза: " + _фр[кл]["ist"]] += 1
+    else:
+      д = {"f": []} if СЦ else зов(KK.ЗАДАНИЕ.replace("{firmy}", "\n".join("%d. %s" % (i, о_компании(кл)) for i, кл in enumerate(пачка, 1))).replace("{{", "{").replace("}}", "}"), "f", None, 3000)
     if not д: print("пачка %d: модель не дала фраз" % (п0 // 20 + 1), flush=True); continue
     фразы = {int(x["n"]): x["t"] for x in д.get("f", []) if str(x.get("n", "")).isdigit()}
     for i, кл in enumerate(пачка, 1):
@@ -330,6 +339,7 @@ for п0 in range(0, len(список), 20):
         ф = (фразы.get(i) or "").strip().replace("—", "-")
         запись = {"kluch": кл, "inn": инн, "email": em, "imya": лз.get("imya"), "rol": лз.get("rol"), "ts": datetime.now(timezone.utc).isoformat()}
         if СЦ: ф = random.choice(СЦ_ФРАЗЫ)
+        elif СДЕЛКИ: pass
         elif not KK.фраза_годна(ф):
             запись["otsev"] = "фраза модели: %r" % ф[:120]; пиши(ЖУР_КАРТ, запись); отсев["фраза не прошла"] += 1; continue
         обр = имя_уверено(кл, em, лз.get("imya") or "", лз.get("fio") or "")
@@ -340,8 +350,8 @@ for п0 in range(0, len(список), 20):
         менеджер = (str(getattr(mb, "from_name", "") or "").split(",")[0].split() or ["Сергей"])[0]
         з = random.sample(KK.ЗАК, 3)
         абз = [((обр + ", добрый день!") if обр else "Добрый день!") + " Меня зовут " + менеджер + ", я из Компрессор Центра. " + random.choice(KK.ПОВОД),
-               ф + " " + random.choice(KK.ОХВАТ) + " " + random.choice(KK.ЗАК_ФР).format(z=", ".join(з[:-1]) + " и " + з[-1], zt=", ".join(KK.ЗАК_ТВ[x] for x in з[:-1]) + " и " + KK.ЗАК_ТВ[з[-1]]) + ("" if СЦ else " " + random.choice(KK.СЕРВИС)),
-               random.choice(KK.ВОПРОС) + ("" if лз.get("teh") else " " + random.choice(KK.ПЕРЕСЛАТЬ))]
+               ф + " " + (KF.o_nas() if СДЕЛКИ else random.choice(KK.ОХВАТ)) + " " + random.choice(KK.ЗАК_ФР).format(z=", ".join(з[:-1]) + " и " + з[-1], zt=", ".join(KK.ЗАК_ТВ[x] for x in з[:-1]) + " и " + KK.ЗАК_ТВ[з[-1]]) + ("" if (СЦ or СДЕЛКИ) else " " + random.choice(KK.СЕРВИС)),
+               random.choice(KK.ВОПРОС) + ("" if (лз.get("teh") or СДЕЛКИ) else " " + random.choice(KK.ПЕРЕСЛАТЬ))]
         тело = "\n\n".join(абз); тема = random.choice(KK.ТЕМЫ)
         есть = к.execute("SELECT id, inn FROM recipients WHERE lower(email)=?", (em,)).fetchone()
         if есть and есть[1] and инн and ц(есть[1]) != инн:
