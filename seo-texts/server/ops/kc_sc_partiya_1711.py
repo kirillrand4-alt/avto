@@ -16,7 +16,7 @@
 Отсев как в КЦ: стоп-лист, ответ/жалоба/отписка, активная сделка КЦ, КЦ писал на адрес < 15 дней, письмо компании в
 очереди, адрес за другим ИНН. АВТООТПРАВКИ НЕТ.
     kc_sc_partiya_1711.py                 — сухой подсчёт
-    kc_sc_partiya_1711.py --zapusk [--model=claude-opus-4-8] [--tolko-gotovye]   (--tolko-gotovye: письма без хвоста пробы)
+    kc_sc_partiya_1711.py --zapusk [--model=claude-opus-4-8] [--tolko-gotovye] [--sc-fraza]   (--tolko-gotovye: письма без хвоста пробы; --sc-fraza: кому была общая фраза — строка «работали через наш СЦ»)
     kc_sc_partiya_1711.py --hod"""
 import csv, io, json, os, random, re, sqlite3, subprocess, sys, threading, time
 from collections import Counter, defaultdict
@@ -271,6 +271,16 @@ q = build_ai_quota(store, cfg)
 ящики = [m for m in cfg.mailboxes() if str(getattr(m, "division", "")) == "kc" and m.mailbox_id not in пауз]
 КАРТ = читать_журнал(ЖУР_КАРТ)
 список = [кл for кл in живые if кл not in КАРТ]
+# Владелец 18.11: «мы с ними точно работали, у нас есть подтверждённый заказ — без общих фраз, а именно „работали с вами
+# по сервисному центру“». Кому модель дала только общую фразу (о компании нет данных) — вместо отраслевой фразы строка
+# о совместной работе через сервисный центр; фраза «свой сервисный центр» тогда не нужна (повтор).
+СЦ = "--sc-fraza" in sys.argv
+СЦ_ФРАЗЫ = ["Мы с вами уже работали: ваша компания обращалась в наш сервисный центр.",
+            "Ваша компания уже работала с нашим сервисным центром, поэтому пишу вам в первую очередь.",
+            "Мы с вами уже знакомы по работе нашего сервисного центра.",
+            "Ранее вы обращались в наш сервисный центр, так что мы с вами уже работали."]
+if СЦ:
+    список = [кл for кл in живые if str(КАРТ.get(кл, {}).get("otsev", "")).startswith("фраза")]
 print("письма: к генерации %d" % len(список), flush=True)
 ГЛАЗ = io.open(os.path.join(ОПС, "kc-sc-kazhdoe20.txt"), "a", encoding="utf-8")
 
@@ -312,14 +322,15 @@ def имя_уверено(кл, em, imya, fio):
 заведено = 0; отсев = Counter()
 for п0 in range(0, len(список), 20):
     пачка = список[п0:п0 + 20]
-    д = зов(KK.ЗАДАНИЕ.replace("{firmy}", "\n".join("%d. %s" % (i, о_компании(кл)) for i, кл in enumerate(пачка, 1))).replace("{{", "{").replace("}}", "}"), "f", None, 3000)
+    д = {"f": []} if СЦ else зов(KK.ЗАДАНИЕ.replace("{firmy}", "\n".join("%d. %s" % (i, о_компании(кл)) for i, кл in enumerate(пачка, 1))).replace("{{", "{").replace("}}", "}"), "f", None, 3000)
     if not д: print("пачка %d: модель не дала фраз" % (п0 // 20 + 1), flush=True); continue
     фразы = {int(x["n"]): x["t"] for x in д.get("f", []) if str(x.get("n", "")).isdigit()}
     for i, кл in enumerate(пачка, 1):
         лз = ЛЕС[кл]; em = лз["email"]; инн = кл if not кл.startswith("имя:") else ""
         ф = (фразы.get(i) or "").strip().replace("—", "-")
         запись = {"kluch": кл, "inn": инн, "email": em, "imya": лз.get("imya"), "rol": лз.get("rol"), "ts": datetime.now(timezone.utc).isoformat()}
-        if not KK.фраза_годна(ф):
+        if СЦ: ф = random.choice(СЦ_ФРАЗЫ)
+        elif not KK.фраза_годна(ф):
             запись["otsev"] = "фраза модели: %r" % ф[:120]; пиши(ЖУР_КАРТ, запись); отсев["фраза не прошла"] += 1; continue
         обр = имя_уверено(кл, em, лз.get("imya") or "", лз.get("fio") or "")
         if (лз.get("imya") or "") and not обр: отсев["имя снято: одно ФИО на нескольких почтах"] += 1
@@ -329,7 +340,7 @@ for п0 in range(0, len(список), 20):
         менеджер = (str(getattr(mb, "from_name", "") or "").split(",")[0].split() or ["Сергей"])[0]
         з = random.sample(KK.ЗАК, 3)
         абз = [((обр + ", добрый день!") if обр else "Добрый день!") + " Меня зовут " + менеджер + ", я из Компрессор Центра. " + random.choice(KK.ПОВОД),
-               ф + " " + random.choice(KK.ОХВАТ) + " " + random.choice(KK.ЗАК_ФР).format(z=", ".join(з[:-1]) + " и " + з[-1], zt=", ".join(KK.ЗАК_ТВ[x] for x in з[:-1]) + " и " + KK.ЗАК_ТВ[з[-1]]) + " " + random.choice(KK.СЕРВИС),
+               ф + " " + random.choice(KK.ОХВАТ) + " " + random.choice(KK.ЗАК_ФР).format(z=", ".join(з[:-1]) + " и " + з[-1], zt=", ".join(KK.ЗАК_ТВ[x] for x in з[:-1]) + " и " + KK.ЗАК_ТВ[з[-1]]) + ("" if СЦ else " " + random.choice(KK.СЕРВИС)),
                random.choice(KK.ВОПРОС) + ("" if лз.get("teh") else " " + random.choice(KK.ПЕРЕСЛАТЬ))]
         тело = "\n\n".join(абз); тема = random.choice(KK.ТЕМЫ)
         есть = к.execute("SELECT id, inn FROM recipients WHERE lower(email)=?", (em,)).fetchone()
