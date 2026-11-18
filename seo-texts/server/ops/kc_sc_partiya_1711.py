@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 # --sdelki (владелец 18.11): письма «как у Meyer» — фраза о том, что мы для клиента делали, по названиям его успешных сделок
 # (kc_sc_sdelki_fraza.py), «немного напомню о нас», без просьбы переслать (писали именно этому контакту). Своя кампания и журнал.
 СДЕЛКИ = "--sdelki" in sys.argv
-ЖУР_ВЫБ, ЖУР_ЛЕС, ЖУР_КАРТ = (os.path.join(ОПС, x) for x in ("kc-sc-vybor.jsonl", "kc-sc-lesenka.jsonl", "kc-sc-sdelki-kartochki.jsonl" if СДЕЛКИ else "kc-sc-kartochki.jsonl"))
+ЖУР_ВЫБ, ЖУР_ЛЕС, ЖУР_КАРТ = (os.path.join(ОПС, x) for x in ("kc-sc-vybor.jsonl", "kc-sc-lesenka.jsonl", "kc-sc-sdelki2-kartochki.jsonl" if СДЕЛКИ else "kc-sc-kartochki.jsonl"))
 if "--zapusk" in sys.argv:
     л = io.open(os.path.join(ОПС, "kc-sc.log"), "a", encoding="utf-8")
     п = subprocess.Popen([sys.executable, "-u", os.path.abspath(__file__), "--rabota"] + [x for x in sys.argv[1:] if x != "--zapusk"],
@@ -52,7 +52,7 @@ if "--hod" in sys.argv:
 
 РАБОТА = "--rabota" in sys.argv
 МОДЕЛЬ = next((x.split("=", 1)[1] for x in sys.argv if x.startswith("--model=")), "claude-opus-4-8")
-ИМЯ_КАМП = "КЦ СЦ клиенты 18.11" if СДЕЛКИ else "КЦ СЦ клиенты 17.11"
+ИМЯ_КАМП = "КЦ СЦ клиенты по сделкам 18.11" if СДЕЛКИ else "КЦ СЦ клиенты 17.11"
 os.environ["PROVIDER_THINKING_FIELD"] = "omit"
 sys.path.insert(0, r"C:\sender"); sys.path.insert(0, r"C:\sender\server"); sys.path.insert(0, r"C:\sender\server\ops")
 if РАБОТА:
@@ -255,6 +255,7 @@ print("лесенка готова: проб %s; живой адрес у %d, в
 from sender.ai_quota import build_ai_quota   # noqa: E402
 import gen_9000_kc_kanon as KK               # noqa: E402
 import kc_sc_sdelki_fraza as KF              # noqa: E402
+import kc_sc_linzy as L                      # noqa: E402
 r = к.execute("SELECT id FROM campaigns WHERE name=?", (ИМЯ_КАМП,)).fetchone()
 if r:
     КАМП = r[0]
@@ -333,13 +334,39 @@ for п0 in range(0, len(список), 20):
     else:
       д = {"f": []} if СЦ else зов(KK.ЗАДАНИЕ.replace("{firmy}", "\n".join("%d. %s" % (i, о_компании(кл)) for i, кл in enumerate(пачка, 1))).replace("{{", "{").replace("}}", "}"), "f", None, 3000)
     if not д: print("пачка %d: модель не дала фраз" % (п0 // 20 + 1), flush=True); continue
+    ПОДГ = {}
+    if СДЕЛКИ:   # 18.11: текст по образцу руководителя → пересказ → линзы технолог/филолог/доверие (ошибка → откат, снова ошибка → не заводим)
+        def _текст(кл):
+            лз_ = ЛЕС[кл]; em_ = лз_["email"]
+            обр_ = имя_уверено(кл, em_, лз_.get("imya") or "", лз_.get("fio") or "")
+            mb_ = random.choice([m for m in ящики if str(getattr(m, "from_name", "") or "").split()[:1] != обр_.split()[:1]] or ящики)
+            мен_ = (str(getattr(mb_, "from_name", "") or "").split(",")[0].split() or ["Сергей"])[0]
+            з_ = random.sample(KK.ЗАК, 3)
+            прив_ = (обр_ + ", добрый день!") if обр_ else "Добрый день!"
+            исх_ = ["Меня зовут " + мен_ + ", я из Компрессор Центра. " + _фр[кл]["f"],
+                    random.choice(KF.ПОВОД_СЦ) + " " + KF.o_nas() + " " + random.choice(KK.ЗАК_ФР).format(z=", ".join(з_[:-1]) + " и " + з_[-1], zt=", ".join(KK.ЗАК_ТВ[x] for x in з_[:-1]) + " и " + KK.ЗАК_ТВ[з_[-1]]),
+                    random.choice(KF.ВОПРОС_СЦ)]
+            тема_ = random.choice(KF.ТЕМЫ_СЦ); сд_ = KF.sdelki(кл if not кл.startswith("имя:") else "")
+            нов_ = L.perefraz(исх_, сд_, зов)
+            if нов_ and мен_ not in нов_[0]: нов_ = None
+            собр = lambda аа: "\n\n".join([прив_ + " " + аа[0]] + list(аа[1:]))
+            т_ = собр(нов_ or исх_); вер_ = L.linzy(т_, тема_, сд_, зов); отк_ = False
+            if нов_ and L.oshibka(вер_):
+                т_ = собр(исх_); вер_ = L.linzy(т_, тема_, сд_, зов); отк_ = True
+            return {"mb": mb_, "tema": тема_, "telo": т_, "linzy": вер_, "perefraz": bool(нов_) and not отк_, "otkat": отк_, "obr": обр_}
+        from concurrent.futures import ThreadPoolExecutor as _ПУЛ
+        with _ПУЛ(6) as _пул:
+            ПОДГ = dict(zip(пачка, _пул.map(_текст, пачка)))
     фразы = {int(x["n"]): x["t"] for x in д.get("f", []) if str(x.get("n", "")).isdigit()}
     for i, кл in enumerate(пачка, 1):
         лз = ЛЕС[кл]; em = лз["email"]; инн = кл if not кл.startswith("имя:") else ""
         ф = (фразы.get(i) or "").strip().replace("—", "-")
         запись = {"kluch": кл, "inn": инн, "email": em, "imya": лз.get("imya"), "rol": лз.get("rol"), "ts": datetime.now(timezone.utc).isoformat()}
         if СЦ: ф = random.choice(СЦ_ФРАЗЫ)
-        elif СДЕЛКИ: pass
+        elif СДЕЛКИ:
+            if L.oshibka(ПОДГ[кл]["linzy"]) or any(v.get("verdict") == "нет ответа" for v in ПОДГ[кл]["linzy"].values()):
+                запись.update(otsev="линзы: " + "; ".join("%s: %s" % (k_, v.get("pochemu", v.get("verdict"))) for k_, v in ПОДГ[кл]["linzy"].items() if v.get("verdict") in ("ошибка", "нет ответа"))[:300],
+                              telo=ПОДГ[кл]["telo"]); пиши(ЖУР_КАРТ, запись); отсев["линзы: ошибка"] += 1; continue
         elif not KK.фраза_годна(ф):
             запись["otsev"] = "фраза модели: %r" % ф[:120]; пиши(ЖУР_КАРТ, запись); отсев["фраза не прошла"] += 1; continue
         обр = имя_уверено(кл, em, лз.get("imya") or "", лз.get("fio") or "")
@@ -353,6 +380,9 @@ for п0 in range(0, len(список), 20):
                ф + " " + (KF.o_nas() if СДЕЛКИ else random.choice(KK.ОХВАТ)) + " " + random.choice(KK.ЗАК_ФР).format(z=", ".join(з[:-1]) + " и " + з[-1], zt=", ".join(KK.ЗАК_ТВ[x] for x in з[:-1]) + " и " + KK.ЗАК_ТВ[з[-1]]) + ("" if (СЦ or СДЕЛКИ) else " " + random.choice(KK.СЕРВИС)),
                random.choice(KK.ВОПРОС) + ("" if (лз.get("teh") or СДЕЛКИ) else " " + random.choice(KK.ПЕРЕСЛАТЬ))]
         тело = "\n\n".join(абз); тема = random.choice(KK.ТЕМЫ)
+        if СДЕЛКИ:
+            mb, тема, тело = ПОДГ[кл]["mb"], ПОДГ[кл]["tema"], ПОДГ[кл]["telo"]
+            отсев["пересказ" if ПОДГ[кл]["perefraz"] else ("откат к исходнику" if ПОДГ[кл]["otkat"] else "без пересказа")] += 1
         есть = к.execute("SELECT id, inn FROM recipients WHERE lower(email)=?", (em,)).fetchone()
         if есть and есть[1] and инн and ц(есть[1]) != инн:
             запись["otsev"] = "адрес за другим ИНН %s" % есть[1]; пиши(ЖУР_КАРТ, запись); отсев["адрес за другим ИНН"] += 1; continue
@@ -377,7 +407,9 @@ for п0 in range(0, len(список), 20):
                             "VALUES (?,?,?,?,?,?,?,?,?,'pending','outbound',?,?)", (ключ, КАМП, rid, mid, инн, em, тема, тело, панель, сейчас, сейчас)).lastrowid
             к.commit()
         заведено += 1
-        запись.update({"karta": кид, "mailbox": mb.mailbox_id, "tema": тема, "telo": тело}); пиши(ЖУР_КАРТ, запись)
+        запись.update({"karta": кид, "mailbox": mb.mailbox_id, "tema": тема, "telo": тело})
+        if СДЕЛКИ: запись.update(linzy=ПОДГ[кл]["linzy"], perefraz=ПОДГ[кл]["perefraz"])
+        пиши(ЖУР_КАРТ, запись)
         if i == 1:
             ГЛАЗ.write("=== #%d %s | %s (%s) | %s | %s\nТема: %s\n\n%s\n\n" % (кид, ИМЯ_К[кл], лз.get("fio"), лз.get("rol"), em, mb.mailbox_id, тема, тело)); ГЛАЗ.flush()
     print("пачка %d: карточек %d, отсев %s" % (п0 // 20 + 1, заведено, dict(отсев)), flush=True)
