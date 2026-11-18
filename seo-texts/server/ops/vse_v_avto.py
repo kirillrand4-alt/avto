@@ -8,7 +8,7 @@
 направлений — пропуск с причиной, срок — ближайший слот окна в зоне
 получателя. Разница одна: не первые 300 по баллу, а все — кнопка упирается
 в одни и те же заблокированные верхние карточки.
-    vse_v_avto.py [--katit] [--zapusk] [--tolko=ID,ID] [--bez=ID,ID] [--kto=кто решил] [--verdikt=есть,...]   (без --katit — сухой подсчёт)
+    vse_v_avto.py [--katit] [--zapusk] [--tolko=ID,ID] [--bez=ID,ID] [--kto=кто решил] [--verdikt=есть,...] [--limit=N]   (без --katit — сухой подсчёт)
 Журнал: _ops/vse-v-avto.jsonl, лог: _ops/vse-v-avto.log
 """
 import io
@@ -59,6 +59,12 @@ if _ВЕРД:
     with store._lock:
         _вп = {str(e or "").lower(): str(v or "") for e, v in store._conn.execute("SELECT email, verdict FROM addr_probe")}
     ряды = [r for r in ряды if _вп.get(str(r.get("email") or "").lower()) in _ВЕРД]
+# --limit=N — только N карточек, равномерно по очереди (порядок id сохраняет раскладку mail.ru), владелец 18.11
+_ЛИМ = int(next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--limit=")), "0") or 0)
+if _ЛИМ and len(ряды) > _ЛИМ:
+    ряды = sorted(ряды, key=lambda r: int(r["id"]))
+    _равн = [int(i * len(ряды) / _ЛИМ) for i in range(_ЛИМ)]
+    ряды = [ряды[i] for i in _равн] + [р for j, р in enumerate(ряды) if j not in set(_равн)]   # остальные — на замену отсеянным заслоном
 _КТО = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--kto=")), "владелец 30.10 (все разом)")
 _по_камп = Counter(int(r.get("campaign_id") or 0) for r in ряды)
 print("по кампаниям:", sorted(_по_камп.items()), flush=True)
@@ -94,6 +100,8 @@ for i, r in enumerate(ряды, 1):
     if rec is None:
         итог["нет получателя"] += 1
         continue
+    if _ЛИМ and (итог["пройдёт"] + итог["в автоотправку"]) >= _ЛИМ:
+        break
     if not КАТИТЬ:
         итог["пройдёт"] += 1; итог["пройдёт, кампания %s" % r.get("campaign_id")] += 1
         continue
