@@ -48,6 +48,7 @@ def perefraz(абзацы, сд, зов):
     нов = [(д.get("a%d" % (i + 1)) or "").strip().replace("—", "-") for i in range(len(абзацы))]
     if not all(нов) or "!" in "".join(нов) or re.search(r"(?i)бесплатн|скидк|акци|выгодн|перешл|передайте|передадите", "".join(нов)):
         return None
+    if re.match(r"(?i)\s*(здравствуйте|добрый день|доброе утро|приветствую)", нов[0]): return None   # 18.11: «добрый день! Здравствуйте»
     исх = " ".join(абзацы)
     for год in re.findall(r"\b20\d\d\b", исх):            # год и латинские марки должны сохраниться
         if год not in " ".join(нов): return None
