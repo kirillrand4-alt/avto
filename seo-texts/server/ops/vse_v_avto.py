@@ -8,7 +8,7 @@
 направлений — пропуск с причиной, срок — ближайший слот окна в зоне
 получателя. Разница одна: не первые 300 по баллу, а все — кнопка упирается
 в одни и те же заблокированные верхние карточки.
-    vse_v_avto.py [--katit] [--zapusk] [--tolko=ID,ID] [--bez=ID,ID] [--kto=кто решил]   (без --katit — сухой подсчёт)
+    vse_v_avto.py [--katit] [--zapusk] [--tolko=ID,ID] [--bez=ID,ID] [--kto=кто решил] [--verdikt=есть,...]   (без --katit — сухой подсчёт)
 Журнал: _ops/vse-v-avto.jsonl, лог: _ops/vse-v-avto.log
 """
 import io
@@ -53,6 +53,12 @@ if _БЕЗ:
 _ТОЛЬКО = {int(x) for a in sys.argv if a.startswith("--tolko=") for x in a.split("=", 1)[1].split(",") if x.strip().isdigit()}
 if _ТОЛЬКО:
     ряды = [r for r in ряды if int(r.get("campaign_id") or 0) in _ТОЛЬКО]
+# --verdikt=есть — только адреса с этим вердиктом пробы (addr_probe), владелец 18.11: «переведи где „ящик есть“»
+_ВЕРД = {x for a in sys.argv if a.startswith("--verdikt=") for x in a.split("=", 1)[1].split(",") if x}
+if _ВЕРД:
+    with store._lock:
+        _вп = {str(e or "").lower(): str(v or "") for e, v in store._conn.execute("SELECT email, verdict FROM addr_probe")}
+    ряды = [r for r in ряды if _вп.get(str(r.get("email") or "").lower()) in _ВЕРД]
 _КТО = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--kto=")), "владелец 30.10 (все разом)")
 _по_камп = Counter(int(r.get("campaign_id") or 0) for r in ряды)
 print("по кампаниям:", sorted(_по_камп.items()), flush=True)
