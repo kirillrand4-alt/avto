@@ -1,15 +1,25 @@
 # -*- coding: utf-8 -*-
-"""Перевести лиды в «не интересно» штатным update_lead_cas с пометкой: lidy_v_ne_interesno.py "причина" ID [ID…] [--katit]"""
-import sys
+"""Перевести лиды в «не интересно» (владелец 19.11: «если там полный отказ и нет запроса на доп. услуги — переведи в
+не интересно»). Список id — по прочтению текстов ответов. Через LeadDesk.set_status (проверка перехода, CAS, аудит).
+Журнал _ops/lidy-ne-interesno.jsonl (fsync).   lidy_v_ne_interesno.py <id,id,...> [--primenit]"""
+import io, json, os, sys, time
 sys.path.insert(0, r"C:\sender")
-from sender.config import Config   # noqa: E402
-from sender.store import Store     # noqa: E402
-cfg = Config.load(r"C:\sender\sender.yaml")
-store = Store(cfg.get("service.db_path", r"C:\sender\sender.db"))
-причина = sys.argv[1]
-for i in [int(a) for a in sys.argv[2:] if a.isdigit()]:
-    л = store._conn.execute("SELECT id, email, company_name, status, version FROM leads WHERE id=?", (i,)).fetchone()
-    print("#%s %s | %s | было: %s" % (л[0], л[1], л[2], л[3]))
-    if "--katit" in sys.argv and л[3] != "not_interested":
-        р = store.update_lead_cas(i, expected_version=л[4], action=причина, status="not_interested")
-        print("   ->", "not_interested" if р else "НЕ ВЫШЛО (версия сменилась)")
+from sender.config import Config
+from sender.store import Store
+from sender.leaddesk import LeadDesk
+ИДЫ = [int(x) for x in sys.argv[1].split(",") if x.strip()]
+cfg = Config.load(r"C:\sender\sender.yaml"); st = Store(cfg.get("service.db_path", r"C:\sender\sender.db")); ld = LeadDesk(cfg, st)
+итог = {}
+with io.open(r"C:\sender\_ops\lidy-ne-interesno.jsonl", "a", encoding="utf-8") as ж:
+    for и in ИДЫ:
+        л = ld.get(и)
+        if л is None: итог[и] = "нет лида"; continue
+        if л.status != "new": итог[и] = "статус %s — не трогаю" % л.status; continue
+        if "--primenit" not in sys.argv: итог[и] = "перевёл бы (%s, %s)" % (л.company_name, л.email); continue
+        try:
+            ld.set_status(и, status="not_interested")
+            итог[и] = "ок"; ж.write(json.dumps({"lead": и, "email": л.email, "bylo": "new", "stalo": "not_interested", "ts": time.strftime("%Y-%m-%dT%H:%M:%S")}, ensure_ascii=False) + "\n")
+        except Exception as ex:  # noqa: BLE001
+            итог[и] = "ошибка: %s" % ex
+    ж.flush(); os.fsync(ж.fileno())
+for и, v in итог.items(): print(и, v)
