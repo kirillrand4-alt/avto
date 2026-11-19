@@ -6,7 +6,8 @@
 карточкой, письмо — тот же текст и тема, что ушли на ошибочный адрес; ложится
 pending_review, отправляет оператор.
 
-    kopiya_na_adres.py <старый адрес> <новый адрес> [--privet=Имя_Отчество,_добрый_день!]  (пробелы — подчёркиванием)
+    kopiya_na_adres.py <старый адрес> <новый адрес> [--privet=Имя_Отчество,_добрый_день!] [--bez-pereslat] [--suho]
+    (пробелы — подчёркиванием; --suho — только показать текст копии)
 (16.11: замещающему по автоответу — первое приветствие письма меняется на обращение по имени)
 """
 import json
@@ -57,15 +58,23 @@ if вер in ("нет ящика", "нет MX"):
     sys.exit(0)
 м = c.execute("SELECT * FROM messages WHERE recipient_id=? AND status IN ('sent','bounced') ORDER BY sent_at DESC LIMIT 1",
               (р["id"],)).fetchone()
-тело, тема = м["body_rendered"], м["subject"]
-if not тело:
-    cr = c.execute("SELECT coalesce(edited_body, body), coalesce(edited_subject, subject) FROM confirm_reviews "
-                   "WHERE message_id=? ORDER BY id DESC LIMIT 1", (м["id"],)).fetchone()
-    тело, тема = cr[0], cr[1]
+import re as _re
+# 19.11 (ушло двум адресатам с ошибкой): берём ТЕЛО КАРТОЧКИ, а не body_rendered — в отрендеренном уже стоит подпись
+# прежнего менеджера, и система добавляла вторую; приветствие с именем («Эдуард Николаевич, добрый день!») регулярка
+# не ловила; ящик копии был случайным — имя в тексте не совпадало с подписью. Теперь ящик — тот же, что у исходного.
+cr = c.execute("SELECT coalesce(edited_body, body), coalesce(edited_subject, subject) FROM confirm_reviews "
+               "WHERE message_id=? ORDER BY id DESC LIMIT 1", (м["id"],)).fetchone()
+тело, тема = (cr[0], cr[1]) if cr and cr[0] else (м["body_rendered"], м["subject"])
+тело = _re.split(r"\n\s*С уважением,", тело or "")[0].rstrip()          # подпись добавит система
 _пр = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--privet=")), "").replace("_", " ")
 if _пр:
-    import re as _re
-    тело = _re.sub(r"^(Добрый день|Здравствуйте)[^!\n]*!", _пр, тело, count=1)
+    тело, _n = _re.subn(r"^[^\n!]*?(?:добрый день|здравствуйте|доброе утро)[^!\n]*!", _пр, тело, count=1, flags=_re.I)
+    if not _n:
+        print("приветствие не найдено — копию не ставлю"); sys.exit(1)
+if "--bez-pereslat" in sys.argv:   # копия тому, к кому нас направили: просьба переслать — лишняя
+    тело = _re.sub(r"\s*(Если[^.?!]*(перешл|передад|передайте)[^.?!]*[.?!])", "", тело)
+print("--- ТЕКСТ КОПИИ ---\n%s\n---" % тело)
+if "--suho" in sys.argv: sys.exit(0)
 есть = c.execute("SELECT id FROM recipients WHERE lower(email)=?", (новый,)).fetchone()
 if есть:
     нов_id = есть[0]
@@ -81,7 +90,9 @@ mid, _шаг, почему = q._ensure_message(м["campaign_id"], нов_id)
 if not mid:
     print("message не создан: %s" % почему)
     sys.exit(0)
+with c:
+    c.execute("UPDATE messages SET mailbox_id=? WHERE id=?", (м["mailbox_id"], mid))   # тот же отправитель, что у исходного
 r = cs.submit(email=новый, subject=тема, body=тело, inn=р["inn"], campaign_id=м["campaign_id"],
-              recipient_id=нов_id, message_id=mid, panel={"kopiya_s": старый})
+              recipient_id=нов_id, message_id=mid, panel={"kopiya_s": старый, "mailbox_id": м["mailbox_id"]})
 print("копия письма m%s → %s: очередь %s (review %s)" % (м["id"], новый, r.status, r.review_id))
 print("=== КОПИЯ: ПОСТАВЛЕНА ===")
